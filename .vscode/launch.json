@@ -11,6 +11,12 @@
             "deviceId": "sdk gphone64 x86 64",
         },
         {
+            "name": "football home",
+            "request": "launch",
+            "type": "dart",
+            "deviceId": "sdk gphone x86 64",
+        },
+        {
             "name": "football (profile mode)",
             "request": "launch",
             "type": "dart",
