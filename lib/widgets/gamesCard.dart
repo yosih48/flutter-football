@@ -18,6 +18,12 @@ class GameWidget extends StatelessWidget {
           children: [
             Row(
               children: [
+                         Image.network(
+                  game.home.logo,
+                  width: 24.0,
+                  height: 24.0,
+                ),
+                SizedBox(width: 8.0),
                 Expanded(
                   child: Text(
                     game.home.name,
@@ -35,6 +41,7 @@ class GameWidget extends StatelessWidget {
                     fontSize: 16.0,
                   ),
                 ),
+  
                 Expanded(
                   child: Align(
                     alignment: Alignment.centerRight,
@@ -48,6 +55,13 @@ class GameWidget extends StatelessWidget {
                     ),
                   ),
                 ),
+                     SizedBox(width: 8.0),
+                                          Image.network(
+                  game.away.logo,
+                  width: 24.0,
+                  height: 24.0,
+                ),
+                
               ],
             ),
             SizedBox(height: 8.0),
