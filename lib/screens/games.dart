@@ -68,7 +68,9 @@ class _GamesScreenState extends State<GamesScreen> {
         itemCount: _games.length,
         itemBuilder: (BuildContext context, int index) {
                     final game = _games[index];
-          return GameWidget(game: game);
+        final matchingGuesses = _guesses.where((g) => g.gameOriginalId == game.fixtureId).toList();
+          final guess = matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
+          return GameWidget(game: game, guess: guess);
         },
       ),
     );

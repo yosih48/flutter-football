@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:football/models/games.dart';
+import 'package:football/models/guesses.dart';
 
 class GameWidget extends StatelessWidget {
   final Game game;
+  final Guess? guess;
 
-  GameWidget({required this.game});
+  GameWidget({required this.game, this.guess});
 
   @override
   Widget build(BuildContext context) {
@@ -49,13 +51,34 @@ class GameWidget extends StatelessWidget {
               ],
             ),
             SizedBox(height: 8.0),
-            Text(
-              game.status.long,
-              style: TextStyle(
-                color: Color(0xff67727d).withOpacity(0.6),
-                fontSize: 14.0,
-              ),
+            
+            Row(
+              children: [
+                Text(
+                  game.status.long,
+                  style: TextStyle(
+                    color: Color(0xff67727d).withOpacity(0.6),
+                    fontSize: 14.0,
+                  ),
+                ),
+                if (guess != null)
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
+                        style: TextStyle(
+                          color: Color(0xff67727d).withOpacity(0.6),
+                          fontSize: 14.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                 SizedBox(width:100.0),
+              ],
             ),
+                       
+  
             // Add more game details as needed
           ],
         ),
