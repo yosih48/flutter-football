@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:football/models/games.dart';
+import 'package:football/models/guesses.dart';
 import 'package:football/resources/gamesMethods.dart';
+import 'package:football/resources/guessesMethods.dart';
 import 'package:football/widgets/gamesCard.dart';
 import 'package:http/http.dart' as http;
 
@@ -14,11 +16,14 @@ class GamesScreen extends StatefulWidget {
 
 class _GamesScreenState extends State<GamesScreen> {
   List<Game> _games = [];
+   List<Guess> _guesses = [];
   int league = 4;
+  String clientId = '6584aceb503733cfc6418e98';
   @override
   void initState() {
     super.initState();
    _fetchGames(league);
+  _fetchGuesses(clientId);
   }
 
 
@@ -30,12 +35,27 @@ class _GamesScreenState extends State<GamesScreen> {
       setState(() {
         _games = games;
       });
-      print(_games);
+      // print(_games);
     } catch (e) {
       print('Failed to fetch games: $e');
     }
   }
-
+  Future<void> _fetchGuesses(clientId) async {
+      print('clientId ${clientId}');
+    try {
+      final guesses = await GuessesMethods().fetchGuesses(clientId);
+     
+      setState(() {
+        _guesses = guesses;
+      });
+    
+    } 
+ catch (e, stackTrace) {
+  print('Failed to fetch guesses: $e');
+  print('Stack trace: $stackTrace');
+  // You might want to show an error message to the user here
+}
+  }
 
 
   @override
