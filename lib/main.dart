@@ -26,14 +26,14 @@ class GameApp extends StatelessWidget {
    const GameApp({super.key});
   @override
   Widget build(BuildContext context) {
-   return MaterialApp(
+    return MaterialApp(
       home: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
           return StreamBuilder<User?>(
             stream: authProvider.authStateChanges(),
             builder: (context, snapshot) {
               if (authProvider.isLoading) {
-                     print('is Loading');
+                print('is Loading');
                 return const Center(child: CircularProgressIndicator());
               }
               if (snapshot.hasData) {
@@ -42,13 +42,13 @@ class GameApp extends StatelessWidget {
                   mobileScreenLayout: MobileScreenLayout(),
                   webScreenLayout: WebScreenLayout(),
                 );
-              }else if (snapshot.hasError) {
-                   print('haserror');
+              } else if (snapshot.hasError) {
+                print('haserror');
                 return Center(
                   child: Text('${snapshot.error}'),
                 );
               }
-                   print('nothing');
+              print('nothing');
               return const LoginScreen();
             },
           );
