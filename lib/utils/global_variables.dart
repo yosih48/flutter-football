@@ -11,7 +11,6 @@ List<Widget> homeScreenItems = [
   
 
  GamesScreen(),
-  LoginScreen()
   // const MyWidget(),
 
 ];
