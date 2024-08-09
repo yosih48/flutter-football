@@ -55,12 +55,10 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
     });
 
-    final res = await AuthService.login(
-      _usernameController.text,
-      _passwordController.text,
-    );
+     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    authProvider.login(_usernameController.text, _passwordController.text);
 
-    if (res == 'success') {
+    if (authProvider == 'success') {
       await Provider.of<UserProvider >(context, listen: false)
           .refreshUser(_usernameController.text);
       if (context.mounted) {

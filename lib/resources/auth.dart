@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:football/models/users.dart';
@@ -22,8 +23,10 @@ print(password);
 print(body);
     if (response.statusCode == 200) {
       // Login successful
+      print('Login successful');
       return json.decode(response.body);
     } else {
+        print(' Login failed');
       // Login failed
       throw Exception('Failed to login: ${response.statusCode}');
     }
@@ -72,37 +75,39 @@ print(body);
     }
   }
 }
-
-class AuthProvider extends ChangeNotifier {
+class AuthProvider with ChangeNotifier {
   User? _currentUser;
   bool _isLoading = false;
-  String? _token;
-
-  User? get currentUser => _currentUser;
-  bool get isLoading => _isLoading;
-  bool get isAuthenticated => _token != null;
-
+  final StreamController<User?> _authStateController = StreamController<User?>.broadcast();
   Future<void> login(String email, String password) async {
+
     try {
       _isLoading = true;
       notifyListeners();
 
-      final result = await AuthService.login(email, password);
-      _currentUser = User.fromJson(result['user']);
-      _token = result['token'];
+      final userData = await AuthService.login(email, password);
+      print(userData);
+      _currentUser = User.fromJson(userData); // Assuming you have a User.fromJson constructor
+        print(_currentUser);
+      _authStateController.add(_currentUser);
+      
+      print('Login successful: ${_currentUser?.email}');
     } catch (e) {
-      rethrow;
+      print('Login failed: $e');
+      _authStateController.addError(e);
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
-
-  Future<void> logout() async {
-    _currentUser = null;
-    _token = null;
-    notifyListeners();
+  AuthProvider() {
+    // Initialize the stream with the current user state
+    _authStateController.add(_currentUser);
   }
+
+  bool get isLoading => _isLoading;
+
+  User? get currentUser => _currentUser;
 
   Future<void> refreshUser(String email) async {
     try {
@@ -110,6 +115,8 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
 
       _currentUser = await AuthService.getUserDetails(email);
+      // Emit the new user state
+      _authStateController.add(_currentUser);
     } catch (e) {
       print("Error refreshing user: $e");
     } finally {
@@ -119,6 +126,22 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Stream<User?> authStateChanges() {
-    return Stream.value(_currentUser);
+    print('authStateChanges');
+    return _authStateController.stream;
+  }
+
+  // Don't forget to close the stream when the provider is disposed
+  @override
+  void dispose() {
+    _authStateController.close();
+    super.dispose();
+  }
+
+  // Add a method to handle sign out
+  Future<void> signOut() async {
+    // Implement your sign out logic here
+    _currentUser = null;
+    _authStateController.add(null);
+    notifyListeners();
   }
 }

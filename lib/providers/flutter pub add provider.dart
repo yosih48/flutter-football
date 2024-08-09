@@ -12,9 +12,9 @@ class UserProvider extends ChangeNotifier {
 
   User? get currentUser => _currentUser;
 
-  bool get isCurrentUserAdmin => _currentUser?.isAdmin ?? false;
+  bool get isCurrentUserAdmin => _currentUser?.admin ?? false;
 
-  String get currentUserUsername => _currentUser?.displayName ?? 'Not logged in';
+  String get currentUserUsername => _currentUser?.name ?? 'Not logged in';
 
   String get currentUserUid => _currentUser?.id ?? 'Not logged in';
 
@@ -25,7 +25,7 @@ class UserProvider extends ChangeNotifier {
       User? user = await AuthService.getUserDetails(email);
       if (user != null) {
         _currentUser = user;
-        print("Employee refreshed: ${user.displayName}");
+        print("Employee refreshed: ${user.name}");
       } else {
         _currentUser = null;
         print("No employee data retrieved");
@@ -41,7 +41,7 @@ class UserProvider extends ChangeNotifier {
 
   void setCurrentEmployee(User employee) {
     _currentUser = employee;
-    print("Current employee set: ${employee.displayName}");
+    print("Current employee set: ${employee.name}");
     notifyListeners();
   }
 
