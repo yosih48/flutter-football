@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:football/widgets/text_field_input.dart';
+import 'package:provider/provider.dart';
 
 import '../resources/auth.dart';
 import '../responsive/mobile_screen_layout.dart';
@@ -39,36 +40,47 @@ class _SignupScreenState extends State<SignupScreen> {
 
   void selectImage() async {}
 
-  // void signUpUser() async {
-  //   setState(() {
-  //     _isLoading = true;
-  //   });
-  //   String res = await AuthMethods().signUpUser(
-  //     email: _emailController.text,
-  //     password: _passwordController.text,
-  //     username: _usernameController.text,
-  //   );
-  //   setState(() {
-  //     _isLoading = false;
-  //   });
-  //   if (res != 'success') {
-  //     showSnackBar(context, res);
-  //   } else {
-  //     print('error signup');
-  //     Navigator.of(context).pushReplacement(
-  //       MaterialPageRoute(
-  //         builder: (context) => const ResponsiveLayout(
-  //           mobileScreenLayout: MobileScreenLayout(),
-  //           webScreenLayout: WebScreenLayout(),
-  //         ),
-  //       ),
-  //     );
-  //   }
-  // }
+ void signUpUser() async {
+  setState(() {
+    _isLoading = true;
+  });
+
+  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  
+  try {
+    await authProvider.register(
+      _usernameController.text,
+      _emailController.text,
+      _passwordController.text
+    );
+    
+    // If we reach here, registration was successful
+    print('Registration successful');
+    navigateToLogin();
+    // Navigator.of(context).pushReplacement(
+    //   MaterialPageRoute(
+    //     builder: (context) => const ResponsiveLayout(
+    //       mobileScreenLayout: MobileScreenLayout(),
+    //       webScreenLayout: WebScreenLayout(),
+    //     ),
+    //   ),
+    // );
+  } catch (e) {
+    print('Registration failed: $e');
+    // Show error message to user
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Registration failed: $e')),
+    );
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
+  }
+}
 
   void navigateToLogin() {
-    // Navigator.of(context)
-    //     .push(MaterialPageRoute(builder: (context) => const LoginScreen()));
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => const LoginScreen()));
   }
 
   @override
@@ -117,7 +129,7 @@ class _SignupScreenState extends State<SignupScreen> {
           //button login
 
           InkWell(
-            // onTap: signUpUser,
+            onTap: signUpUser,
             child: Container(
               child: _isLoading
                   ? const Center(

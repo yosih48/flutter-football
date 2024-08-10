@@ -53,11 +53,20 @@ print(body);
     String email,
     String password,
   ) async {
-    final url = Uri.parse('$_baseUrl/register');
+
+    print('register displayName ${displayName}');
+    final url = Uri.parse('$_baseUrl/add');
     final body = json.encode({
       'displayName': displayName,
       'email': email,
       'password': password,
+    'points': {
+      '2': 0  // Changed 2 to '2'
+    },
+    'thisDayPoints': {
+      '2': 0  // Changed 2 to '2'
+    },
+             'isAdmin': false,
     });
 
     final response = await http.post(
@@ -65,9 +74,10 @@ print(body);
       headers: {'Content-Type': 'application/json'},
       body: body,
     );
-
+print(body);
     if (response.statusCode == 201) {
       // Registration successful
+      print('Registration successful');
       return json.decode(response.body);
     } else {
       // Registration failed
@@ -94,6 +104,26 @@ class AuthProvider with ChangeNotifier {
       print('Login successful: ${_currentUser?.email}');
     } catch (e) {
       print('Login failed: $e');
+      _authStateController.addError(e);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+    Future<void> register(String displayName, String email, String password) async {
+      print(' AuthProvider ${displayName}');
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final userData = await AuthService.register(displayName, email, password);
+       print(' userData ${userData }');
+      _currentUser = User.fromJson(userData);
+      _authStateController.add(_currentUser);
+      
+      print('Registration successful: ${_currentUser?.email}');
+    } catch (e) {
+      print('Registration failed: $e');
       _authStateController.addError(e);
     } finally {
       _isLoading = false;
