@@ -5,48 +5,30 @@ import 'package:football/models/guesses.dart';
 class GameWidget extends StatelessWidget {
   final Game game;
   final Guess? guess;
-
-  GameWidget({required this.game, this.guess});
+   final Function(BuildContext) onTap;
+  GameWidget({required this.game, this.guess,   required this.onTap,});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
         padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                         Image.network(
-                  game.home.logo,
-                  width: 24.0,
-                  height: 24.0,
-                ),
-                SizedBox(width: 8.0),
-                Expanded(
-                  child: Text(
-                    game.home.name,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16.0,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+        child: InkWell(
+           onTap: () => onTap(context),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                           Image.network(
+                    game.home.logo,
+                    width: 24.0,
+                    height: 24.0,
                   ),
-                ),
-                Text(
-                  '${game.goals.home} - ${game.goals.away}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16.0,
-                  ),
-                ),
-  
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.centerRight,
+                  SizedBox(width: 8.0),
+                  Expanded(
                     child: Text(
-                      game.away.name,
+                      game.home.name,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16.0,
@@ -54,47 +36,68 @@ class GameWidget extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ),
-                     SizedBox(width: 8.0),
-                                          Image.network(
-                  game.away.logo,
-                  width: 24.0,
-                  height: 24.0,
-                ),
-                
-              ],
-            ),
-            SizedBox(height: 8.0),
-            
-            Row(
-              children: [
-                Text(
-                  game.status.long,
-                  style: TextStyle(
-                    color: Color(0xff67727d).withOpacity(0.6),
-                    fontSize: 14.0,
+                  Text(
+                    '${game.goals.home} - ${game.goals.away}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16.0,
+                    ),
                   ),
-                ),
-                if (guess != null)
+            
                   Expanded(
                     child: Align(
-                      alignment: Alignment.center,
+                      alignment: Alignment.centerRight,
                       child: Text(
-                        '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
+                        game.away.name,
                         style: TextStyle(
-                          color: Color(0xff67727d).withOpacity(0.6),
-                          fontSize: 14.0,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16.0,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
-                 SizedBox(width:100.0),
-              ],
-            ),
-                       
-  
-            // Add more game details as needed
-          ],
+                       SizedBox(width: 8.0),
+                                            Image.network(
+                    game.away.logo,
+                    width: 24.0,
+                    height: 24.0,
+                  ),
+                  
+                ],
+              ),
+              SizedBox(height: 8.0),
+              
+              Row(
+                children: [
+                  Text(
+                    game.status.long,
+                    style: TextStyle(
+                      color: Color(0xff67727d).withOpacity(0.6),
+                      fontSize: 14.0,
+                    ),
+                  ),
+                  if (guess != null)
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
+                          style: TextStyle(
+                            color: Color(0xff67727d).withOpacity(0.6),
+                            fontSize: 14.0,
+                          ),
+                        ),
+                      ),
+                    ),
+                   SizedBox(width:100.0),
+                ],
+              ),
+                         
+            
+              // Add more game details as needed
+            ],
+          ),
         ),
       ),
     );

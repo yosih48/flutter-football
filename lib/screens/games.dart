@@ -4,6 +4,7 @@ import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
 import 'package:football/resources/gamesMethods.dart';
 import 'package:football/resources/guessesMethods.dart';
+import 'package:football/screens/gameDetails.dart';
 import 'package:football/widgets/gamesCard.dart';
 import 'package:http/http.dart' as http;
 
@@ -43,7 +44,7 @@ class _GamesScreenState extends State<GamesScreen> {
   Future<void> _fetchGuesses(clientId) async {
       print('clientId ${clientId}');
     try {
-      final guesses = await GuessesMethods().fetchGuesses(clientId);
+      final guesses = await GuessesMethods().fetchThisUserGuesses(clientId);
      
       setState(() {
         _guesses = guesses;
@@ -67,10 +68,24 @@ class _GamesScreenState extends State<GamesScreen> {
       body: ListView.builder(
         itemCount: _games.length,
         itemBuilder: (BuildContext context, int index) {
-                    final game = _games[index];
+       final game = _games[index];
         final matchingGuesses = _guesses.where((g) => g.gameOriginalId == game.fixtureId).toList();
           final guess = matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
-          return GameWidget(game: game, guess: guess);
+          return GameWidget(game: game, guess: guess,
+            onTap: (context) async{
+              print( game.fixtureId);
+    // Your onTap logic here
+    print('Game tapped!');
+                   await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => GameDetails(
+                                gameOriginalId: game.fixtureId
+                                ),
+                              ),
+                            );
+  },
+          );
         },
       ),
     );
