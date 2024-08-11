@@ -36,22 +36,27 @@ class GameWidget extends StatelessWidget {
             children: [
               Row(
                 children: [
+                  // SizedBox(width: 8.0),
+                  Expanded(
+                    child: Align(
+                          alignment: Alignment.centerRight,
+                      child: Text(
+                        game.home.name,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16.0,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                   SizedBox(width: 6.0),
                   Image.network(
                     game.home.logo,
                     width: 24.0,
                     height: 24.0,
                   ),
-                  SizedBox(width: 8.0),
-                  Expanded(
-                    child: Text(
-                      game.home.name,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16.0,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
+                   SizedBox(width: 8.0),
                   if (game.status.long == "Not Started")
                     Row(
                       children: [
@@ -101,9 +106,16 @@ class GameWidget extends StatelessWidget {
                         fontSize: 16.0,
                       ),
                     ),
+                         SizedBox(width: 8.0),
+                  Image.network(
+                    game.away.logo,
+                    width: 24.0,
+                    height: 24.0,
+                  ),
+                  SizedBox(width: 6.0),
                   Expanded(
                     child: Align(
-                      alignment: Alignment.centerRight,
+                      alignment: Alignment.centerLeft,
                       child: Text(
                         game.away.name,
                         //  '${game.odds.draw}',
@@ -115,12 +127,6 @@ class GameWidget extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                  ),
-                  SizedBox(width: 8.0),
-                  Image.network(
-                    game.away.logo,
-                    width: 24.0,
-                    height: 24.0,
                   ),
                 ],
               ),
