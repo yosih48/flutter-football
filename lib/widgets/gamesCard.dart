@@ -14,7 +14,13 @@ class GameWidget extends StatelessWidget {
     required this.onTap,
     this.homeController,
     this.awayController,
-  });
+  }){
+    // Set initial values for controllers if a guess exists
+    if (guess != null) {
+      homeController!.text = guess!.homeTeamGoals.toString();
+      awayController!.text = guess!.awayTeamGoals.toString();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,19 +120,19 @@ class GameWidget extends StatelessWidget {
                       fontSize: 14.0,
                     ),
                   ),
-                  if (guess != null)
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.center,
-                        child: Text(
-                          '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
-                          style: TextStyle(
-                            color: Color(0xff67727d).withOpacity(0.6),
-                            fontSize: 14.0,
-                          ),
-                        ),
-                      ),
-                    ),
+                  // if (guess != null)
+                  //   Expanded(
+                  //     child: Align(
+                  //       alignment: Alignment.center,
+                  //       child: Text(
+                  //         '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
+                  //         style: TextStyle(
+                  //           color: Color(0xff67727d).withOpacity(0.6),
+                  //           fontSize: 14.0,
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ),
                   SizedBox(width: 100.0),
                 ],
               ),

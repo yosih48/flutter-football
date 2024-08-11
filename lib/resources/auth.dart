@@ -87,6 +87,7 @@ print(body);
 }
 class AuthProvider with ChangeNotifier {
   User? _currentUser;
+    User? get user => _currentUser;
   bool _isLoading = false;
   final StreamController<User?> _authStateController = StreamController<User?>.broadcast();
   Future<void> login(String email, String password) async {

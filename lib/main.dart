@@ -16,8 +16,9 @@ void main() =>   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        // Other providers...
+        ChangeNotifierProvider(create: (_) => UserProvider()),
       ],
+
       child: GameApp(),
     ),
   );

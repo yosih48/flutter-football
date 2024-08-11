@@ -2,26 +2,68 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
+import 'package:football/models/users.dart';
+import 'package:football/models/users.dart';
+import 'package:football/models/users.dart';
+import 'package:football/providers/flutter%20pub%20add%20provider.dart';
+import 'package:football/resources/auth.dart';
 import 'package:football/resources/gamesMethods.dart';
 import 'package:football/resources/guessesMethods.dart';
 import 'package:football/screens/gameDetails.dart';
+import 'package:football/screens/login_screen.dart';
 import 'package:football/widgets/gamesCard.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
-class GamesScreen extends StatefulWidget {
+import '../models/users.dart';
+
+class GamesScreen extends StatelessWidget {
   @override
-  _GamesScreenState createState() => _GamesScreenState();
+  Widget build(BuildContext context) {
+    return Consumer2<AuthProvider, UserProvider>(
+      builder: (context, authProvider, userProvider, child) {
+        // Check if user is authenticated
+        if (authProvider.user == null) {
+          return LoginScreen(); // Or some other widget for unauthenticated users
+        }
+        return _GamesScreenContent(
+          authProvider: authProvider,
+          userProvider: userProvider,
+        );
+      },
+    );
+  }
 }
 
-class _GamesScreenState extends State<GamesScreen> {
+class _GamesScreenContent extends StatefulWidget {
+  final AuthProvider authProvider;
+  final UserProvider userProvider;
+
+  _GamesScreenContent({
+    required this.authProvider,
+    required this.userProvider,
+  });
+
+  @override
+  _GamesScreenContentState createState() => _GamesScreenContentState();
+}
+
+class _GamesScreenContentState extends State<_GamesScreenContent> {
+
   List<Game> _games = [];
   List<Guess> _guesses = [];
   int league = 39;
-  String clientId = '6584aceb503733cfc6418e98';
-  String email = 'yosihofman21@gmail.com';
+  // String clientId = '6584aceb503733cfc6418e98';
+  // String email = 'yosihofman21@gmail.com';
+    late String clientId;
+  late String email;
   Map<int, Map<String, TextEditingController>> _guessControllers = {};
   void initState() {
     super.initState();
+    clientId = widget.authProvider.user?.id ?? 'Not logged in';
+    email = widget.authProvider.user?.email ?? 'Not logged in';
+    print(clientId);
+    print(email);
     _fetchGames(league);
     _fetchGuesses(clientId);
   }
@@ -84,69 +126,108 @@ class _GamesScreenState extends State<GamesScreen> {
     }
   }
 
+
+  
   Future<void> _submitAllGuesses() async {
-    List<Map<String, dynamic>> guesses = [];
-    for (var game in _games) {
-      var controllers = _guessControllers[game.fixtureId];
-      if (controllers != null) {
-        var homeScore = controllers['home']?.text;
-        var awayScore = controllers['away']?.text;
+  List<Map<String, dynamic>> newGuesses = [];
+  List<Map<String, dynamic>> updatedGuesses = [];
 
-        print("Game ${game.fixtureId} - Home: $homeScore, Away: $awayScore");
+  for (var game in _games) {
+    var controllers = _guessControllers[game.fixtureId];
+    if (controllers != null) {
+      var homeScore = controllers['home']?.text;
+      var awayScore = controllers['away']?.text;
 
-        if (homeScore != null &&
-            awayScore != null &&
-            homeScore.isNotEmpty &&
-            awayScore.isNotEmpty) {
-          guesses.add({
-            'userID': clientId, // Replace with actual user ID
-            'gameID': game.fixtureId,
-            'gameOriginalID': game.fixtureId,
-            'expectedPoints': 0, // You may need to calculate this
-            'home_team_goals': homeScore,
-            'away_team_goals':awayScore,
-            'sum_points': 0,
-            'leagueID': league, // Replace with actual league ID
-            'email': email, // Replace with actual user email
-          });
+      if (homeScore != null &&
+          awayScore != null &&
+          homeScore.isNotEmpty &&
+          awayScore.isNotEmpty) {
+        
+        // Check if a guess already exists for this game
+     Guess? existingGuess;
+try {
+  existingGuess = _guesses.firstWhere(
+    (g) => g.gameOriginalId == game.fixtureId,
+  );
+} catch (e) {
+  // No matching guess found
+  existingGuess = null;
+}
+
+        var guessData = {
+          'userID': clientId,
+          'gameID': game.fixtureId,
+          'gameOriginalID': game.fixtureId,
+          'expectedPoints': 0,
+          'home_team_goals': homeScore,
+          'away_team_goals': awayScore,
+          'sum_points': 0,
+          'leagueID': league,
+          // 'email': email,
+        };
+
+           if (existingGuess != null) {
+          // Update existing guess
+          updatedGuesses.add(guessData);
+        } else {
+          // Create new guess
+            guessData['email'] = email;
+          newGuesses.add(guessData);
         }
       }
     }
+  }
 
-    if (guesses.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("No guesses to submit")),
-      );
-      return;
-    }
+  if (newGuesses.isEmpty && updatedGuesses.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("No new or updated guesses to submit")),
+    );
+    return;
+  }
 
-    final url = Uri.parse('https://leagues.onrender.com/guesses/add');
-    bool allSuccessful = true;
+  final newGuessUrl = Uri.parse('https://leagues.onrender.com/guesses/add');
+  final updateGuessUrl = Uri.parse('https://leagues.onrender.com/guesses/');
+  bool allSuccessful = true;
 
-    for (var guess in guesses) {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(guess), // Send each guess individually
-      );
+  // Submit new guesses
+  for (var guess in newGuesses) {
+    final response = await http.post(
+      newGuessUrl,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(guess),
+    );
 
-      if (response.statusCode != 200) {
-        allSuccessful = false;
-        print("Failed to submit guess: ${response.body}");
-      }
-    }
-
-    if (allSuccessful) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("All guesses submitted successfully")),
-      );
-      _fetchGuesses(clientId); // Refresh guesses after submission
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to submit some guesses")),
-      );
+    if (response.statusCode != 200) {
+      allSuccessful = false;
+      print("Failed to submit new guess: ${response.body}");
     }
   }
+
+  // Update existing guesses
+  for (var guess in updatedGuesses) {
+    final response = await http.put(
+      updateGuessUrl,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(guess),
+    );
+
+    if (response.statusCode != 200) {
+      allSuccessful = false;
+      print("Failed to update guess: ${response.body}");
+    }
+  }
+
+  if (allSuccessful) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("All guesses submitted or updated successfully")),
+    );
+    _fetchGuesses(clientId); // Refresh guesses after submission
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Failed to submit or update some guesses")),
+    );
+  }
+}
 
   @override
   Widget build(BuildContext context) {
