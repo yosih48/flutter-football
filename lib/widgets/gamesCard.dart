@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
 
@@ -64,8 +65,14 @@ class GameWidget extends StatelessWidget {
                             decoration: InputDecoration(
                               border: OutlineInputBorder(),
                             ),
+                              inputFormatters: [
+    LengthLimitingTextInputFormatter(1), // Limit input to 1 character
+    FilteringTextInputFormatter.digitsOnly, // Allow only digits
+  ],
                           ),
+                          
                         ),
+                        
                         Text(' - '),
                         SizedBox(
                           width: 40,
@@ -77,6 +84,11 @@ class GameWidget extends StatelessWidget {
                             decoration: InputDecoration(
                               border: OutlineInputBorder(),
                             ),
+                 inputFormatters: [
+    LengthLimitingTextInputFormatter(1), // Limit input to 1 character
+    FilteringTextInputFormatter.digitsOnly, // Allow only digits
+  ],
+      
                           ),
                         ),
                       ],
@@ -94,6 +106,8 @@ class GameWidget extends StatelessWidget {
                       alignment: Alignment.centerRight,
                       child: Text(
                         game.away.name,
+                        //  '${game.odds.draw}',
+                      
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16.0,
@@ -112,29 +126,47 @@ class GameWidget extends StatelessWidget {
               ),
               SizedBox(height: 8.0),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+         
+                    //  SizedBox(width: 60,),
+                  Text(
+                    '${game.odds.home}',
+                    style: TextStyle(
+                      color: Color(0xff67727d).withOpacity(0.6),
+                      fontSize: 16.0,
+                    ),
+                  ),
+                  // SizedBox(width: 20,),
+                  Text(
+                    '${game.odds.draw}',
+                    style: TextStyle(
+                      color: Color(0xff67727d).withOpacity(0.6),
+                      fontSize: 16.0,
+                    ),
+                  ),
+                    //  SizedBox(width: 20,),
+                  Text(
+                    '${game.odds.away}',
+                    style: TextStyle(
+                      color: Color(0xff67727d).withOpacity(0.6),
+                      fontSize: 16.0,
+                    ),
+                  ),
+    
+                  // SizedBox(width: 100.0),
+                ],
+              ),
+                SizedBox(height: 8.0),
+              Row(
+                children: [ 
                   Text(
                     game.status.long,
                     style: TextStyle(
                       color: Color(0xff67727d).withOpacity(0.6),
                       fontSize: 14.0,
                     ),
-                  ),
-                  // if (guess != null)
-                  //   Expanded(
-                  //     child: Align(
-                  //       alignment: Alignment.center,
-                  //       child: Text(
-                  //         '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
-                  //         style: TextStyle(
-                  //           color: Color(0xff67727d).withOpacity(0.6),
-                  //           fontSize: 14.0,
-                  //         ),
-                  //       ),
-                  //     ),
-                  //   ),
-                  SizedBox(width: 100.0),
-                ],
+                  ),],
               ),
             ],
           ),
