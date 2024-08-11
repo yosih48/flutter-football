@@ -6,24 +6,19 @@ class GameWidget extends StatelessWidget {
   final Game game;
   final Guess? guess;
   final Function(BuildContext) onTap;
-    final TextEditingController? homeController;
+  final TextEditingController? homeController;
   final TextEditingController? awayController;
   GameWidget({
     required this.game,
     this.guess,
     required this.onTap,
-      this.homeController,
-   this.awayController,
+    this.homeController,
+    this.awayController,
   });
 
   @override
   Widget build(BuildContext context) {
-    TextEditingController _homeController = TextEditingController();
-    TextEditingController _awayController = TextEditingController();
-    Future<void> addGuess() async {
-      print('add guess');
-    }
-
+    print(homeController);
     return Card(
       child: Padding(
         padding: EdgeInsets.all(16.0),
@@ -68,7 +63,7 @@ class GameWidget extends StatelessWidget {
                         Text(' - '),
                         SizedBox(
                           width: 40,
-                                height: 50,
+                          height: 50,
                           child: TextField(
                             controller: awayController,
                             keyboardType: TextInputType.number,
@@ -78,7 +73,6 @@ class GameWidget extends StatelessWidget {
                             ),
                           ),
                         ),
-             
                       ],
                     )
                   else

@@ -18,7 +18,14 @@ class _GamesScreenState extends State<GamesScreen> {
   List<Guess> _guesses = [];
   int league = 39;
   String clientId = '6584aceb503733cfc6418e98';
-    Map<int, Map<String, TextEditingController>> _guessControllers = {};
+  String email = 'yosihofman21@gmail.com';
+  Map<int, Map<String, TextEditingController>> _guessControllers = {};
+  void initState() {
+    super.initState();
+    _fetchGames(league);
+    _fetchGuesses(clientId);
+  }
+
   @override
   void dispose() {
     for (var controllers in _guessControllers.values) {
@@ -28,63 +35,6 @@ class _GamesScreenState extends State<GamesScreen> {
     super.dispose();
   }
 
-
-  void initState() {
-    super.initState();
-    _fetchGames(league);
-    _fetchGuesses(clientId);
-  }
-    Future<void> _submitAllGuesses() async {
-    List<Map<String, dynamic>> guesses = [];
-
-    for (var game in _games) {
-      var homeScore = _guessControllers[game.fixtureId]?['home']?.text;
-      var awayScore = _guessControllers[game.fixtureId]?['away']?.text;
-
-      if (homeScore != null &&
-          awayScore != null &&
-          homeScore.isNotEmpty &&
-          awayScore.isNotEmpty) {
-        guesses.add({
-          'userID': clientId, // Replace with actual user ID
-          'gameID': game.fixtureId,
-          'gameOriginalID': game.fixtureId,
-          'expectedPoints': 0, // You may need to calculate this
-          'home_team_goals': int.parse(homeScore),
-          'away_team_goals': int.parse(awayScore),
-          'sum_points': 0,
-          'leagueID': league, // Replace with actual league ID
-          'email': 'yosihofman21@gmail.com', // Replace with actual user email
-        });
-      }
-    }
-
-    if (guesses.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("No guesses to submit")),
-      );
-      return;
-    }
-
-    final url = Uri.parse('https://leagues.onrender.com/guesses/add');
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(guesses),
-    );
-
-    if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Guesses submitted successfully")),
-      );
-      _fetchGuesses(clientId); // Refresh guesses after submission
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to submit guesses")),
-      );
-    }
-  }
-
   Future<void> _fetchGames(int leagueId) async {
     print('leagueId ${leagueId}');
 
@@ -92,6 +42,16 @@ class _GamesScreenState extends State<GamesScreen> {
       final games = await GamesMethods().fetchGames(leagueId);
       setState(() {
         _games = games;
+      });
+      setState(() {
+        for (var game in _games) {
+          if (_guessControllers[game.fixtureId] == null) {
+            _guessControllers[game.fixtureId] = {
+              'home': TextEditingController(),
+              'away': TextEditingController(),
+            };
+          }
+        }
       });
       // print(_games);
     } catch (e) {
@@ -107,10 +67,84 @@ class _GamesScreenState extends State<GamesScreen> {
       setState(() {
         _guesses = guesses;
       });
+
+      setState(() {
+        for (var guess in _guesses) {
+          var controllers = _guessControllers[guess.gameOriginalId];
+          if (controllers != null) {
+            controllers['home']?.text = guess.homeTeamGoals.toString();
+            controllers['away']?.text = guess.awayTeamGoals.toString();
+          }
+        }
+      });
     } catch (e, stackTrace) {
       print('Failed to fetch guesses: $e');
       print('Stack trace: $stackTrace');
       // You might want to show an error message to the user here
+    }
+  }
+
+  Future<void> _submitAllGuesses() async {
+    List<Map<String, dynamic>> guesses = [];
+    for (var game in _games) {
+      var controllers = _guessControllers[game.fixtureId];
+      if (controllers != null) {
+        var homeScore = controllers['home']?.text;
+        var awayScore = controllers['away']?.text;
+
+        print("Game ${game.fixtureId} - Home: $homeScore, Away: $awayScore");
+
+        if (homeScore != null &&
+            awayScore != null &&
+            homeScore.isNotEmpty &&
+            awayScore.isNotEmpty) {
+          guesses.add({
+            'userID': clientId, // Replace with actual user ID
+            'gameID': game.fixtureId,
+            'gameOriginalID': game.fixtureId,
+            'expectedPoints': 0, // You may need to calculate this
+            'home_team_goals': homeScore,
+            'away_team_goals':awayScore,
+            'sum_points': 0,
+            'leagueID': league, // Replace with actual league ID
+            'email': email, // Replace with actual user email
+          });
+        }
+      }
+    }
+
+    if (guesses.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("No guesses to submit")),
+      );
+      return;
+    }
+
+    final url = Uri.parse('https://leagues.onrender.com/guesses/add');
+    bool allSuccessful = true;
+
+    for (var guess in guesses) {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(guess), // Send each guess individually
+      );
+
+      if (response.statusCode != 200) {
+        allSuccessful = false;
+        print("Failed to submit guess: ${response.body}");
+      }
+    }
+
+    if (allSuccessful) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("All guesses submitted successfully")),
+      );
+      _fetchGuesses(clientId); // Refresh guesses after submission
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to submit some guesses")),
+      );
     }
   }
 
@@ -129,10 +163,17 @@ class _GamesScreenState extends State<GamesScreen> {
               .toList();
           final guess =
               matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
+          // Ensure controllers exist for this game
+          if (_guessControllers[game.fixtureId] == null) {
+            _guessControllers[game.fixtureId] = {
+              'home': TextEditingController(),
+              'away': TextEditingController(),
+            };
+          }
           return GameWidget(
             game: game,
             guess: guess,
-              homeController: _guessControllers[game.fixtureId]?['home'],
+            homeController: _guessControllers[game.fixtureId]?['home'],
             awayController: _guessControllers[game.fixtureId]?['away'],
             onTap: (context) async {
               print(game.fixtureId);
@@ -149,7 +190,7 @@ class _GamesScreenState extends State<GamesScreen> {
           );
         },
       ),
-            floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton(
         onPressed: _submitAllGuesses,
         child: Icon(Icons.send),
         tooltip: 'Submit All Guesses',
