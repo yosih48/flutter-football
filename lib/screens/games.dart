@@ -8,8 +8,6 @@ import 'package:football/screens/gameDetails.dart';
 import 'package:football/widgets/gamesCard.dart';
 import 'package:http/http.dart' as http;
 
-
-
 class GamesScreen extends StatefulWidget {
   @override
   _GamesScreenState createState() => _GamesScreenState();
@@ -17,16 +15,75 @@ class GamesScreen extends StatefulWidget {
 
 class _GamesScreenState extends State<GamesScreen> {
   List<Game> _games = [];
-   List<Guess> _guesses = [];
+  List<Guess> _guesses = [];
   int league = 39;
   String clientId = '6584aceb503733cfc6418e98';
+    Map<int, Map<String, TextEditingController>> _guessControllers = {};
   @override
-  void initState() {
-    super.initState();
-   _fetchGames(league);
-  _fetchGuesses(clientId);
+  void dispose() {
+    for (var controllers in _guessControllers.values) {
+      controllers['home']?.dispose();
+      controllers['away']?.dispose();
+    }
+    super.dispose();
   }
 
+
+  void initState() {
+    super.initState();
+    _fetchGames(league);
+    _fetchGuesses(clientId);
+  }
+    Future<void> _submitAllGuesses() async {
+    List<Map<String, dynamic>> guesses = [];
+
+    for (var game in _games) {
+      var homeScore = _guessControllers[game.fixtureId]?['home']?.text;
+      var awayScore = _guessControllers[game.fixtureId]?['away']?.text;
+
+      if (homeScore != null &&
+          awayScore != null &&
+          homeScore.isNotEmpty &&
+          awayScore.isNotEmpty) {
+        guesses.add({
+          'userID': clientId, // Replace with actual user ID
+          'gameID': game.fixtureId,
+          'gameOriginalID': game.fixtureId,
+          'expectedPoints': 0, // You may need to calculate this
+          'home_team_goals': int.parse(homeScore),
+          'away_team_goals': int.parse(awayScore),
+          'sum_points': 0,
+          'leagueID': league, // Replace with actual league ID
+          'email': 'yosihofman21@gmail.com', // Replace with actual user email
+        });
+      }
+    }
+
+    if (guesses.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("No guesses to submit")),
+      );
+      return;
+    }
+
+    final url = Uri.parse('https://leagues.onrender.com/guesses/add');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(guesses),
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Guesses submitted successfully")),
+      );
+      _fetchGuesses(clientId); // Refresh guesses after submission
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to submit guesses")),
+      );
+    }
+  }
 
   Future<void> _fetchGames(int leagueId) async {
     print('leagueId ${leagueId}');
@@ -41,23 +98,21 @@ class _GamesScreenState extends State<GamesScreen> {
       print('Failed to fetch games: $e');
     }
   }
+
   Future<void> _fetchGuesses(clientId) async {
-      print('clientId ${clientId}');
+    print('clientId ${clientId}');
     try {
       final guesses = await GuessesMethods().fetchThisUserGuesses(clientId);
-     
+
       setState(() {
         _guesses = guesses;
       });
-    
-    } 
- catch (e, stackTrace) {
-  print('Failed to fetch guesses: $e');
-  print('Stack trace: $stackTrace');
-  // You might want to show an error message to the user here
-}
+    } catch (e, stackTrace) {
+      print('Failed to fetch guesses: $e');
+      print('Stack trace: $stackTrace');
+      // You might want to show an error message to the user here
+    }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -68,25 +123,36 @@ class _GamesScreenState extends State<GamesScreen> {
       body: ListView.builder(
         itemCount: _games.length,
         itemBuilder: (BuildContext context, int index) {
-       final game = _games[index];
-        final matchingGuesses = _guesses.where((g) => g.gameOriginalId == game.fixtureId).toList();
-          final guess = matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
-          return GameWidget(game: game, guess: guess,
-            onTap: (context) async{
-              print( game.fixtureId);
-    // Your onTap logic here
-    print('Game tapped!');
-                   await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => GameDetails(
-                                gameOriginalId: game.fixtureId
-                                ),
-                              ),
-                            );
-  },
+          final game = _games[index];
+          final matchingGuesses = _guesses
+              .where((g) => g.gameOriginalId == game.fixtureId)
+              .toList();
+          final guess =
+              matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
+          return GameWidget(
+            game: game,
+            guess: guess,
+              homeController: _guessControllers[game.fixtureId]?['home'],
+            awayController: _guessControllers[game.fixtureId]?['away'],
+            onTap: (context) async {
+              print(game.fixtureId);
+              // Your onTap logic here
+              print('Game tapped!');
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      GameDetails(gameOriginalId: game.fixtureId),
+                ),
+              );
+            },
           );
         },
+      ),
+            floatingActionButton: FloatingActionButton(
+        onPressed: _submitAllGuesses,
+        child: Icon(Icons.send),
+        tooltip: 'Submit All Guesses',
       ),
     );
   }

@@ -5,22 +5,36 @@ import 'package:football/models/guesses.dart';
 class GameWidget extends StatelessWidget {
   final Game game;
   final Guess? guess;
-   final Function(BuildContext) onTap;
-  GameWidget({required this.game, this.guess,   required this.onTap,});
+  final Function(BuildContext) onTap;
+    final TextEditingController? homeController;
+  final TextEditingController? awayController;
+  GameWidget({
+    required this.game,
+    this.guess,
+    required this.onTap,
+      this.homeController,
+   this.awayController,
+  });
 
   @override
   Widget build(BuildContext context) {
+    TextEditingController _homeController = TextEditingController();
+    TextEditingController _awayController = TextEditingController();
+    Future<void> addGuess() async {
+      print('add guess');
+    }
+
     return Card(
       child: Padding(
         padding: EdgeInsets.all(16.0),
         child: InkWell(
-           onTap: () => onTap(context),
+          onTap: () => onTap(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                           Image.network(
+                  Image.network(
                     game.home.logo,
                     width: 24.0,
                     height: 24.0,
@@ -36,14 +50,45 @@ class GameWidget extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  Text(
-                    '${game.goals.home} - ${game.goals.away}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16.0,
+                  if (game.status.long == "Not Started")
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 40,
+                          height: 50,
+                          child: TextField(
+                            controller: homeController,
+                            keyboardType: TextInputType.number,
+                            textAlign: TextAlign.center,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        Text(' - '),
+                        SizedBox(
+                          width: 40,
+                                height: 50,
+                          child: TextField(
+                            controller: awayController,
+                            keyboardType: TextInputType.number,
+                            textAlign: TextAlign.center,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+             
+                      ],
+                    )
+                  else
+                    Text(
+                      '${game.goals.home} - ${game.goals.away}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16.0,
+                      ),
                     ),
-                  ),
-            
                   Expanded(
                     child: Align(
                       alignment: Alignment.centerRight,
@@ -57,17 +102,15 @@ class GameWidget extends StatelessWidget {
                       ),
                     ),
                   ),
-                       SizedBox(width: 8.0),
-                                            Image.network(
+                  SizedBox(width: 8.0),
+                  Image.network(
                     game.away.logo,
                     width: 24.0,
                     height: 24.0,
                   ),
-                  
                 ],
               ),
               SizedBox(height: 8.0),
-              
               Row(
                 children: [
                   Text(
@@ -90,12 +133,9 @@ class GameWidget extends StatelessWidget {
                         ),
                       ),
                     ),
-                   SizedBox(width:100.0),
+                  SizedBox(width: 100.0),
                 ],
               ),
-                         
-            
-              // Add more game details as needed
             ],
           ),
         ),
