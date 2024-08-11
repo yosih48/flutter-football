@@ -1,11 +1,10 @@
-
 class Game {
   final int fixtureId;
-  final String referee;
+  final String? referee;
   final String timezone;
   final DateTime date;
   final int timestamp;
-  final Map<String, int> periods;
+  final Map<String, int?> periods;
   final Venue venue;
   final Status status;
   final League league;
@@ -13,10 +12,11 @@ class Game {
   final Team away;
   final Goals goals;
   final Score score;
+  final Odds odds;
 
   Game({
     required this.fixtureId,
-    required this.referee,
+   this.referee,
     required this.timezone,
     required this.date,
     required this.timestamp,
@@ -28,6 +28,7 @@ class Game {
     required this.away,
     required this.goals,
     required this.score,
+    required this.odds,
   });
 
   factory Game.fromJson(Map<String, dynamic> json) {
@@ -48,7 +49,38 @@ class Game {
       away: Team.fromJson(json['teams']['away']),
       goals: Goals.fromJson(json['goals']),
       score: Score.fromJson(json['score']),
+      odds: Odds.fromJson(
+          json['odds'] ?? {'away': '10', 'home': '10', 'draw': '10'}),
     );
+  }
+}
+
+class Odds {
+  final double home;
+  final double draw;
+  final double away;
+
+  Odds({
+    required this.home,
+    required this.draw,
+    required this.away,
+  });
+
+  factory Odds.fromJson(Map<String, dynamic> json) {
+    return Odds(
+      home: _parseDoubleOrDefault(json['Home'], 10),
+      draw: _parseDoubleOrDefault(json['Draw'], 10),
+      away: _parseDoubleOrDefault(json['Away'], 10),
+    );
+  }
+
+  static double _parseDoubleOrDefault(dynamic value, double defaultValue) {
+    if (value == null) return defaultValue;
+    try {
+      return double.parse(value.toString());
+    } catch (e) {
+      return defaultValue;
+    }
   }
 }
 
@@ -75,7 +107,7 @@ class Venue {
 class Status {
   final String long;
   final String short;
-  final int elapsed;
+  final int? elapsed;
 
   Status({
     required this.long,
@@ -148,8 +180,8 @@ class Team {
 }
 
 class Goals {
-  final int home;
-  final int away;
+  final int? home;
+  final int? away;
 
   Goals({
     required this.home,
@@ -165,8 +197,8 @@ class Goals {
 }
 
 class Score {
-  final Map<String, int> halftime;
-  final Map<String, int> fulltime;
+  final Map<String, int?> halftime;
+  final Map<String, int?> fulltime;
   final Map<String, int?> extratime;
   final Map<String, int?> penalty;
 

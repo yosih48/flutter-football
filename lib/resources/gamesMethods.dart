@@ -17,11 +17,21 @@ class GamesMethods {
       final responseData = jsonDecode(response.body);
       // print(responseData);
       final gamesData = responseData['games'];
-      // print('gamesData ${gamesData}');
+      print('gamesData ${gamesData[0]}');
       if (gamesData != null && gamesData is List) {
-        final games =
-            (gamesData as List).map((item) => Game.fromJson(item)).toList();
-        return games;
+        final List<Game> allGames =
+            gamesData.map((item) => Game.fromJson(item)).toList();
+
+        // Filter games
+        final List<Game> filteredGames = allGames.where((game) {
+          bool hasOdds = game.odds.home != 10 ||
+              game.odds.draw != 10 ||
+              game.odds.away != 10;
+          bool isFinished = game.status.long == "Match Finished";
+          return hasOdds || isFinished;
+        }).toList();
+
+        return filteredGames;
       } else {
         throw Exception('Games data is null or not a list');
       }
