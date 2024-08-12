@@ -131,11 +131,12 @@ class GameWidget extends StatelessWidget {
                 ],
               ),
               SizedBox(height: 8.0),
+               if (game.status.long == "Not Started")
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
          
-                    //  SizedBox(width: 60,),
+                    //  SizedBox(width: 0,),
                   Text(
                     '${game.odds.home}',
                     style: TextStyle(
@@ -172,7 +173,22 @@ class GameWidget extends StatelessWidget {
                       color: Color(0xff67727d).withOpacity(0.6),
                       fontSize: 14.0,
                     ),
-                  ),],
+                  ),
+                   if (guess != null && game.status.long != 'Not Started' )
+                             Expanded(
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
+                          style: TextStyle(
+                            color: Color(0xff67727d).withOpacity(0.6),
+                            fontSize: 14.0,
+                          ),
+                        ),
+                      ),
+                    ),
+                   SizedBox(width: 100.0),
+                  ],
               ),
             ],
           ),
