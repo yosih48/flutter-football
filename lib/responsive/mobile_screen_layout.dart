@@ -59,7 +59,7 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(
-              Icons.home,
+              Icons.sports_football,
               color: (_page == 0) ? primaryColor : secondaryColor,
             ),
             label: '',
