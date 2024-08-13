@@ -30,7 +30,7 @@ class GamesMethods {
           bool isFinished = game.status.long == "Match Finished";
           return hasOdds || isFinished;
         }).toList();
-
+     filteredGames.sort((a, b) => a.timestamp.compareTo(b.timestamp));
         return filteredGames;
       } else {
         throw Exception('Games data is null or not a list');

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
-
+import 'package:intl/intl.dart';
 class GameWidget extends StatelessWidget {
   final Game game;
   final Guess? guess;
@@ -34,7 +34,27 @@ class GameWidget extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
+Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+                  Text(
+                    game.status.long,
+                    style: TextStyle(
+                      color: Color(0xff67727d).withOpacity(0.6),
+                      fontSize: 14.0,
+                    ),
+                  ),
+                           Text(
+            DateFormat('dd/MM/yy').format(game.date),
+            style: TextStyle(
+              color: Color(0xff67727d).withOpacity(0.6),
+              fontSize: 14.0,
+            ),
+          ),
+  ],
+),
+SizedBox(height: 8.0,)
+,              Row(
                 children: [
                   // SizedBox(width: 8.0),
                   Expanded(
@@ -167,13 +187,20 @@ class GameWidget extends StatelessWidget {
                 SizedBox(height: 8.0),
               Row(
                 children: [ 
-                  Text(
-                    game.status.long,
-                    style: TextStyle(
-                      color: Color(0xff67727d).withOpacity(0.6),
-                      fontSize: 14.0,
-                    ),
-                  ),
+          //                  Text(
+          //   DateFormat('dd/MM/yy').format(game.date),
+          //   style: TextStyle(
+          //     color: Color(0xff67727d).withOpacity(0.6),
+          //     fontSize: 14.0,
+          //   ),
+          // ),
+          //         Text(
+          //           game.status.long,
+          //           style: TextStyle(
+          //             color: Color(0xff67727d).withOpacity(0.6),
+          //             fontSize: 14.0,
+          //           ),
+          //         ),
                    if (guess != null && game.status.long != 'Not Started' )
                              Expanded(
                       child: Align(
