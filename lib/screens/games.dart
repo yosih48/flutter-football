@@ -61,7 +61,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     void updateSelectedIndex(int index) {
       print(index);
     setState(() {
-    league = index == 0 ? 2 : 4;
+    league = index == 0 ? 2 :index == 1? 4: 39;
       selectedIndex = index;
      
     });
@@ -251,7 +251,8 @@ try {
           ToggleButtonsSample(
             options: [
               'champ',
-              'euro'
+              'euro',
+              'english'
               // AppLocalizations.of(context)!.opens,
               // AppLocalizations.of(context)!.history
             ],
