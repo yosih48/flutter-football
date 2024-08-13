@@ -52,7 +52,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
   List<Game> _games = [];
   List<Guess> _guesses = [];
-  int league = 39;
+  int league = 2;
   // String clientId = '6584aceb503733cfc6418e98';
   // String email = 'yosihofman21@gmail.com';
     late String clientId;

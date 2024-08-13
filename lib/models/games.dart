@@ -35,20 +35,20 @@ class Game {
     return Game(
       fixtureId: json['fixture']['id'],
       referee: json['fixture']['referee'],
-      timezone: json['fixture']['timezone'],
+      timezone: json['fixture']['timezone'] ?? '',
       date: DateTime.parse(json['fixture']['date']),
       timestamp: json['fixture']['timestamp'],
       periods: {
-        'first': json['fixture']['periods']['first'],
-        'second': json['fixture']['periods']['second'],
+        'first': json['fixture']['periods']['first'] ?? 0,  // Provide default values
+        'second': json['fixture']['periods']['second'] ?? 0,
       },
       venue: Venue.fromJson(json['fixture']['venue']),
       status: Status.fromJson(json['fixture']['status']),
       league: League.fromJson(json['league']),
       home: Team.fromJson(json['teams']['home']),
       away: Team.fromJson(json['teams']['away']),
-      goals: Goals.fromJson(json['goals']),
-      score: Score.fromJson(json['score']),
+       goals: Goals.fromJson(json['goals'] ?? {}),
+      score: Score.fromJson(json['score'] ?? {}),
       odds: Odds.fromJson(
           json['odds'] ?? {'away': '10', 'home': '10', 'draw': '10'}),
     );
@@ -97,9 +97,9 @@ class Venue {
 
   factory Venue.fromJson(Map<String, dynamic> json) {
     return Venue(
-      id: json['id'],
-      name: json['name'],
-      city: json['city'],
+      id: json['id'] ?? 0,  // Provide a default value if null
+      name: json['name'] ?? '',  // Provide a default value if null
+      city: json['city'] ?? '', 
     );
   }
 }
