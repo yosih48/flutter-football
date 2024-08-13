@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:football/screens/games.dart';
+import 'package:football/screens/groups.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/screens/signup_screen.dart';
 import 'package:football/screens/table.dart';
@@ -14,7 +15,8 @@ List<Widget> homeScreenItems = [
   
 
  GamesScreen(),
- TableScreen(),
+//  TableScreen(),
+ GroupListScreen(),
   SignupScreen(),
 
 ];
