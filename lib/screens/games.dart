@@ -12,6 +12,7 @@ import 'package:football/resources/guessesMethods.dart';
 import 'package:football/screens/gameDetails.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/widgets/gamesCard.dart';
+import 'package:football/widgets/toggleButton.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
@@ -53,10 +54,20 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   List<Game> _games = [];
   List<Guess> _guesses = [];
   int league = 2;
-  // String clientId = '6584aceb503733cfc6418e98';
-  // String email = 'yosihofman21@gmail.com';
+
     late String clientId;
   late String email;
+    int selectedIndex = 0;
+    void updateSelectedIndex(int index) {
+      print(index);
+    setState(() {
+    league = index == 0 ? 2 : 4;
+      selectedIndex = index;
+     
+    });
+      _fetchGames(league); 
+  }
+
   Map<int, Map<String, TextEditingController>> _guessControllers = {};
   void initState() {
     super.initState();
@@ -235,47 +246,67 @@ try {
       appBar: AppBar(
         title: Text('games'),
       ),
-      body: ListView.builder(
-        itemCount: _games.length,
-        itemBuilder: (BuildContext context, int index) {
-          final game = _games[index];
-          final matchingGuesses = _guesses
-              .where((g) => g.gameOriginalId == game.fixtureId)
-              .toList();
-          final guess =
-              matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
-          // Ensure controllers exist for this game
-          if (_guessControllers[game.fixtureId] == null) {
-            _guessControllers[game.fixtureId] = {
-              'home': TextEditingController(),
-              'away': TextEditingController(),
-            };
-          }
-          return GameWidget(
-            game: game,
-            guess: guess,
-            homeController: _guessControllers[game.fixtureId]?['home'],
-            awayController: _guessControllers[game.fixtureId]?['away'],
-            onTap: (context) async {
-              print(game.fixtureId);
-              // Your onTap logic here
-              print('Game tapped!');
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      GameDetails(gameOriginalId: game.fixtureId),
-                ),
-              );
-            },
-          );
-        },
+            body: Column(
+        children: [
+          ToggleButtonsSample(
+            options: [
+              'champ',
+              'euro'
+              // AppLocalizations.of(context)!.opens,
+              // AppLocalizations.of(context)!.history
+            ],
+            onSelectionChanged: updateSelectedIndex,
+            initialSelection: 0,
+          ),
+          Expanded(
+            child: listView(),
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
+ floatingActionButton: FloatingActionButton(
         onPressed: _submitAllGuesses,
         child: Icon(Icons.send),
         tooltip: 'Submit All Guesses',
       ),
+    );
+  }
+
+  ListView listView() {
+    return ListView.builder(
+      itemCount: _games.length,
+      itemBuilder: (BuildContext context, int index) {
+        final game = _games[index];
+        final matchingGuesses = _guesses
+            .where((g) => g.gameOriginalId == game.fixtureId)
+            .toList();
+        final guess =
+            matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
+        // Ensure controllers exist for this game
+        if (_guessControllers[game.fixtureId] == null) {
+          _guessControllers[game.fixtureId] = {
+            'home': TextEditingController(),
+            'away': TextEditingController(),
+          };
+        }
+        return GameWidget(
+          game: game,
+          guess: guess,
+          homeController: _guessControllers[game.fixtureId]?['home'],
+          awayController: _guessControllers[game.fixtureId]?['away'],
+          onTap: (context) async {
+            print(game.fixtureId);
+            // Your onTap logic here
+            print('Game tapped!');
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    GameDetails(gameOriginalId: game.fixtureId),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

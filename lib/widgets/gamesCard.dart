@@ -214,7 +214,7 @@ SizedBox(height: 8.0,)
                         ),
                       ),
                     ),
-                   SizedBox(width: 100.0),
+                  //  SizedBox(width: 100.0),
                   ],
               ),
             ],
