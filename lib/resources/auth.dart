@@ -9,6 +9,11 @@ class AuthService {
 
   // Login function
   static Future<Map<String, dynamic>> login(String email, String password) async {
+
+  try {
+    print(email);
+    print(password);
+
 print(email);
 print(password);
 
@@ -29,6 +34,11 @@ print(body);
         print(' Login failed');
       // Login failed
       throw Exception('Failed to login: ${response.statusCode}');
+    }
+      } catch (e, stackTrace) {
+            print('Stack trace: $stackTrace');
+      print('Error during login: $e');
+      throw Exception('Error during login: $stackTrace');
     }
   }
   static Future<User?> getUserDetails(String email) async {
