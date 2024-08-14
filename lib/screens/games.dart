@@ -298,11 +298,14 @@ try {
             print(game.fixtureId);
             // Your onTap logic here
             print('Game tapped!');
+              if (game.status.long != "Not Started")
             await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) =>
-                    GameDetails(gameOriginalId: game.fixtureId),
+                    GameDetails(gameOriginalId: game.fixtureId,
+                  game: game,
+                ),
               ),
             );
           },
