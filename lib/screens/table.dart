@@ -111,17 +111,34 @@ class _TableState extends State<TableScreen> {
             // DataColumn(label: Text('Sum Points')),
           ],
           rows: _users
-              .map((user) => DataRow(
-                    cells: [
-                      DataCell(Text(user['displayName'] ?? 'N/A')),
-            DataCell(Text(user['thisDayPoints'][league.toString()]
-                              ?.toString() ??
-                          '0')),
-                      DataCell(Text(
-                          user['points'][league.toString()]?.toString() ??
-                              '0')),
-                    ],
-                  ))
+    .map((user) => DataRow(
+  cells: [
+    DataCell(
+      Center(
+        child: Text(
+          user['displayName'] ?? 'N/A',
+          textAlign: TextAlign.center,
+        ),
+      ),
+    ),
+    DataCell(
+      Center(
+        child: Text(
+          user['thisDayPoints'][league.toString()]?.toString() ?? '0',
+          textAlign: TextAlign.center,
+        ),
+      ),
+    ),
+    DataCell(
+      Center(
+        child: Text(
+          user['points'][league.toString()]?.toString() ?? '0',
+          textAlign: TextAlign.center,
+        ),
+      ),
+    ),
+  ],
+))
               .toList(),
         ),
       ),

@@ -167,16 +167,36 @@ List<GuessWithNames> _guessesWithNames = [];
           DataColumn(label: Text('Guess')),
           DataColumn(label: Text('Sum Points')),
         ],
-        rows: _guessesWithNames
-            .map((guessWithName) => DataRow(
-                  cells: [
-                    DataCell(Text(guessWithName.userName)),
-                    DataCell(Text(
-                        '${guessWithName.guess.homeTeamGoals} - ${guessWithName.guess.awayTeamGoals}')),
-                    DataCell(Text(guessWithName.guess.sumPoints.toString())),
-                  ],
-                ))
-            .toList(),
+   rows: _guessesWithNames
+    .map((guessWithName) => DataRow(
+          cells: [
+            DataCell(
+              Center(
+                child: Text(
+                  guessWithName.userName,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+            DataCell(
+              Center(
+                child: Text(
+                  '${guessWithName.guess.homeTeamGoals} - ${guessWithName.guess.awayTeamGoals}',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+            DataCell(
+              Center(
+                child: Text(
+                  guessWithName.guess.sumPoints.toString(),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ],
+        ))
+    .toList(),
       ),
     );
 

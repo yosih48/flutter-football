@@ -59,7 +59,7 @@ SizedBox(height: 8.0,)
                   // SizedBox(width: 8.0),
                   Expanded(
                     child: Align(
-                          alignment: Alignment.centerRight,
+                          alignment: Alignment.center,
                       child: Text(
                         game.home.name,
                         style: TextStyle(
@@ -70,7 +70,7 @@ SizedBox(height: 8.0,)
                       ),
                     ),
                   ),
-                   SizedBox(width: 6.0),
+                  //  SizedBox(width: 6.0),
                   Image.network(
                     game.home.logo,
                     width: 24.0,
@@ -132,10 +132,10 @@ SizedBox(height: 8.0,)
                     width: 24.0,
                     height: 24.0,
                   ),
-                  SizedBox(width: 6.0),
+                  // SizedBox(width: 6.0),
                   Expanded(
                     child: Align(
-                      alignment: Alignment.centerLeft,
+                      alignment: Alignment.center,
                       child: Text(
                         game.away.name,
                         //  '${game.odds.draw}',
