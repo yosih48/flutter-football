@@ -67,25 +67,46 @@ class _GroupListContentState extends State<_GroupListContent> {
       appBar: AppBar(
         title: Text('My Groups'),
       ),
-      body: _userGroups == null
+body: _userGroups == null
           ? Center(child: CircularProgressIndicator())
           : ListView.builder(
               itemCount: _userGroups!.length,
               itemBuilder: (context, index) {
                 String groupId = _userGroups!.keys.elementAt(index);
                 String groupName = _userGroups![groupId]!;
-                return ListTile(
-                  title: Text(groupName),
-                  onTap: () {
-                    print(groupName);
-                    print(groupId);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TableScreen(groupId: groupId,groupName: groupName ),
+                return Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: ListTile(
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      title: Text(
+                        groupName,
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
-                    );
-                  },
+                      tileColor: Colors.blue[50],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      onTap: () {
+                        print(groupName);
+                        print(groupId);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TableScreen(
+                                groupId: groupId, groupName: groupName),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 );
               },
             ),

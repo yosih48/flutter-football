@@ -41,7 +41,7 @@ class _TableState extends State<TableScreen> {
   }
 
   Future<void> _fetchUsers() async {
-    print('dsdsddsdsd');
+
     try {
       List<Map<String, dynamic>> allUsers =
           await UsersMethods().fetchAllUsers();
@@ -73,7 +73,7 @@ class _TableState extends State<TableScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Game Details'),
+        title: Text('Table'),
       ),
       body: Column(
         children: [
