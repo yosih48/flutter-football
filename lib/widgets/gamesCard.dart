@@ -156,7 +156,7 @@ SizedBox(height: 8.0,)
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
          
-                    //  SizedBox(width: 0,),
+                     SizedBox(width: 1,),
                   Text(
                     '${game.odds.home}',
                     style: TextStyle(
@@ -181,7 +181,7 @@ SizedBox(height: 8.0,)
                     ),
                   ),
     
-                  // SizedBox(width: 100.0),
+                   SizedBox(width: 1,),
                 ],
               ),
                 SizedBox(height: 8.0),
@@ -202,6 +202,9 @@ SizedBox(height: 8.0,)
           //           ),
           //         ),
                    if (guess != null && game.status.long != 'Not Started' )
+
+
+
                              Expanded(
                       child: Align(
                         alignment: Alignment.center,
