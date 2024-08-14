@@ -10,6 +10,8 @@ import 'package:football/responsive/web_screen_layout.dart';
 import 'package:football/screens/games.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 
 void main() =>   runApp(
@@ -28,6 +30,19 @@ class GameApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+              debugShowCheckedModeBanner: false,
+         title: 'Localizations Sample App',
+         
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: [
+          Locale('en'), // English
+          Locale('he'), // hebrew refreshUser
+        ],
       home: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
           return StreamBuilder<User?>(
