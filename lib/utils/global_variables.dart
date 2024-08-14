@@ -16,7 +16,7 @@ List<Widget> homeScreenItems = [
 
  GamesScreen(),
 //  TableScreen(),
- GroupListScreen(),
+ GroupList(),
   SignupScreen(),
 
 ];

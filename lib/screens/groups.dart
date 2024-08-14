@@ -1,25 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:football/providers/flutter%20pub%20add%20provider.dart';
+import 'package:football/resources/auth.dart';
 import 'package:football/resources/usersMethods.dart';
+import 'package:football/screens/login_screen.dart';
 import 'package:football/screens/table.dart';
+import 'package:provider/provider.dart';
 
-class GroupListScreen extends StatefulWidget {
-  // final String currentUserId;
-
-  const GroupListScreen({Key? key, 
-  // required this.currentUserId
-  }) : super(key: key);
-
+class GroupList extends StatelessWidget {
   @override
-  _GroupListScreenState createState() => _GroupListScreenState();
+  Widget build(BuildContext context) {
+    return Consumer2<AuthProvider, UserProvider>(
+      builder: (context, authProvider, userProvider, child) {
+        // Check if user is authenticated
+        if (authProvider.user == null) {
+          return LoginScreen(); // Or some other widget for unauthenticated users
+        }
+        return _GroupListContent(
+          authProvider: authProvider,
+          userProvider: userProvider,
+        );
+      },
+    );
+  }
 }
 
-class _GroupListScreenState extends State<GroupListScreen> {
+class _GroupListContent extends StatefulWidget {
+  final AuthProvider authProvider;
+  final UserProvider userProvider;
+
+  _GroupListContent({
+    required this.authProvider,
+    required this.userProvider,
+  });
+
+  @override
+  _GroupListContentState createState() => _GroupListContentState();
+}
+
+class _GroupListContentState extends State<_GroupListContent> {
   Map<String, String>? _userGroups;
-  String currentUserId = '6584aceb503733cfc6418e98';
+ late String currentUserId;
 
   @override
   void initState() {
     super.initState();
+     currentUserId = widget.authProvider.user?.id ?? 'Not logged in';
     _fetchUserGroups();
   }
 

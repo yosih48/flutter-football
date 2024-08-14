@@ -55,7 +55,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   List<Guess> _guesses = [];
   int league = 2;
 
-    late String clientId;
+  late String clientId;
   late String email;
     int selectedIndex = 0;
     void updateSelectedIndex(int index) {
