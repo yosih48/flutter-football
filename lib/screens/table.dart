@@ -31,6 +31,7 @@ class _TableState extends State<TableScreen> {
               : 39;
       selectedIndex = index;
     });
+         _fetchUsers();
   }
 
   @override
@@ -47,20 +48,21 @@ class _TableState extends State<TableScreen> {
           await UsersMethods().fetchAllUsers();
       // Now you can work with the 'users' list directly
       for (var user in allUsers) {
-        // print(user['points']['4']);
-        // print(user['displayName']);
+        print(user['points'][league.toString()]);
+        print(user['displayName']);
       }
-      //   setState(() {
-      //   _users = allUsers.where((user) {
-      //     Map<String, dynamic>? groupID = user['groupID'];
-      //     return groupID != null && groupID.containsKey(widget.groupId);
-      //   }).toList();
-      // });
+
       setState(() {
         _users = allUsers.where((user) {
           Map<String, dynamic>? groupID = user['groupID'];
           return groupID != null && groupID.containsValue(widget.groupName);
-        }).toList();
+        }).toList() 
+          ..sort((a, b) {
+            // Ensure points are treated as numbers, handling both int and double
+            num pointsA = a['points']?[league.toString()] ?? 0;
+            num pointsB = b['points']?[league.toString()] ?? 0;
+            return pointsB.compareTo(pointsA); // Sort in descending order
+          });
       });
     } catch (e, stackTrace) {
       print('Failed to fetch guesses: $e');
