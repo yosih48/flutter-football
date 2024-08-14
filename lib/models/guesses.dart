@@ -1,3 +1,5 @@
+import 'package:football/resources/guessesMethods.dart';
+
 class Guess {
   final String id;
   final String awayTeamGoals;
@@ -49,5 +51,41 @@ class Guess {
       direction: json['direction'] != null ? int.parse(json['direction'].toString()) : null,
     );
   }
+}
+
+class GuessWithNames {
+  final Guess guess;
+  final String userName;
+
+
+  GuessWithNames(this.guess, this.userName);
+}
+class CallService {
+  final Map<String, String> _userNameCache = {};
+
+
+  Future<GuessWithNames> getGuessWithNames(Guess guess) async {
+    // print("Call details: ${guess.details}");
+ 
+
+    String userName = await _getUserName(guess.userId);
+
+
+
+    return GuessWithNames(guess, userName);
+  }
+
+  Future<String> _getUserName(String userId) async {
+    if (_userNameCache.containsKey(userId)) {
+      return _userNameCache[userId]!;
+    }
+    // Fetch from Firestore
+    String name = await GuessesMethods()
+        .fetchUserName(userId);
+    _userNameCache[userId] = name;
+    return name;
+  }
+
+
 }
 

@@ -17,7 +17,7 @@ class GameDetails extends StatefulWidget {
 
 class _GameDetailsState extends State<GameDetails> {
   List<Guess> _guesses = [];
-
+List<GuessWithNames> _guessesWithNames = [];
   @override
   void initState() {
     super.initState();
@@ -28,11 +28,14 @@ class _GameDetailsState extends State<GameDetails> {
       print('gameId ${gameId}');
     try {
       final guesses = await GuessesMethods().fetchAllUsersGuesses(gameId);
-     
-      setState(() {
-        _guesses = guesses;
+        final callService = CallService();
+      final guessesWithNames = await Future.wait(
+          guesses.map((guess) => callService.getGuessWithNames(guess)));
+
+       setState(() {
+        _guessesWithNames = guessesWithNames;
       });
-    print( _guesses);
+      print(_guessesWithNames);
     } 
  catch (e, stackTrace) {
   print('Failed to fetch guesses: $e');
@@ -160,17 +163,17 @@ class _GameDetailsState extends State<GameDetails> {
       scrollDirection: Axis.horizontal,
       child: DataTable(
         columns: const [
-          DataColumn(label: Text('Email')),
+          DataColumn(label: Text('user name')),
           DataColumn(label: Text('Guess')),
           DataColumn(label: Text('Sum Points')),
         ],
-        rows: _guesses
-            .map((guess) => DataRow(
+        rows: _guessesWithNames
+            .map((guessWithName) => DataRow(
                   cells: [
-                    DataCell(Text(guess.email)),
+                    DataCell(Text(guessWithName.userName)),
                     DataCell(Text(
-                        '${guess.homeTeamGoals} - ${guess.awayTeamGoals}')),
-                    DataCell(Text(guess.sumPoints.toString())),
+                        '${guessWithName.guess.homeTeamGoals} - ${guessWithName.guess.awayTeamGoals}')),
+                    DataCell(Text(guessWithName.guess.sumPoints.toString())),
                   ],
                 ))
             .toList(),
