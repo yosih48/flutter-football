@@ -9,10 +9,10 @@ import 'package:flutter/material.dart';
 // ];
 
 class ToggleButtonsSample extends StatefulWidget {
-
-  const ToggleButtonsSample({super.key, 
-  required this.onSelectionChanged,
-     required this.options,
+  const ToggleButtonsSample({
+    super.key,
+    required this.onSelectionChanged,
+    required this.options,
     this.initialSelection = 0,
   });
 
@@ -28,7 +28,7 @@ class _ToggleButtonsSampleState extends State<ToggleButtonsSample> {
   //   true,
   //   false,
   // ];
-   late List<bool> _selectedOptions;
+  late List<bool> _selectedOptions;
 
   bool vertical = false;
   @override
@@ -39,6 +39,7 @@ class _ToggleButtonsSampleState extends State<ToggleButtonsSample> {
       (index) => index == widget.initialSelection,
     );
   }
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);

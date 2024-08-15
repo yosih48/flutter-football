@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 class GameWidget extends StatelessWidget {
   final Game game;
   final Guess? guess;
@@ -15,7 +18,7 @@ class GameWidget extends StatelessWidget {
     required this.onTap,
     this.homeController,
     this.awayController,
-  }){
+  }) {
     // Set initial values for controllers if a guess exists
     if (guess != null) {
       homeController!.text = guess!.homeTeamGoals.toString();
@@ -34,9 +37,9 @@ class GameWidget extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-Row(
-  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
                   Text(
                     game.status.long,
                     style: TextStyle(
@@ -44,22 +47,24 @@ Row(
                       fontSize: 14.0,
                     ),
                   ),
-                           Text(
-            DateFormat('dd/MM/yy').format(game.date),
-            style: TextStyle(
-              color: Color(0xff67727d).withOpacity(0.6),
-              fontSize: 14.0,
-            ),
-          ),
-  ],
-),
-SizedBox(height: 8.0,)
-,              Row(
+                  Text(
+                    DateFormat('dd/MM/yy').format(game.date),
+                    style: TextStyle(
+                      color: Color(0xff67727d).withOpacity(0.6),
+                      fontSize: 14.0,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 8.0,
+              ),
+              Row(
                 children: [
                   // SizedBox(width: 8.0),
                   Expanded(
                     child: Align(
-                          alignment: Alignment.center,
+                      alignment: Alignment.center,
                       child: Text(
                         game.home.name,
                         style: TextStyle(
@@ -76,7 +81,7 @@ SizedBox(height: 8.0,)
                     width: 24.0,
                     height: 24.0,
                   ),
-                   SizedBox(width: 8.0),
+                  SizedBox(width: 8.0),
                   if (game.status.long == "Not Started")
                     Row(
                       children: [
@@ -90,14 +95,14 @@ SizedBox(height: 8.0,)
                             decoration: InputDecoration(
                               border: OutlineInputBorder(),
                             ),
-                              inputFormatters: [
-    LengthLimitingTextInputFormatter(1), // Limit input to 1 character
-    FilteringTextInputFormatter.digitsOnly, // Allow only digits
-  ],
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(
+                                  1), // Limit input to 1 character
+                              FilteringTextInputFormatter
+                                  .digitsOnly, // Allow only digits
+                            ],
                           ),
-                          
                         ),
-                        
                         Text(' - '),
                         SizedBox(
                           width: 40,
@@ -109,11 +114,12 @@ SizedBox(height: 8.0,)
                             decoration: InputDecoration(
                               border: OutlineInputBorder(),
                             ),
-                 inputFormatters: [
-    LengthLimitingTextInputFormatter(1), // Limit input to 1 character
-    FilteringTextInputFormatter.digitsOnly, // Allow only digits
-  ],
-      
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(
+                                  1), // Limit input to 1 character
+                              FilteringTextInputFormatter
+                                  .digitsOnly, // Allow only digits
+                            ],
                           ),
                         ),
                       ],
@@ -126,7 +132,7 @@ SizedBox(height: 8.0,)
                         fontSize: 16.0,
                       ),
                     ),
-                         SizedBox(width: 8.0),
+                  SizedBox(width: 8.0),
                   Image.network(
                     game.away.logo,
                     width: 24.0,
@@ -139,7 +145,7 @@ SizedBox(height: 8.0,)
                       child: Text(
                         game.away.name,
                         //  '${game.odds.draw}',
-                      
+
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16.0,
@@ -151,63 +157,61 @@ SizedBox(height: 8.0,)
                 ],
               ),
               SizedBox(height: 8.0),
-               if (game.status.long == "Not Started")
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-         
-                     SizedBox(width: 1,),
-                  Text(
-                    '${game.odds.home}',
-                    style: TextStyle(
-                      color: Color(0xff67727d).withOpacity(0.6),
-                      fontSize: 16.0,
+              if (game.status.long == "Not Started")
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SizedBox(
+                      width: 1,
                     ),
-                  ),
-                  // SizedBox(width: 20,),
-                  Text(
-                    '${game.odds.draw}',
-                    style: TextStyle(
-                      color: Color(0xff67727d).withOpacity(0.6),
-                      fontSize: 16.0,
+                    Text(
+                      '${game.odds.home}',
+                      style: TextStyle(
+                        color: Color(0xff67727d).withOpacity(0.6),
+                        fontSize: 16.0,
+                      ),
                     ),
-                  ),
+                    // SizedBox(width: 20,),
+                    Text(
+                      '${game.odds.draw}',
+                      style: TextStyle(
+                        color: Color(0xff67727d).withOpacity(0.6),
+                        fontSize: 16.0,
+                      ),
+                    ),
                     //  SizedBox(width: 20,),
-                  Text(
-                    '${game.odds.away}',
-                    style: TextStyle(
-                      color: Color(0xff67727d).withOpacity(0.6),
-                      fontSize: 16.0,
+                    Text(
+                      '${game.odds.away}',
+                      style: TextStyle(
+                        color: Color(0xff67727d).withOpacity(0.6),
+                        fontSize: 16.0,
+                      ),
                     ),
-                  ),
-    
-                   SizedBox(width: 1,),
-                ],
-              ),
-                SizedBox(height: 8.0),
+
+                    SizedBox(
+                      width: 1,
+                    ),
+                  ],
+                ),
+              SizedBox(height: 8.0),
               Row(
-                children: [ 
-          //                  Text(
-          //   DateFormat('dd/MM/yy').format(game.date),
-          //   style: TextStyle(
-          //     color: Color(0xff67727d).withOpacity(0.6),
-          //     fontSize: 14.0,
-          //   ),
-          // ),
-          //         Text(
-          //           game.status.long,
-          //           style: TextStyle(
-          //             color: Color(0xff67727d).withOpacity(0.6),
-          //             fontSize: 14.0,
-          //           ),
-          //         ),
-                   if (guess != null && game.status.long != 'Not Started' )
-
-
-
-                             Expanded(
+                children: [
+                  if (guess != null && game.status.long != 'Not Started')
+                    Expanded(
                       child: Align(
-                        alignment: Alignment.center,
+                        alignment: Alignment
+                            .centerRight, // Align the first text to the right
+                        child: Text(AppLocalizations.of(context)!.yourguess),
+                      ),
+                    ),
+                       if (guess != null && game.status.long != 'Not Started')
+                  Container(
+                    width: 190,
+                    // color: Colors.black,
+                    child: Expanded(
+                      child: Align(
+                        alignment: Alignment
+                            .centerRight, // Align the second text to the center
                         child: Text(
                           '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
                           style: TextStyle(
@@ -217,8 +221,9 @@ SizedBox(height: 8.0,)
                         ),
                       ),
                     ),
+                  ),
                   //  SizedBox(width: 100.0),
-                  ],
+                ],
               ),
             ],
           ),
