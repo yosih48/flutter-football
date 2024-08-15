@@ -55,7 +55,7 @@ class TableScreenContentState extends State<TableScreenContent> {
           ? 2
           : index == 1
               ? 4
-              : 39;
+              : 140;
       selectedIndex = index;
     });
   _fetchUsersForGroup(_selectedGroupName);
@@ -118,7 +118,7 @@ class TableScreenContentState extends State<TableScreenContent> {
             options: [
               'champ',
               'euro',
-              'english'
+              'spain'
          
             ],
             onSelectionChanged: updateSelectedIndex,

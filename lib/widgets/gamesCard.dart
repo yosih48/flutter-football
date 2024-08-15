@@ -43,7 +43,9 @@ class GameWidget extends StatelessWidget {
                   Text(
                     game.status.long,
                     style: TextStyle(
-                      color: Color(0xff67727d).withOpacity(0.6),
+              color: (game.status.long == "First Half" || game.status.long == "Second Half")
+        ? Colors.red
+        : Color(0xff67727d).withOpacity(0.6),
                       fontSize: 14.0,
                     ),
                   ),
@@ -194,37 +196,28 @@ class GameWidget extends StatelessWidget {
                   ],
                 ),
               SizedBox(height: 8.0),
-              Row(
-                children: [
-                  if (guess != null && game.status.long != 'Not Started')
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment
-                            .centerRight, // Align the first text to the right
-                        child: Text(AppLocalizations.of(context)!.yourguess),
-                      ),
-                    ),
-                       if (guess != null && game.status.long != 'Not Started')
-                  Container(
-                    width: 190,
-                    // color: Colors.black,
-                    child: Expanded(
-                      child: Align(
-                        alignment: Alignment
-                            .centerRight, // Align the second text to the center
-                        child: Text(
-                          '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
-                          style: TextStyle(
-                            color: Color(0xff67727d).withOpacity(0.6),
-                            fontSize: 14.0,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  //  SizedBox(width: 100.0),
-                ],
-              ),
+      Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+        if(guess != null && game.status.long != 'Not Started')
+    Expanded(
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: 
+          Text(AppLocalizations.of(context)!.yourguess),
+      ),
+    ),
+    if (guess != null && game.status.long != 'Not Started')
+      Text(
+        '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
+        style: TextStyle(
+          color: Color(0xff67727d).withOpacity(0.6),
+          fontSize: 14.0,
+        ),
+      ),
+    SizedBox(width: 170),
+  ],
+),
             ],
           ),
         ),
