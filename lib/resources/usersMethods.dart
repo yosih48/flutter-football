@@ -50,5 +50,31 @@ Future<Map<String, dynamic>> fetchUserById(String userId) async {
     rethrow;
   }
 }
+  Future<void> _createNewGroup(String groupName, currentUserId) async {
+    final url = Uri.parse('${const String.fromEnvironment('VUE_APP_HOST')}groups/add');
+    try {
+      final response = await http.post(
+        url,
+        body: jsonEncode({
+          'name': groupName,
+          'createdBy': currentUserId,
+          'code': DateTime.now().millisecondsSinceEpoch,
+        }),
+        headers: {
+          'Content-type': 'application/json; charset=UTF-8',
+          // 'Authorization': 'Bearer ${userToken}', // Uncomment if needed
+        },
+      );
 
+      if (response.statusCode == 200) {
+        // Group created successfully
+        // _fetchUserGroups(); // Refresh the groups list
+      } else {
+        throw Exception('Failed to create group');
+      }
+    } catch (e) {
+      print('Error creating group: $e');
+      // Show error message to user
+    }
+  }
 }
