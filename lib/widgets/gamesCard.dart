@@ -197,27 +197,47 @@ class GameWidget extends StatelessWidget {
                 ),
               SizedBox(height: 8.0),
       Row(
-  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  children: [
+      
+        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
         if(guess != null && game.status.long != 'Not Started')
-    Expanded(
+          Expanded(
       child: Align(
         alignment: Alignment.centerRight,
         child: 
           Text(AppLocalizations.of(context)!.yourguess),
       ),
-    ),
-    if (guess != null && game.status.long != 'Not Started')
-      Text(
-        '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
-        style: TextStyle(
-          color: Color(0xff67727d).withOpacity(0.6),
-          fontSize: 14.0,
+          ),
+          if (guess != null && game.status.long != 'Not Started')
+       Expanded(
+        child: Align(
+               alignment: Alignment.center,
+          child: Text(
+            '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
+            style: TextStyle(
+              color: Color(0xff67727d).withOpacity(0.6),
+              fontSize: 14.0,
+            ),
+          ),
         ),
       ),
-    SizedBox(width: 170),
-  ],
-),
+        if (guess != null && game.status.long != 'Not Started')
+       Expanded(
+        child: Align(
+              alignment: Alignment.centerLeft,
+          // child: 
+          // Text(
+          //   '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
+          //   style: TextStyle(
+          //     color: Color(0xff67727d).withOpacity(0.6),
+          //     fontSize: 14.0,
+          //   ),
+          // ),
+        ),
+      ),
+          // SizedBox(width: 170),
+        ],
+      ),
             ],
           ),
         ),
