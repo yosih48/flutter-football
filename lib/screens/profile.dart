@@ -137,13 +137,13 @@ void _showCreateGroupDialog() {
         ),
         child: Column(
           children: [
-            SizedBox(height: 100), // Adjust based on your AppBar height
+                SizedBox(height: kToolbarHeight + 100), // This accommodates the AppBar height
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('My Groups', style: TextStyle(color: Colors.white,  fontWeight: FontWeight.bold)),
+                  Text('My Groups', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   TextButton(
                     onPressed: _showCreateGroupDialog,
                     child: Text('Create New Group', style: TextStyle(color: Colors.white)),
@@ -151,10 +151,12 @@ void _showCreateGroupDialog() {
                 ],
               ),
             ),
+              //  SizedBox(height: 10), 
             Expanded(
               child: _userGroups.isEmpty
                   ? Center(child: CircularProgressIndicator())
                   : ListView.builder(
+                       padding: EdgeInsets.zero, 
                       itemCount: _userGroups.length,
                       itemBuilder: (context, index) {
                         String groupId = _userGroups.keys.elementAt(index);
@@ -167,7 +169,7 @@ void _showCreateGroupDialog() {
                             child: Text(groupName[0], style: TextStyle(color: Colors.white)),
                             radius: 25,
                           ),
-                   
+                                           
                           title: Text(
                             groupName,
                             style: TextStyle(color: Colors.white, fontSize: 18),
