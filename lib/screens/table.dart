@@ -1,14 +1,19 @@
+import 'dart:convert';
+import 'dart:math';
+import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
 import 'package:football/models/users.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/resources/auth.dart';
+import 'package:football/resources/groupsMethods.dart';
 import 'package:football/resources/guessesMethods.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/widgets/toggleButton.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 
 class TableScreen extends StatelessWidget {
   @override
@@ -27,6 +32,7 @@ class TableScreen extends StatelessWidget {
     );
   }
 }
+
 class TableScreenContent extends StatefulWidget {
   final AuthProvider authProvider;
   final UserProvider userProvider;
@@ -47,7 +53,8 @@ class TableScreenContentState extends State<TableScreenContent> {
   Map<String, String> _userGroups = {};
   int league = 2;
   late String currentUserId;
-
+   Map<String, dynamic> user = {};
+   TextEditingController _inviteCodeController = TextEditingController();
   void updateSelectedIndex(int index) {
     print(index);
     setState(() {
@@ -58,23 +65,148 @@ class TableScreenContentState extends State<TableScreenContent> {
               : 140;
       selectedIndex = index;
     });
-  _fetchUsersForGroup(_selectedGroupName);
-   
+    _fetchUsersForGroup(_selectedGroupName);
   }
+    void _showInviteDialog(String inviteCode) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Invite Friend'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Invite code copied to clipboard:'),
+              SizedBox(height: 10),
+              Text(inviteCode, style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 20),
+              Text(
+                  'Share this code with your friend to invite them to the group.'),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _inviteFriend(String groupName) async {
+    print(groupName);
+    // try {
+    //   final response = await http.post(
+    //     Uri.parse('https://leagues.onrender.com/groups/createInvite'),
+    //     body: json.encode({'groupName': groupName}),
+    //     headers: {'Content-Type': 'application/json'},
+    //   );
+
+    //   if (response.statusCode == 200) {
+    //   } else {
+    //     print('Failed to create invite code');
+    //   }
+    // } catch (e) {
+    //   print('Error creating invite: $e');
+    // }
+        // final inviteCode = json.decode(response.body)['inviteCode'];
+        FlutterClipboard.copy(groupName)
+        .then((value) => print('copied'));
+              _showInviteDialog(groupName);
+    //  await FlutterClipboardManager.copyToClipBoard(groupName);
+  }
+   void _showJoinGroupDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Join Group'),
+          content: TextField(
+            controller: _inviteCodeController,
+            decoration: InputDecoration(hintText: "Enter invite code"),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              child: Text('Join'),
+              onPressed: ()async {
+                if (_inviteCodeController.text.isNotEmpty) {
+              await  GroupsMethods().addGroupToUser(_inviteCodeController.text, user, currentUserId);
+              _fetchUserGroups();
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+  //   Future<void> _addGroupToUser(String groupName) async {
+  //   final existingGroupKeys =
+  //       user['groupID']?.keys?.map((key) => int.parse(key))?.toList() ?? [];
+  //   final nextKey = existingGroupKeys.isEmpty
+  //       ? 1
+  //       : (existingGroupKeys.reduce(max) + 1).toString();
+  //   print('existingGroupKeys: ${existingGroupKeys}');
+  //   final url = Uri.parse('https://leagues.onrender.com/users/');
+  //   try {
+  //     final response = await http.put(
+  //       url,
+  //       body: jsonEncode({
+  //         '_id': currentUserId,
+  //         'groups': user['groupID'],
+  //         'email': user['email'],
+  //         '\$set': {
+  //           'groupID.$nextKey': groupName,
+  //         },
+  //       }),
+  //       headers: {
+  //         'Content-type': 'application/json; charset=UTF-8',
+  //       },
+  //     );
+
+  //     if (response.statusCode == 200) {
+  //       final data = json.decode(response.body);
+  //       if (data['message'] == 'Group name already exists') {
+  //         print('Group name already exists');
+  //         // Show snackbar or alert
+  //       } else {
+  //         print('User updated successfully');
+  //         // Show success snackbar
+  //         _fetchUserGroups(); // Refresh user data
+  //       }
+  //     } else {
+  //       print('User update failed with status: ${response.statusCode}');
+  //       // Show error snackbar
+  //     }
+  //   } catch (e) {
+  //     print('Error updating user: $e');
+  //     // Show error snackbar
+  //   }
+  // }
 
   @override
   void initState() {
     super.initState();
     currentUserId = widget.authProvider.user?.id ?? 'Not logged in';
     _fetchUserGroups();
-   
   }
 
   Future<void> _fetchUserGroups() async {
     try {
-   Map<String, dynamic> userData =
+      Map<String, dynamic> userData =
           await UsersMethods().fetchUserById(currentUserId);
-       setState(() {
+      setState(() {
         _userGroups = Map<String, String>.from(userData['groupID'] ?? {});
         if (_userGroups.isNotEmpty) {
           _selectedGroupName = _userGroups.values.first;
@@ -111,16 +243,17 @@ class TableScreenContentState extends State<TableScreenContent> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Table'),
+               actions: [
+          IconButton(
+            icon: Icon(Icons.group_add),
+            onPressed: _showJoinGroupDialog,
+          ),
+        ],
       ),
       body: Column(
         children: [
           ToggleButtonsSample(
-            options: [
-              'champ',
-              'euro',
-              'spain'
-         
-            ],
+            options: ['champ', 'euro', 'spain'],
             onSelectionChanged: updateSelectedIndex,
             initialSelection: 0,
           ),
@@ -164,7 +297,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                   DataColumn(label: Text('sum points')),
                   // DataColumn(label: Text('Sum Points')),
                 ],
-    rows: _users
+                rows: _users
                     .map((user) => DataRow(
                           cells: [
                             DataCell(
@@ -201,6 +334,10 @@ class TableScreenContentState extends State<TableScreenContent> {
               ),
             ),
           ),
+        ),
+        IconButton(
+          icon: Icon(Icons.share),
+          onPressed: () => _inviteFriend(_selectedGroupName),
         ),
       ],
     );
