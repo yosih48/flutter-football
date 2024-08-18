@@ -49,6 +49,14 @@ class GameWidget extends StatelessWidget {
                       fontSize: 14.0,
                     ),
                   ),
+                  if(game.status.long == 'Not Started')
+                    Text(
+    DateFormat('HH:mm').format(game.date.toLocal()), // Format the time
+    style: TextStyle(
+      color: Color(0xff67727d).withOpacity(0.9),
+      fontSize: 14.0,
+    ),
+  ),
                   Text(
                     DateFormat('dd/MM/yy').format(game.date),
                     style: TextStyle(
