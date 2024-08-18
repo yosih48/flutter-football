@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/screens/login_screen.dart';
@@ -6,7 +7,6 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:provider/provider.dart';
-
 
 class ProfileScreen extends StatelessWidget {
   @override
@@ -25,8 +25,9 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 }
+
 class ProfileScreenContent extends StatefulWidget {
-    final AuthProvider authProvider;
+  final AuthProvider authProvider;
   final UserProvider userProvider;
 
   ProfileScreenContent({
@@ -38,29 +39,30 @@ class ProfileScreenContent extends StatefulWidget {
 }
 
 class _ProfileScreenContentState extends State<ProfileScreenContent> {
-
-    Map<String, String> _userGroups = {};
-    late String currentUserId;
-     TextEditingController _groupNameController = TextEditingController();
+  Map<String, String> _userGroups = {};
+  late String currentUserId;
+  TextEditingController _groupNameController = TextEditingController();
+  Map<String, dynamic> user = {};
   @override
   void initState() {
     super.initState();
-      currentUserId = widget.authProvider.user?.id ?? 'Not logged in';
+    currentUserId = widget.authProvider.user?.id ?? 'Not logged in';
     _fetchUserGroups();
   }
-    Future<void> _fetchUserGroups() async {
+
+  Future<void> _fetchUserGroups() async {
     try {
-   Map<String, dynamic> userData =
+      Map<String, dynamic> userData =
           await UsersMethods().fetchUserById(currentUserId);
-       setState(() {
+      setState(() {
         _userGroups = Map<String, String>.from(userData['groupID'] ?? {});
- 
       });
     } catch (e) {
       print('Failed to fetch user groups: $e');
     }
   }
-    Future<void> _createNewGroup(String groupName) async {
+
+  Future<void> _createNewGroup(String groupName) async {
     final url = Uri.parse('https://leagues.onrender.com/groups/add');
     try {
       final response = await http.post(
@@ -78,7 +80,8 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
 
       if (response.statusCode == 200) {
         // Group created successfully
-        _fetchUserGroups(); // Refresh the groups list
+        // _fetchUserGroups(); // Refresh the groups list
+           await _addGroupToUser(groupName);
       } else {
         throw Exception('Failed to create group');
       }
@@ -87,7 +90,52 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
       // Show error message to user
     }
   }
-void _showCreateGroupDialog() {
+
+  Future<void> _addGroupToUser(String groupName) async {
+    final existingGroupKeys =
+        user['groupID']?.keys?.map((key) => int.parse(key))?.toList() ?? [];
+    final nextKey = existingGroupKeys.isEmpty
+        ? 1
+        : (existingGroupKeys.reduce(max) + 1).toString();
+    print('existingGroupKeys: ${existingGroupKeys}');
+    final url = Uri.parse('https://leagues.onrender.com/users/');
+    try {
+      final response = await http.put(
+        url,
+        body: jsonEncode({
+          '_id': currentUserId,
+          'groups': user['groupID'],
+          'email': user['email'],
+          '\$set': {
+            'groupID.$nextKey': groupName,
+          },
+        }),
+        headers: {
+          'Content-type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['message'] == 'Group name already exists') {
+          print('Group name already exists');
+          // Show snackbar or alert
+        } else {
+          print('User updated successfully');
+          // Show success snackbar
+          _fetchUserGroups(); // Refresh user data
+        }
+      } else {
+        print('User update failed with status: ${response.statusCode}');
+        // Show error snackbar
+      }
+    } catch (e) {
+      print('Error updating user: $e');
+      // Show error snackbar
+    }
+  }
+
+  void _showCreateGroupDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -118,6 +166,7 @@ void _showCreateGroupDialog() {
       },
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -137,46 +186,50 @@ void _showCreateGroupDialog() {
         ),
         child: Column(
           children: [
-                SizedBox(height: kToolbarHeight + 100), // This accommodates the AppBar height
+            SizedBox(
+                height: kToolbarHeight +
+                    100), // This accommodates the AppBar height
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('My Groups', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  Text('My Groups',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
                   TextButton(
                     onPressed: _showCreateGroupDialog,
-                    child: Text('Create New Group', style: TextStyle(color: Colors.white)),
+                    child: Text('Create New Group',
+                        style: TextStyle(color: Colors.white)),
                   ),
                 ],
               ),
             ),
-              //  SizedBox(height: 10), 
+            //  SizedBox(height: 10),
             Expanded(
               child: _userGroups.isEmpty
                   ? Center(child: CircularProgressIndicator())
                   : ListView.builder(
-                       padding: EdgeInsets.zero, 
+                      padding: EdgeInsets.zero,
                       itemCount: _userGroups.length,
                       itemBuilder: (context, index) {
                         String groupId = _userGroups.keys.elementAt(index);
                         String groupName = _userGroups.values.elementAt(index);
                         return ListTile(
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          leading: 
-                                  CircleAvatar(
+                          contentPadding:
+                              EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          leading: CircleAvatar(
                             backgroundColor: Colors.grey,
-                            child: Text(groupName[0], style: TextStyle(color: Colors.white)),
+                            child: Text(groupName[0],
+                                style: TextStyle(color: Colors.white)),
                             radius: 25,
                           ),
-                                           
                           title: Text(
                             groupName,
                             style: TextStyle(color: Colors.white, fontSize: 18),
                             textAlign: TextAlign.right,
                           ),
-                          trailing: 
-                          IconButton(
+                          trailing: IconButton(
                             icon: Icon(Icons.exit_to_app, color: Colors.white),
                             onPressed: () {
                               // Handle exit action
