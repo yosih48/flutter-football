@@ -198,11 +198,19 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                   Text('My Groups',
                       style: TextStyle(
                           color: Colors.white, fontWeight: FontWeight.bold)),
-                  TextButton(
-                    onPressed: _showCreateGroupDialog,
-                    child: Text('Create New Group',
-                        style: TextStyle(color: Colors.white)),
-                  ),
+          
+TextButton.icon(
+  icon: Icon(Icons.add),
+  label: Text(
+    'צור קבוצה',
+    style: TextStyle(color: Colors.white), // Change the color here
+  ),
+  onPressed: _showCreateGroupDialog,
+    style: TextButton.styleFrom(
+    foregroundColor: Colors.white, // This changes the color of the icon and text
+  ),
+
+)
                 ],
               ),
             ),
