@@ -16,6 +16,9 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 
 class TableScreen extends StatelessWidget {
+  final String? selectedGroupName ;
+
+  TableScreen({this.selectedGroupName });
   @override
   Widget build(BuildContext context) {
     return Consumer2<AuthProvider, UserProvider>(
@@ -27,6 +30,7 @@ class TableScreen extends StatelessWidget {
         return TableScreenContent(
           authProvider: authProvider,
           userProvider: userProvider,
+             selectedGroupName : selectedGroupName ,
         );
       },
     );
@@ -36,10 +40,13 @@ class TableScreen extends StatelessWidget {
 class TableScreenContent extends StatefulWidget {
   final AuthProvider authProvider;
   final UserProvider userProvider;
+   final String? selectedGroupName;
+ 
 
   TableScreenContent({
     required this.authProvider,
     required this.userProvider,
+     this.selectedGroupName , 
   });
 
   @override
@@ -49,11 +56,11 @@ class TableScreenContent extends StatefulWidget {
 class TableScreenContentState extends State<TableScreenContent> {
   List<Map<String, dynamic>> _users = [];
   int selectedIndex = 0;
-  String _selectedGroupName = '';
+  late String selectedGroupName ;
   Map<String, String> _userGroups = {};
-  int league = 2;
+ int league = 2;
   late String currentUserId;
-   Map<String, dynamic> user = {};
+  //  Map<String, dynamic> user = {};
    TextEditingController _inviteCodeController = TextEditingController();
   void updateSelectedIndex(int index) {
     print(index);
@@ -65,7 +72,7 @@ class TableScreenContentState extends State<TableScreenContent> {
               : 140;
       selectedIndex = index;
     });
-    _fetchUsersForGroup(_selectedGroupName);
+    _fetchUsersForGroup(selectedGroupName);
   }
     void _showInviteDialog(String inviteCode) {
     showDialog(
@@ -98,26 +105,31 @@ class TableScreenContentState extends State<TableScreenContent> {
   }
 
   Future<void> _inviteFriend(String groupName) async {
-    print(groupName);
-    // try {
-    //   final response = await http.post(
-    //     Uri.parse('https://leagues.onrender.com/groups/createInvite'),
-    //     body: json.encode({'groupName': groupName}),
-    //     headers: {'Content-Type': 'application/json'},
-    //   );
+   try {
+    // Fetch the list of groups
+    final groups = await GroupsMethods().fetchGroups();
 
-    //   if (response.statusCode == 200) {
-    //   } else {
-    //     print('Failed to create invite code');
-    //   }
-    // } catch (e) {
-    //   print('Error creating invite: $e');
-    // }
-        // final inviteCode = json.decode(response.body)['inviteCode'];
-        FlutterClipboard.copy(groupName)
-        .then((value) => print('copied'));
-              _showInviteDialog(groupName);
-    //  await FlutterClipboardManager.copyToClipBoard(groupName);
+    // Find the group with the specified name
+    final group = groups.firstWhere(
+      (g) => g['name'] == groupName,
+    
+    );
+
+    if (group != null) {
+      // Copy the group's code to the clipboard
+      final groupCode = group['_id'];
+      await FlutterClipboard.copy(groupCode);
+      print('Group code copied: $groupCode');
+
+      // Show the invite dialog
+      _showInviteDialog(groupCode);
+    } else {
+      print('Group not found');
+    }
+  } catch (e) {
+    print('Error inviting friend: $e');
+  }
+ 
   }
    void _showJoinGroupDialog() {
     showDialog(
@@ -140,7 +152,7 @@ class TableScreenContentState extends State<TableScreenContent> {
               child: Text('Join'),
               onPressed: ()async {
                 if (_inviteCodeController.text.isNotEmpty) {
-              await  GroupsMethods().addGroupToUser(_inviteCodeController.text, user, currentUserId);
+              await  GroupsMethods().addGroupToUser(_inviteCodeController.text,  currentUserId,context);
               _fetchUserGroups();
                   Navigator.of(context).pop();
                 }
@@ -151,67 +163,28 @@ class TableScreenContentState extends State<TableScreenContent> {
       },
     );
   }
-  //   Future<void> _addGroupToUser(String groupName) async {
-  //   final existingGroupKeys =
-  //       user['groupID']?.keys?.map((key) => int.parse(key))?.toList() ?? [];
-  //   final nextKey = existingGroupKeys.isEmpty
-  //       ? 1
-  //       : (existingGroupKeys.reduce(max) + 1).toString();
-  //   print('existingGroupKeys: ${existingGroupKeys}');
-  //   final url = Uri.parse('https://leagues.onrender.com/users/');
-  //   try {
-  //     final response = await http.put(
-  //       url,
-  //       body: jsonEncode({
-  //         '_id': currentUserId,
-  //         'groups': user['groupID'],
-  //         'email': user['email'],
-  //         '\$set': {
-  //           'groupID.$nextKey': groupName,
-  //         },
-  //       }),
-  //       headers: {
-  //         'Content-type': 'application/json; charset=UTF-8',
-  //       },
-  //     );
 
-  //     if (response.statusCode == 200) {
-  //       final data = json.decode(response.body);
-  //       if (data['message'] == 'Group name already exists') {
-  //         print('Group name already exists');
-  //         // Show snackbar or alert
-  //       } else {
-  //         print('User updated successfully');
-  //         // Show success snackbar
-  //         _fetchUserGroups(); // Refresh user data
-  //       }
-  //     } else {
-  //       print('User update failed with status: ${response.statusCode}');
-  //       // Show error snackbar
-  //     }
-  //   } catch (e) {
-  //     print('Error updating user: $e');
-  //     // Show error snackbar
-  //   }
-  // }
 
   @override
   void initState() {
     super.initState();
     currentUserId = widget.authProvider.user?.id ?? 'Not logged in';
+    selectedGroupName = widget.selectedGroupName ??'';
     _fetchUserGroups();
   }
 
   Future<void> _fetchUserGroups() async {
+
     try {
       Map<String, dynamic> userData =
           await UsersMethods().fetchUserById(currentUserId);
       setState(() {
         _userGroups = Map<String, String>.from(userData['groupID'] ?? {});
         if (_userGroups.isNotEmpty) {
-          _selectedGroupName = _userGroups.values.first;
-          _fetchUsersForGroup(_selectedGroupName);
+          selectedGroupName = widget.selectedGroupName ??_userGroups.values.first;
+          _fetchUsersForGroup(selectedGroupName);
         }
+  
       });
     } catch (e) {
       print('Failed to fetch user groups: $e');
@@ -232,6 +205,7 @@ class TableScreenContentState extends State<TableScreenContent> {
             num pointsB = b['points']?[league.toString()] ?? 0;
             return pointsB.compareTo(pointsA); // Sort in descending order
           });
+                //  print('users: ${_users}');
       });
     } catch (e) {
       print('Failed to fetch users for group: $e');
@@ -244,10 +218,12 @@ class TableScreenContentState extends State<TableScreenContent> {
       appBar: AppBar(
         title: Text('Table'),
                actions: [
-          IconButton(
-            icon: Icon(Icons.group_add),
-            onPressed: _showJoinGroupDialog,
-          ),
+    
+            TextButton.icon(
+  icon: Icon(Icons.group_add),
+  label: Text('הצטרף לקבוצה'),
+  onPressed: _showJoinGroupDialog,
+),
         ],
       ),
       body: Column(
@@ -269,7 +245,7 @@ class TableScreenContentState extends State<TableScreenContent> {
     return Column(
       children: [
         DropdownButton<String>(
-          value: _selectedGroupName,
+          value: selectedGroupName,
           items: _userGroups.entries.map((entry) {
             return DropdownMenuItem<String>(
               value: entry.value,
@@ -279,7 +255,7 @@ class TableScreenContentState extends State<TableScreenContent> {
           onChanged: (String? newValue) {
             if (newValue != null) {
               setState(() {
-                _selectedGroupName = newValue;
+                selectedGroupName = newValue;
               });
               _fetchUsersForGroup(newValue);
             }
@@ -335,10 +311,12 @@ class TableScreenContentState extends State<TableScreenContent> {
             ),
           ),
         ),
-        IconButton(
-          icon: Icon(Icons.share),
-          onPressed: () => _inviteFriend(_selectedGroupName),
-        ),
+  TextButton.icon(
+  icon: Icon(Icons.add),
+  label: Text('הזמן חברים'),
+  onPressed: () => _inviteFriend(selectedGroupName),
+),
+
       ],
     );
   }

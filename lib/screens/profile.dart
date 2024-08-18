@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/screens/login_screen.dart';
+import 'package:football/screens/table.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:football/resources/usersMethods.dart';
@@ -215,26 +216,41 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                       itemBuilder: (context, index) {
                         String groupId = _userGroups.keys.elementAt(index);
                         String groupName = _userGroups.values.elementAt(index);
-                        return ListTile(
-                          contentPadding:
-                              EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          leading: CircleAvatar(
-                            backgroundColor: Colors.grey,
-                            child: Text(groupName[0],
-                                style: TextStyle(color: Colors.white)),
-                            radius: 25,
-                          ),
-                          title: Text(
-                            groupName,
-                            style: TextStyle(color: Colors.white, fontSize: 18),
-                            textAlign: TextAlign.right,
-                          ),
-                          trailing: IconButton(
-                            icon: Icon(Icons.exit_to_app, color: Colors.white),
-                            onPressed: () {
-                              // Handle exit action
-                              print('Exiting group: $groupName');
-                            },
+                        return InkWell(
+                        onTap: () {
+                          
+Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+        TableScreen(selectedGroupName :groupName)
+              ),
+            );
+
+
+                          
+                        },
+                          child: ListTile(
+                            contentPadding:
+                                EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.grey,
+                              child: Text(groupName[0],
+                                  style: TextStyle(color: Colors.white)),
+                              radius: 25,
+                            ),
+                            title: Text(
+                              groupName,
+                              style: TextStyle(color: Colors.white, fontSize: 18),
+                              textAlign: TextAlign.right,
+                            ),
+                            trailing: IconButton(
+                              icon: Icon(Icons.exit_to_app, color: Colors.white),
+                              onPressed: () {
+                                // Handle exit action
+                                print('Exiting group: $groupName');
+                              },
+                            ),
                           ),
                         );
                       },
