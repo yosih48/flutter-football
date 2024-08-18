@@ -43,7 +43,7 @@ class GameWidget extends StatelessWidget {
                   Text(
                     game.status.long,
                     style: TextStyle(
-              color: (game.status.long == "First Half" || game.status.long == "Second Half")
+              color: (game.status.long == "First Half" || game.status.long == "Second Half"|| game.status.long == "Halftime")
         ? Colors.red
         : Color(0xff67727d).withOpacity(0.6),
                       fontSize: 14.0,

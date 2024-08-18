@@ -14,6 +14,7 @@ import 'package:football/screens/login_screen.dart';
 import 'package:football/widgets/gamesCard.dart';
 import 'package:football/widgets/toggleButton.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../models/users.dart';
@@ -54,7 +55,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   List<Game> _games = [];
   List<Guess> _guesses = [];
   int league = 2;
-
+bool _showOnlyTodayGames = false;
   late String clientId;
   late String email;
     int selectedIndex = 0;
@@ -87,7 +88,10 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     }
     super.dispose();
   }
-
+bool isGameToday(String formattedDate) {
+  final today = DateFormat('dd/MM/yy').format(DateTime.now());
+  return formattedDate == today;
+}
   Future<void> _fetchGames(int leagueId) async {
     print('leagueId ${leagueId}');
 
@@ -245,6 +249,21 @@ try {
     return Scaffold(
       appBar: AppBar(
         title: Text('games'),
+              actions: [
+        Row(
+          children: [
+            Text('Today only'),
+            Switch(
+              value: _showOnlyTodayGames,
+              onChanged: (value) {
+                setState(() {
+                  _showOnlyTodayGames = value;
+                });
+              },
+            ),
+          ],
+        ),
+      ],
       ),
             body: Column(
         children: [
@@ -274,10 +293,13 @@ try {
   }
 
   ListView listView() {
+      final filteredGames = _showOnlyTodayGames
+      ? _games.where((game) => isGameToday( DateFormat('dd/MM/yy').format(game.date))).toList()
+      : _games;
     return ListView.builder(
-      itemCount: _games.length,
+      itemCount: filteredGames.length,
       itemBuilder: (BuildContext context, int index) {
-        final game = _games[index];
+        final game = filteredGames[index];
         final matchingGuesses = _guesses
             .where((g) => g.gameOriginalId == game.fixtureId)
             .toList();
