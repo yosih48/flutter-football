@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:football/models/users.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthService {
   static const _baseUrl = 'https://leagues.onrender.com/users';
@@ -41,11 +42,11 @@ print(body);
       throw Exception('Error during login: $stackTrace');
     }
   }
-  static Future<User?> getUserDetails(String email) async {
+  static Future<User?> getUserDetails(String  token) async {
     final url = Uri.parse('$_baseUrl/user');
     final response = await http.get(
       url,
-      // headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
     );
 
     if (response.statusCode == 200) {
@@ -100,7 +101,7 @@ class AuthProvider with ChangeNotifier {
     User? get user => _currentUser;
   bool _isLoading = false;
   final StreamController<User?> _authStateController = StreamController<User?>.broadcast();
-
+final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   Future<void> login(String email, String password) async {
 
     try {
@@ -111,6 +112,7 @@ class AuthProvider with ChangeNotifier {
       print(userData);
       _currentUser = User.fromJson(userData); // Assuming you have a User.fromJson constructor
         print(_currentUser);
+          await _secureStorage.write(key: 'auth_token', value: _currentUser!.newToken);
       _authStateController.add(_currentUser);
       
       print('Login successful: ${_currentUser?.email}');
@@ -142,25 +144,38 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
     }
   }
-  AuthProvider() {
-    // Initialize the stream with the current user state
-    _authStateController.add(_currentUser);
+  // AuthProvider() {
+  //   // Initialize the stream with the current user state
+  //   _authStateController.add(_currentUser);
+  // }
+    AuthProvider() {
+    _initializeAuthState();
+  }
+    Future<void> _initializeAuthState() async {
+    final String? token = await _secureStorage.read(key: 'auth_token');
+    if (token != null) {
+      // If a token exists, try to get the user details
+      await refreshUser(token);
+    } else {
+      _authStateController.add(null);
+    }
   }
 
   bool get isLoading => _isLoading;
 
   User? get currentUser => _currentUser;
 
-  Future<void> refreshUser(String email) async {
+  Future<void> refreshUser(String  token) async {
     try {
       _isLoading = true;
       notifyListeners();
 
-      _currentUser = await AuthService.getUserDetails(email);
+      _currentUser = await AuthService.getUserDetails( token);
       // Emit the new user state
       _authStateController.add(_currentUser);
     } catch (e) {
       print("Error refreshing user: $e");
+        await signOut();
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -179,18 +194,12 @@ class AuthProvider with ChangeNotifier {
     super.dispose();
   }
 
-  // Add a method to handle sign out
-  // Future<void> signOut() async {
-  //   // Implement your sign out logic here
-  //   _currentUser = null;
-  //   _authStateController.add(null);
-  //   notifyListeners();
-  // }
+
     Future<void> signOut() async {
     try {
       _isLoading = true;
       notifyListeners();
-
+  await _secureStorage.delete(key: 'auth_token');
       // Clear the current user
       _currentUser = null;
 

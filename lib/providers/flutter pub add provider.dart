@@ -17,13 +17,14 @@ class UserProvider extends ChangeNotifier {
   String get currentUserUsername => _currentUser?.name ?? 'Not logged in';
 
   String get currentUserUid => _currentUser?.id ?? 'Not logged in';
-  String get currentUserEmail => _currentUser?.email ?? 'Not logged in';
+  String get currentUserEmail => _currentUser?.email ?? 'Not logged in'; 
+  String get currentUserToken => _currentUser?.newToken ?? 'Not logged in'; 
 
   final AuthService _authService = AuthService();
 
   Future<void> refreshUser(String email) async {
     try {
-      User? user = await AuthService.getUserDetails(email);
+      User? user = await AuthService.getUserDetails(currentUserToken);
       if (user != null) {
         _currentUser = user;
         print("Employee refreshed: ${user.name}");

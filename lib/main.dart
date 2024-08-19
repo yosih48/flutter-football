@@ -12,18 +12,26 @@ import 'package:football/screens/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+void main() async {
+  // Ensure that plugin services are initialized
+  WidgetsFlutterBinding.ensureInitialized();
 
-void main() =>   runApp(
+  // Initialize flutter_secure_storage
+  final storage = FlutterSecureStorage();
+
+  // You can now use the storage in your AuthProvider if needed
+  runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
       ],
-
       child: GameApp(),
     ),
   );
+}
 
 class GameApp extends StatelessWidget {
    const GameApp({super.key});
