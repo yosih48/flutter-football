@@ -264,6 +264,21 @@ Navigator.push(
                       },
                     ),
             ),
+                      ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () async {
+              final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    await authProvider.signOut();
+              if (context.mounted) {
+       
+              }
+            },
+            child: const Text('Signout'),
+          ),
           ],
         ),
       ),

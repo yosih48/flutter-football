@@ -100,6 +100,7 @@ class AuthProvider with ChangeNotifier {
     User? get user => _currentUser;
   bool _isLoading = false;
   final StreamController<User?> _authStateController = StreamController<User?>.broadcast();
+
   Future<void> login(String email, String password) async {
 
     try {
@@ -179,10 +180,29 @@ class AuthProvider with ChangeNotifier {
   }
 
   // Add a method to handle sign out
-  Future<void> signOut() async {
-    // Implement your sign out logic here
-    _currentUser = null;
-    _authStateController.add(null);
-    notifyListeners();
+  // Future<void> signOut() async {
+  //   // Implement your sign out logic here
+  //   _currentUser = null;
+  //   _authStateController.add(null);
+  //   notifyListeners();
+  // }
+    Future<void> signOut() async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      // Clear the current user
+      _currentUser = null;
+
+      // Emit the new (null) user state
+      _authStateController.add(null);
+
+      print('Sign out successful');
+    } catch (e) {
+      print('Sign out failed: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }
