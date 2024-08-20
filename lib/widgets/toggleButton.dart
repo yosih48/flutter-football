@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:football/theme/colors.dart';
 
 /// Flutter code sample for [ToggleButtons].
 
@@ -64,11 +65,11 @@ class _ToggleButtonsSampleState extends State<ToggleButtonsSample> {
                 });
                 widget.onSelectionChanged(index);
               },
-              borderRadius: const BorderRadius.all(Radius.circular(8)),
-              selectedBorderColor: Colors.red[700],
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8.0)),
+              selectedBorderColor: blue,
               selectedColor: Colors.white,
-              fillColor: Colors.red[200],
-              color: Colors.red[400],
+              // fillColor: Colors.red[200],
+              color:grey,
               constraints: const BoxConstraints(
                 minHeight: 40.0,
                 minWidth: 80.0,

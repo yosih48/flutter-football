@@ -4,6 +4,7 @@ import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/screens/table.dart';
+import 'package:football/theme/colors.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:football/resources/usersMethods.dart';
@@ -171,6 +172,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: background,
       appBar: AppBar(
         title: Text('הקבוצות שלי', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.transparent,
@@ -182,7 +184,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF1E3A5F), Color(0xFF16243B)],
+            colors: [Color(0xFF16181b), Color(0xFF16181b)],
           ),
         ),
         child: Column(

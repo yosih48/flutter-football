@@ -11,6 +11,7 @@ import 'package:football/resources/gamesMethods.dart';
 import 'package:football/resources/guessesMethods.dart';
 import 'package:football/screens/gameDetails.dart';
 import 'package:football/screens/login_screen.dart';
+import 'package:football/theme/colors.dart';
 import 'package:football/widgets/gamesCard.dart';
 import 'package:football/widgets/toggleButton.dart';
 import 'package:http/http.dart' as http;
@@ -247,12 +248,24 @@ try {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: background,
       appBar: AppBar(
-        title: Text('games'),
+        title: Text('games',
+  style: TextStyle(
+  color: white, // White color for the team names
+
+),
+        ),
+           backgroundColor: Colors.transparent,
               actions: [
         Row(
           children: [
-            Text('Today only'),
+            Text('Today only',
+              style: TextStyle(
+  color: white, // White color for the team names
+
+),
+            ),
             Switch(
               value: _showOnlyTodayGames,
               onChanged: (value) {
@@ -296,7 +309,7 @@ try {
       final filteredGames = _showOnlyTodayGames
       ? _games.where((game) => isGameToday( DateFormat('dd/MM/yy').format(game.date))).toList()
       : _games;
-    return ListView.builder(
+    return ListView.separated(
       itemCount: filteredGames.length,
       itemBuilder: (BuildContext context, int index) {
         final game = filteredGames[index];
@@ -334,6 +347,8 @@ try {
           },
         );
       },
+  separatorBuilder: (BuildContext context, int index) => Divider(height: 0.0, color: background),
+    padding: EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
     );
   }
 }
