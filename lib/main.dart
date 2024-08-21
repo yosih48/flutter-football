@@ -1,4 +1,4 @@
-
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:football/models/users.dart';
@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 void main() async {
   // Ensure that plugin services are initialized
@@ -20,7 +21,7 @@ void main() async {
 
   // Initialize flutter_secure_storage
   final storage = FlutterSecureStorage();
-
+  await Firebase.initializeApp();
   // You can now use the storage in your AuthProvider if needed
   runApp(
     MultiProvider(

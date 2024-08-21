@@ -45,6 +45,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   late String currentUserId;
   TextEditingController _groupNameController = TextEditingController();
   Map<String, dynamic> user = {};
+
   @override
   void initState() {
     super.initState();
@@ -83,7 +84,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
       if (response.statusCode == 200) {
         // Group created successfully
         // _fetchUserGroups(); // Refresh the groups list
-           await _addGroupToUser(groupName);
+        await _addGroupToUser(groupName);
       } else {
         throw Exception('Failed to create group');
       }
@@ -171,6 +172,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
 
   @override
   Widget build(BuildContext context) {
+    final selectedGroup = Provider.of<UserProvider>(context);
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
@@ -200,19 +202,19 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                   Text('My Groups',
                       style: TextStyle(
                           color: Colors.white, fontWeight: FontWeight.bold)),
-          
-TextButton.icon(
-  icon: Icon(Icons.add),
-  label: Text(
-    'צור קבוצה',
-    style: TextStyle(color: Colors.white), // Change the color here
-  ),
-  onPressed: _showCreateGroupDialog,
-    style: TextButton.styleFrom(
-    foregroundColor: Colors.white, // This changes the color of the icon and text
-  ),
-
-)
+                  TextButton.icon(
+                    icon: Icon(Icons.add),
+                    label: Text(
+                      'צור קבוצה',
+                      style: TextStyle(
+                          color: Colors.white), // Change the color here
+                    ),
+                    onPressed: _showCreateGroupDialog,
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors
+                          .white, // This changes the color of the icon and text
+                    ),
+                  )
                 ],
               ),
             ),
@@ -227,60 +229,74 @@ TextButton.icon(
                         String groupId = _userGroups.keys.elementAt(index);
                         String groupName = _userGroups.values.elementAt(index);
                         return InkWell(
-                        onTap: () {
-                          
-Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-        TableScreen(selectedGroupName :groupName)
-              ),
-            );
-
-
-                          
-                        },
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => TableScreen(
+                                      selectedGroupName: groupName)),
+                            );
+                          },
                           child: ListTile(
-                            contentPadding:
-                                EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
                             leading: CircleAvatar(
                               backgroundColor: Colors.grey,
                               child: Text(groupName[0],
                                   style: TextStyle(color: Colors.white)),
-                              radius: 25,
+                              radius: 18,
                             ),
                             title: Text(
                               groupName,
-                              style: TextStyle(color: Colors.white, fontSize: 18),
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 16),
                               textAlign: TextAlign.right,
                             ),
-                            trailing: IconButton(
-                              icon: Icon(Icons.exit_to_app, color: Colors.white),
-                              onPressed: () {
-                                // Handle exit action
-                                print('Exiting group: $groupName');
-                              },
+                   trailing: Row(
+                              mainAxisSize: MainAxisSize
+                                  .min, // Ensures the Row takes up only the necessary width
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.edit, color: Colors.white),
+                                  onPressed: () {
+                                     
+                                      selectedGroup.setSelectedGroupName(groupName);
+                                      print(' set groupName: ${groupName}');
+                                      // Navigate back or show a confirmation
+                           
+                                    print('Editing group: $groupName');
+                                  },
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.exit_to_app,
+                                      color: Colors.white),
+                                  onPressed: () {
+                                    // Handle exit action
+                                    print('Exiting group: $groupName');
+                                  },
+                                ),
+                              ],
                             ),
                           ),
                         );
                       },
                     ),
             ),
-                      ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
+              onPressed: () async {
+                final authProvider =
+                    Provider.of<AuthProvider>(context, listen: false);
+                await authProvider.signOut();
+                if (context.mounted) {}
+              },
+              child: const Text('Signout'),
             ),
-            onPressed: () async {
-              final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    await authProvider.signOut();
-              if (context.mounted) {
-       
-              }
-            },
-            child: const Text('Signout'),
-          ),
           ],
         ),
       ),
