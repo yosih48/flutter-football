@@ -253,7 +253,6 @@ try {
         title: Text('games',
   style: TextStyle(
   color: white, // White color for the team names
-
 ),
         ),
            backgroundColor: Colors.transparent,
@@ -282,10 +281,10 @@ try {
         children: [
           ToggleButtonsSample(
             options: [
-              'champ',
-              'euro',
-              // 'english',
-              'spain'
+              'Champ',
+              'Euro',
+             
+              'Spain'
               // AppLocalizations.of(context)!.opens,
               // AppLocalizations.of(context)!.history
             ],

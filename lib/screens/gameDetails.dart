@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
 import 'package:football/resources/guessesMethods.dart';
+import 'package:football/theme/colors.dart';
 import 'package:intl/intl.dart';
 
 class GameDetails extends StatefulWidget {
@@ -47,8 +48,13 @@ List<GuessWithNames> _guessesWithNames = [];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: background,
       appBar: AppBar(
-        title: Text('Game Details'),
+        title: Text('Game Details',
+          style: TextStyle(
+            color: white, // White color for the team names
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -63,6 +69,7 @@ List<GuessWithNames> _guessesWithNames = [];
 
   Widget _buildGameCard() {
     return Card(
+        color: cards,
       margin: EdgeInsets.all(16.0),
       child: Padding(
         padding: EdgeInsets.all(16.0),
@@ -86,15 +93,19 @@ List<GuessWithNames> _guessesWithNames = [];
       children: [
         Text(
           widget.game.status.long,
-          style: TextStyle(
-            color: Color(0xff67727d).withOpacity(0.6),
-            fontSize: 14.0,
-          ),
+              style: TextStyle(
+                      color: (widget.game.status.long == "First Half" ||
+                              widget.game.status.long == "Second Half" ||
+                              widget.game.status.long == "Halftime")
+                          ? Colors.red
+                          : Color(0xFF9BA4B5).withOpacity(0.6),
+                      fontSize: 14.0,
+                    ),
         ),
         Text(
           DateFormat('dd/MM/yy').format(widget.game.date),
-          style: TextStyle(
-            color: Color(0xff67727d).withOpacity(0.6),
+         style: TextStyle(
+            color: Color(0xFF9BA4B5).withOpacity(0.9),
             fontSize: 14.0,
           ),
         ),
@@ -111,9 +122,10 @@ List<GuessWithNames> _guessesWithNames = [];
         SizedBox(width: 8.0),
         Text(
           '${widget.game.goals.home} - ${widget.game.goals.away}',
-          style: TextStyle(
+              style: TextStyle(
+            color: Colors.white, // White color for the team names
             fontWeight: FontWeight.bold,
-            fontSize: 16.0,
+            fontSize: 18.0,
           ),
         ),
         SizedBox(width: 8.0),
@@ -134,9 +146,10 @@ List<GuessWithNames> _guessesWithNames = [];
         Flexible(
           child: Text(
             team.name,
-            style: TextStyle(
+                  style: TextStyle(
+              color: Colors.white, // White color for the team names
               fontWeight: FontWeight.bold,
-              fontSize: 16.0,
+              fontSize: 18.0,
             ),
             overflow: TextOverflow.ellipsis,
             textAlign: isHome ? TextAlign.right : TextAlign.left,
@@ -163,9 +176,21 @@ List<GuessWithNames> _guessesWithNames = [];
       scrollDirection: Axis.horizontal,
       child: DataTable(
         columns: const [
-          DataColumn(label: Text('user name')),
-          DataColumn(label: Text('Guess')),
-          DataColumn(label: Text('Sum Points')),
+          DataColumn(label: Text('user name',
+            style: TextStyle(
+              color: Colors.white,
+            ),
+          )),
+          DataColumn(label: Text('Guess',
+            style: TextStyle(
+              color: Colors.white,
+            ),
+          )),
+          DataColumn(label: Text('Sum Points',
+            style: TextStyle(
+              color: Colors.white,
+            ),
+          )),
         ],
    rows: _guessesWithNames
     .map((guessWithName) => DataRow(
@@ -174,6 +199,9 @@ List<GuessWithNames> _guessesWithNames = [];
               Center(
                 child: Text(
                   guessWithName.userName,
+                           style: TextStyle(
+                            color: Colors.white,
+                          ),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -183,6 +211,9 @@ List<GuessWithNames> _guessesWithNames = [];
                 child: Text(
                   '${guessWithName.guess.homeTeamGoals} - ${guessWithName.guess.awayTeamGoals}',
                   textAlign: TextAlign.center,
+                            style: TextStyle(
+                            color: Colors.white,
+                          ),
                 ),
               ),
             ),
@@ -191,7 +222,11 @@ List<GuessWithNames> _guessesWithNames = [];
                 child: Text(
                   guessWithName.guess.sumPoints.toString(),
                   textAlign: TextAlign.center,
+                            style: TextStyle(
+                            color: Colors.white,
+                          ),
                 ),
+                
               ),
             ),
           ],

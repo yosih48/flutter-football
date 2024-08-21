@@ -256,7 +256,7 @@ class TableScreenContentState extends State<TableScreenContent> {
       body: Column(
         children: [
           ToggleButtonsSample(
-            options: ['champ', 'euro', 'spain'],
+            options: ['Champ', 'Euro', 'Spain'],
             onSelectionChanged: updateSelectedIndex,
             initialSelection: 0,
           ),

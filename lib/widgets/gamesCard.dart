@@ -31,11 +31,10 @@ class GameWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     print(homeController);
     return Card(
-        color: cards, // Dark background color for the card
+      color: cards, // Dark background color for the card
       elevation: 0,
       child: Padding(
         padding: EdgeInsets.all(8.0),
-        
         child: InkWell(
           onTap: () => onTap(context),
           child: Column(
@@ -47,20 +46,23 @@ class GameWidget extends StatelessWidget {
                   Text(
                     game.status.long,
                     style: TextStyle(
-              color: (game.status.long == "First Half" || game.status.long == "Second Half"|| game.status.long == "Halftime")
-        ? Colors.red
-        : Color(0xFF9BA4B5).withOpacity(0.6),
+                      color: (game.status.long == "First Half" ||
+                              game.status.long == "Second Half" ||
+                              game.status.long == "Halftime")
+                          ? Colors.red
+                          : Color(0xFF9BA4B5).withOpacity(0.6),
                       fontSize: 14.0,
                     ),
                   ),
-                  if(game.status.long == 'Not Started')
+                  if (game.status.long == 'Not Started')
                     Text(
-    DateFormat('HH:mm').format(game.date.toLocal()), // Format the time
-    style: TextStyle(
-      color: Color(0xFF9BA4B5).withOpacity(0.9),
-      fontSize: 14.0,
-    ),
-      ),
+                      DateFormat('HH:mm')
+                          .format(game.date.toLocal()), // Format the time
+                      style: TextStyle(
+                        color: Color(0xFF9BA4B5).withOpacity(0.9),
+                        fontSize: 14.0,
+                      ),
+                    ),
                   Text(
                     DateFormat('dd/MM/yy').format(game.date),
                     style: TextStyle(
@@ -82,9 +84,9 @@ class GameWidget extends StatelessWidget {
                       child: Text(
                         game.home.name,
                         style: TextStyle(
-                     color: Colors.white, // White color for the team names
-      fontWeight: FontWeight.bold,
-      fontSize: 18.0,
+                          color: Colors.white, // White color for the team names
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18.0,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -103,21 +105,24 @@ class GameWidget extends StatelessWidget {
                         SizedBox(
                           width: 40,
                           height: 50,
-                          child: 
-                          TextField(
-                       controller: homeController,
-      keyboardType: TextInputType.number,
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        color: Colors.white, // White color for the input text
-        fontSize: 16.0,
-      ),
-      decoration: InputDecoration(
-        border: OutlineInputBorder(
-    borderSide: BorderSide(color: Color(0xFF9BA4B5)), // Light gray border color
-        ),
-        contentPadding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
-      ),
+                          child: TextField(
+                            controller: homeController,
+                            keyboardType: TextInputType.number,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors
+                                  .white, // White color for the input text
+                              fontSize: 16.0,
+                            ),
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: Color(
+                                        0xFF9BA4B5)), // Light gray border color
+                              ),
+                              contentPadding: EdgeInsets.symmetric(
+                                  vertical: 12.0, horizontal: 8.0),
+                            ),
                             inputFormatters: [
                               LengthLimitingTextInputFormatter(
                                   1), // Limit input to 1 character
@@ -131,19 +136,23 @@ class GameWidget extends StatelessWidget {
                           width: 40,
                           height: 50,
                           child: TextField(
-                    controller: awayController,
-      keyboardType: TextInputType.number,
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        color: Colors.white, // White color for the input text
-        fontSize: 16.0,
-      ),
-      decoration: InputDecoration(
-        border: OutlineInputBorder(
-    borderSide: BorderSide(color: Color(0xFF9BA4B5)), // Light gray border color
-        ),
-        contentPadding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
-      ),
+                            controller: awayController,
+                            keyboardType: TextInputType.number,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors
+                                  .white, // White color for the input text
+                              fontSize: 16.0,
+                            ),
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: Color(
+                                        0xFF9BA4B5)), // Light gray border color
+                              ),
+                              contentPadding: EdgeInsets.symmetric(
+                                  vertical: 12.0, horizontal: 8.0),
+                            ),
                             inputFormatters: [
                               LengthLimitingTextInputFormatter(
                                   1), // Limit input to 1 character
@@ -158,9 +167,9 @@ class GameWidget extends StatelessWidget {
                     Text(
                       '${game.goals.home} - ${game.goals.away}',
                       style: TextStyle(
-                                    color: Colors.white, // White color for the team names
-      fontWeight: FontWeight.bold,
-      fontSize: 18.0,
+                        color: Colors.white, // White color for the team names
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18.0,
                       ),
                     ),
                   SizedBox(width: 8.0),
@@ -176,11 +185,11 @@ class GameWidget extends StatelessWidget {
                       child: Text(
                         game.away.name,
                         //  '${game.odds.draw}',
-    
+
                         style: TextStyle(
-                       color: Colors.white, // White color for the team names
-      fontWeight: FontWeight.bold,
-      fontSize: 18.0,
+                          color: Colors.white, // White color for the team names
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18.0,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -199,96 +208,99 @@ class GameWidget extends StatelessWidget {
                     Text(
                       '${game.odds.home}',
                       style: TextStyle(
-              color: Color(0xFF9BA4B5), // Light gray color for the odds
-      fontSize: 16.0,
+                        color:
+                            Color(0xFF9BA4B5), // Light gray color for the odds
+                        fontSize: 16.0,
                       ),
                     ),
                     // SizedBox(width: 20,),
                     Text(
                       '${game.odds.draw}',
                       style: TextStyle(
-                   color: Color(0xFF9BA4B5), // Light gray color for the odds
-      fontSize: 16.0,
+                        color:
+                            Color(0xFF9BA4B5), // Light gray color for the odds
+                        fontSize: 16.0,
                       ),
                     ),
                     //  SizedBox(width: 20,),
                     Text(
                       '${game.odds.away}',
                       style: TextStyle(
-                    color: Color(0xFF9BA4B5), // Light gray color for the odds
-      fontSize: 16.0,
+                        color:
+                            Color(0xFF9BA4B5), // Light gray color for the odds
+                        fontSize: 16.0,
                       ),
                     ),
-    
+
                     SizedBox(
                       width: 1,
                     ),
                   ],
                 ),
               SizedBox(height: 8.0),
-      Row(
-      
-        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
- if(guess == null && game.status.long != 'Not Started')
+              Row(
+                // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (guess == null && game.status.long != 'Not Started')
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${'--'} : ${'--'}',
+                          style: TextStyle(
+                            color: Color(
+                                0xFF9BA4B5), // Light gray color for the "Your guess" and score
+                            fontSize: 14.0,
+                          ),
+                        ),
+                      ),
+                    ),
 
-        Expanded(
-        child: Align(
-               alignment: Alignment.center,
-          child: Text(
-            '${'--'} : ${'--'}',
-            style: TextStyle(
-        color: Color(0xFF9BA4B5), // Light gray color for the "Your guess" and score
-      fontSize: 14.0,
-            ),
-          ),
-        ),
-      ),
-
-
-        if(guess != null && game.status.long != 'Not Started')
-          Expanded(
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: 
-          Text(AppLocalizations.of(context)!.yourguess,
-                        style: TextStyle(
-        color: Color(0xFF9BA4B5), // Light gray color for the "Your guess" and score
-      fontSize: 14.0,
-            ),
-          ),
-      ),
-          ),
-          if (guess != null && game.status.long != 'Not Started')
-       Expanded(
-        child: Align(
-               alignment: Alignment.center,
-          child: Text(
-            '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
-            style: TextStyle(
-        color: Color(0xFF9BA4B5), // Light gray color for the "Your guess" and score
-      fontSize: 14.0,
-            ),
-          ),
-        ),
-      ),
-        if (guess != null && game.status.long != 'Not Started')
-       Expanded(
-        child: Align(
-              alignment: Alignment.centerLeft,
-          // child: 
-          // Text(
-          //   '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
-          //   style: TextStyle(
-          //     color: Color(0xff67727d).withOpacity(0.6),
-          //     fontSize: 14.0,
-          //   ),
-          // ),
-        ),
-      ),
-          // SizedBox(width: 170),
-        ],
-      ),
+                  if (guess != null && game.status.long != 'Not Started')
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          AppLocalizations.of(context)!.yourguess,
+                          style: TextStyle(
+                            color: Color(
+                                0xFF9BA4B5), // Light gray color for the "Your guess" and score
+                            fontSize: 14.0,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (guess != null && game.status.long != 'Not Started')
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
+                          style: TextStyle(
+                            color: Color(
+                                0xFF9BA4B5), // Light gray color for the "Your guess" and score
+                            fontSize: 14.0,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (guess != null && game.status.long != 'Not Started')
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        // child:
+                        // Text(
+                        //   '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
+                        //   style: TextStyle(
+                        //     color: Color(0xff67727d).withOpacity(0.6),
+                        //     fontSize: 14.0,
+                        //   ),
+                        // ),
+                      ),
+                    ),
+                  // SizedBox(width: 170),
+                ],
+              ),
             ],
           ),
         ),
