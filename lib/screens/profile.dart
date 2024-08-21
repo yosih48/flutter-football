@@ -258,14 +258,18 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                                   .min, // Ensures the Row takes up only the necessary width
                               children: [
                                 IconButton(
-                                  icon: Icon(Icons.edit, color: Colors.white),
+                                  icon: Icon(Icons.star,
+                                    color: selectedGroup.selectedGroupName ==
+                                            groupName
+                                        ? Colors.amber
+                                        : Colors.white,
+                                  ),
                                   onPressed: () {
                                      
                                       selectedGroup.setSelectedGroupName(groupName);
                                       print(' set groupName: ${groupName}');
                                       // Navigate back or show a confirmation
-                           
-                                    print('Editing group: $groupName');
+              
                                   },
                                 ),
                                 IconButton(
