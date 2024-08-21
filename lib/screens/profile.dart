@@ -268,7 +268,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                                      
                                       selectedGroup.setSelectedGroupName(groupName);
                                       print(' set groupName: ${groupName}');
-                                      // Navigate back or show a confirmation
+                                     
               
                                   },
                                 ),

@@ -9,16 +9,21 @@ import 'package:football/responsive/rsponsive_layout_screen.dart';
 import 'package:football/responsive/web_screen_layout.dart';
 import 'package:football/screens/games.dart';
 import 'package:football/screens/login_screen.dart';
+import 'package:football/widgets/pushNotifications.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:workmanager/workmanager.dart';
 
 void main() async {
   // Ensure that plugin services are initialized
   WidgetsFlutterBinding.ensureInitialized();
-
+  Workmanager().initialize(
+    NotificationManager.callbackDispatcher,
+    isInDebugMode: true,
+  );
   // Initialize flutter_secure_storage
   final storage = FlutterSecureStorage();
   await Firebase.initializeApp();

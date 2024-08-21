@@ -13,6 +13,7 @@ import 'package:football/screens/gameDetails.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/widgets/gamesCard.dart';
+import 'package:football/widgets/pushNotifications.dart';
 import 'package:football/widgets/toggleButton.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -55,8 +56,9 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
   List<Game> _games = [];
   List<Guess> _guesses = [];
+  List<Guess> _gameStartTimes = [];
   int league = 2;
-bool _showOnlyTodayGames = false;
+  bool _showOnlyTodayGames = false;
   late String clientId;
   late String email;
     int selectedIndex = 0;
@@ -73,6 +75,7 @@ bool _showOnlyTodayGames = false;
   Map<int, Map<String, TextEditingController>> _guessControllers = {};
   void initState() {
     super.initState();
+      NotificationManager.scheduleNotifications();
     clientId = widget.authProvider.user?.id ?? 'Not logged in';
     email = widget.authProvider.user?.email ?? 'Not logged in';
     print(clientId);
@@ -124,8 +127,23 @@ bool isGameToday(String formattedDate) {
 
       setState(() {
         _guesses = guesses;
+              for (var game in _games) {
+          if (_guessControllers[game.fixtureId] == null) {
+            _guessControllers[game.fixtureId] = {
+              'home': TextEditingController(),
+              'away': TextEditingController(),
+            };
+          }
+          _gameStartTimes[game.fixtureId] = game.timestamp;
+        }
       });
-
+      await NotificationManager.scheduleNotifications({
+        'gameData': {
+          'homeTeam': _games.first.homeTeam,
+          'awayTeam': _games.first.awayTeam,
+          'gameTime': _games.first.startTime.toIso8601String(),
+        },
+      });
       setState(() {
         for (var guess in _guesses) {
           var controllers = _guessControllers[guess.gameOriginalId];
@@ -134,6 +152,9 @@ bool isGameToday(String formattedDate) {
             controllers['away']?.text = guess.awayTeamGoals.toString();
           }
         }
+        
+
+          
       });
     } catch (e, stackTrace) {
       print('Failed to fetch guesses: $e');
