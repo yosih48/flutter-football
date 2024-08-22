@@ -110,9 +110,11 @@ class NotificationManager {
   }
     static Future<void> _showLocalNotification(
     String homeTeam,
+    
     String awayTeam,
     DateTime gameTime,
   ) async {
+       print('_showLocalNotification');
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
       'game_notifications',
