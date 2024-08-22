@@ -58,7 +58,7 @@ class NotificationManager {
     final fcmToken = await FirebaseMessaging.instance.getToken();
     if (fcmToken != null) {
       final response = await http.post(
-        Uri.parse('https://your-nodejs-server.com/send-notification'),
+        Uri.parse('https://leagues.onrender.com/send-notification'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
