@@ -24,10 +24,16 @@ class NotificationManager {
 
         for (var game in games) {
           final gameTime = DateTime.parse(game['gameTime']);
-          final timeDifference = gameTime.difference(now);
+          //not local
+          // final timeDifference = gameTime.difference(now);
+
+          //convert to local
+          DateTime gameTimeLocal = gameTime.toLocal();
+          DateTime nowLocal = DateTime.now();
+          final timeDifference = gameTimeLocal.difference(nowLocal);
 
           // Check if the game is between 2 hours and 1 hour 45 minutes away
-          if (timeDifference.inHours == 2 &&
+          if (timeDifference.inHours == 30 &&
               timeDifference.inMinutes % 60 < 15) {
             await _sendPushNotification(
               game['homeTeam'],
