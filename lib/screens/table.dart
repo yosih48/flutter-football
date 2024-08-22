@@ -56,7 +56,7 @@ class TableScreenContent extends StatefulWidget {
 class TableScreenContentState extends State<TableScreenContent> {
   List<Map<String, dynamic>> _users = [];
   int selectedIndex = 0;
-  late String selectedGroupName;
+  late String selectedGroupName ="";
   Map<String, String> _userGroups = {};
   int league = 2;
   late String currentUserId;
@@ -169,18 +169,7 @@ class TableScreenContentState extends State<TableScreenContent> {
   void initState() {
     super.initState();
     currentUserId = widget.authProvider.user?.id ?? 'Not logged in';
-    // selectedGroupName = widget.selectedGroupName ??'';
-    final selectedGroup = Provider.of<UserProvider>(context, listen: false);
-    // selectedGroupName = selectedGroup.selectedGroupName;
-      if (selectedGroup.selectedGroupName == 'default') {
-      // Assign the first value from _userGroups
-      selectedGroupName =
-          _userGroups.isNotEmpty ? _userGroups.values.first : 'default';
-    } else {
-      // Otherwise, use the value from selectedGroup
-      selectedGroupName = selectedGroup.selectedGroupName;
-    }
-    print(selectedGroupName);
+  
     _fetchUserGroups();
   }
 
@@ -190,9 +179,19 @@ class TableScreenContentState extends State<TableScreenContent> {
           await UsersMethods().fetchUserById(currentUserId);
       setState(() {
         _userGroups = Map<String, String>.from(userData['groupID'] ?? {});
+
+        final selectedGroup = Provider.of<UserProvider>(context, listen: false);
+
         if (_userGroups.isNotEmpty) {
-          selectedGroupName =
-              widget.selectedGroupName ?? selectedGroupName;
+          if (selectedGroup.selectedGroupName == 'default') {
+            // Assign the first value from _userGroups
+            selectedGroupName = _userGroups.values.first;
+          } else {
+            // Otherwise, use the value from selectedGroup
+            selectedGroupName =
+                widget.selectedGroupName ?? selectedGroup.selectedGroupName;
+          }
+
           _fetchUsersForGroup(selectedGroupName);
         }
       });
