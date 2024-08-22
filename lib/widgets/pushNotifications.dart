@@ -8,38 +8,49 @@ class NotificationManager {
 
   static Future<void> scheduleNotifications(
       List<Map<String, dynamic>> games) async {
+    print('games in scheduleNotifications');
+    // print(games);
+    List<String> serializedGames =
+        games.map((game) => jsonEncode(game)).toList();
     await Workmanager().registerPeriodicTask(
       taskName,
       taskName,
       frequency: Duration(minutes: 15), // Check every 15 minutes
-      inputData: {'games': games},
+      inputData: {'games': serializedGames},
     );
   }
 
   static void callbackDispatcher() {
     Workmanager().executeTask((task, inputData) async {
+         print('executeTask');
       if (task == taskName && inputData != null) {
-        final games = List<Map<String, dynamic>>.from(inputData['games']);
+          print('task == taskName');
+        // Deserialize the JSON strings back into maps
+        List<String> serializedGames = List<String>.from(inputData['games']);
+        List games = serializedGames.map((game) => jsonDecode(game)).toList();
+
         final now = DateTime.now();
 
         for (var game in games) {
+           print('game in games');
           final gameTime = DateTime.parse(game['gameTime']);
-          //not local
-          // final timeDifference = gameTime.difference(now);
 
-          //convert to local
+          // Convert to local
           DateTime gameTimeLocal = gameTime.toLocal();
           DateTime nowLocal = DateTime.now();
           final timeDifference = gameTimeLocal.difference(nowLocal);
 
           // Check if the game is between 2 hours and 1 hour 45 minutes away
-          if (timeDifference.inHours == 30 &&
-              timeDifference.inMinutes % 60 < 15) {
+          // if (timeDifference.inHours == 2 && timeDifference.inMinutes % 60 < 15) {
+          if (timeDifference.inHours > 24 && timeDifference.inHours < 34) {
+            print('in timeeeeeee');
             await _sendPushNotification(
               game['homeTeam'],
               game['awayTeam'],
-              gameTime,
+              gameTimeLocal,
             );
+          }else{
+               print('no timeeeeeee');
           }
         }
       }
@@ -55,7 +66,7 @@ class NotificationManager {
     final fcmToken = await FirebaseMessaging.instance.getToken();
     if (fcmToken != null) {
       final response = await http.post(
-        Uri.parse('https://your-nodejs-server.com/send-notification'),
+        Uri.parse('https://leagues.onrender.com/send-notification'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },

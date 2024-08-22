@@ -114,8 +114,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               'away': TextEditingController(),
             };
           }
-          print('Game date type: ${game.date.runtimeType}');
-          print('Game date value: ${game.date}');
+          // print('Game date type: ${game.date.runtimeType}');
+          // print('Game date value: ${game.date}');
 
           _gameStartTimes[game.fixtureId] = game.date ;
         }
