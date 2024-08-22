@@ -1,55 +1,46 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:workmanager/workmanager.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class NotificationManager {
-  static const taskName = 'sendPushNotification';
+  static const taskName = 'checkUpcomingGames';
 
   static Future<void> scheduleNotifications(
-      Map<String, dynamic> gameData) async {
+      List<Map<String, dynamic>> games) async {
     await Workmanager().registerPeriodicTask(
       taskName,
       taskName,
-      inputData: {
-        'gameData': gameData,
-      },
-        // inputData: gameData,??
-      frequency: const Duration(minutes: 5),
-      initialDelay: const Duration(minutes: 1),
+      frequency: Duration(minutes: 15), // Check every 15 minutes
+      inputData: {'games': games},
     );
   }
 
-  static void callbackDispatcher(Map<String, dynamic>? inputData) {
+  static void callbackDispatcher() {
     Workmanager().executeTask((task, inputData) async {
       if (task == taskName && inputData != null) {
-        final gameData = inputData['gameData'] as Map<String, dynamic>;
-        // Use the gameData to send push notifications
-        await _sendPushNotification(
-          gameData['homeTeam'] as String,
-          gameData['awayTeam'] as String,
-          DateTime.parse(gameData['gameTime'] as String),
-        );
-        return Future.value(true);
+        final games = List<Map<String, dynamic>>.from(inputData['games']);
+        final now = DateTime.now();
+
+        for (var game in games) {
+          final gameTime = DateTime.parse(game['gameTime']);
+          final timeDifference = gameTime.difference(now);
+
+          // Check if the game is between 2 hours and 1 hour 45 minutes away
+          if (timeDifference.inHours == 2 &&
+              timeDifference.inMinutes % 60 < 15) {
+            await _sendPushNotification(
+              game['homeTeam'],
+              game['awayTeam'],
+              gameTime,
+            );
+          }
+        }
       }
       return Future.value(true);
     });
   }
 
-  // static Future<void> _sendPushNotification(
-  //   String homeTeam,
-  //   String awayTeam,
-  //   DateTime gameTime,
-  // ) async {
-  //   final fcmToken = await FirebaseMessaging.instance.getToken();
-  //   if (fcmToken != null) {
-  //     // Use the FCM token to send a push notification to the user
-  //     // via your Node.js server
-  //     await sendPushNotification(
-  //         fcmToken, 'Upcoming Game', '$homeTeam vs $awayTeam at $gameTime');
-  //   }
-  // }
   static Future<void> _sendPushNotification(
     String homeTeam,
     String awayTeam,
@@ -58,14 +49,14 @@ class NotificationManager {
     final fcmToken = await FirebaseMessaging.instance.getToken();
     if (fcmToken != null) {
       final response = await http.post(
-        Uri.parse('https://leagues.onrender.com/send-notification'),
+        Uri.parse('https://your-nodejs-server.com/send-notification'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode(<String, String>{
           'token': fcmToken,
-          'title': 'Upcoming Game',
-          'body': '$homeTeam vs $awayTeam at $gameTime',
+          'title': 'Upcoming Game in 2 Hours',
+          'body': '$homeTeam vs $awayTeam at ${gameTime.toLocal()}',
         }),
       );
 

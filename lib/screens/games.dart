@@ -122,15 +122,17 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       });
 
       // Pass the game data to the NotificationManager
-      if (_games.isNotEmpty) {
-        await NotificationManager.scheduleNotifications({
-          'gameData': {
-            'homeTeam': _games.first.home.name,
-            'awayTeam': _games.first.away.name,
-            'gameTime': _games.first.date.toIso8601String(),
-          },
-        });
-      }
+      // Prepare game data for notifications
+      List<Map<String, dynamic>> gameData = _games
+          .map((game) => {
+                'homeTeam': game.home.name,
+                'awayTeam': game.away.name,
+                'gameTime': game.date.toIso8601String(),
+              })
+          .toList();
+
+      // Schedule notifications
+      await NotificationManager.scheduleNotifications(gameData);
     } catch (e) {
       print('Failed to fetch games: $e');
     }
