@@ -2,9 +2,25 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationManager {
   static const taskName = 'checkUpcomingGames';
+    static final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  static Future<void> initialize() async {
+    await Workmanager().initialize(callbackDispatcher);
+    await _initializeLocalNotifications();
+  }
+
+  static Future<void> _initializeLocalNotifications() async {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    final InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
 
   static Future<void> scheduleNotifications(
       List<Map<String, dynamic>> games) async {
@@ -12,6 +28,8 @@ class NotificationManager {
     // print(games);
     List<String> serializedGames =
         games.map((game) => jsonEncode(game)).toList();
+          print('serializedGames');
+          print(serializedGames);
     await Workmanager().registerPeriodicTask(
       taskName,
       taskName,
@@ -21,13 +39,15 @@ class NotificationManager {
   }
 
   static void callbackDispatcher() {
+         print('callbackDispatcher');
     Workmanager().executeTask((task, inputData) async {
          print('executeTask');
       if (task == taskName && inputData != null) {
           print('task == taskName');
         // Deserialize the JSON strings back into maps
         List<String> serializedGames = List<String>.from(inputData['games']);
-        List games = serializedGames.map((game) => jsonDecode(game)).toList();
+        List<Map<String, dynamic>> games =
+            List<Map<String, dynamic>>.from(inputData['games']);
 
         final now = DateTime.now();
 
@@ -42,7 +62,7 @@ class NotificationManager {
 
           // Check if the game is between 2 hours and 1 hour 45 minutes away
           // if (timeDifference.inHours == 2 && timeDifference.inMinutes % 60 < 15) {
-          if (timeDifference.inHours > 24 && timeDifference.inHours < 34) {
+          if (timeDifference.inHours > 20 && timeDifference.inHours < 34) {
             print('in timeeeeeee');
             await _sendPushNotification(
               game['homeTeam'],
@@ -65,6 +85,7 @@ class NotificationManager {
   ) async {
     final fcmToken = await FirebaseMessaging.instance.getToken();
     if (fcmToken != null) {
+           try {
       final response = await http.post(
         Uri.parse('https://leagues.onrender.com/send-notification'),
         headers: <String, String>{
@@ -82,6 +103,31 @@ class NotificationManager {
       } else {
         print('Failed to send notification');
       }
+         } catch (e) {
+        print('Error sending notification: $e');
+      }
     }
+  }
+    static Future<void> _showLocalNotification(
+    String homeTeam,
+    String awayTeam,
+    DateTime gameTime,
+  ) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'game_notifications',
+      'Game Notifications',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'Upcoming Game in 2 Hours',
+      '$homeTeam vs $awayTeam at ${gameTime.toLocal()}',
+      platformChannelSpecifics,
+    );
   }
 }

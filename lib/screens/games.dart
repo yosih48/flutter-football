@@ -56,7 +56,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   List<Game> _games = [];
   List<Guess> _guesses = [];
  Map<int, DateTime> _gameStartTimes = {};
-  int league = 2;
+  int league =2;
   bool _showOnlyTodayGames = false;
   late String clientId;
   late String email;

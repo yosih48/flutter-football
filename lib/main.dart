@@ -22,7 +22,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Workmanager().initialize(
     NotificationManager.callbackDispatcher,
-    isInDebugMode: true,
+   
   );
   // Initialize flutter_secure_storage
   final storage = FlutterSecureStorage();
