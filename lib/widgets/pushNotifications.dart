@@ -3,7 +3,16 @@ import 'package:workmanager/workmanager.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  print('callbackDispatcher started');
+  Workmanager().executeTask((task, inputData)async {
+      print('Executing task: $task');
+    print('Input data: $inputData');
+      return Future.value(true);
+    // ... rest of your code ...
+  });
+}
 class NotificationManager {
   static const taskName = 'checkUpcomingGames';
     static final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -30,12 +39,17 @@ class NotificationManager {
         games.map((game) => jsonEncode(game)).toList();
           print('serializedGames');
           print(serializedGames);
-    await Workmanager().registerPeriodicTask(
-      taskName,
-      taskName,
-      frequency: Duration(minutes: 15), // Check every 15 minutes
-      inputData: {'games': serializedGames},
+  try {
+    await Workmanager().registerOneOffTask(
+      "testTask",
+      "testTask",
+      initialDelay: Duration(seconds: 15),
+      inputData: {'test': 'data'},
     );
+    print('One-off task registered successfully');
+  } catch (e) {
+    print('Error registering one-off task: $e');
+  }
   }
 
   static void callbackDispatcher() {
@@ -62,7 +76,7 @@ class NotificationManager {
 
           // Check if the game is between 2 hours and 1 hour 45 minutes away
           // if (timeDifference.inHours == 2 && timeDifference.inMinutes % 60 < 15) {
-          if (timeDifference.inHours > 20 && timeDifference.inHours < 34) {
+          if (timeDifference.inHours > 18 && timeDifference.inHours < 34) {
             print('in timeeeeeee');
             await _sendPushNotification(
               game['homeTeam'],

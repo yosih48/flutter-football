@@ -288,14 +288,14 @@ class GameWidget extends StatelessWidget {
                     Expanded(
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        // child:
-                        // Text(
-                        //   '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
-                        //   style: TextStyle(
-                        //     color: Color(0xff67727d).withOpacity(0.6),
-                        //     fontSize: 14.0,
-                        //   ),
-                        // ),
+                        child:
+                        Text(
+'${guess!.sumPoints % 1 == 0 ? guess!.sumPoints.toInt() : guess!.sumPoints} נקודות ',
+                          style: TextStyle(
+                            color: Color(0xFF9BA4B5).withOpacity(0.6),
+                            fontSize: 14.0,
+                          ),
+                        ),
                       ),
                     ),
                   // SizedBox(width: 170),
