@@ -224,7 +224,9 @@ List<GuessWithNames> _guessesWithNames = [];
             DataCell(
               Center(
                 child: Text(
-                  guessWithName.guess.sumPoints.toString(),
+                 guessWithName.guess.sumPoints % 1 == 0 
+      ? guessWithName.guess.sumPoints.toInt().toString() 
+      : guessWithName.guess.sumPoints.toString(),
                   textAlign: TextAlign.center,
                             style: TextStyle(
                             color: Colors.white,
