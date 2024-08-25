@@ -55,6 +55,10 @@ List<GuessWithNames> _guessesWithNames = [];
             color: white, // White color for the team names
           ),
         ),
+            backgroundColor: Colors.transparent,
+                 iconTheme: IconThemeData(
+          color: Colors.white, // Set the color of the arrow icon to white
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
