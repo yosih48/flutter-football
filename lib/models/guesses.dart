@@ -56,12 +56,16 @@ class Guess {
 class GuessWithNames {
   final Guess guess;
   final String userName;
+    final Map<String, String> userGroups;
 
 
-  GuessWithNames(this.guess, this.userName);
+  GuessWithNames(this.guess, this.userName,
+ this.userGroups
+   );
 }
 class CallService {
   final Map<String, String> _userNameCache = {};
+   final Map<String, Map<String, String>> _userGroupCache = {};
 
 
   Future<GuessWithNames> getGuessWithNames(Guess guess) async {
@@ -69,10 +73,13 @@ class CallService {
  
 
     String userName = await _getUserName(guess.userId);
+  Map<String, String> userGroups = await _getUserGroups(guess.userId);
 
 
 
-    return GuessWithNames(guess, userName);
+    return GuessWithNames(guess, userName,
+   userGroups
+    );
   }
 
   Future<String> _getUserName(String userId) async {
@@ -84,6 +91,15 @@ class CallService {
         .fetchUserName(userId);
     _userNameCache[userId] = name;
     return name;
+  }
+   Future<Map<String, String>> _getUserGroups(String userId) async {
+    if (_userGroupCache.containsKey(userId)) {
+      return _userGroupCache[userId]!;
+    }
+    // Fetch from Firestore
+    Map<String, String> groups = await GuessesMethods().fetchUserGroup(userId);
+    _userGroupCache[userId] = groups;
+    return groups;
   }
 
 

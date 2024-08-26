@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
+import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/resources/guessesMethods.dart';
 import 'package:football/theme/colors.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class GameDetails extends StatefulWidget {
   final gameOriginalId;
    final Game game;
+ 
 
 
   const GameDetails({super.key, required this. gameOriginalId, required this.game});
@@ -19,24 +22,33 @@ class GameDetails extends StatefulWidget {
 class _GameDetailsState extends State<GameDetails> {
   List<Guess> _guesses = [];
 List<GuessWithNames> _guessesWithNames = [];
+ late String selectedGroupName ="";
   @override
   void initState() {
     super.initState();
- 
+
   _fetchGuesses( widget.gameOriginalId);
   }
   Future<void> _fetchGuesses(gameId) async {
-      print('gameId ${gameId}');
+     final userProvider = Provider.of<UserProvider>(context, listen: false);
+      selectedGroupName = userProvider.selectedGroupName;
+
     try {
       final guesses = await GuessesMethods().fetchAllUsersGuesses(gameId);
         final callService = CallService();
       final guessesWithNames = await Future.wait(
           guesses.map((guess) => callService.getGuessWithNames(guess)));
 
+      final filteredGuesses = guessesWithNames.where((guessWithName) {
+      return guessWithName.userGroups.values.contains(selectedGroupName);
+    }).toList();
+
        setState(() {
-        _guessesWithNames = guessesWithNames;
+        _guessesWithNames = filteredGuesses;
       });
-      print(_guessesWithNames);
+      for (var guessWithName in _guessesWithNames) {
+    print(guessWithName.userGroups);
+  }
     } 
  catch (e, stackTrace) {
   print('Failed to fetch guesses: $e');

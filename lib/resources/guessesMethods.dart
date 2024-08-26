@@ -72,4 +72,16 @@ class GuessesMethods {
       throw Exception('Failed to load user name');
     }
   }
+ Future<Map<String, String>>  fetchUserGroup(String userId) async {
+    final response = await http
+        .get(Uri.parse('https://leagues.onrender.com/users/${userId}'));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      // print(response.body);
+      return Map<String, String>.from(data['groupID']);
+    } else {
+      throw Exception('Failed to load user name');
+    }
+  }
 }

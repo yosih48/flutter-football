@@ -45,11 +45,15 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   late String currentUserId;
   TextEditingController _groupNameController = TextEditingController();
   Map<String, dynamic> user = {};
+  late String selectedGroupName ="";
+  
 
   @override
   void initState() {
     super.initState();
     currentUserId = widget.authProvider.user?.id ?? 'Not logged in';
+
+
     _fetchUserGroups();
   }
 
@@ -57,9 +61,20 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     try {
       Map<String, dynamic> userData =
           await UsersMethods().fetchUserById(currentUserId);
+        
       setState(() {
+ final userProvider = Provider.of<UserProvider>(context, listen: false);
+print(userProvider.selectedGroupName);
         _userGroups = Map<String, String>.from(userData['groupID'] ?? {});
+      //  _userGroups.values.first;
+      if(userProvider.selectedGroupName =='default'){
+              Provider.of<UserProvider>(context, listen: false)
+          .setSelectedGroupName(_userGroups.values.first);
+      }
+      print('second');
+      print(userProvider.selectedGroupName);
       });
+
     } catch (e) {
       print('Failed to fetch user groups: $e');
     }
