@@ -96,7 +96,12 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     }
     super.dispose();
   }
-
+void toggleShowOnlyTodayGames() {
+  setState(() {
+    _showOnlyTodayGames = !_showOnlyTodayGames;
+  });
+  _fetchGames(league);
+}
   bool isGameToday(String formattedDate) {
     final today = DateFormat('dd/MM/yy').format(DateTime.now());
     return formattedDate == today;
@@ -106,9 +111,21 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     print('leagueId ${leagueId}');
 
     try {
-      final games = await GamesMethods().fetchGames(leagueId);
+          List<Game> allGames = [];
+    List<int> leagueIds = [2, 3, 383, 140];
+
+    if (_showOnlyTodayGames) {
+      // Fetch games from all leagues
+      for (int leagueId in leagueIds) {
+        final games = await GamesMethods().fetchGames(leagueId);
+        allGames.addAll(games);
+      }
+    } else {
+      // Fetch games only for the current league
+      allGames = await GamesMethods().fetchGames(leagueId);
+    }
       setState(() {
-        _games = games;
+        _games = allGames;
       });
       setState(() {
         for (var game in _games) {
@@ -282,7 +299,9 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                 onChanged: (value) {
                   setState(() {
                     _showOnlyTodayGames = value;
+                   _fetchGames(league);
                   });
+                  // toggleShowOnlyTodayGames();
                 },
               ),
             ],
@@ -321,12 +340,15 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   }
 
   ListView listView() {
-    final filteredGames = _showOnlyTodayGames
-        ? _games
-            .where(
-                (game) => isGameToday(DateFormat('dd/MM/yy').format(game.date)))
-            .toList()
-        : _games;
+   final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+
+  final filteredGames = _showOnlyTodayGames
+      ? _games.where((game) {
+          final gameDate = DateTime(game.date.year, game.date.month, game.date.day);
+          return gameDate.isAtSameMomentAs(today);
+        }).toList()
+      : _games;
     return ListView.separated(
       itemCount: filteredGames.length,
       itemBuilder: (BuildContext context, int index) {
