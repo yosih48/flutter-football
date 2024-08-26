@@ -52,26 +52,27 @@ class _GamesScreenContent extends StatefulWidget {
 }
 
 class _GamesScreenContentState extends State<_GamesScreenContent> {
-
   List<Game> _games = [];
   List<Guess> _guesses = [];
   int league = 2;
-bool _showOnlyTodayGames = false;
+  bool _showOnlyTodayGames = false;
   late String clientId;
   late String email;
-    int selectedIndex = 0;
-    void updateSelectedIndex(int index) {
-      print(index);
+  int selectedIndex = 0;
+  void updateSelectedIndex(int index) {
+    print(index);
     setState(() {
-    league = index == 0 ? 2 :index == 1? 383
+      league = index == 0
+          ? 2
+          : index == 1
+              ? 383
               : 140;
       selectedIndex = index;
-          
-              Provider.of<UserProvider>(context, listen: false)
+
+      Provider.of<UserProvider>(context, listen: false)
           .setselectedLeageId(league);
-     
     });
-      _fetchGames(league); 
+    _fetchGames(league);
   }
 
   Map<int, Map<String, TextEditingController>> _guessControllers = {};
@@ -79,9 +80,8 @@ bool _showOnlyTodayGames = false;
     super.initState();
     clientId = widget.authProvider.user?.id ?? 'Not logged in';
     email = widget.authProvider.user?.email ?? 'Not logged in';
-    league= widget.userProvider.selectedLeageId ?? 2;
+    league = widget.userProvider.selectedLeageId ?? 2;
 
-   
     print(clientId);
     print(email);
     _fetchGames(league);
@@ -96,10 +96,12 @@ bool _showOnlyTodayGames = false;
     }
     super.dispose();
   }
-bool isGameToday(String formattedDate) {
-  final today = DateFormat('dd/MM/yy').format(DateTime.now());
-  return formattedDate == today;
-}
+
+  bool isGameToday(String formattedDate) {
+    final today = DateFormat('dd/MM/yy').format(DateTime.now());
+    return formattedDate == today;
+  }
+
   Future<void> _fetchGames(int leagueId) async {
     print('leagueId ${leagueId}');
 
@@ -149,166 +151,168 @@ bool isGameToday(String formattedDate) {
     }
   }
 
-
-  
   Future<void> _submitAllGuesses() async {
-  List<Map<String, dynamic>> newGuesses = [];
-  List<Map<String, dynamic>> updatedGuesses = [];
+    List<Map<String, dynamic>> newGuesses = [];
+    List<Map<String, dynamic>> updatedGuesses = [];
 
-  for (var game in _games) {
-    var controllers = _guessControllers[game.fixtureId];
-    if (controllers != null) {
-      var homeScore = controllers['home']?.text;
-      var awayScore = controllers['away']?.text;
+    for (var game in _games) {
+      var controllers = _guessControllers[game.fixtureId];
+      if (controllers != null) {
+        var homeScore = controllers['home']?.text;
+        var awayScore = controllers['away']?.text;
 
-      if (homeScore != null &&
-          awayScore != null &&
-          homeScore.isNotEmpty &&
-          awayScore.isNotEmpty) {
-        
-        // Check if a guess already exists for this game
-     Guess? existingGuess;
-try {
-  existingGuess = _guesses.firstWhere(
-    (g) => g.gameOriginalId == game.fixtureId,
-  );
-} catch (e) {
-  // No matching guess found
-  existingGuess = null;
-}
+        if (homeScore != null &&
+            awayScore != null &&
+            homeScore.isNotEmpty &&
+            awayScore.isNotEmpty) {
+          // Check if a guess already exists for this game
+          Guess? existingGuess;
+          try {
+            existingGuess = _guesses.firstWhere(
+              (g) => g.gameOriginalId == game.fixtureId,
+            );
+          } catch (e) {
+            // No matching guess found
+            existingGuess = null;
+          }
 
-        var guessData = {
-          'userID': clientId,
-          'gameID': game.fixtureId,
-          'gameOriginalID': game.fixtureId,
-          'expectedPoints': 0,
-          'home_team_goals': homeScore,
-          'away_team_goals': awayScore,
-          // 'sum_points': 0,
-          'leagueID': league,
-          // 'email': email,
-        };
+          var guessData = {
+            'userID': clientId,
+            'gameID': game.fixtureId,
+            'gameOriginalID': game.fixtureId,
+            'expectedPoints': 0,
+            'home_team_goals': homeScore,
+            'away_team_goals': awayScore,
+            // 'sum_points': 0,
+            'leagueID': league,
+            // 'email': email,
+          };
 
-           if (existingGuess != null) {
-          // Update existing guess
-          updatedGuesses.add(guessData);
-        } else {
-          // Create new guess
+          if (existingGuess != null && game.status.long == "Not Started") {
+            // Update existing guess
+                
+            updatedGuesses.add(guessData);
+          }
+          if (existingGuess == null) {
+         
+            // Create new guess
             guessData['email'] = email;
             guessData['sum_points'] = 0;
-          newGuesses.add(guessData);
+            newGuesses.add(guessData);
+          }
         }
       }
     }
-  }
 
-  if (newGuesses.isEmpty && updatedGuesses.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("No new or updated guesses to submit")),
-    );
-    return;
-  }
+    if (newGuesses.isEmpty && updatedGuesses.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("No new or updated guesses to submit")),
+      );
+      return;
+    }
 
-  final newGuessUrl = Uri.parse('https://leagues.onrender.com/guesses/add');
-  final updateGuessUrl = Uri.parse('https://leagues.onrender.com/guesses/');
-  bool allSuccessful = true;
+    final newGuessUrl = Uri.parse('https://leagues.onrender.com/guesses/add');
+    final updateGuessUrl = Uri.parse('https://leagues.onrender.com/guesses/');
+    bool allSuccessful = true;
 
-  // Submit new guesses
-  for (var guess in newGuesses) {
-    final response = await http.post(
-      newGuessUrl,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(guess),
-    );
+    // Submit new guesses
+    for (var guess in newGuesses) {
+      final response = await http.post(
+        newGuessUrl,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(guess),
+      );
 
-    if (response.statusCode != 200) {
-      allSuccessful = false;
-      print("Failed to submit new guess: ${response.body}");
+      if (response.statusCode != 200) {
+        allSuccessful = false;
+        print("Failed to submit new guess: ${response.body}");
+      }
+    }
+
+    // Update existing guesses
+    for (var guess in updatedGuesses) {
+      final response = await http.put(
+        updateGuessUrl,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(guess),
+      );
+
+      if (response.statusCode != 200) {
+        allSuccessful = false;
+        print("Failed to update guess: ${response.body}");
+      }
+    }
+
+    if (allSuccessful) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text("All guesses submitted or updated successfully")),
+      );
+      _fetchGuesses(clientId); // Refresh guesses after submission
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to submit or update some guesses")),
+      );
     }
   }
-
-  // Update existing guesses
-  for (var guess in updatedGuesses) {
-    final response = await http.put(
-      updateGuessUrl,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(guess),
-    );
-
-    if (response.statusCode != 200) {
-      allSuccessful = false;
-      print("Failed to update guess: ${response.body}");
-    }
-  }
-
-  if (allSuccessful) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("All guesses submitted or updated successfully")),
-    );
-    _fetchGuesses(clientId); // Refresh guesses after submission
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Failed to submit or update some guesses")),
-    );
-  }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: background,
+      backgroundColor: background,
       appBar: AppBar(
-        title: Text('games',
-  style: TextStyle(
-  color: white, // White color for the team names
-),
+        title: Text(
+          'games',
+          style: TextStyle(
+            color: white, // White color for the team names
+          ),
         ),
-           backgroundColor: Colors.transparent,
-              actions: [
-        Row(
-          children: [
-            Text('Today only',
-              style: TextStyle(
-  color: white, // White color for the team names
-
-),
-            ),
-            Switch(
-              value: _showOnlyTodayGames,
-              onChanged: (value) {
-                setState(() {
-                  _showOnlyTodayGames = value;
-                });
-              },
-            ),
-          ],
-        ),
-      ],
+        backgroundColor: Colors.transparent,
+        actions: [
+          Row(
+            children: [
+              Text(
+                'Today only',
+                style: TextStyle(
+                  color: white, // White color for the team names
+                ),
+              ),
+              Switch(
+                value: _showOnlyTodayGames,
+                onChanged: (value) {
+                  setState(() {
+                    _showOnlyTodayGames = value;
+                  });
+                },
+              ),
+            ],
+          ),
+        ],
       ),
-            body: Column(
+      body: Column(
         children: [
           ToggleButtonsSample(
             options: [
               'Champ',
               'Israel',
-             
+
               'Spain'
               // AppLocalizations.of(context)!.opens,
               // AppLocalizations.of(context)!.history
             ],
             onSelectionChanged: updateSelectedIndex,
             initialSelection: league == 2
-        ? 0
-        : league == 383
-            ? 1
-            : 2,
+                ? 0
+                : league == 383
+                    ? 1
+                    : 2,
           ),
           Expanded(
             child: listView(),
           ),
         ],
       ),
- floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton(
         onPressed: _submitAllGuesses,
         child: Icon(Icons.send),
         tooltip: 'Submit All Guesses',
@@ -317,18 +321,19 @@ try {
   }
 
   ListView listView() {
-      final filteredGames = _showOnlyTodayGames
-      ? _games.where((game) => isGameToday( DateFormat('dd/MM/yy').format(game.date))).toList()
-      : _games;
+    final filteredGames = _showOnlyTodayGames
+        ? _games
+            .where(
+                (game) => isGameToday(DateFormat('dd/MM/yy').format(game.date)))
+            .toList()
+        : _games;
     return ListView.separated(
       itemCount: filteredGames.length,
       itemBuilder: (BuildContext context, int index) {
         final game = filteredGames[index];
-        final matchingGuesses = _guesses
-            .where((g) => g.gameOriginalId == game.fixtureId)
-            .toList();
-        final guess =
-            matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
+        final matchingGuesses =
+            _guesses.where((g) => g.gameOriginalId == game.fixtureId).toList();
+        final guess = matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
         // Ensure controllers exist for this game
         if (_guessControllers[game.fixtureId] == null) {
           _guessControllers[game.fixtureId] = {
@@ -345,21 +350,22 @@ try {
             print(game.fixtureId);
             // Your onTap logic here
             print('Game tapped!');
-              if (game.status.long != "Not Started")
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    GameDetails(gameOriginalId: game.fixtureId,
-                  game: game,
+            if (game.status.long != "Not Started")
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => GameDetails(
+                    gameOriginalId: game.fixtureId,
+                    game: game,
+                  ),
                 ),
-              ),
-            );
+              );
           },
         );
       },
-  separatorBuilder: (BuildContext context, int index) => Divider(height: 0.0, color: background),
-    padding: EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
+      separatorBuilder: (BuildContext context, int index) =>
+          Divider(height: 0.0, color: background),
+      padding: EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
     );
   }
 }
