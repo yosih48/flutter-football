@@ -173,6 +173,9 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   @override
   Widget build(BuildContext context) {
     final selectedGroup = Provider.of<UserProvider>(context);
+  
+    print( 'selectedGroup : ${selectedGroup.selectedGroupName}');
+ 
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
@@ -238,7 +241,6 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                             );
                           },
                           child: ListTile(
-                  
                             contentPadding: EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 8),
                             leading: CircleAvatar(
@@ -253,23 +255,24 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                                   TextStyle(color: Colors.white, fontSize: 16),
                               textAlign: TextAlign.right,
                             ),
-                   trailing: Row(
+                            trailing: Row(
                               mainAxisSize: MainAxisSize
                                   .min, // Ensures the Row takes up only the necessary width
                               children: [
                                 IconButton(
-                                  icon: Icon(Icons.star,
+                                  icon: Icon(
+                                    Icons.star,
                                     color: selectedGroup.selectedGroupName ==
                                             groupName
                                         ? Colors.amber
                                         : Colors.white,
                                   ),
                                   onPressed: () {
-                                     
-                                      selectedGroup.setSelectedGroupName(groupName);
-                                      print(' set groupName: ${groupName}');
-                                      // Navigate back or show a confirmation
-              
+                                    selectedGroup
+                                        .setSelectedGroupName(groupName);
+                               
+                                    print(' set groupName: ${groupName}');
+                                    // Navigate back or show a confirmation
                                   },
                                 ),
                                 IconButton(

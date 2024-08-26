@@ -63,8 +63,12 @@ bool _showOnlyTodayGames = false;
     void updateSelectedIndex(int index) {
       print(index);
     setState(() {
-    league = index == 0 ? 2 :index == 1? 4: 140;
+    league = index == 0 ? 2 :index == 1? 383
+              : 140;
       selectedIndex = index;
+          
+              Provider.of<UserProvider>(context, listen: false)
+          .setselectedLeageId(league);
      
     });
       _fetchGames(league); 
@@ -75,6 +79,9 @@ bool _showOnlyTodayGames = false;
     super.initState();
     clientId = widget.authProvider.user?.id ?? 'Not logged in';
     email = widget.authProvider.user?.email ?? 'Not logged in';
+    league= widget.userProvider.selectedLeageId ?? 2;
+
+   
     print(clientId);
     print(email);
     _fetchGames(league);
@@ -282,14 +289,18 @@ try {
           ToggleButtonsSample(
             options: [
               'Champ',
-              'Euro',
+              'Israel',
              
               'Spain'
               // AppLocalizations.of(context)!.opens,
               // AppLocalizations.of(context)!.history
             ],
             onSelectionChanged: updateSelectedIndex,
-            initialSelection: 0,
+            initialSelection: league == 2
+        ? 0
+        : league == 383
+            ? 1
+            : 2,
           ),
           Expanded(
             child: listView(),

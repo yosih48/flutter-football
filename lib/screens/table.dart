@@ -68,9 +68,11 @@ class TableScreenContentState extends State<TableScreenContent> {
       league = index == 0
           ? 2
           : index == 1
-              ? 4
+              ? 383
               : 140;
       selectedIndex = index;
+             Provider.of<UserProvider>(context, listen: false)
+          .setselectedLeageId(league);
     });
     _fetchUsersForGroup(selectedGroupName);
   }
@@ -169,7 +171,7 @@ class TableScreenContentState extends State<TableScreenContent> {
   void initState() {
     super.initState();
     currentUserId = widget.authProvider.user?.id ?? 'Not logged in';
-  
+  league = widget.userProvider.selectedLeageId ?? 2;
     _fetchUserGroups();
   }
 
@@ -255,9 +257,13 @@ class TableScreenContentState extends State<TableScreenContent> {
       body: Column(
         children: [
           ToggleButtonsSample(
-            options: ['Champ', 'Euro', 'Spain'],
+            options: ['Champ', 'Israel', 'Spain'],
             onSelectionChanged: updateSelectedIndex,
-            initialSelection: 0,
+            initialSelection:  league == 2
+        ? 0
+        : league == 383
+            ? 1
+            : 2,
           ),
           Expanded(
             child: table(league),

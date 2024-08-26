@@ -10,8 +10,10 @@ import '../resources/auth.dart';
 class UserProvider extends ChangeNotifier {
   User? _currentUser;
    String _selectedGroupName = 'default';
+   int _selectedLeageId = 2;
 
    String get selectedGroupName => _selectedGroupName;
+   int get selectedLeageId => _selectedLeageId;
   User? get currentUser => _currentUser;
 
 
@@ -45,6 +47,11 @@ class UserProvider extends ChangeNotifier {
 
   void setSelectedGroupName(String groupName) {
     _selectedGroupName = groupName;
+    notifyListeners();
+  }
+  void setselectedLeageId(int id) {
+    _selectedLeageId = id;
+    print('_selectedLeageId ${_selectedLeageId}');
     notifyListeners();
   }
   void setCurrentEmployee(User employee) {
