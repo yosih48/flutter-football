@@ -30,6 +30,9 @@ class GameWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     print(homeController);
+        bool isValid = homeController!.text.isNotEmpty;
+    print(isValid);
+
     return Card(
       color: cards, // Dark background color for the card
       elevation: 0,
@@ -110,6 +113,7 @@ class GameWidget extends StatelessWidget {
                             keyboardType: TextInputType.number,
                             textAlign: TextAlign.center,
                             style: TextStyle(
+                              
                               color: Colors
                                   .white, // White color for the input text
                               fontSize: 16.0,
@@ -117,9 +121,23 @@ class GameWidget extends StatelessWidget {
                             decoration: InputDecoration(
                               border: OutlineInputBorder(
                                 borderSide: BorderSide(
-                                    color: Color(
-                                        0xFF9BA4B5)), // Light gray border color
+                                  color:
+                                      isValid ? Color(0xFF9BA4B5) : Colors.red,
+                                ),
                               ),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color:
+                                      isValid ? Color(0xFF9BA4B5) : Colors.red,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color:
+                                      isValid ? Color(0xFF9BA4B5) : Colors.red,
+                                ),
+                              ),
+                       
                               contentPadding: EdgeInsets.symmetric(
                                   vertical: 12.0, horizontal: 8.0),
                             ),
@@ -144,11 +162,24 @@ class GameWidget extends StatelessWidget {
                                   .white, // White color for the input text
                               fontSize: 16.0,
                             ),
-                            decoration: InputDecoration(
+                                        decoration: InputDecoration(
                               border: OutlineInputBorder(
                                 borderSide: BorderSide(
-                                    color: Color(
-                                        0xFF9BA4B5)), // Light gray border color
+                                  color:
+                                      isValid ? Color(0xFF9BA4B5) : Colors.red,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color:
+                                      isValid ? Color(0xFF9BA4B5) : Colors.red,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color:
+                                      isValid ? Color(0xFF9BA4B5) : Colors.red,
+                                ),
                               ),
                               contentPadding: EdgeInsets.symmetric(
                                   vertical: 12.0, horizontal: 8.0),

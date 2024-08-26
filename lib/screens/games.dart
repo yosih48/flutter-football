@@ -184,7 +184,7 @@ try {
           'expectedPoints': 0,
           'home_team_goals': homeScore,
           'away_team_goals': awayScore,
-          'sum_points': 0,
+          // 'sum_points': 0,
           'leagueID': league,
           // 'email': email,
         };
@@ -195,6 +195,7 @@ try {
         } else {
           // Create new guess
             guessData['email'] = email;
+            guessData['sum_points'] = 0;
           newGuesses.add(guessData);
         }
       }
