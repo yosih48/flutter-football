@@ -4,8 +4,25 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 class GamesMethods {
-  Future<List<Game>> fetchGames(int leagueId) async {
-    print('leagueId ${leagueId}');
+
+    Future<List<Game>> fetchAllGames() async {
+    List<int> leagueIds = [2, 3, 383, 140];
+    List<Game> allGames = [];
+
+    for (int leagueId in leagueIds) {
+      final games = await _fetchGamesForLeague(leagueId);
+      allGames.addAll(games);
+    }
+
+    allGames.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    return allGames;
+  }
+
+  Future<List<Game>> fetchGamesForLeague(int leagueId) async {
+    return await _fetchGamesForLeague(leagueId);
+  }
+
+  Future<List<Game>> _fetchGamesForLeague(int leagueId) async {
     final url = Uri.parse('https://leagues.onrender.com/api/realApiData');
     final response = await http.post(
       url,
@@ -15,23 +32,25 @@ class GamesMethods {
 
     if (response.statusCode == 200) {
       final responseData = jsonDecode(response.body);
-      // print(responseData);
       final gamesData = responseData['games'];
-      print('gamesData ${gamesData[0]}');
       if (gamesData != null && gamesData is List) {
-        final List<Game> allGames =
+        final List<Game> games =
             gamesData.map((item) => Game.fromJson(item)).toList();
 
         // Filter games
-        final List<Game> filteredGames = allGames.where((game) {
+         final filteredGames = games.where((game) {
           bool hasOdds = game.odds.home != 10 ||
               game.odds.draw != 10 ||
               game.odds.away != 10;
           bool isFinished = game.status.long == "Match Finished";
           return hasOdds || isFinished;
         }).toList();
-     filteredGames.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
+        // Sort the filtered games by timestamp
+        filteredGames.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
         return filteredGames;
+
       } else {
         throw Exception('Games data is null or not a list');
       }
@@ -39,7 +58,6 @@ class GamesMethods {
       throw Exception('Failed to fetch games');
     }
   }
-  
 
 
 }

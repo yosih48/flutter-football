@@ -107,41 +107,31 @@ void toggleShowOnlyTodayGames() {
     return formattedDate == today;
   }
 
-  Future<void> _fetchGames(int leagueId) async {
-    print('leagueId ${leagueId}');
-
-    try {
-          List<Game> allGames = [];
-    List<int> leagueIds = [2, 3, 383, 140];
+ Future<void> _fetchGames(league) async {
+  try {
+    List<Game> fetchedGames;
 
     if (_showOnlyTodayGames) {
-      // Fetch games from all leagues
-      for (int leagueId in leagueIds) {
-        final games = await GamesMethods().fetchGames(leagueId);
-        allGames.addAll(games);
-      }
+      fetchedGames = await GamesMethods().fetchAllGames();
     } else {
-      // Fetch games only for the current league
-      allGames = await GamesMethods().fetchGames(leagueId);
+      fetchedGames = await GamesMethods().fetchGamesForLeague(league);
     }
-      setState(() {
-        _games = allGames;
-      });
-      setState(() {
-        for (var game in _games) {
-          if (_guessControllers[game.fixtureId] == null) {
-            _guessControllers[game.fixtureId] = {
-              'home': TextEditingController(),
-              'away': TextEditingController(),
-            };
-          }
+
+    setState(() {
+      _games = fetchedGames;
+      for (var game in _games) {
+        if (_guessControllers[game.fixtureId] == null) {
+          _guessControllers[game.fixtureId] = {
+            'home': TextEditingController(),
+            'away': TextEditingController(),
+          };
         }
-      });
-      // print(_games);
-    } catch (e) {
-      print('Failed to fetch games: $e');
-    }
+      }
+    });
+  } catch (e) {
+    print('Failed to fetch games: $e');
   }
+}
 
   Future<void> _fetchGuesses(clientId) async {
     print('clientId ${clientId}');
