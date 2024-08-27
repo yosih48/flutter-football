@@ -59,9 +59,11 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   late String clientId;
   late String email;
   int selectedIndex = 0;
+   bool isLoading = true;
   void updateSelectedIndex(int index) {
     print(index);
     setState(() {
+          isLoading = true;
       league = index == 0
           ? 2
           : index == 1
@@ -127,6 +129,7 @@ void toggleShowOnlyTodayGames() {
           };
         }
       }
+       isLoading = false;
     });
   } catch (e) {
     print('Failed to fetch games: $e');
@@ -289,6 +292,7 @@ void toggleShowOnlyTodayGames() {
                 onChanged: (value) {
                   setState(() {
                     _showOnlyTodayGames = value;
+                    isLoading = true;
                    _fetchGames(league);
                   });
                   // toggleShowOnlyTodayGames();
@@ -319,7 +323,11 @@ void toggleShowOnlyTodayGames() {
                     :league == 140? 2: 3,
           ),
           Expanded(
-            child: listView(),
+            child: 
+            isLoading
+                ? Center(child: CircularProgressIndicator())
+                :
+            listView(),
           ),
         ],
       ),

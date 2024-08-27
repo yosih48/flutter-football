@@ -305,6 +305,7 @@ print(userProvider.selectedGroupName);
                       },
                     ),
             ),
+
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(
@@ -319,6 +320,7 @@ print(userProvider.selectedGroupName);
               },
               child: const Text('Signout'),
             ),
+            SizedBox(height: 20.0,)
           ],
         ),
       ),
