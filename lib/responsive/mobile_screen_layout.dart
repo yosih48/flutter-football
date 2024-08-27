@@ -62,7 +62,7 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
               Icons.person,
               color: (_page == 0) ? primaryColor : secondaryColor,
             ),
-            label: '',
+            label: 'פרופיל',
             backgroundColor: primaryColor,
           ),
           BottomNavigationBarItem(
@@ -70,23 +70,23 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
                 Icons.sports_soccer,
                 color: (_page == 1) ? primaryColor : secondaryColor,
               ),
-              label: '',
+              label: 'תוצאות',
+              backgroundColor: primaryColor),
+          BottomNavigationBarItem(
+              icon: Icon(
+                Icons.list,
+                color: (_page == 2) ? primaryColor : secondaryColor,
+              ),
+              label: 'טבלה',
               backgroundColor: primaryColor),
                       BottomNavigationBarItem(
             icon: Icon(
               Icons.star,
-              color: (_page == 2) ? primaryColor : secondaryColor,
+              color: (_page == 3) ? primaryColor : secondaryColor,
             ),
-            label: '',
+            label: 'מועדפים',
             backgroundColor: primaryColor,
           ),
-          BottomNavigationBarItem(
-              icon: Icon(
-                Icons.list,
-                color: (_page == 3) ? primaryColor : secondaryColor,
-              ),
-              label: '',
-              backgroundColor: primaryColor),
 
           // BottomNavigationBarItem(
           //   icon: Icon(

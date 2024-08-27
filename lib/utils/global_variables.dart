@@ -18,8 +18,8 @@ List<Widget> homeScreenItems = [
 
  ProfileScreen(),
  GamesScreen(),
- FavoritsScreen(),
  TableScreen(),
+ FavoritsScreen(),
 //  GroupList(),
   // SignupScreen(),
 

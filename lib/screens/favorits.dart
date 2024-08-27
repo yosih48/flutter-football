@@ -140,6 +140,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                           Colors.blue, // White color for the switch when it's on
                       inactiveThumbColor: Colors
                           .white, // White color for the switch thumb when it's off
+                 // White color for the switch thumb when it's off
                       inactiveTrackColor: Colors
                           .grey, // Optional: Light grey for the track when it's off
                     ),
