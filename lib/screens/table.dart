@@ -60,6 +60,7 @@ class TableScreenContentState extends State<TableScreenContent> {
   Map<String, String> _userGroups = {};
   int league = 2;
   late String currentUserId;
+    bool isLoading = true;
   //  Map<String, dynamic> user = {};
   TextEditingController _inviteCodeController = TextEditingController();
   void updateSelectedIndex(int index) {
@@ -198,6 +199,7 @@ class TableScreenContentState extends State<TableScreenContent> {
 
           _fetchUsersForGroup(selectedGroupName);
         }
+        
       });
     } catch (e) {
       print('Failed to fetch user groups: $e');
@@ -218,6 +220,7 @@ class TableScreenContentState extends State<TableScreenContent> {
             num pointsB = b['points']?[league.toString()] ?? 0;
             return pointsB.compareTo(pointsA); // Sort in descending order
           });
+           isLoading = false;
         //  print('users: ${_users}');
       });
     } catch (e) {
@@ -256,7 +259,11 @@ class TableScreenContentState extends State<TableScreenContent> {
           color: Colors.white, // Set the color of the arrow icon to white
         ),
       ),
-      body: Column(
+      body: 
+      isLoading
+          ? Center(child: CircularProgressIndicator())
+          :
+      Column(
         children: [
           ToggleButtonsSample(
             options: ['Champ', 'Israel', 'Spain', 'אירופית'],
