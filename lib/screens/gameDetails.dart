@@ -171,7 +171,7 @@ List<GuessWithNames> _guessesWithNames = [];
                   style: TextStyle(
               color: Colors.white, // White color for the team names
               fontWeight: FontWeight.bold,
-              fontSize: 18.0,
+              fontSize: 14.0,
             ),
             overflow: TextOverflow.ellipsis,
             textAlign: isHome ? TextAlign.right : TextAlign.left,
