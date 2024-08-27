@@ -35,10 +35,10 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
     final String url =
         'https://leagues.onrender.com/users/profile'; // Replace with your actual API endpoint
     final Map<String, dynamic> leagueData = {
-      'championsLeague': leagueStates['Champ'],
-      'israeliLeague': leagueStates['Israel'],
-      'spanishLeague': leagueStates['Spain'],
-      'europeLeague': leagueStates['אירופית'],
+      'championsLeague': leagueStates['ליגת אלופות'],
+      'israeliLeague': leagueStates['ליגת העל'],
+      'spanishLeague': leagueStates['ליגה ספרדית'],
+      'europeLeague': leagueStates['ליגה אירופית'],
       'premierLeague': false,
       'africaLeague': false,
       'conferenceLeague': false,
