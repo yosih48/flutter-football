@@ -117,28 +117,32 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
           ? Center(child: CircularProgressIndicator())
           : ListView(
               children: [
-                Transform.scale(
-                  scale: 0.9,
-                  child: SwitchListTile(
-                    title: Text(
-                      'בחירת כל התחרויות',
-                      style: TextStyle(
-                        color: white, // White color for the team names
+                Padding(
+                   padding: EdgeInsets.only(top: 50.0),
+           
+                  child: Transform.scale(
+                    scale: 0.9,
+                    child: SwitchListTile(
+                      title: Text(
+                        'בחירת כל התחרויות',
+                        style: TextStyle(
+                          color: white, // White color for the team names
+                        ),
                       ),
+                      value: leagueStates.values.every((value) => value),
+                      onChanged: (bool value) {
+                        setState(() {
+                          leagueStates.updateAll((key, _) => value);
+                        });
+                        updateDatabase(name, email);
+                      },
+                      activeColor:
+                          Colors.blue, // White color for the switch when it's on
+                      inactiveThumbColor: Colors
+                          .white, // White color for the switch thumb when it's off
+                      inactiveTrackColor: Colors
+                          .grey, // Optional: Light grey for the track when it's off
                     ),
-                    value: leagueStates.values.every((value) => value),
-                    onChanged: (bool value) {
-                      setState(() {
-                        leagueStates.updateAll((key, _) => value);
-                      });
-                      updateDatabase(name, email);
-                    },
-                    activeColor:
-                        Colors.blue, // White color for the switch when it's on
-                    inactiveThumbColor: Colors
-                        .white, // White color for the switch thumb when it's off
-                    inactiveTrackColor: Colors
-                        .grey, // Optional: Light grey for the track when it's off
                   ),
                 ),
                 ...leagueStates.entries.map((entry) {
