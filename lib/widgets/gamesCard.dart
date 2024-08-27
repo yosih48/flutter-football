@@ -30,7 +30,7 @@ class GameWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     print(homeController);
-        bool isValid = homeController!.text.isNotEmpty;
+    bool isValid = homeController!.text.isNotEmpty;
     print(isValid);
 
     return Card(
@@ -83,25 +83,25 @@ class GameWidget extends StatelessWidget {
                   // SizedBox(width: 8.0),
                   Expanded(
                     child: Align(
-                      alignment: Alignment.center,
+                      alignment: Alignment.centerLeft,
                       child: Text(
                         game.home.name,
                         style: TextStyle(
                           color: Colors.white, // White color for the team names
                           fontWeight: FontWeight.bold,
-                          fontSize: 18.0,
+                          fontSize: 14.0,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
-                  //  SizedBox(width: 6.0),
+                  SizedBox(width: 6.0),
                   Image.network(
                     game.home.logo,
                     width: 24.0,
                     height: 24.0,
                   ),
-                  SizedBox(width: 8.0),
+                  SizedBox(width: 18.0),
                   if (game.status.long == "Not Started")
                     Row(
                       children: [
@@ -113,7 +113,6 @@ class GameWidget extends StatelessWidget {
                             keyboardType: TextInputType.number,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              
                               color: Colors
                                   .white, // White color for the input text
                               fontSize: 16.0,
@@ -137,7 +136,6 @@ class GameWidget extends StatelessWidget {
                                       isValid ? Color(0xFF9BA4B5) : Colors.red,
                                 ),
                               ),
-                       
                               contentPadding: EdgeInsets.symmetric(
                                   vertical: 12.0, horizontal: 8.0),
                             ),
@@ -162,7 +160,7 @@ class GameWidget extends StatelessWidget {
                                   .white, // White color for the input text
                               fontSize: 16.0,
                             ),
-                                        decoration: InputDecoration(
+                            decoration: InputDecoration(
                               border: OutlineInputBorder(
                                 borderSide: BorderSide(
                                   color:
@@ -203,16 +201,16 @@ class GameWidget extends StatelessWidget {
                         fontSize: 18.0,
                       ),
                     ),
-                  SizedBox(width: 8.0),
+                  SizedBox(width: 18.0),
                   Image.network(
                     game.away.logo,
                     width: 24.0,
                     height: 24.0,
                   ),
-                  // SizedBox(width: 6.0),
+                  SizedBox(width: 6.0),
                   Expanded(
                     child: Align(
-                      alignment: Alignment.center,
+                      alignment: Alignment.centerRight,
                       child: Text(
                         game.away.name,
                         //  '${game.odds.draw}',
@@ -220,7 +218,7 @@ class GameWidget extends StatelessWidget {
                         style: TextStyle(
                           color: Colors.white, // White color for the team names
                           fontWeight: FontWeight.bold,
-                          fontSize: 18.0,
+                          fontSize: 14.0,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -316,12 +314,11 @@ class GameWidget extends StatelessWidget {
                       ),
                     ),
                   if (guess != null && game.status.long != 'Not Started')
-                             Expanded(
+                    Expanded(
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child:
-                        Text(
-'${guess!.sumPoints % 1 == 0 ? guess!.sumPoints.toInt() : guess!.sumPoints} נקודות ',
+                        child: Text(
+                          '${guess!.sumPoints % 1 == 0 ? guess!.sumPoints.toInt() : guess!.sumPoints} נקודות ',
                           style: TextStyle(
                             color: Color(0xFF9BA4B5).withOpacity(0.6),
                             fontSize: 14.0,
