@@ -23,6 +23,7 @@ class _GameDetailsState extends State<GameDetails> {
   List<Guess> _guesses = [];
 List<GuessWithNames> _guessesWithNames = [];
  late String selectedGroupName ="";
+   bool isLoading = true;
   @override
   void initState() {
     super.initState();
@@ -45,10 +46,11 @@ List<GuessWithNames> _guessesWithNames = [];
 
        setState(() {
         _guessesWithNames = filteredGuesses;
+          isLoading = false;
       });
-      for (var guessWithName in _guessesWithNames) {
-    print(guessWithName.userGroups);
-  }
+  //     for (var guessWithName in _guessesWithNames) {
+  //   print(guessWithName.userGroups);
+  // }
     } 
  catch (e, stackTrace) {
   print('Failed to fetch guesses: $e');
@@ -72,7 +74,11 @@ List<GuessWithNames> _guessesWithNames = [];
           color: Colors.white, // Set the color of the arrow icon to white
         ),
       ),
-      body: SingleChildScrollView(
+      body: 
+      isLoading
+          ? Center(child: CircularProgressIndicator())
+          :
+      SingleChildScrollView(
         child: Column(
           children: [
             _buildGameCard(),
