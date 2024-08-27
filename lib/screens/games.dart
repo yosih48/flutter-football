@@ -66,7 +66,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           ? 2
           : index == 1
               ? 383
-              : 140;
+              : index == 2? 140: 3;
       selectedIndex = index;
 
       Provider.of<UserProvider>(context, listen: false)
@@ -305,16 +305,18 @@ void toggleShowOnlyTodayGames() {
               'Champ',
               'Israel',
 
-              'Spain'
+              'Spain',
+              'אירופית'
               // AppLocalizations.of(context)!.opens,
               // AppLocalizations.of(context)!.history
             ],
             onSelectionChanged: updateSelectedIndex,
-            initialSelection: league == 2
+            initialSelection: 
+            league == 2
                 ? 0
                 : league == 383
                     ? 1
-                    : 2,
+                    :league == 140? 2: 3,
           ),
           Expanded(
             child: listView(),

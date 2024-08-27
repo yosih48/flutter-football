@@ -69,7 +69,9 @@ class TableScreenContentState extends State<TableScreenContent> {
           ? 2
           : index == 1
               ? 383
-              : 140;
+              : index == 2
+                  ? 140
+                  : 3;
       selectedIndex = index;
              Provider.of<UserProvider>(context, listen: false)
           .setselectedLeageId(league);
@@ -257,13 +259,16 @@ class TableScreenContentState extends State<TableScreenContent> {
       body: Column(
         children: [
           ToggleButtonsSample(
-            options: ['Champ', 'Israel', 'Spain'],
+            options: ['Champ', 'Israel', 'Spain', 'אירופית'],
             onSelectionChanged: updateSelectedIndex,
-            initialSelection:  league == 2
-        ? 0
-        : league == 383
-            ? 1
-            : 2,
+            initialSelection:  
+            league == 2
+                ? 0
+                : league == 383
+                    ? 1
+                    : league == 140
+                        ? 2
+                        : 3,
           ),
           Expanded(
             child: table(league),

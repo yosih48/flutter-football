@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:football/screens/favorits.dart';
 import 'package:football/screens/games.dart';
 import 'package:football/screens/groups.dart';
 import 'package:football/screens/login_screen.dart';
@@ -17,6 +18,7 @@ List<Widget> homeScreenItems = [
 
  ProfileScreen(),
  GamesScreen(),
+ FavoritsScreen(),
  TableScreen(),
 //  GroupList(),
   // SignupScreen(),
