@@ -102,19 +102,100 @@ class AuthProvider with ChangeNotifier {
   bool _isLoading = false;
   final StreamController<User?> _authStateController = StreamController<User?>.broadcast();
 final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
-  Future<void> login(String email, String password) async {
+  // Future<void> login(String email, String password) async {
 
+    // try {
+    //   _isLoading = true;
+    //   notifyListeners();
+
+    //   final userData = await AuthService.login(email, password);
+    //   print(userData);
+    //   _currentUser = User.fromJson(userData); // Assuming you have a User.fromJson constructor
+    //     print(_currentUser);
+    //       await _secureStorage.write(key: 'auth_token', value: _currentUser!.newToken);
+    //   _authStateController.add(_currentUser);
+      
+    //   print('Login successful: ${_currentUser?.email}');
+    // } catch (e) {
+    //   print('Login failed: $e');
+    //   _authStateController.addError(e);
+    // } finally {
+    //   _isLoading = false;
+    //   notifyListeners();
+    // }
+// }
+
+
+
+
+
+
+  // AuthProvider() {
+  //   // Initialize the stream with the current user state
+  //   _authStateController.add(_currentUser);
+  // }
+  //   AuthProvider() {
+  //   _initializeAuthState();
+  // }
+  //   Future<void> _initializeAuthState() async {
+  //   final String? token = await _secureStorage.read(key: 'auth_token');
+  //   if (token != null) {
+  //     // If a token exists, try to get the user details
+  //     await refreshUser(token);
+  //   } else {
+  //     _authStateController.add(null);
+  //   }
+  // }
+
+  // bool get isLoading => _isLoading;
+
+  // User? get currentUser => _currentUser;
+
+  // Future<void> refreshUser(String  token) async {
+  //   try {
+  //     _isLoading = true;
+  //     notifyListeners();
+
+  //     _currentUser = await AuthService.getUserDetails( token);
+  //     // Emit the new user state
+  //     _authStateController.add(_currentUser);
+  //   } catch (e) {
+  //     print("Error refreshing user: $e");
+  //       await signOut();
+  //   } finally {
+  //     _isLoading = false;
+  //     notifyListeners();
+  //   }
+  // }
+
+  // Stream<User?> authStateChanges() {
+  //   print('authStateChanges');
+  //   return _authStateController.stream;
+  // }
+  AuthProvider() {
+    _initializeAuthState();
+  }
+
+  Future<void> _initializeAuthState() async {
+    final String? token = await _secureStorage.read(key: 'auth_token');
+    if (token != null) {
+      await refreshUser(token);
+    } else {
+      _authStateController.add(null);
+    }
+  }
+
+  Future<void> login(String email, String password) async {
     try {
       _isLoading = true;
       notifyListeners();
 
       final userData = await AuthService.login(email, password);
-      print(userData);
-      _currentUser = User.fromJson(userData); // Assuming you have a User.fromJson constructor
-        print(_currentUser);
-          await _secureStorage.write(key: 'auth_token', value: _currentUser!.newToken);
+      _currentUser = User.fromJson(userData);
+      await _secureStorage.write(
+          key: 'auth_token', value: _currentUser!.newToken);
       _authStateController.add(_currentUser);
-      
+
       print('Login successful: ${_currentUser?.email}');
     } catch (e) {
       print('Login failed: $e');
@@ -124,6 +205,37 @@ final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
       notifyListeners();
     }
   }
+
+  Future<void> refreshUser(String token) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      _currentUser = await AuthService.getUserDetails(token);
+      _authStateController.add(_currentUser);
+    } catch (e) {
+      print("Error refreshing user: $e");
+      await signOut();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+
+
+
+
+
+
+
+
+  // Don't forget to close the stream when the provider is disposed
+  // @override
+  // void dispose() {
+  //   _authStateController.close();
+  //   super.dispose();
+  // }
     Future<void> register(String displayName, String email, String password) async {
       print(' AuthProvider ${displayName}');
     try {
@@ -144,57 +256,11 @@ final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
       notifyListeners();
     }
   }
-  // AuthProvider() {
-  //   // Initialize the stream with the current user state
-  //   _authStateController.add(_currentUser);
-  // }
-    AuthProvider() {
-    _initializeAuthState();
-  }
-    Future<void> _initializeAuthState() async {
-    final String? token = await _secureStorage.read(key: 'auth_token');
-    if (token != null) {
-      // If a token exists, try to get the user details
-      await refreshUser(token);
-    } else {
-      _authStateController.add(null);
-    }
-  }
+
+  Stream<User?> authStateChanges() => _authStateController.stream;
 
   bool get isLoading => _isLoading;
-
   User? get currentUser => _currentUser;
-
-  Future<void> refreshUser(String  token) async {
-    try {
-      _isLoading = true;
-      notifyListeners();
-
-      _currentUser = await AuthService.getUserDetails( token);
-      // Emit the new user state
-      _authStateController.add(_currentUser);
-    } catch (e) {
-      print("Error refreshing user: $e");
-        await signOut();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Stream<User?> authStateChanges() {
-    print('authStateChanges');
-    return _authStateController.stream;
-  }
-
-  // Don't forget to close the stream when the provider is disposed
-  @override
-  void dispose() {
-    _authStateController.close();
-    super.dispose();
-  }
-
-
     Future<void> signOut() async {
     try {
       _isLoading = true;

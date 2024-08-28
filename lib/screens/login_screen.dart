@@ -42,15 +42,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
 
-  @override
-  void dispose() {
-    // TODO: implement dispose
-    super.dispose();
-    _usernameController.dispose();
-    _passwordController.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   // TODO: implement dispose
+  //   super.dispose();
+  //   _usernameController.dispose();
+  //   _passwordController.dispose();
+  // }
 
-  void loginUser() async {
+  void loginUsera() async {
     setState(() {
       _isLoading = true;
     });
@@ -93,6 +93,21 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     }
   }
+
+void loginUser() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    await authProvider.login(
+        _usernameController.text, _passwordController.text);
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
