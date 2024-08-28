@@ -29,7 +29,8 @@ class UserProvider extends ChangeNotifier {
 
   Future<void> refreshUser(String email) async {
     try {
-      User? user = await AuthService.getUserDetails(currentUserToken);
+      User? user = await AuthService.getUserDetails(currentUserToken, currentUserUid);
+      print('providor user');
       if (user != null) {
         _currentUser = user;
         print("Employee refreshed: ${user.name}");

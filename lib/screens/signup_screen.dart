@@ -48,11 +48,11 @@ class _SignupScreenState extends State<SignupScreen> {
   final authProvider = Provider.of<AuthProvider>(context, listen: false);
   
   try {
-    await authProvider.register(
-      _usernameController.text,
-      _emailController.text,
-      _passwordController.text
-    );
+    // await authProvider.register(
+    //   _usernameController.text,
+    //   _emailController.text,
+    //   _passwordController.text
+    // );
     
     // If we reach here, registration was successful
     print('Registration successful');

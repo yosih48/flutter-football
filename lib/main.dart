@@ -9,6 +9,7 @@ import 'package:football/responsive/rsponsive_layout_screen.dart';
 import 'package:football/responsive/web_screen_layout.dart';
 import 'package:football/screens/games.dart';
 import 'package:football/screens/login_screen.dart';
+import 'package:football/screens/profile.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -18,7 +19,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 void main() async {
   // Ensure that plugin services are initialized
   WidgetsFlutterBinding.ensureInitialized();
-
+  final authProvider = AuthProvider();
+  await authProvider.initializeApp();
   // Initialize flutter_secure_storage
   final storage = FlutterSecureStorage();
   await Firebase.initializeApp();
@@ -26,7 +28,10 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider.value(
+          value: authProvider,
+         
+        ),
         ChangeNotifierProvider(create: (_) => UserProvider()),
       ],
       child: GameApp(),
@@ -35,52 +40,34 @@ void main() async {
 }
 
 class GameApp extends StatelessWidget {
-   const GameApp({super.key});
+  const GameApp({super.key});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-              debugShowCheckedModeBanner: false,
-         title: 'Localizations Sample App',
-         
-        localizationsDelegates: [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: [
-          Locale('en'), // English
-          Locale('he'), // hebrew refreshUser
-        ],
+      debugShowCheckedModeBanner: false,
+      title: 'Localizations Sample App',
+      localizationsDelegates: [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        Locale('en'), // English
+        Locale('he'), // hebrew refreshUser
+      ],
       home: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
-          return StreamBuilder<User?>(
-            stream: authProvider.authStateChanges(),
-            builder: (context, snapshot) {
-              if (authProvider.isLoading) {
-                print('is Loading');
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (snapshot.hasData) {
-                print('hasData');
-                return const ResponsiveLayout(
-                  mobileScreenLayout: MobileScreenLayout(),
-                  webScreenLayout: WebScreenLayout(),
-                );
-              } else if (snapshot.hasError) {
-                print('haserror');
-                return Center(
-                  child: Text('${snapshot.error}'),
-                );
-              }
-              print('nothing');
-              return const LoginScreen();
-            },
-          );
+          if (authProvider.isInitializing) {
+            print('main isInitializing');
+            print(authProvider.isInitializing);
+            return Scaffold(body: Center(child: CircularProgressIndicator()));
+          }
+          return authProvider.currentUser != null
+              ? MobileScreenLayout()
+              : LoginScreen();
         },
       ),
     );
   }
 }
-
-

@@ -25,7 +25,7 @@ class TableScreen extends StatelessWidget {
     return Consumer2<AuthProvider, UserProvider>(
       builder: (context, authProvider, userProvider, child) {
         // Check if user is authenticated
-        if (authProvider.user == null) {
+        if (authProvider.currentUser == null) {
           return LoginScreen(); // Or some other widget for unauthenticated users
         }
         return TableScreenContent(
@@ -173,7 +173,7 @@ class TableScreenContentState extends State<TableScreenContent> {
   @override
   void initState() {
     super.initState();
-    currentUserId = widget.authProvider.user?.id ?? 'Not logged in';
+    currentUserId = widget.authProvider.currentUser?.id ?? 'Not logged in';
   league = widget.userProvider.selectedLeageId ?? 2;
     _fetchUserGroups();
   }

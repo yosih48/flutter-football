@@ -25,4 +25,5 @@ class User {
       groups: json['groups'] != null ? Map<String, dynamic>.from(json['groups']) : null,
     );
   }
+
 }

@@ -42,13 +42,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
 
-  // @override
-  // void dispose() {
-  //   // TODO: implement dispose
-  //   super.dispose();
-  //   _usernameController.dispose();
-  //   _passwordController.dispose();
-  // }
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   void loginUsera() async {
     setState(() {
@@ -94,23 +93,26 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-void loginUser() async {
-    setState(() {
-      _isLoading = true;
-    });
+  void loginUser() async {
+    if (!mounted) return;
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    await authProvider.login(
-        _usernameController.text, _passwordController.text);
 
-    setState(() {
-      _isLoading = false;
-    });
+    try {
+      await authProvider.login(
+          _usernameController.text, _passwordController.text);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login failed: ${e.toString()}')),
+      );
+    }
   }
 
 
   @override
   Widget build(BuildContext context) {
+     final authProvider = Provider.of<AuthProvider>(context);
     return Scaffold(
         body: SafeArea(
             child: Container(
@@ -203,11 +205,16 @@ void loginUser() async {
           ),
           const SizedBox(height: 24),
           //button login
-
+          ElevatedButton(
+            onPressed: _isLoading  ? null : loginUser,
+            child: _isLoading 
+                ? CircularProgressIndicator()
+                : Text('Logina'),
+          ),
           InkWell(
-            onTap: loginUser,
+            onTap: authProvider.isLoading  ? null : loginUser,
             child: Container(
-              child: _isLoading
+              child: authProvider.isLoading 
                   ? const Center(
                       child: CircularProgressIndicator(
                         color: primaryColor,

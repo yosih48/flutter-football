@@ -19,7 +19,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
   late String displayName;
   late String email;
   bool isLoading = true;
-
+  String userId = '';
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -32,11 +32,36 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
     'ליגה ספרדית': false,
     'ליגה אירופית': false,
   };
+
   Future<void> _loadUserPreferences() async {
-    final userProvider = await Provider.of<AuthProvider>(context);
-    final userId = userProvider.currentUser!.id;
+    setState(() {
+      isLoading = true;
+    });
 
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    try {
+      final user = await authProvider.ensureUserLoaded();
+      
+      if (user != null) {
+        setState(() {
+          userId = user.id;
+          isLoading = false;
+        });
+        print('User ID: ${user.id}');
+        print('User Name: ${user.name}');
 
+        _getUserInfo();
+      } else {
+        print('User is null after ensuring loaded');
+        // Handle the case where user is null (e.g., show login screen)
+      }
+    } catch (e) {
+      print('Error loading user preferences: $e');
+      // Handle error (e.g., show error message)
+    }
+  }
+
+  Future<void> _getUserInfo() async {
     try {
       Map<String, dynamic> userData =
           await UsersMethods().fetchUserById(userId);
@@ -118,8 +143,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
           : ListView(
               children: [
                 Padding(
-                   padding: EdgeInsets.only(top: 50.0),
-           
+                  padding: EdgeInsets.only(top: 50.0),
                   child: Transform.scale(
                     scale: 0.9,
                     child: SwitchListTile(
@@ -136,11 +160,11 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                         });
                         updateDatabase(name, email);
                       },
-                      activeColor:
-                          Colors.blue, // White color for the switch when it's on
+                      activeColor: Colors
+                          .blue, // White color for the switch when it's on
                       inactiveThumbColor: Colors
                           .white, // White color for the switch thumb when it's off
-                 // White color for the switch thumb when it's off
+                      // White color for the switch thumb when it's off
                       inactiveTrackColor: Colors
                           .grey, // Optional: Light grey for the track when it's off
                     ),

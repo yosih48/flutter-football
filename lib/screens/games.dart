@@ -26,7 +26,7 @@ class GamesScreen extends StatelessWidget {
     return Consumer2<AuthProvider, UserProvider>(
       builder: (context, authProvider, userProvider, child) {
         // Check if user is authenticated
-        if (authProvider.user == null) {
+        if (authProvider.currentUser == null) {
           return LoginScreen(); // Or some other widget for unauthenticated users
         }
         return _GamesScreenContent(
@@ -80,8 +80,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   Map<int, Map<String, TextEditingController>> _guessControllers = {};
   void initState() {
     super.initState();
-    clientId = widget.authProvider.user?.id ?? 'Not logged in';
-    email = widget.authProvider.user?.email ?? 'Not logged in';
+    clientId = widget.authProvider.currentUser?.id ?? 'Not logged in';
+    email = widget.authProvider.currentUser?.email ?? 'Not logged in';
     league = widget.userProvider.selectedLeageId ?? 2;
 
     print(clientId);

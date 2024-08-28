@@ -1,83 +1,117 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:football/models/users.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
 
 class AuthService {
   static const _baseUrl = 'https://leagues.onrender.com/users';
 
   // Login function
-  static Future<Map<String, dynamic>> login(String email, String password) async {
+  static Future<Map<String, dynamic>> login(
+      String email, String password) async {
+    try {
+      final url = Uri.parse('$_baseUrl/login');
+      final body = json.encode({'email': email, 'password': password});
 
-  try {
-    print(email);
-    print(password);
-
-print(email);
-print(password);
-
-    final url = Uri.parse('$_baseUrl/login');
-    final body = json.encode({'email': email, 'password': password});
-
-    final response = await http.post(
-      url,
-      headers: { "Content-type": "application/json; charset=UTF-8",},
-      body: body,
-    );
-print(body);
-    if (response.statusCode == 200) {
-      // Login successful
-      print('Login successful');
-      return json.decode(response.body);
-    } else {
+      final response = await http.post(
+        url,
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+        body: body,
+      );
+      print(body);
+      if (response.statusCode == 200) {
+        // Login successful
+        print('Login successful');
+        return json.decode(response.body);
+      } else {
         print(' Login failed');
-      // Login failed
-      throw Exception('Failed to login: ${response.statusCode}');
-    }
-      } catch (e, stackTrace) {
-            print('Stack trace: $stackTrace');
+        // Login failed
+        throw Exception('Failed to login: ${response.statusCode}');
+      }
+    } catch (e, stackTrace) {
+      print('Stack trace: $stackTrace');
       print('Error during login: $e');
       throw Exception('Error during login: $stackTrace');
     }
   }
-  static Future<User?> getUserDetails(String  token) async {
-    final url = Uri.parse('$_baseUrl/user');
+
+  static Future<User?> getUserDetails(String token, String userId) async {
+    print('Getting user details for userId: $userId');
+    print('Using token: $token');
+
+    final url = Uri.parse('$_baseUrl/${userId}');
+    print('Requesting URL: $url');
+
     final response = await http.get(
       url,
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token'
+      },
     );
 
+    print('Response status code: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
     if (response.statusCode == 200) {
-      // User details retrieved successfully
-      final userJson = json.decode(response.body);
-      return User.fromJson(userJson);
+      final responseBody = json.decode(response.body);
+      print('Decoded response body: $responseBody');
+
+      User? user;
+      if (responseBody is List && responseBody.isNotEmpty) {
+        user = User.fromJson(responseBody[0]);
+        print('responseBody is List');
+        print(user.id);
+      } else if (responseBody is Map<String, dynamic>) {
+          final Map<String, dynamic> userMap = {
+    'id': responseBody['_id'],
+    'name': responseBody['displayName'],
+    'admin': responseBody['isAdmin'],
+    'email': responseBody['email'],
+    'newToken': responseBody['newToken'],  // Assuming this exists in the response
+    'groups': responseBody['groupID'],
+  };
+        user = User.fromJson(userMap);
+         print('responseBody is map');
+         print(userMap);
+            print(user);
+      } else {
+        throw Exception('Unexpected response format');
+      }
+
+      print('Created user object: $user');
+      print('User ID: ${user.id}');
+      return user;
     } else {
-      // Failed to retrieve user details
-      return null;
+      throw Exception('Failed to get user details: ${response.statusCode}');
     }
   }
+
   // Register function (optional)
   static Future<Map<String, dynamic>> register(
     String displayName,
     String email,
     String password,
   ) async {
-
     print('register displayName ${displayName}');
     final url = Uri.parse('$_baseUrl/add');
     final body = json.encode({
       'displayName': displayName,
       'email': email,
       'password': password,
-    'points': {
-      '2': 0  // Changed 2 to '2'
-    },
-    'thisDayPoints': {
-      '2': 0  // Changed 2 to '2'
-    },
-             'isAdmin': false,
+      'points': {
+        '2': 0 // Changed 2 to '2'
+      },
+      'thisDayPoints': {
+        '2': 0 // Changed 2 to '2'
+      },
+      'isAdmin': false,
     });
 
     final response = await http.post(
@@ -85,7 +119,7 @@ print(body);
       headers: {'Content-Type': 'application/json'},
       body: body,
     );
-print(body);
+    print(body);
     if (response.statusCode == 201) {
       // Registration successful
       print('Registration successful');
@@ -96,188 +130,133 @@ print(body);
     }
   }
 }
+
 class AuthProvider with ChangeNotifier {
   User? _currentUser;
-    User? get user => _currentUser;
+  User? get user => _currentUser;
   bool _isLoading = false;
-  final StreamController<User?> _authStateController = StreamController<User?>.broadcast();
-final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
-  // Future<void> login(String email, String password) async {
+  bool _isInitializing = true;
+  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
+  // final StreamController<User?> _authStateController = StreamControcller<User?>.broadcast();
 
-    // try {
-    //   _isLoading = true;
-    //   notifyListeners();
+  User? get currentUser => _currentUser;
+  bool get isLoading => _isLoading;
+  bool get isInitializing => _isInitializing;
+  Future<void> initializeApp() async {
+    final String? token = await _secureStorage.read(key: 'auth_token');
+    final String? userId = await _secureStorage.read(key: 'user_id');
+    print(userId);
+    if (token != null && userId != null) {
+      print('token != null');
+      try {
+        await refreshUser(token, userId);
+      } catch (e) {
+        print("Error refreshing user: $e");
+        await signOut();
+      }
+    }
+    _isInitializing = false;
+    print(_isInitializing);
+    print(' _isInitializing = false');
+    print(isInitializing);
+    notifyListeners();
+  }
 
-    //   final userData = await AuthService.login(email, password);
-    //   print(userData);
-    //   _currentUser = User.fromJson(userData); // Assuming you have a User.fromJson constructor
-    //     print(_currentUser);
-    //       await _secureStorage.write(key: 'auth_token', value: _currentUser!.newToken);
-    //   _authStateController.add(_currentUser);
-      
-    //   print('Login successful: ${_currentUser?.email}');
-    // } catch (e) {
-    //   print('Login failed: $e');
-    //   _authStateController.addError(e);
-    // } finally {
-    //   _isLoading = false;
-    //   notifyListeners();
-    // }
-// }
+  Future<void> login(String email, String password) async {
+    _isLoading = true;
+    notifyListeners();
 
+    try {
+      final userData = await AuthService.login(email, password);
+      _currentUser = User.fromJson(userData);
+      await _secureStorage.write(
+          key: 'auth_token', value: _currentUser!.newToken);
+      await _secureStorage.write(key: 'user_id', value: _currentUser!.id);
+      print('Login successful: ${_currentUser?.email}');
+    } catch (e) {
+      print('Login failed: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
+  Future<void> refreshUser(String token, String userId) async {
+    try {
+      final user = await AuthService.getUserDetails(token, userId);
+      print('user in refresh');
+      print(user);
+      if (user != null) {
+        _currentUser = user;
+        await _secureStorage.write(key: 'auth_token', value: token);
+        await _secureStorage.write(key: 'user_id', value: userId);
+      } else {
+        throw Exception('Failed to refresh user');
+      }
+    } catch (e) {
+      print("Error refreshing user: $e");
+      await signOut();
+      rethrow;
+    }
+    notifyListeners();
+  }
 
+  Future<void> signOut() async {
+    await _secureStorage.delete(key: 'auth_token');
+    await _secureStorage.delete(key: 'user_id');
+    _currentUser = null;
+    notifyListeners();
+  }
 
+  Future<User?> ensureUserLoaded() async {
+    print('ensureUserLoaded ');
+    print('_currentUser : ${_currentUser!.id}');
+    if (_currentUser != null && _currentUser!.id.isNotEmpty) {
+      return _currentUser;
+    }
 
+    final String? token = await _secureStorage.read(key: 'auth_token');
+    final String? userId = await _secureStorage.read(key: 'user_id');
+    print('userId : ${userId}');
+    print('token ${token}');
+    if (token != null && userId != null) {
+      try {
+        await refreshUser(token, userId);
+        if (_currentUser != null && _currentUser!.id.isNotEmpty) {
+          return _currentUser;
+        } else {
+          throw Exception('User data is invalid after refresh');
+        }
+      } catch (e) {
+        print("Error ensuring user loaded: $e");
+        await signOut();
+      }
+    }
 
-  // AuthProvider() {
-  //   // Initialize the stream with the current user state
-  //   _authStateController.add(_currentUser);
-  // }
-  //   AuthProvider() {
-  //   _initializeAuthState();
-  // }
-  //   Future<void> _initializeAuthState() async {
-  //   final String? token = await _secureStorage.read(key: 'auth_token');
-  //   if (token != null) {
-  //     // If a token exists, try to get the user details
-  //     await refreshUser(token);
-  //   } else {
-  //     _authStateController.add(null);
-  //   }
-  // }
+    return null;
+  }
 
-  // bool get isLoading => _isLoading;
+  // Don't forget to close the stream when the provider is disposed
 
-  // User? get currentUser => _currentUser;
-
-  // Future<void> refreshUser(String  token) async {
+  //   Future<void> register(String displayName, String email, String password) async {
+  //     print(' AuthProvider ${displayName}');
   //   try {
   //     _isLoading = true;
   //     notifyListeners();
 
-  //     _currentUser = await AuthService.getUserDetails( token);
-  //     // Emit the new user state
+  //     final userData = await AuthService.register(displayName, email, password);
+  //      print(' userData ${userData }');
+  //     _currentUser = User.fromJson(userData);
   //     _authStateController.add(_currentUser);
+
+  //     print('Registration successful: ${_currentUser?.email}');
   //   } catch (e) {
-  //     print("Error refreshing user: $e");
-  //       await signOut();
+  //     print('Registration failed: $e');
+  //     _authStateController.addError(e);
   //   } finally {
   //     _isLoading = false;
   //     notifyListeners();
   //   }
   // }
-
-  // Stream<User?> authStateChanges() {
-  //   print('authStateChanges');
-  //   return _authStateController.stream;
-  // }
-  AuthProvider() {
-    _initializeAuthState();
-  }
-
-  Future<void> _initializeAuthState() async {
-    final String? token = await _secureStorage.read(key: 'auth_token');
-    if (token != null) {
-      await refreshUser(token);
-    } else {
-      _authStateController.add(null);
-    }
-  }
-
-  Future<void> login(String email, String password) async {
-    try {
-      _isLoading = true;
-      notifyListeners();
-
-      final userData = await AuthService.login(email, password);
-      _currentUser = User.fromJson(userData);
-      await _secureStorage.write(
-          key: 'auth_token', value: _currentUser!.newToken);
-      _authStateController.add(_currentUser);
-
-      print('Login successful: ${_currentUser?.email}');
-    } catch (e) {
-      print('Login failed: $e');
-      _authStateController.addError(e);
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> refreshUser(String token) async {
-    try {
-      _isLoading = true;
-      notifyListeners();
-
-      _currentUser = await AuthService.getUserDetails(token);
-      _authStateController.add(_currentUser);
-    } catch (e) {
-      print("Error refreshing user: $e");
-      await signOut();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-
-
-
-
-
-
-
-
-  // Don't forget to close the stream when the provider is disposed
-  // @override
-  // void dispose() {
-  //   _authStateController.close();
-  //   super.dispose();
-  // }
-    Future<void> register(String displayName, String email, String password) async {
-      print(' AuthProvider ${displayName}');
-    try {
-      _isLoading = true;
-      notifyListeners();
-
-      final userData = await AuthService.register(displayName, email, password);
-       print(' userData ${userData }');
-      _currentUser = User.fromJson(userData);
-      _authStateController.add(_currentUser);
-      
-      print('Registration successful: ${_currentUser?.email}');
-    } catch (e) {
-      print('Registration failed: $e');
-      _authStateController.addError(e);
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Stream<User?> authStateChanges() => _authStateController.stream;
-
-  bool get isLoading => _isLoading;
-  User? get currentUser => _currentUser;
-    Future<void> signOut() async {
-    try {
-      _isLoading = true;
-      notifyListeners();
-  await _secureStorage.delete(key: 'auth_token');
-      // Clear the current user
-      _currentUser = null;
-
-      // Emit the new (null) user state
-      _authStateController.add(null);
-
-      print('Sign out successful');
-    } catch (e) {
-      print('Sign out failed: $e');
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
 }
