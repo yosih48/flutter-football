@@ -102,25 +102,23 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     super.dispose();
   }
 
-  // void toggleShowOnlyTodayGames() {
-  //   setState(() {
-  //     _showOnlyTodayGames = !_showOnlyTodayGames;
-  //   });
-  //   _fetchGames(league);
-  // }
-  // void toggleshowOnlyThisLeagueTodayGames() {
-  //   setState(() {
-  //     _showOnlyThisLeagueTodayGames = !_showOnlyThisLeagueTodayGames;
-  //   });
-  //   _fetchGames(league);
-  // }
-
-  bool isGameToday(String formattedDate) {
-    final today = DateFormat('dd/MM/yy').format(DateTime.now());
-    return formattedDate == today;
+  void toggleShowOnlyTodayGames() {
+    setState(() {
+      _showOnlyTodayGames = !_showOnlyTodayGames;
+    });
+    _fetchGames(league);
+  }
+  void toggleshowOnlyThisLeagueTodayGames() {
+    setState(() {
+      _showOnlyThisLeagueTodayGames = !_showOnlyThisLeagueTodayGames;
+    });
+    _fetchGames(league);
   }
 
+
+
   Future<void> _fetchGames(league) async {
+     isLoading = true;
     try {
       List<Game> fetchedGames;
 
@@ -312,12 +310,12 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                 child: Switch(
                   value: _showOnlyThisLeagueTodayGames,
                   onChanged: (value) {
-                    setState(() {
-                     _showOnlyThisLeagueTodayGames = value;
-                      isLoading = true;
-                      _fetchGames(league);
-                    });
-                    // toggleShowOnlyTodayGames();
+                    // setState(() {
+                    //  _showOnlyThisLeagueTodayGames = value;
+                    //   isLoading = true;
+                    //   _fetchGames(league);
+                    // });
+                    toggleshowOnlyThisLeagueTodayGames();
                   },
                           activeColor: Colors.blue,
                   inactiveThumbColor: Colors.white,
@@ -336,12 +334,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                 child: Switch(
                   value: _showOnlyTodayGames,
                   onChanged: (value) {
-                    setState(() {
-                      _showOnlyTodayGames = value;
-                      isLoading = true;
-                      _fetchGames(league);
-                    });
-                    // toggleShowOnlyTodayGames();
+             
+                    toggleShowOnlyTodayGames();
                   },
                           activeColor: Colors.blue,
                   inactiveThumbColor: Colors.white,
