@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/resources/auth.dart';
+import 'package:football/resources/groupsMethods.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/screens/table.dart';
 import 'package:football/theme/colors.dart';
@@ -42,17 +43,16 @@ class ProfileScreenContent extends StatefulWidget {
 
 class _ProfileScreenContentState extends State<ProfileScreenContent> {
   Map<String, String> _userGroups = {};
+  List<Map<String, dynamic>> _groupsInfo = [];
   late String currentUserId;
   TextEditingController _groupNameController = TextEditingController();
   Map<String, dynamic> user = {};
-  late String selectedGroupName ="";
-  
+  late String selectedGroupName = "";
 
   @override
   void initState() {
     super.initState();
     currentUserId = widget.authProvider.currentUser?.id ?? 'Not logged in';
-
 
     _fetchUserGroups();
   }
@@ -61,22 +61,94 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     try {
       Map<String, dynamic> userData =
           await UsersMethods().fetchUserById(currentUserId);
-        
+      List<Map<String, dynamic>> groupsInfo =
+          await GroupsMethods().fetchGroups();
       setState(() {
- final userProvider = Provider.of<UserProvider>(context, listen: false);
-print(userProvider.selectedGroupName);
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        print(userProvider.selectedGroupName);
         _userGroups = Map<String, String>.from(userData['groupID'] ?? {});
-      //  _userGroups.values.first;
-      if(userProvider.selectedGroupName =='default'){
-              Provider.of<UserProvider>(context, listen: false)
-          .setSelectedGroupName(_userGroups.values.first);
-      }
-      print('second');
-      print(userProvider.selectedGroupName);
+        _groupsInfo = groupsInfo;
+        //  _userGroups.values.first;
+        if (userProvider.selectedGroupName == 'default') {
+          Provider.of<UserProvider>(context, listen: false)
+              .setSelectedGroupName(_userGroups.values.first);
+        }
+        print('second');
+        print(userProvider.selectedGroupName);
       });
-
     } catch (e) {
       print('Failed to fetch user groups: $e');
+    }
+  }
+
+  Future<void> leaveGroup(String groupName) async {
+    // Find the group ID to delete
+    String? groupIdToDelete = _userGroups.entries
+        .firstWhere((entry) => entry.value == groupName,
+            orElse: () => MapEntry('', ''))
+        .key;
+
+    if (groupIdToDelete.isEmpty) {
+      print('Group not found');
+      return;
+    }
+
+    // Show confirmation dialog
+    bool isConfirmed = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Leave Group'),
+          content: Text('Are you sure you want to leave this group?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(false),
+            ),
+            TextButton(
+              child: Text('Leave'),
+              onPressed: () => Navigator.of(context).pop(true),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (isConfirmed == true) {
+      // Remove the group from the local state
+      setState(() {
+        _userGroups.remove(groupIdToDelete);
+      });
+
+      // Update the server
+      try {
+        final response = await http.put(
+          Uri.parse('https://leagues.onrender.com/users/'),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(<String, dynamic>{
+            '_id': currentUserId,
+            'groupID': _userGroups,
+          }),
+        );
+
+        if (response.statusCode == 200) {
+          print('Successfully left the group');
+          // You might want to update the UserProvider here
+          // Provider.of<UserProvider>(context, listen: false).updateGroups(_userGroups);
+        } else {
+          print('Failed to leave group. Status code: ${response.statusCode}');
+          // Revert the local change if the server update failed
+          await _fetchUserGroups();
+        }
+      } catch (e) {
+        print('Error leaving group: $e');
+        // Revert the local change if there was an error
+        await _fetchUserGroups();
+      }
+    } else {
+      print('Group leaving cancelled by user');
     }
   }
 
@@ -188,9 +260,9 @@ print(userProvider.selectedGroupName);
   @override
   Widget build(BuildContext context) {
     final selectedGroup = Provider.of<UserProvider>(context);
-  
-    print( 'selectedGroup : ${selectedGroup.selectedGroupName}');
- 
+
+    print('selectedGroup : ${selectedGroup.selectedGroupName}');
+
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
@@ -246,6 +318,10 @@ print(userProvider.selectedGroupName);
                       itemBuilder: (context, index) {
                         String groupId = _userGroups.keys.elementAt(index);
                         String groupName = _userGroups.values.elementAt(index);
+                        bool isCreator = _groupsInfo.any((group) =>
+                            group['name'] == groupName &&
+                                group['createdBy'] == currentUserId ||
+                            groupName == 'general');
                         return InkWell(
                           onTap: () {
                             Navigator.push(
@@ -285,19 +361,32 @@ print(userProvider.selectedGroupName);
                                   onPressed: () {
                                     selectedGroup
                                         .setSelectedGroupName(groupName);
-                               
+
                                     print(' set groupName: ${groupName}');
                                     // Navigate back or show a confirmation
                                   },
                                 ),
-                                IconButton(
-                                  icon: Icon(Icons.exit_to_app,
-                                      color: Colors.white),
-                                  onPressed: () {
-                                    // Handle exit action
-                                    print('Exiting group: $groupName');
-                                  },
-                                ),
+                                !isCreator
+                                    ? IconButton(
+                                        icon: Icon(Icons.exit_to_app,
+                                            color: Colors.white),
+                                        onPressed: () {
+                                          leaveGroup(groupName);
+                                          print('Exiting group: $groupName');
+                                        },
+                                      )
+                                    :
+                                    Opacity(
+                                        opacity:
+                                            0.0, // Makes the button invisible
+                                        child: IconButton(
+                                          icon: Icon(Icons
+                                              .exit_to_app), // Same icon as the visible button
+                                          onPressed:
+                                              () {}, // No action required
+                                        ),
+                                      ),
+                           
                               ],
                             ),
                           ),
@@ -320,7 +409,9 @@ print(userProvider.selectedGroupName);
               },
               child: const Text('Signout'),
             ),
-            SizedBox(height: 20.0,)
+            SizedBox(
+              height: 20.0,
+            )
           ],
         ),
       ),
