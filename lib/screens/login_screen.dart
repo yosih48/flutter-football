@@ -204,13 +204,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 labelText: 'pass'),
           ),
           const SizedBox(height: 24),
-          //button login
-          ElevatedButton(
-            onPressed: _isLoading  ? null : loginUser,
-            child: _isLoading 
-                ? CircularProgressIndicator()
-                : Text('Logina'),
-          ),
+         
+ 
           InkWell(
             onTap: authProvider.isLoading  ? null : loginUser,
             child: Container(

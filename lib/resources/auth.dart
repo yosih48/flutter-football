@@ -239,24 +239,24 @@ class AuthProvider with ChangeNotifier {
 
   // Don't forget to close the stream when the provider is disposed
 
-  //   Future<void> register(String displayName, String email, String password) async {
-  //     print(' AuthProvider ${displayName}');
-  //   try {
-  //     _isLoading = true;
-  //     notifyListeners();
+    Future<void> register(String displayName, String email, String password) async {
+      print(' AuthProvider ${displayName}');
+    try {
+      _isLoading = true;
+      notifyListeners();
 
-  //     final userData = await AuthService.register(displayName, email, password);
-  //      print(' userData ${userData }');
-  //     _currentUser = User.fromJson(userData);
-  //     _authStateController.add(_currentUser);
+      final userData = await AuthService.register(displayName, email, password);
+       print(' userData ${userData }');
+      _currentUser = User.fromJson(userData);
+      // _authStateController.add(_currentUser);
 
-  //     print('Registration successful: ${_currentUser?.email}');
-  //   } catch (e) {
-  //     print('Registration failed: $e');
-  //     _authStateController.addError(e);
-  //   } finally {
-  //     _isLoading = false;
-  //     notifyListeners();
-  //   }
-  // }
+      print('Registration successful: ${_currentUser?.email}');
+    } catch (e) {
+      print('Registration failed: $e');
+      // _authStateController.addError(e);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }
