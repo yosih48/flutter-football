@@ -125,7 +125,11 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       List<Game> fetchedGames;
 
       if (_showOnlyTodayGames) {
-        fetchedGames = await GamesMethods().fetchAllGames(league, _showOnlyThisLeagueTodayGames);
+        fetchedGames = await GamesMethods().fetchAllGames(
+          league,
+         _showOnlyThisLeagueTodayGames,
+         onlyTodayGames: _showOnlyTodayGames
+        );
       } else {
         fetchedGames = await GamesMethods().fetchGamesForLeague(league);
       }
@@ -139,7 +143,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               'away': TextEditingController(),
             };
           }
-          // print(game.league.id);
+          print(game.league.id);
         }
         isLoading = false;
       });
@@ -281,17 +285,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
   @override
   Widget build(BuildContext context) {
-      final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
 
-  // Filter the games based on whether to show only today's games
-  final filteredGames = _showOnlyTodayGames
-      ? _games.where((game) {
-          final gameDate =
-              DateTime(game.date.year, game.date.month, game.date.day);
-          return gameDate.isAtSameMomentAs(today);
-        }).toList()
-         : _games;
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
@@ -382,7 +376,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           Expanded(
             child: isLoading
         ? Center(child: CircularProgressIndicator())
-                : filteredGames.isEmpty
+                : _games.isEmpty
                     ? Center(
                         child: Text(
                           'No games',
@@ -394,7 +388,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                           ),
                         ),
                       )
-                    : listView(filteredGames),
+                    : listView(_games),
           ),
         ],
       ),
