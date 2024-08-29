@@ -45,7 +45,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       if (user != null) {
         setState(() {
           userId = user.id;
-          isLoading = false;
+       
         });
         print('User ID: ${user.id}');
         print('User Name: ${user.name}');
