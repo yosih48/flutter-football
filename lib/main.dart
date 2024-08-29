@@ -25,7 +25,41 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   print("Handling a background message: ${message.messageId}");
 }
+   Future<void> setupFirebaseMessaging() async {
+     final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+         FlutterLocalNotificationsPlugin();
 
+     const AndroidInitializationSettings initializationSettingsAndroid =
+         AndroidInitializationSettings('@mipmap/ic_launcher');
+
+     final InitializationSettings initializationSettings = InitializationSettings(
+       android: initializationSettingsAndroid,
+       iOS: null,
+     );
+
+     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+       RemoteNotification? notification = message.notification;
+       AndroidNotification? android = message.notification?.android;
+
+       if (notification != null && android != null) {
+         flutterLocalNotificationsPlugin.show(
+           notification.hashCode,
+           notification.title,
+           notification.body,
+           NotificationDetails(
+             android: AndroidNotificationDetails(
+               'high_importance_channel',
+               'High Importance Notifications',
+               importance: Importance.max,
+               priority: Priority.high,
+             ),
+           ),
+         );
+       }
+     });
+   }
 void main() async {
   // Ensure that plugin services are initialized
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +68,8 @@ void main() async {
   // Initialize flutter_secure_storage
   final storage = FlutterSecureStorage();
   await Firebase.initializeApp();
+  await FirebaseMessaging.instance.requestPermission();
+  setupFirebaseMessaging();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
     await FlutterLocalNotificationsPlugin()
       .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
