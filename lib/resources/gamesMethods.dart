@@ -4,8 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 class GamesMethods {
-
-    Future<List<Game>> fetchAllGames() async {
+  Future<List<Game>> fetchAllGames() async {
     List<int> leagueIds = [2, 3, 383, 140];
     List<Game> allGames = [];
 
@@ -38,11 +37,24 @@ class GamesMethods {
             gamesData.map((item) => Game.fromJson(item)).toList();
 
         // Filter games
-         final filteredGames = games.where((game) {
+        final filteredGames = games.where((game) {
           bool hasOdds = game.odds.home != 10 ||
               game.odds.draw != 10 ||
               game.odds.away != 10;
           bool isFinished = game.status.long == "Match Finished";
+          // Additional filter logic for specific league IDs
+    
+          if (leagueId == 2 || leagueId == 848 || leagueId == 3) {
+            return hasOdds 
+            &&
+                    !game.league.round.contains("Qualifying") &&
+                    !game.league.round.contains("Play-offs")
+            ||
+                isFinished &&
+                    !game.league.round.contains("Qualifying") &&
+                    !game.league.round.contains("Play-offs");
+          }
+
           return hasOdds || isFinished;
         }).toList();
 
@@ -50,7 +62,6 @@ class GamesMethods {
         filteredGames.sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
         return filteredGames;
-
       } else {
         throw Exception('Games data is null or not a list');
       }
@@ -58,6 +69,4 @@ class GamesMethods {
       throw Exception('Failed to fetch games');
     }
   }
-
-
 }
