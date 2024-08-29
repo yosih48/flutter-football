@@ -69,18 +69,19 @@ class AuthService {
         print('responseBody is List');
         print(user.id);
       } else if (responseBody is Map<String, dynamic>) {
-          final Map<String, dynamic> userMap = {
-    'id': responseBody['_id'],
-    'name': responseBody['displayName'],
-    'admin': responseBody['isAdmin'],
-    'email': responseBody['email'],
-    'newToken': responseBody['newToken'],  // Assuming this exists in the response
-    'groups': responseBody['groupID'],
-  };
+        final Map<String, dynamic> userMap = {
+          'id': responseBody['_id'],
+          'name': responseBody['displayName'],
+          'admin': responseBody['isAdmin'],
+          'email': responseBody['email'],
+          'newToken':
+              responseBody['newToken'], // Assuming this exists in the response
+          'groups': responseBody['groupID'],
+        };
         user = User.fromJson(userMap);
-         print('responseBody is map');
-         print(userMap);
-            print(user);
+        print('responseBody is map');
+        print(userMap);
+        print(user);
       } else {
         throw Exception('Unexpected response format');
       }
@@ -112,6 +113,9 @@ class AuthService {
         '2': 0 // Changed 2 to '2'
       },
       'isAdmin': false,
+      'groupID': {
+        '1': "general" // Changed 2 to '2'
+      },
     });
 
     final response = await http.post(
@@ -126,6 +130,7 @@ class AuthService {
       return json.decode(response.body);
     } else {
       // Registration failed
+      print(response.body);
       throw Exception('Failed to register: ${response.statusCode}');
     }
   }
@@ -239,14 +244,15 @@ class AuthProvider with ChangeNotifier {
 
   // Don't forget to close the stream when the provider is disposed
 
-    Future<void> register(String displayName, String email, String password) async {
-      print(' AuthProvider ${displayName}');
+  Future<void> register(
+      String displayName, String email, String password) async {
+    print(' AuthProvider ${displayName}');
     try {
       _isLoading = true;
       notifyListeners();
 
       final userData = await AuthService.register(displayName, email, password);
-       print(' userData ${userData }');
+      print(' userData ${userData}');
       _currentUser = User.fromJson(userData);
       // _authStateController.add(_currentUser);
 
