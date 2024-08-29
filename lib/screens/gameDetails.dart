@@ -124,13 +124,7 @@ List<GuessWithNames> _guessesWithNames = [];
                       fontSize: 14.0,
                     ),
         ),
-        Text(
-          widget.game.league.round,
-              style: TextStyle(
-                 color:Colors.red,
-                      fontSize: 14.0,
-                    ),
-        ),
+     
         Text(
           DateFormat('dd/MM/yy').format(widget.game.date),
          style: TextStyle(

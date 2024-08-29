@@ -278,6 +278,17 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
   @override
   Widget build(BuildContext context) {
+      final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+
+  // Filter the games based on whether to show only today's games
+  final filteredGames = _showOnlyTodayGames
+      ? _games.where((game) {
+          final gameDate =
+              DateTime(game.date.year, game.date.month, game.date.day);
+          return gameDate.isAtSameMomentAs(today);
+        }).toList()
+         : _games;
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
@@ -367,8 +378,20 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           ),
           Expanded(
             child: isLoading
-                ? Center(child: CircularProgressIndicator())
-                : listView(),
+        ? Center(child: CircularProgressIndicator())
+                : filteredGames.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No games',
+                          style: TextStyle(
+                            color: Colors.white, // Customize the text color
+                            fontSize: 20, // Customize the font size
+                            fontWeight:
+                                FontWeight.bold, // Customize the font weight
+                          ),
+                        ),
+                      )
+                    : listView(filteredGames),
           ),
         ],
       ),
@@ -380,17 +403,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     );
   }
 
-  ListView listView() {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+  ListView listView(List<Game> filteredGames) {
 
-    final filteredGames = _showOnlyTodayGames
-        ? _games.where((game) {
-            final gameDate =
-                DateTime(game.date.year, game.date.month, game.date.day);
-            return gameDate.isAtSameMomentAs(today);
-          }).toList()
-        : _games;
     return ListView.separated(
       itemCount: filteredGames.length,
       itemBuilder: (BuildContext context, int index) {
