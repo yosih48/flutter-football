@@ -139,6 +139,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               'away': TextEditingController(),
             };
           }
+          // print(game.league.id);
         }
         isLoading = false;
       });
@@ -173,10 +174,12 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   }
 
   Future<void> _submitAllGuesses() async {
+// print(' league: ${league}');
     List<Map<String, dynamic>> newGuesses = [];
     List<Map<String, dynamic>> updatedGuesses = [];
 
     for (var game in _games) {
+  
       var controllers = _guessControllers[game.fixtureId];
       if (controllers != null) {
         var homeScore = controllers['home']?.text;
@@ -196,7 +199,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             // No matching guess found
             existingGuess = null;
           }
-
+           print(' leagueId: ${game.league.id}');
           var guessData = {
             'userID': clientId,
             'gameID': game.fixtureId,
@@ -205,7 +208,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             'home_team_goals': homeScore,
             'away_team_goals': awayScore,
             // 'sum_points': 0,
-            'leagueID': league,
+            'leagueID': game.league.id,
             // 'email': email,
           };
 
