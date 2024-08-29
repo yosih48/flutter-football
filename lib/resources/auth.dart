@@ -208,6 +208,7 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> signOut() async {
+  
     await _secureStorage.delete(key: 'auth_token');
     await _secureStorage.delete(key: 'user_id');
     _currentUser = null;

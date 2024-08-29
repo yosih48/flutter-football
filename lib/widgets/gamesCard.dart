@@ -89,9 +89,12 @@ class GameWidget extends StatelessWidget {
                         style: TextStyle(
                           color: Colors.white, // White color for the team names
                           fontWeight: FontWeight.bold,
-                          fontSize: 14.0,
+                          fontSize: 13.0,
                         ),
-                        overflow: TextOverflow.ellipsis,
+                                overflow: TextOverflow
+                            .visible, 
+                        maxLines: 2,
+                           textAlign: TextAlign.left, 
                       ),
                     ),
                   ),
@@ -213,14 +216,14 @@ class GameWidget extends StatelessWidget {
                       alignment: Alignment.centerRight,
                       child: Text(
                         game.away.name,
-                        //  '${game.odds.draw}',
-
-                        style: TextStyle(
+                         style: TextStyle(
                           color: Colors.white, // White color for the team names
                           fontWeight: FontWeight.bold,
-                          fontSize: 14.0,
+                          fontSize: 13.0,
                         ),
-                        overflow: TextOverflow.ellipsis,
+                         overflow: TextOverflow
+                            .visible, // Allow the text to wrap to the next line
+                        maxLines: 2, // Set the maximum number of lines
                       ),
                     ),
                   ),
