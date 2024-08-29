@@ -56,19 +56,22 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   List<Guess> _guesses = [];
   int league = 2;
   bool _showOnlyTodayGames = false;
+  bool _showOnlyThisLeagueTodayGames = false;
   late String clientId;
   late String email;
   int selectedIndex = 0;
-   bool isLoading = true;
+  bool isLoading = true;
   void updateSelectedIndex(int index) {
     print(index);
     setState(() {
-          isLoading = true;
+      isLoading = true;
       league = index == 0
           ? 2
           : index == 1
               ? 383
-              : index == 2? 140: 3;
+              : index == 2
+                  ? 140
+                  : 3;
       selectedIndex = index;
 
       Provider.of<UserProvider>(context, listen: false)
@@ -98,43 +101,51 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     }
     super.dispose();
   }
-void toggleShowOnlyTodayGames() {
-  setState(() {
-    _showOnlyTodayGames = !_showOnlyTodayGames;
-  });
-  _fetchGames(league);
-}
+
+  // void toggleShowOnlyTodayGames() {
+  //   setState(() {
+  //     _showOnlyTodayGames = !_showOnlyTodayGames;
+  //   });
+  //   _fetchGames(league);
+  // }
+  // void toggleshowOnlyThisLeagueTodayGames() {
+  //   setState(() {
+  //     _showOnlyThisLeagueTodayGames = !_showOnlyThisLeagueTodayGames;
+  //   });
+  //   _fetchGames(league);
+  // }
+
   bool isGameToday(String formattedDate) {
     final today = DateFormat('dd/MM/yy').format(DateTime.now());
     return formattedDate == today;
   }
 
- Future<void> _fetchGames(league) async {
-  try {
-    List<Game> fetchedGames;
+  Future<void> _fetchGames(league) async {
+    try {
+      List<Game> fetchedGames;
 
-    if (_showOnlyTodayGames) {
-      fetchedGames = await GamesMethods().fetchAllGames();
-    } else {
-      fetchedGames = await GamesMethods().fetchGamesForLeague(league);
-    }
-
-    setState(() {
-      _games = fetchedGames;
-      for (var game in _games) {
-        if (_guessControllers[game.fixtureId] == null) {
-          _guessControllers[game.fixtureId] = {
-            'home': TextEditingController(),
-            'away': TextEditingController(),
-          };
-        }
+      if (_showOnlyTodayGames) {
+        fetchedGames = await GamesMethods().fetchAllGames(league, _showOnlyThisLeagueTodayGames);
+      } else {
+        fetchedGames = await GamesMethods().fetchGamesForLeague(league);
       }
-       isLoading = false;
-    });
-  } catch (e) {
-    print('Failed to fetch games: $e');
+
+      setState(() {
+        _games = fetchedGames;
+        for (var game in _games) {
+          if (_guessControllers[game.fixtureId] == null) {
+            _guessControllers[game.fixtureId] = {
+              'home': TextEditingController(),
+              'away': TextEditingController(),
+            };
+          }
+        }
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Failed to fetch games: $e');
+    }
   }
-}
 
   Future<void> _fetchGuesses(clientId) async {
     print('clientId ${clientId}');
@@ -200,11 +211,10 @@ void toggleShowOnlyTodayGames() {
 
           if (existingGuess != null && game.status.long == "Not Started") {
             // Update existing guess
-                
+
             updatedGuesses.add(guessData);
           }
           if (existingGuess == null) {
-         
             // Create new guess
             guessData['email'] = email;
             guessData['sum_points'] = 0;
@@ -256,7 +266,7 @@ void toggleShowOnlyTodayGames() {
     if (allSuccessful) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text("All guesses submitted or updated successfully")),
+            content: Text("נשמר בהצלחה")),
       );
       _fetchGuesses(clientId); // Refresh guesses after submission
     } else {
@@ -281,22 +291,54 @@ void toggleShowOnlyTodayGames() {
         actions: [
           Row(
             children: [
+              if(_showOnlyTodayGames)
+              Text(
+                'This League',
+                style: TextStyle(
+                    color: white, fontSize: 14 // White color for the team names
+                    ),
+              ),
+                 if (_showOnlyTodayGames)
+              Transform.scale(
+                scale: 0.6,
+                child: Switch(
+                  value: _showOnlyThisLeagueTodayGames,
+                  onChanged: (value) {
+                    setState(() {
+                     _showOnlyThisLeagueTodayGames = value;
+                      isLoading = true;
+                      _fetchGames(league);
+                    });
+                    // toggleShowOnlyTodayGames();
+                  },
+                          activeColor: Colors.blue,
+                  inactiveThumbColor: Colors.white,
+                  inactiveTrackColor: Colors.grey, 
+                ),
+              ),
               Text(
                 'Today only',
                 style: TextStyle(
-                  color: white, // White color for the team names
+                  color: white, 
+                  fontSize: 14 // White color for the team names
                 ),
               ),
-              Switch(
-                value: _showOnlyTodayGames,
-                onChanged: (value) {
-                  setState(() {
-                    _showOnlyTodayGames = value;
-                    isLoading = true;
-                   _fetchGames(league);
-                  });
-                  // toggleShowOnlyTodayGames();
-                },
+              Transform.scale(
+                scale: 0.6,
+                child: Switch(
+                  value: _showOnlyTodayGames,
+                  onChanged: (value) {
+                    setState(() {
+                      _showOnlyTodayGames = value;
+                      isLoading = true;
+                      _fetchGames(league);
+                    });
+                    // toggleShowOnlyTodayGames();
+                  },
+                          activeColor: Colors.blue,
+                  inactiveThumbColor: Colors.white,
+                  inactiveTrackColor: Colors.grey, 
+                ),
               ),
             ],
           ),
@@ -315,19 +357,18 @@ void toggleShowOnlyTodayGames() {
               // AppLocalizations.of(context)!.history
             ],
             onSelectionChanged: updateSelectedIndex,
-            initialSelection: 
-            league == 2
+            initialSelection: league == 2
                 ? 0
                 : league == 383
                     ? 1
-                    :league == 140? 2: 3,
+                    : league == 140
+                        ? 2
+                        : 3,
           ),
           Expanded(
-            child: 
-            isLoading
+            child: isLoading
                 ? Center(child: CircularProgressIndicator())
-                :
-            listView(),
+                : listView(),
           ),
         ],
       ),
@@ -340,15 +381,16 @@ void toggleShowOnlyTodayGames() {
   }
 
   ListView listView() {
-   final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
 
-  final filteredGames = _showOnlyTodayGames
-      ? _games.where((game) {
-          final gameDate = DateTime(game.date.year, game.date.month, game.date.day);
-          return gameDate.isAtSameMomentAs(today);
-        }).toList()
-      : _games;
+    final filteredGames = _showOnlyTodayGames
+        ? _games.where((game) {
+            final gameDate =
+                DateTime(game.date.year, game.date.month, game.date.day);
+            return gameDate.isAtSameMomentAs(today);
+          }).toList()
+        : _games;
     return ListView.separated(
       itemCount: filteredGames.length,
       itemBuilder: (BuildContext context, int index) {

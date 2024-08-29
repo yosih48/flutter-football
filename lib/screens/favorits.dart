@@ -161,12 +161,11 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                         updateDatabase(name, email);
                       },
                       activeColor: Colors
-                          .blue, // White color for the switch when it's on
+                          .blue, 
                       inactiveThumbColor: Colors
-                          .white, // White color for the switch thumb when it's off
-                      // White color for the switch thumb when it's off
+                          .white, 
                       inactiveTrackColor: Colors
-                          .grey, // Optional: Light grey for the track when it's off
+                          .grey, 
                     ),
                   ),
                 ),

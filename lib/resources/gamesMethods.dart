@@ -4,8 +4,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 class GamesMethods {
-  Future<List<Game>> fetchAllGames() async {
-    List<int> leagueIds = [2, 3, 383, 140];
+  Future<List<Game>> fetchAllGames(leagueId, league ) async {
+   
+    List<int> leagueIds = league? [leagueId]: [2, 3, 383, 140] ;
+
+
     List<Game> allGames = [];
 
     for (int leagueId in leagueIds) {
