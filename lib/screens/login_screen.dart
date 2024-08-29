@@ -4,6 +4,9 @@
 // import 'package:businesses/screens/employeesCalls.dart';
 // import 'package:businesses/screens/signup_screen.dart';
 // import 'package:businesses/utils/utils.dart';
+import 'dart:convert';
+
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:football/screens/signup_screen.dart';
 import 'package:football/theme/colors.dart';
 import 'package:provider/provider.dart';
@@ -11,7 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:football/models/users.dart';
 
 import 'package:football/utils/utils.dart';
-
+import 'package:http/http.dart' as http;
 import '../providers/flutter pub add provider.dart';
 import '../resources/auth.dart';
 import '../responsive/mobile_screen_layout.dart';
@@ -96,6 +99,10 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await authProvider.login(
           _usernameController.text, _passwordController.text);
+String? fcmToken = await FirebaseMessaging.instance.getToken();
+print('fcmToken: ${fcmToken}');
+ await sendFCMTokenToServer(fcmToken);
+
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -103,7 +110,36 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     }
   }
+Future<void> sendFCMTokenToServer(String? fcmToken) async {
+  if (fcmToken == null) {
+    print('FCM token is null. Unable to send to server.');
+    return;
+  }
 
+  final String userId = '6584aceb503733cfc6418e98'; // Replace with actual user ID from your auth system
+  final String serverUrl = 'https://leagues.onrender.com/users/store-fcm-token'; // Replace with your actual server URL
+
+  try {
+    final response = await http.post(
+      Uri.parse(serverUrl),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'userId': userId,
+        'fcmToken': fcmToken,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print('FCM token sent to server successfully');
+    } else {
+      print('Failed to send FCM token to server. Status code: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Error sending FCM token to server: $e');
+  }
+}
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
