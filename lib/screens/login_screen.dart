@@ -63,6 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       await authProvider.login(
           _usernameController.text, _passwordController.text, fcmToken);
+          
 // String? fcmToken = await FirebaseMessaging.instance.getToken();
 // print('fcmToken: ${fcmToken}');
 //  await sendFCMTokenToServer(fcmToken);
