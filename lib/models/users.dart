@@ -4,6 +4,7 @@ class User {
   final bool admin;
   final String email;
   final String? newToken;
+  final String? fcmToken;
   final Map<String, dynamic>? groups;
   final Map<String, dynamic>? groupID;
 
@@ -13,6 +14,7 @@ class User {
     required this.admin,
     required this.email,
     this.newToken,
+    this.fcmToken,
     this.groups,
     this.groupID,
   });
@@ -23,10 +25,10 @@ class User {
       name: json['name'] ?? '',
       admin: json['admin'] ?? false,
       email: json['email'] ?? '',
+      fcmToken: json['fcmToken'] ?? '',
       newToken: json['newToken'],
       groups: json['groups'] != null ? Map<String, dynamic>.from(json['groups']) : null,
       groupID: json['groupID'] != null ? Map<String, dynamic>.from(json['groupID']) : null,
     );
   }
-
 }

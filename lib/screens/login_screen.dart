@@ -50,46 +50,6 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void loginUsera() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    authProvider.login(_usernameController.text, _passwordController.text);
-
-    if (authProvider == 'success') {
-      await Provider.of<UserProvider>(context, listen: false)
-          .refreshUser(_usernameController.text);
-      if (context.mounted) {
-        User? currentUser =
-            Provider.of<UserProvider>(context, listen: false).currentUser;
-
-        if (currentUser != null) {
-          // Navigate to admin screen
-          Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(
-                builder: (context) => const ResponsiveLayout(
-                  mobileScreenLayout: MobileScreenLayout(),
-                  webScreenLayout: WebScreenLayout(),
-                ),
-              ),
-              (route) => false);
-        }
-      }
-
-      setState(() {
-        _isLoading = false;
-      });
-    } else {
-      setState(() {
-        _isLoading = false;
-      });
-      if (context.mounted) {
-        // showSnackBar(context, res as String);
-      }
-    }
-  }
 
   void loginUser() async {
     if (!mounted) return;
@@ -97,11 +57,15 @@ class _LoginScreenState extends State<LoginScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     try {
+
+   String? fcmToken = await FirebaseMessaging.instance.getToken();
+    print('fcmToken: $fcmToken');
+
       await authProvider.login(
-          _usernameController.text, _passwordController.text);
-String? fcmToken = await FirebaseMessaging.instance.getToken();
-print('fcmToken: ${fcmToken}');
- await sendFCMTokenToServer(fcmToken);
+          _usernameController.text, _passwordController.text, fcmToken);
+// String? fcmToken = await FirebaseMessaging.instance.getToken();
+// print('fcmToken: ${fcmToken}');
+//  await sendFCMTokenToServer(fcmToken);
 
     } catch (e) {
       if (!mounted) return;
@@ -117,6 +81,7 @@ Future<void> sendFCMTokenToServer(String? fcmToken) async {
   }
 
   final String userId = '6584aceb503733cfc6418e98'; // Replace with actual user ID from your auth system
+  final String email = _usernameController.text; // Replace with actual user ID from your auth system
   final String serverUrl = 'https://leagues.onrender.com/users/store-fcm-token'; // Replace with your actual server URL
 
   try {
@@ -128,6 +93,7 @@ Future<void> sendFCMTokenToServer(String? fcmToken) async {
       body: jsonEncode(<String, String>{
         'userId': userId,
         'fcmToken': fcmToken,
+        'email': email,
       }),
     );
 

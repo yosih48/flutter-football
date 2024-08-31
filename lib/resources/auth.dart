@@ -12,10 +12,12 @@ class AuthService {
 
   // Login function
   static Future<Map<String, dynamic>> login(
-      String email, String password) async {
+      String email, String password,String? fcmToken) async {
+        print('second login');
+        print(fcmToken);
     try {
       final url = Uri.parse('$_baseUrl/login');
-      final body = json.encode({'email': email, 'password': password});
+      final body = json.encode({'email': email, 'password': password, 'fcmToken': fcmToken ?? '',});
 
       final response = await http.post(
         url,
@@ -28,6 +30,9 @@ class AuthService {
       if (response.statusCode == 200) {
         // Login successful
         print('Login successful');
+
+
+        
         return json.decode(response.body);
       } else {
         print(' Login failed');
@@ -167,12 +172,14 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> login(String email, String password) async {
+  Future<void> login(String email, String password, String? fcmToken) async {
+    print('login');
+    print(fcmToken);
     _isLoading = true;
     notifyListeners();
 
     try {
-      final userData = await AuthService.login(email, password);
+      final userData = await AuthService.login(email, password, fcmToken);
       _currentUser = User.fromJson(userData);
       await _secureStorage.write(
           key: 'auth_token', value: _currentUser!.newToken);
