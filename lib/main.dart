@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:football/models/users.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/resources/auth.dart';
+import 'package:football/resources/firebase_messaging_service.dart';
 import 'package:football/responsive/mobile_screen_layout.dart';
 import 'package:football/responsive/rsponsive_layout_screen.dart';
 import 'package:football/responsive/web_screen_layout.dart';
@@ -22,7 +23,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
+  // Don't call Firebase.initializeApp() here
   print("Handling a background message: ${message.messageId}");
 }
    Future<void> setupFirebaseMessaging() async {
@@ -63,29 +64,14 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   // Ensure that plugin services are initialized
   WidgetsFlutterBinding.ensureInitialized();
+  
   final authProvider = AuthProvider();
   await authProvider.initializeApp();
-  // Initialize flutter_secure_storage
+  
   final storage = FlutterSecureStorage();
+  
   await Firebase.initializeApp();
-  await FirebaseMessaging.instance.requestPermission();
-  setupFirebaseMessaging();
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-    await FlutterLocalNotificationsPlugin()
-      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(
-        const AndroidNotificationChannel(
-          'high_importance_channel',
-          'High Importance Notifications',
-          importance: Importance.high,
-        ),
-      );
-
-  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
+  await FirebaseMessagingService.initialize();
   // You can now use the storage in your AuthProvider if needed
   runApp(
     MultiProvider(

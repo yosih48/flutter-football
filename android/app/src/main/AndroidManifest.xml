@@ -3,6 +3,7 @@
 xmlns:tools="http://schemas.android.com/tools">
 
    <uses-permission android:name="android.permission.INTERNET" />
+   <uses-permission android:name="android.permission.VIBRATE" />
    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
    <uses-permission android:name="android.permission.WAKE_LOCK"/>
    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
@@ -32,7 +33,7 @@ xmlns:tools="http://schemas.android.com/tools">
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-            <service
+            <!-- <service
             android:name=".java.MyFirebaseMessagingService"
             android:exported="false"
          
@@ -41,7 +42,7 @@ xmlns:tools="http://schemas.android.com/tools">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
-        </service>
+        </service> -->
             <receiver
             android:name="be.tramckrijte.workmanager.WorkManagerReceiver"
             android:exported="true"> 
