@@ -404,7 +404,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
               onPressed: () async {
                 final authProvider =
                     Provider.of<AuthProvider>(context, listen: false);
-                await authProvider.signOut();
+                await authProvider.signOut(currentUserId);
                 if (context.mounted) {}
               },
               child: const Text('Signout'),

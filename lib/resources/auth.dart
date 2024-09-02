@@ -162,7 +162,7 @@ class AuthProvider with ChangeNotifier {
         await refreshUser(token, userId);
       } catch (e) {
         print("Error refreshing user: $e");
-        await signOut();
+        await signOut(userId);
       }
     }
     _isInitializing = false;
@@ -208,16 +208,36 @@ class AuthProvider with ChangeNotifier {
       }
     } catch (e) {
       print("Error refreshing user: $e");
-      await signOut();
+      await signOut(userId);
       rethrow;
     }
     notifyListeners();
   }
 
-  Future<void> signOut() async {
+  Future<void> signOut(userID) async {
   
     await _secureStorage.delete(key: 'auth_token');
     await _secureStorage.delete(key: 'user_id');
+      try {
+      final response = await http.post(
+        Uri.parse('https://leagues.onrender.com/users/logout'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'userId': userID,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        // Handle successful logout
+        print('Logout successful');
+      } else {
+        throw Exception('Failed to log out');
+      }
+    } catch (e) {
+      print('Error during logout: $e');
+    }
     _currentUser = null;
     notifyListeners();
   }
@@ -243,7 +263,7 @@ class AuthProvider with ChangeNotifier {
         }
       } catch (e) {
         print("Error ensuring user loaded: $e");
-        await signOut();
+        await signOut(userId);
       }
     }
 
