@@ -404,6 +404,27 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
               onPressed: () async {
                 final authProvider =
                     Provider.of<AuthProvider>(context, listen: false);
+                  bool? confirmSignOut = await showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+               title: Text('Confirm Signout'),
+                      content: Text('Are you sure you want to sign out?'),
+                      actions: <Widget>[
+                        TextButton(
+                          child: Text('Cancel'),
+                          onPressed: () => Navigator.of(context).pop(false),
+                        ),
+                        TextButton(
+                            child: Text('Signout'),
+                          onPressed: () => Navigator.of(context).pop(true),
+                        ),
+                      ],
+                    );
+                  },
+                );
+
+if (confirmSignOut == true)
                 await authProvider.signOut(currentUserId);
                 if (context.mounted) {}
               },
