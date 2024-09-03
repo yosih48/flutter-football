@@ -68,8 +68,24 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
         print(userProvider.selectedGroupName);
         _userGroups = Map<String, String>.from(userData['groupID'] ?? {});
         _groupsInfo = groupsInfo;
-        //  _userGroups.values.first;
+
         if (userProvider.selectedGroupName == 'default') {
+          String selectedGroup;
+
+          if (_userGroups.isNotEmpty) {
+            var groupValues = _userGroups.values.toList();
+
+            if (groupValues.first.toLowerCase() == 'general' &&
+                groupValues.length > 1) {
+              selectedGroup = groupValues[1];
+            } else {
+              selectedGroup = groupValues.first;
+            }
+          } else {
+            // Handle the case when _userGroups is empty
+            selectedGroup = 'default'; // or any other default value you prefer
+          }
+    
           Provider.of<UserProvider>(context, listen: false)
               .setSelectedGroupName(_userGroups.values.first);
         }
@@ -77,8 +93,6 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
             .setCurrentUser(currentUserId);
 
 
-        print('second');
-        print(userProvider.selectedGroupName);
       });
     } catch (e) {
       print('Failed to fetch user groups: $e');
@@ -379,8 +393,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                                           print('Exiting group: $groupName');
                                         },
                                       )
-                                    :
-                                    Opacity(
+                                    : Opacity(
                                         opacity:
                                             0.0, // Makes the button invisible
                                         child: IconButton(
@@ -390,7 +403,6 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                                               () {}, // No action required
                                         ),
                                       ),
-                           
                               ],
                             ),
                           ),
@@ -408,11 +420,11 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
               onPressed: () async {
                 final authProvider =
                     Provider.of<AuthProvider>(context, listen: false);
-                  bool? confirmSignOut = await showDialog(
+                bool? confirmSignOut = await showDialog(
                   context: context,
                   builder: (BuildContext context) {
                     return AlertDialog(
-               title: Text('Confirm Signout'),
+                      title: Text('Confirm Signout'),
                       content: Text('Are you sure you want to sign out?'),
                       actions: <Widget>[
                         TextButton(
@@ -420,7 +432,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                           onPressed: () => Navigator.of(context).pop(false),
                         ),
                         TextButton(
-                            child: Text('Signout'),
+                          child: Text('Signout'),
                           onPressed: () => Navigator.of(context).pop(true),
                         ),
                       ],
@@ -428,8 +440,10 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                   },
                 );
 
-if (confirmSignOut == true)
-                await authProvider.signOut(currentUserId);
+                if (confirmSignOut == true)
+                         Provider.of<UserProvider>(context, listen: false)
+                      .setSelectedGroupName('default');
+                  await authProvider.signOut(currentUserId);
                 if (context.mounted) {}
               },
               child: const Text('Signout'),

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 
+
 import 'package:flutter/material.dart';
 import 'package:football/models/users.dart';
+import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
@@ -218,6 +220,7 @@ class AuthProvider with ChangeNotifier {
   
     await _secureStorage.delete(key: 'auth_token');
     await _secureStorage.delete(key: 'user_id');
+
       try {
       final response = await http.post(
         Uri.parse('https://leagues.onrender.com/users/logout'),

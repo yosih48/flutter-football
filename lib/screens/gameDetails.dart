@@ -77,21 +77,7 @@ class _GameDetailsState extends State<GameDetails> {
         }
 
 
-        // print(selectedGroupName);
-        // final selectedGroup = Provider.of<UserProvider>(context, listen: false);
-
-        // if (_userGroups.isNotEmpty) {
-        //   if (selectedGroup.selectedGroupName == 'default') {
-        //     // Assign the first value from _userGroups
-        //     selectedGroupName = _userGroups.values.first;
-        //   } else {
-        //     // Otherwise, use the value from selectedGroup
-        //     selectedGroupName =
-        //         widget.selectedGroupName ?? selectedGroup.selectedGroupName;
-        //   }
-
-        //   _fetchUsersForGroup(selectedGroupName);
-        // }
+ 
       });
     } catch (e) {
       print('Failed to fetch user groups: $e');
