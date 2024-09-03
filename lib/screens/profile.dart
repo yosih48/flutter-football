@@ -75,7 +75,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
           if (_userGroups.isNotEmpty) {
             var groupValues = _userGroups.values.toList();
 
-            if (groupValues.first.toLowerCase() == 'general' &&
+            if (groupValues.first.toLowerCase() == 'public' &&
                 groupValues.length > 1) {
               selectedGroup = groupValues[1];
             } else {
@@ -339,7 +339,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                         bool isCreator = _groupsInfo.any((group) =>
                             group['name'] == groupName &&
                                 group['createdBy'] == currentUserId ||
-                            groupName == 'general');
+                            groupName == 'public');
                         return InkWell(
                           onTap: () {
                             Navigator.push(

@@ -57,9 +57,9 @@ class _GameDetailsState extends State<GameDetails> {
         Map<String, String> tempGroups =
             Map<String, String>.from(userData['groupID'] ?? {});
 
-        // Remove the 'general' group if it exists
+        // Remove the 'public' group if it exists
         tempGroups
-            .removeWhere((key, value) => value.toLowerCase() == 'general');
+            .removeWhere((key, value) => value.toLowerCase() == 'public');
 
         // Assign the filtered map to _userGroups
         _userGroups = tempGroups;
@@ -71,8 +71,8 @@ class _GameDetailsState extends State<GameDetails> {
           selectedGroupName = _userGroups.values.first;
           _fetchGuesses(selectedGroupName);
         } else {
-          // Handle the case when no groups are left after removing 'general'
-          print('No groups available after removing general');
+          // Handle the case when no groups are left after removing 'public'
+          print('No groups available after removing public');
           // You might want to set a default state or show a message to the user
         }
 

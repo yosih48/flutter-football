@@ -121,7 +121,7 @@ class AuthService {
       },
       'isAdmin': false,
       'groupID': {
-        '1': "general" // Changed 2 to '2'
+        '1': "public" // Changed 2 to '2'
       },
     });
 
