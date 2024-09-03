@@ -73,6 +73,10 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
           Provider.of<UserProvider>(context, listen: false)
               .setSelectedGroupName(_userGroups.values.first);
         }
+        Provider.of<UserProvider>(context, listen: false)
+            .setCurrentUser(currentUserId);
+
+
         print('second');
         print(userProvider.selectedGroupName);
       });

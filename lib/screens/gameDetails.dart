@@ -3,17 +3,18 @@ import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/resources/guessesMethods.dart';
+import 'package:football/resources/usersMethods.dart';
+import 'package:football/screens/table.dart';
 import 'package:football/theme/colors.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class GameDetails extends StatefulWidget {
   final gameOriginalId;
-   final Game game;
- 
+  final Game game;
 
-
-  const GameDetails({super.key, required this. gameOriginalId, required this.game});
+  const GameDetails(
+      {super.key, required this.gameOriginalId, required this.game});
 
   @override
   State<GameDetails> createState() => _GameDetailsState();
@@ -21,77 +22,145 @@ class GameDetails extends StatefulWidget {
 
 class _GameDetailsState extends State<GameDetails> {
   List<Guess> _guesses = [];
-List<GuessWithNames> _guessesWithNames = [];
- late String selectedGroupName ="";
-   bool isLoading = true;
+  List<Map<String, dynamic>> _users = [];
+  late String currentUserId;
+  late int league;
+  List<GuessWithNames> _guessesWithNames = [];
+  late String selectedGroupName = "";
+  Map<String, String> _userGroups = {};
+  bool isLoading = true;
   @override
   void initState() {
     super.initState();
+    league = widget.game.league.id;
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    currentUserId = userProvider.currentUserId!;
 
-  _fetchGuesses( widget.gameOriginalId);
+    print('currentUserId: ${currentUserId}');
+
+    _fetchUserGroups();
+    _fetchGuesses(selectedGroupName);
   }
-  Future<void> _fetchGuesses(gameId) async {
-     final userProvider = Provider.of<UserProvider>(context, listen: false);
-      selectedGroupName = userProvider.selectedGroupName;
+
+  Future<void> _fetchUserGroups() async {
+    try {
+      Map<String, dynamic> userData =
+          await UsersMethods().fetchUserById(currentUserId);
+      setState(() {
+      //   _userGroups = Map<String, String>.from(userData['groupID'] ?? {});
+      //   print(_userGroups);
+
+
+      //  selectedGroupName = _userGroups.values.first;
+      //       _fetchGuesses(selectedGroupName);
+
+        Map<String, String> tempGroups =
+            Map<String, String>.from(userData['groupID'] ?? {});
+
+        // Remove the 'general' group if it exists
+        tempGroups
+            .removeWhere((key, value) => value.toLowerCase() == 'general');
+
+        // Assign the filtered map to _userGroups
+        _userGroups = tempGroups;
+
+        print(_userGroups);
+
+        // Check if _userGroups is not empty before accessing first value
+        if (_userGroups.isNotEmpty) {
+          selectedGroupName = _userGroups.values.first;
+          _fetchGuesses(selectedGroupName);
+        } else {
+          // Handle the case when no groups are left after removing 'general'
+          print('No groups available after removing general');
+          // You might want to set a default state or show a message to the user
+        }
+
+
+        // print(selectedGroupName);
+        // final selectedGroup = Provider.of<UserProvider>(context, listen: false);
+
+        // if (_userGroups.isNotEmpty) {
+        //   if (selectedGroup.selectedGroupName == 'default') {
+        //     // Assign the first value from _userGroups
+        //     selectedGroupName = _userGroups.values.first;
+        //   } else {
+        //     // Otherwise, use the value from selectedGroup
+        //     selectedGroupName =
+        //         widget.selectedGroupName ?? selectedGroup.selectedGroupName;
+        //   }
+
+        //   _fetchUsersForGroup(selectedGroupName);
+        // }
+      });
+    } catch (e) {
+      print('Failed to fetch user groups: $e');
+    }
+  }
+
+ 
+
+  Future<void> _fetchGuesses(groupName) async {
+    // final userProvider = Provider.of<UserProvider>(context, listen: false);
+    // selectedGroupName = userProvider.selectedGroupName;
 
     try {
-      final guesses = await GuessesMethods().fetchAllUsersGuesses(gameId);
-        final callService = CallService();
+      final guesses =
+          await GuessesMethods().fetchAllUsersGuesses(widget.gameOriginalId);
+      final callService = CallService();
       final guessesWithNames = await Future.wait(
           guesses.map((guess) => callService.getGuessWithNames(guess)));
 
       final filteredGuesses = guessesWithNames.where((guessWithName) {
-      return guessWithName.userGroups.values.contains(selectedGroupName);
-    }).toList();
+        return guessWithName.userGroups.values.contains(groupName);
+      }).toList();
 
-       setState(() {
+      setState(() {
         _guessesWithNames = filteredGuesses;
-          isLoading = false;
+        isLoading = false;
       });
-  //     for (var guessWithName in _guessesWithNames) {
-  //   print(guessWithName.userGroups);
-  // }
-    } 
- catch (e, stackTrace) {
-  print('Failed to fetch guesses: $e');
-  print('Stack trace: $stackTrace');
-  // You might want to show an error message to the user here
-}
+      //     for (var guessWithName in _guessesWithNames) {
+      //   print(guessWithName.userGroups);
+      // }
+    } catch (e, stackTrace) {
+      print('Failed to fetch guesses: $e');
+      print('Stack trace: $stackTrace');
+      // You might want to show an error message to the user here
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: background,
+      backgroundColor: background,
       appBar: AppBar(
-        title: Text('Game Details',
+        title: Text(
+          'Game Details',
           style: TextStyle(
             color: white, // White color for the team names
           ),
         ),
-            backgroundColor: Colors.transparent,
-                 iconTheme: IconThemeData(
+        backgroundColor: Colors.transparent,
+        iconTheme: IconThemeData(
           color: Colors.white, // Set the color of the arrow icon to white
         ),
       ),
-      body: 
-      isLoading
+      body: isLoading
           ? Center(child: CircularProgressIndicator())
-          :
-      SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildGameCard(),
-            _buildGuessesTable(),
-          ],
-        ),
-      ),
+          : SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildGameCard(),
+                  _buildGuessesTable(),
+                ],
+              ),
+            ),
     );
   }
 
   Widget _buildGameCard() {
     return Card(
-        color: cards,
+      color: cards,
       margin: EdgeInsets.all(16.0),
       child: Padding(
         padding: EdgeInsets.all(16.0),
@@ -115,19 +184,18 @@ List<GuessWithNames> _guessesWithNames = [];
       children: [
         Text(
           widget.game.status.long,
-              style: TextStyle(
-                      color: (widget.game.status.long == "First Half" ||
-                              widget.game.status.long == "Second Half" ||
-                              widget.game.status.long == "Halftime")
-                          ? Colors.red
-                          : Color(0xFF9BA4B5).withOpacity(0.6),
-                      fontSize: 14.0,
-                    ),
+          style: TextStyle(
+            color: (widget.game.status.long == "First Half" ||
+                    widget.game.status.long == "Second Half" ||
+                    widget.game.status.long == "Halftime")
+                ? Colors.red
+                : Color(0xFF9BA4B5).withOpacity(0.6),
+            fontSize: 14.0,
+          ),
         ),
-     
         Text(
           DateFormat('dd/MM/yy').format(widget.game.date),
-         style: TextStyle(
+          style: TextStyle(
             color: Color(0xFF9BA4B5).withOpacity(0.9),
             fontSize: 14.0,
           ),
@@ -145,7 +213,7 @@ List<GuessWithNames> _guessesWithNames = [];
         SizedBox(width: 8.0),
         Text(
           '${widget.game.goals.home} - ${widget.game.goals.away}',
-              style: TextStyle(
+          style: TextStyle(
             color: Colors.white, // White color for the team names
             fontWeight: FontWeight.bold,
             fontSize: 18.0,
@@ -169,7 +237,7 @@ List<GuessWithNames> _guessesWithNames = [];
         Flexible(
           child: Text(
             team.name,
-                  style: TextStyle(
+            style: TextStyle(
               color: Colors.white, // White color for the team names
               fontWeight: FontWeight.bold,
               fontSize: 14.0,
@@ -195,70 +263,137 @@ List<GuessWithNames> _guessesWithNames = [];
   }
 
   Widget _buildGuessesTable() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        columns: const [
-          DataColumn(label: Text('user name',
-            style: TextStyle(
-              color: Colors.white,
-            ),
-          )),
-          DataColumn(label: Text('Guess',
-            style: TextStyle(
-              color: Colors.white,
-            ),
-          )),
-          DataColumn(label: Text('Sum Points',
-            style: TextStyle(
-              color: Colors.white,
-            ),
-          )),
-        ],
-   rows: _guessesWithNames
-    .map((guessWithName) => DataRow(
-          cells: [
-            DataCell(
-              Center(
-                child: Text(
-                  guessWithName.userName,
-                           style: TextStyle(
-                            color: Colors.white,
-                          ),
-                  textAlign: TextAlign.center,
+    return Column(
+      children: [
+        _userGroups.isNotEmpty?
+        DropdownButton<String>(
+          value: selectedGroupName,
+          dropdownColor: cards, // Set the dropdown background color
+          style: TextStyle(
+            color: Colors.white, // Set the dropdown text color
+            fontSize: 16.0,
+          ),
+          items: _userGroups.entries.map((entry) {
+            return DropdownMenuItem<String>(
+              value: entry.value,
+              child: Text(
+                entry.value,
+                style: TextStyle(
+                  color: Colors.white, // Set the dropdown item text color
                 ),
               ),
-            ),
-            DataCell(
-              Center(
-                child: Text(
-                  '${guessWithName.guess.homeTeamGoals} - ${guessWithName.guess.awayTeamGoals}',
-                  textAlign: TextAlign.center,
-                            style: TextStyle(
-                            color: Colors.white,
-                          ),
-                ),
-              ),
-            ),
-            DataCell(
-              Center(
-                child: Text(
-                 guessWithName.guess.sumPoints % 1 == 0 
-      ? guessWithName.guess.sumPoints.toInt().toString() 
-      : guessWithName.guess.sumPoints.toString(),
-                  textAlign: TextAlign.center,
-                            style: TextStyle(
-                            color: Colors.white,
-                          ),
-                ),
-                
-              ),
-            ),
-          ],
-        ))
-    .toList(),
-      ),
-    );
+            );
+          }).toList(),
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              setState(() {
+                selectedGroupName = newValue;
+              });
+              print(newValue);
+              _fetchGuesses(newValue);
+          
+            }
+          },
+        ): 
 
+        Padding(
+          padding: const EdgeInsets.only(top: 10.0),
+          child: GestureDetector(
+                      onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => TableScreen(),
+                    ),
+                  ),
+
+            child: Text('הצטרף לקבוצה כדי לראות ניחושים של חברים',
+                style: TextStyle(
+                      color: Colors.white,
+                    ),
+            ),
+          ),
+        ),
+        if(_userGroups.isNotEmpty)
+        _guessesWithNames.isNotEmpty?
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            columns: const [
+              DataColumn(
+                  label: Text(
+                'user name',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              )),
+              DataColumn(
+                  label: Text(
+                'Guess',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              )),
+              DataColumn(
+                  label: Text(
+                'Sum Points',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              )),
+            ],
+            rows: _guessesWithNames
+                .map((guessWithName) => DataRow(
+                      cells: [
+                        DataCell(
+                          Center(
+                            child: Text(
+                              guessWithName.userName,
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          Center(
+                            child: Text(
+                              '${guessWithName.guess.homeTeamGoals} - ${guessWithName.guess.awayTeamGoals}',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          Center(
+                            child: Text(
+                              guessWithName.guess.sumPoints % 1 == 0
+                                  ? guessWithName.guess.sumPoints
+                                      .toInt()
+                                      .toString()
+                                  : guessWithName.guess.sumPoints.toString(),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ))
+                .toList(),
+          ),
+        ):
+        Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: Text('אין ניחושים',
+              style: TextStyle(
+                      color: Colors.white,
+                    ),
+          ),
+        ),
+      ],
+    );
   }
 }
