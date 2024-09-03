@@ -59,7 +59,7 @@ class GameWidget extends StatelessWidget {
                   ),
                   if (game.status.long == 'Not Started')
                     Text(
-                      DateFormat('HH:mm')
+                      DateFormat('HH:mm  ')
                           .format(game.date.toLocal()), // Format the time
                       style: TextStyle(
                         color: Color(0xFF9BA4B5).withOpacity(0.9),
@@ -91,10 +91,9 @@ class GameWidget extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                           fontSize: 13.0,
                         ),
-                                overflow: TextOverflow
-                            .visible, 
+                        overflow: TextOverflow.visible,
                         maxLines: 2,
-                           textAlign: TextAlign.left, 
+                        textAlign: TextAlign.left,
                       ),
                     ),
                   ),
@@ -216,12 +215,12 @@ class GameWidget extends StatelessWidget {
                       alignment: Alignment.centerRight,
                       child: Text(
                         game.away.name,
-                         style: TextStyle(
+                        style: TextStyle(
                           color: Colors.white, // White color for the team names
                           fontWeight: FontWeight.bold,
                           fontSize: 13.0,
                         ),
-                         overflow: TextOverflow
+                        overflow: TextOverflow
                             .visible, // Allow the text to wrap to the next line
                         maxLines: 2, // Set the maximum number of lines
                       ),
