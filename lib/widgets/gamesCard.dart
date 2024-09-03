@@ -231,11 +231,11 @@ class GameWidget extends StatelessWidget {
               SizedBox(height: 8.0),
               if (game.status.long == "Not Started")
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    SizedBox(
-                      width: 1,
-                    ),
+                    // SizedBox(
+                    //   width: 1,
+                    // ),
                     Text(
                       '${game.odds.home}',
                       style: TextStyle(
@@ -244,7 +244,7 @@ class GameWidget extends StatelessWidget {
                         fontSize: 16.0,
                       ),
                     ),
-                    // SizedBox(width: 20,),
+                    SizedBox(width:1.0,),
                     Text(
                       '${game.odds.draw}',
                       style: TextStyle(
@@ -253,7 +253,7 @@ class GameWidget extends StatelessWidget {
                         fontSize: 16.0,
                       ),
                     ),
-                    //  SizedBox(width: 20,),
+                     SizedBox(width: 1.0,),
                     Text(
                       '${game.odds.away}',
                       style: TextStyle(
@@ -263,9 +263,9 @@ class GameWidget extends StatelessWidget {
                       ),
                     ),
 
-                    SizedBox(
-                      width: 1,
-                    ),
+                    // SizedBox(
+                    //   width: 1,
+                    // ),
                   ],
                 ),
               SizedBox(height: 8.0),
