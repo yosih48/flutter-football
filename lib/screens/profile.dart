@@ -261,20 +261,42 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(AppLocalizations.of(context)!.createnewgroup),
+             backgroundColor: cards,
+          title: Text(AppLocalizations.of(context)!.createnewgroup,
+            style: TextStyle(color: Colors.white),
+          ),
           content: TextField(
             controller: _groupNameController,
-            decoration: InputDecoration(hintText: AppLocalizations.of(context)!.entergroupname),
+            decoration: InputDecoration(hintText: AppLocalizations.of(context)!.entergroupname,
+               hintStyle: TextStyle(
+                color: Colors.white
+                    , // Hint text color with some opacity
+              ),
+                   enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                    color: Colors.blue), // Bottom border color when enabled
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                    color: Colors.blue,
+                    width:
+                        2.0), // Bottom border color when focused, with thicker border
+              ),
+            ),
           ),
           actions: <Widget>[
             TextButton(
-              child: Text(AppLocalizations.of(context)!.cancel),
+              child: Text(AppLocalizations.of(context)!.cancel,
+                 style: TextStyle(color: Colors.blue)
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             ElevatedButton(
-              child: Text(AppLocalizations.of(context)!.create),
+              child: Text(AppLocalizations.of(context)!.create,
+                 style: TextStyle(color: Colors.blue)
+              ),
               onPressed: () {
                 if (_groupNameController.text.isNotEmpty) {
                   _createNewGroup(_groupNameController.text);

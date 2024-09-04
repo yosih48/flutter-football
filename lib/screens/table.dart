@@ -87,6 +87,7 @@ class TableScreenContentState extends State<TableScreenContent> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          
           title: Text(AppLocalizations.of(context)!.invitefriend),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -142,7 +143,10 @@ class TableScreenContentState extends State<TableScreenContent> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(AppLocalizations.of(context)!.joingroup),
+              backgroundColor: cards,
+          title: Text(AppLocalizations.of(context)!.joingroup,
+           style: TextStyle(color: Colors.white)
+          ),
           content: TextField(
             controller: _inviteCodeController,
             decoration: InputDecoration(
@@ -150,13 +154,17 @@ class TableScreenContentState extends State<TableScreenContent> {
           ),
           actions: <Widget>[
             TextButton(
-              child: Text(AppLocalizations.of(context)!.join),
+              child: Text(AppLocalizations.of(context)!.cancel,
+               style: TextStyle(color: Colors.blue)
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             ElevatedButton(
-              child: Text(AppLocalizations.of(context)!.invitefriend),
+              child: Text(AppLocalizations.of(context)!.join,
+               style: TextStyle(color: Colors.blue)
+              ),
               onPressed: () async {
                 if (_inviteCodeController.text.isNotEmpty) {
                   await GroupsMethods().addGroupToUser(
