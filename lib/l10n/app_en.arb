@@ -85,7 +85,10 @@
      "table": "Table",
     "joingroup": "Join Group",
     "daypoints": "daily points",
-    "createpassword": "Create password"
+    "createpassword": "Create password",
+    "loginfailed": "Login failed",
+    "registrationfailed": "Registration failed",
+    "registrationsuccessful": "Registration successful"
     
     
 

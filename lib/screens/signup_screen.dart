@@ -58,6 +58,9 @@ class _SignupScreenState extends State<SignupScreen> {
     
     // If we reach here, registration was successful
     print('Registration successful');
+        ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppLocalizations.of(context)!.registrationsuccessful)),
+    );
     navigateToLogin();
     // Navigator.of(context).pushReplacement(
     //   MaterialPageRoute(
@@ -71,7 +74,7 @@ class _SignupScreenState extends State<SignupScreen> {
     print('Registration failed: $e');
     // Show error message to user
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Registration failed: $e')),
+      SnackBar(content: Text(AppLocalizations.of(context)!.registrationfailed)),
     );
   } finally {
     setState(() {

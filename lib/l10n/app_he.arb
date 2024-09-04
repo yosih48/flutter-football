@@ -84,7 +84,10 @@
     "table": "טבלה",
      "joingroup": "הצטרף לקבוצה",
     "daypoints": "ניקוד יומי",
-    "createpassword": "צור סיסמה"
+    "createpassword": "צור סיסמה",
+     "loginfailed": "שגיאת תחברות",
+     "registrationfailed": "שגיאת רישום",
+     "registrationsuccessful": "נרשמת בהצלחה"
     
 
              
