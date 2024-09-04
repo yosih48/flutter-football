@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:football/theme/colors.dart';
 import 'package:football/widgets/text_field_input.dart';
 import 'package:provider/provider.dart';
 
@@ -9,7 +10,8 @@ import '../responsive/rsponsive_layout_screen.dart';
 import '../responsive/web_screen_layout.dart';
 import '../utils/colors.dart';
 import '../utils/utils.dart';
-
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'login_screen.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -86,6 +88,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: background,
         body: SafeArea(
             child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -106,23 +109,93 @@ class _SignupScreenState extends State<SignupScreen> {
             height: 24,
           ),
           //test fiels input for username
-          TextFieldInput(
-              hintText: 'enter your username',
-              textEditingController: _usernameController,
-              textInputType: TextInputType.text),
+          
+          TextField(
+        
+              controller: _usernameController,
+              //  labelText: 'enter your username',
+                               decoration: InputDecoration(
+              labelText: AppLocalizations.of(context)!.username,
+              labelStyle: TextStyle(
+                color: Colors.blue, // Change this to your desired color
+              ),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                    color: Colors.blue), // Bottom border color when enabled
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                    color: Colors.blue,
+                    width:
+                        2.0), // Bottom border color when focused, with thicker border
+              ),
+            ),
+            style: TextStyle(
+              color: Colors.white, // Change the input text color to blue
+            ),
+            cursorColor: Colors.blue,
+            onChanged: (value) {
+              _usernameController.text = value;
+            },
+              ),
           const SizedBox(height: 24),
           //test fiels input for email
-          TextFieldInput(
-              textEditingController: _emailController,
-              hintText: 'enter your email',
-              textInputType: TextInputType.emailAddress),
+           TextField(
+        
+              controller: _emailController,
+              //  labelText: 'enter your username',
+                               decoration: InputDecoration(
+              labelText: AppLocalizations.of(context)!.email,
+              labelStyle: TextStyle(
+                color: Colors.blue, // Change this to your desired color
+              ),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                    color: Colors.blue), // Bottom border color when enabled
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                    color: Colors.blue,
+                    width:
+                        2.0), // Bottom border color when focused, with thicker border
+              ),
+            ),
+            style: TextStyle(
+              color: Colors.white, // Change the input text color to blue
+            ),
+            cursorColor: Colors.blue,
+            onChanged: (value) {
+              _emailController.text = value;
+            },
+              ),
           const SizedBox(height: 24),
           //test fiels input for password
-          TextFieldInput(
-            textEditingController: _passwordController,
-            hintText: 'enter your password',
-            textInputType: TextInputType.text,
-            isPass: true,
+                 TextField(
+            controller: _passwordController,
+            //  labelText: 'enter your username',
+            decoration: InputDecoration(
+              labelText: AppLocalizations.of(context)!.createpassword,
+              labelStyle: TextStyle(
+                color: Colors.blue, // Change this to your desired color
+              ),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                    color: Colors.blue), // Bottom border color when enabled
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                    color: Colors.blue,
+                    width:
+                        2.0), // Bottom border color when focused, with thicker border
+              ),
+            ),
+            style: TextStyle(
+              color: Colors.white, // Change the input text color to blue
+            ),
+            cursorColor: Colors.blue,
+            onChanged: (value) {
+              _passwordController.text = value;
+            },
           ),
           const SizedBox(height: 24),
 
@@ -137,7 +210,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         color: primaryColor,
                       ),
                     )
-                  : const Text('sign up'),
+                  :  Text(AppLocalizations.of(context)!.signup),
               width: double.infinity,
               alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -157,15 +230,21 @@ class _SignupScreenState extends State<SignupScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                child: Text('allready have an account?'),
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(AppLocalizations.of(context)!.allreadyhaveanaccount,
+                      style: TextStyle(
+                    color: Colors.white, // Change the input text color to blue
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
               GestureDetector(
                 onTap: navigateToLogin,
                 child: Container(
                   child: Text(
-                    'login',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    AppLocalizations.of(context)!.login,
+                    style: TextStyle(fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 8),
                 ),
