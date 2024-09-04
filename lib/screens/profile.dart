@@ -85,14 +85,12 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
             // Handle the case when _userGroups is empty
             selectedGroup = 'default'; // or any other default value you prefer
           }
-    
+
           Provider.of<UserProvider>(context, listen: false)
               .setSelectedGroupName(_userGroups.values.first);
         }
         Provider.of<UserProvider>(context, listen: false)
             .setCurrentUser(currentUserId);
-
-
       });
     } catch (e) {
       print('Failed to fetch user groups: $e');
@@ -349,61 +347,64 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                                       selectedGroupName: groupName)),
                             );
                           },
-                          child: ListTile(
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            leading: CircleAvatar(
-                              backgroundColor: Colors.grey,
-                              child: Text(groupName[0],
-                                  style: TextStyle(color: Colors.white)),
-                              radius: 18,
-                            ),
-                            title: Text(
-                              groupName,
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 16),
-                              textAlign: TextAlign.right,
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize
-                                  .min, // Ensures the Row takes up only the necessary width
-                              children: [
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.star,
-                                    color: selectedGroup.selectedGroupName ==
-                                            groupName
-                                        ? Colors.amber
-                                        : Colors.white,
-                                  ),
-                                  onPressed: () {
-                                    selectedGroup
-                                        .setSelectedGroupName(groupName);
+                          child: Card(
+                            child: ListTile(
+                              tileColor: cards,
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 2),
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.grey,
+                                child: Text(groupName[0],
+                                    style: TextStyle(color: Colors.white)),
+                                radius: 18,
+                              ),
+                              title: Text(
+                                groupName,
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 16),
+                                textAlign: TextAlign.right,
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize
+                                    .min, // Ensures the Row takes up only the necessary width
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.star,
+                                      color: selectedGroup.selectedGroupName ==
+                                              groupName
+                                          ? Colors.amber
+                                          : Colors.white,
+                                    ),
+                                    onPressed: () {
+                                      selectedGroup
+                                          .setSelectedGroupName(groupName);
 
-                                    print(' set groupName: ${groupName}');
-                                    // Navigate back or show a confirmation
-                                  },
-                                ),
-                                !isCreator
-                                    ? IconButton(
-                                        icon: Icon(Icons.exit_to_app,
-                                            color: Colors.white),
-                                        onPressed: () {
-                                          leaveGroup(groupName);
-                                          print('Exiting group: $groupName');
-                                        },
-                                      )
-                                    : Opacity(
-                                        opacity:
-                                            0.0, // Makes the button invisible
-                                        child: IconButton(
-                                          icon: Icon(Icons
-                                              .exit_to_app), // Same icon as the visible button
-                                          onPressed:
-                                              () {}, // No action required
+                                      print(' set groupName: ${groupName}');
+                                      // Navigate back or show a confirmation
+                                    },
+                                  ),
+                                  !isCreator
+                                      ? IconButton(
+                                          icon: Icon(Icons.exit_to_app,
+                                              color: Colors.white),
+                                          onPressed: () {
+                                            leaveGroup(groupName);
+                                            print('Exiting group: $groupName');
+                                          },
+                                        )
+                                      : Opacity(
+                                          opacity:
+                                              0.0, // Makes the button invisible
+                                          child: IconButton(
+                                            icon: Icon(Icons
+                                                .exit_to_app), // Same icon as the visible button
+                                            onPressed:
+                                                () {}, // No action required
+                                          ),
                                         ),
-                                      ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         );
@@ -441,9 +442,9 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                 );
 
                 if (confirmSignOut == true)
-                         Provider.of<UserProvider>(context, listen: false)
+                  Provider.of<UserProvider>(context, listen: false)
                       .setSelectedGroupName('default');
-                  await authProvider.signOut(currentUserId);
+                await authProvider.signOut(currentUserId);
                 if (context.mounted) {}
               },
               child: const Text('Signout'),
