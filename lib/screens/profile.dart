@@ -47,6 +47,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   Map<String, String> _userGroups = {};
   List<Map<String, dynamic>> _groupsInfo = [];
   late String currentUserId;
+  late String currentUserEmail;
   TextEditingController _groupNameController = TextEditingController();
   Map<String, dynamic> user = {};
   late String selectedGroupName = "";
@@ -55,7 +56,8 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   void initState() {
     super.initState();
     currentUserId = widget.authProvider.currentUser?.id ?? 'Not logged in';
-
+    currentUserEmail = widget.authProvider.currentUser?.email ?? 'Not logged in';
+_fetchUserData();
     _fetchUserGroups();
   }
 
@@ -211,14 +213,31 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
       // Show error message to user
     }
   }
-
+ Future<void> _fetchUserData() async {
+    // Fetch user data including groupID
+    // This is a placeholder - replace with your actual API call
+    try {
+      final _user = await UsersMethods().fetchUserById(currentUserId);
+       
+        print('_user: ${_user}');
+        setState(() {
+      
+          user = Map<String, String>.from(_user['groupID'] ?? {});
+                print(' user: ${user}');
+        });
+   
+    } catch (e) {
+      print('Error fetching user data: $e');
+    }
+  }
   Future<void> _addGroupToUser(String groupName) async {
     final existingGroupKeys =
-        user['groupID']?.keys?.map((key) => int.parse(key))?.toList() ?? [];
+        user?.keys?.map((key) => int.parse(key))?.toList() ?? [];
     final nextKey = existingGroupKeys.isEmpty
         ? 1
         : (existingGroupKeys.reduce(max) + 1).toString();
-    print('existingGroupKeys: ${existingGroupKeys}');
+        
+
     final url = Uri.parse('https://leagues.onrender.com/users/');
     try {
       final response = await http.put(
@@ -226,7 +245,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
         body: jsonEncode({
           '_id': currentUserId,
           'groups': user['groupID'],
-          'email': user['email'],
+          'email': currentUserEmail,
           '\$set': {
             'groupID.$nextKey': groupName,
           },
@@ -263,15 +282,15 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
         return AlertDialog(
              backgroundColor: cards,
           title: Text(AppLocalizations.of(context)!.createnewgroup,
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: Colors.white,fontSize: 14 ),
           ),
           content: TextField(
             controller: _groupNameController,
-            decoration: InputDecoration(hintText: AppLocalizations.of(context)!.entergroupname,
-               hintStyle: TextStyle(
-                color: Colors.white
-                    , // Hint text color with some opacity
-              ),
+            decoration: InputDecoration(
+              labelText: AppLocalizations.of(context)!.entergroupname,
+               labelStyle: TextStyle(
+                        color: Colors.blue, // Change this to your desired color
+                      ),
                    enabledBorder: UnderlineInputBorder(
                 borderSide: BorderSide(
                     color: Colors.blue), // Bottom border color when enabled
@@ -280,9 +299,16 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                 borderSide: BorderSide(
                     color: Colors.blue,
                     width:
-                        2.0), // Bottom border color when focused, with thicker border
+                        2.0),
+                         // Bottom border color when focused, with thicker border
               ),
+              
             ),
+                         style: TextStyle(
+                      color:
+                          Colors.white, // Change the input text color to blue
+                    ),
+                    cursorColor: Colors.blue,
           ),
           actions: <Widget>[
             TextButton(
@@ -467,7 +493,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                       backgroundColor: cards,
                       title: Text(
                         AppLocalizations.of(context)!.confirmsignout,
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                       content: Text(
                         AppLocalizations.of(context)!.leaveapp,

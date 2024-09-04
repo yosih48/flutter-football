@@ -87,21 +87,28 @@ class TableScreenContentState extends State<TableScreenContent> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          
-          title: Text(AppLocalizations.of(context)!.invitefriend),
+          backgroundColor: cards,
+          title: Text(AppLocalizations.of(context)!.invitefriend,
+           style: TextStyle(color: Colors.white,fontSize: 14),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(AppLocalizations.of(context)!.invitecodecopy),
+              Text(AppLocalizations.of(context)!.invitecodecopy,
+               style: TextStyle(color: Colors.white),),
               SizedBox(height: 10),
-              Text(inviteCode, style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(inviteCode, style: TextStyle(fontWeight: FontWeight.bold,color:Colors.white)),
               SizedBox(height: 20),
-              Text(AppLocalizations.of(context)!.shareinvitecode),
+              Text(AppLocalizations.of(context)!.shareinvitecode,
+                 style: TextStyle(color: Colors.white),
+              ),
             ],
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('OK'),
+              child: Text('OK',
+                 style: TextStyle(color: Colors.blue),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -122,7 +129,7 @@ class TableScreenContentState extends State<TableScreenContent> {
         (g) => g['name'] == groupName,
       );
 
-      if (group != null) {
+   
         // Copy the group's code to the clipboard
         final groupCode = group['_id'];
         await FlutterClipboard.copy(groupCode);
@@ -130,9 +137,7 @@ class TableScreenContentState extends State<TableScreenContent> {
 
         // Show the invite dialog
         _showInviteDialog(groupCode);
-      } else {
-        print('Group not found');
-      }
+ 
     } catch (e) {
       print('Error inviting friend: $e');
     }
@@ -145,12 +150,33 @@ class TableScreenContentState extends State<TableScreenContent> {
         return AlertDialog(
               backgroundColor: cards,
           title: Text(AppLocalizations.of(context)!.joingroup,
-           style: TextStyle(color: Colors.white)
+           style: TextStyle(color: Colors.white, fontSize: 14)
           ),
           content: TextField(
             controller: _inviteCodeController,
             decoration: InputDecoration(
-                hintText: AppLocalizations.of(context)!.enterinvitecode),
+                labelText: AppLocalizations.of(context)!.enterinvitecode,
+                     labelStyle: TextStyle(
+                        color: Colors.blue, // Change this to your desired color
+                      ),
+                                     enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                    color: Colors.blue), // Bottom border color when enabled
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                    color: Colors.blue,
+                    width:
+                        2.0),
+                         // Bottom border color when focused, with thicker border
+              ),
+                
+                ),
+                                 style: TextStyle(
+                      color:
+                          Colors.white, // Change the input text color to blue
+                    ),
+                    cursorColor: Colors.blue,
           ),
           actions: <Widget>[
             TextButton(
