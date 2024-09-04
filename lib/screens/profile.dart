@@ -114,15 +114,24 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Leave Group'),
-          content: Text('Are you sure you want to leave this group?'),
+          backgroundColor: cards,
+          title: Text('Leave Group',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: Text('Are you sure you want to leave this group?',
+            style: TextStyle(color: Colors.white),
+          ),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child: Text('Cancel',
+                style: TextStyle(color: Colors.blue),
+              ),
               onPressed: () => Navigator.of(context).pop(false),
             ),
             TextButton(
-              child: Text('Leave'),
+              child: Text('Leave',
+                style: TextStyle(color: Colors.blue),
+              ),
               onPressed: () => Navigator.of(context).pop(true),
             ),
           ],
@@ -414,6 +423,8 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
 
             ElevatedButton(
               style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -425,15 +436,28 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                   context: context,
                   builder: (BuildContext context) {
                     return AlertDialog(
-                      title: Text('Confirm Signout'),
-                      content: Text('Are you sure you want to sign out?'),
+                      backgroundColor: cards,
+                      title: Text(
+                        'Confirm Signout',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      content: Text(
+                        'Are you sure you want to sign out?',
+                        style: TextStyle(color: Colors.white),
+                      ),
                       actions: <Widget>[
                         TextButton(
-                          child: Text('Cancel'),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(color: Colors.blue),
+                          ),
                           onPressed: () => Navigator.of(context).pop(false),
                         ),
                         TextButton(
-                          child: Text('Signout'),
+                          child: Text(
+                            'Signout',
+                            style: TextStyle(color: Colors.blue),
+                          ),
                           onPressed: () => Navigator.of(context).pop(true),
                         ),
                       ],
@@ -441,11 +465,14 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                   },
                 );
 
-                if (confirmSignOut == true)
+                if (confirmSignOut == true) {
                   Provider.of<UserProvider>(context, listen: false)
                       .setSelectedGroupName('default');
-                await authProvider.signOut(currentUserId);
-                if (context.mounted) {}
+                  await authProvider.signOut(currentUserId);
+                  if (context.mounted) {
+                    // Perform any additional actions if needed
+                  }
+                }
               },
               child: const Text('Signout'),
             ),

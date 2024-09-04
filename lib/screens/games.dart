@@ -388,8 +388,11 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _submitAllGuesses,
+          backgroundColor: Colors.blue, 
+        foregroundColor: Colors.white,
+        tooltip: 'Submit All Guesses', // Add a tooltip
         child: Icon(Icons.send),
-        tooltip: 'Submit All Guesses',
+   
       ),
     );
   }

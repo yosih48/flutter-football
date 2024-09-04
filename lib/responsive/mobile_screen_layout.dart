@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
+import 'package:football/theme/colors.dart';
 
 import '../utils/colors.dart';
 import '../utils/global_variables.dart';
@@ -56,6 +57,7 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
       // MyWidget(),
       bottomNavigationBar: CupertinoTabBar(
         backgroundColor: mobileBackgroundColor,
+        
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(
@@ -63,7 +65,8 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
               color: (_page == 0) ? primaryColor : secondaryColor,
             ),
             label: 'פרופיל',
-            backgroundColor: primaryColor,
+           backgroundColor: primaryColor,
+          
           ),
           BottomNavigationBarItem(
               icon: Icon(

@@ -92,6 +92,23 @@ class GameApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+
+ theme: ThemeData(
+    primarySwatch: Colors.blue, // Sets the primary color to blue
+    textTheme: TextTheme(
+      // bodyText1: TextStyle(color: Colors.blue), // Default text color
+      // bodyText2: TextStyle(color: Colors.blue), // Another text style
+   
+  
+    ),
+    progressIndicatorTheme: ProgressIndicatorThemeData(
+      color: Colors.blue, // Default color for CircularProgressIndicator
+    ),
+  
+  ),
+
+
+
       debugShowCheckedModeBanner: false,
       title: 'Localizations Sample App',
       localizationsDelegates: [
