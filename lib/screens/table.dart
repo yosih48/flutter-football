@@ -288,27 +288,26 @@ class TableScreenContentState extends State<TableScreenContent> {
     );
   }
 
-  Widget table(league) {
+Widget table(league) {
     return Column(
       children: [
         Container(
-         
           width: 300,
           child: DropdownButton<String>(
             value: selectedGroupName,
-            dropdownColor: cards, // Set the dropdown background color
+            dropdownColor: cards,
             style: TextStyle(
-              color: Colors.white, // Set the dropdown text color
+              color: Colors.white,
               fontSize: 16.0,
             ),
-               isExpanded: true, 
+            isExpanded: true,
             items: _userGroups.entries.map((entry) {
               return DropdownMenuItem<String>(
                 value: entry.value,
                 child: Text(
                   entry.value,
                   style: TextStyle(
-                    color: Colors.white, // Set the dropdown item text color
+                    color: Colors.white,
                   ),
                 ),
               );
@@ -324,72 +323,92 @@ class TableScreenContentState extends State<TableScreenContent> {
           ),
         ),
         Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                columns: [
-                  DataColumn(
-                      label: Text(
-                    AppLocalizations.of(context)!.username,
-                    style: TextStyle(
-                      color: Colors.white,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                    child: DataTable(
+                      columnSpacing: 0,
+                      horizontalMargin: 0,
+                      columns: [
+                        DataColumn(
+                          label: Expanded(
+                            child: Center(
+                              child: Text(
+                                AppLocalizations.of(context)!.username,
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ),
+                        DataColumn(
+                          label: Expanded(
+                            child: Center(
+                              child: Text(
+                                AppLocalizations.of(context)!.daypoints,
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ),
+                        DataColumn(
+                          label: Expanded(
+                            child: Center(
+                              child: Text(
+                                AppLocalizations.of(context)!.sumpoints,
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                      rows: _users
+                          .map((user) => DataRow(
+                                cells: [
+                                  DataCell(
+                                    Center(
+                                      child: Text(
+                                        user['displayName'] ?? '0',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Center(
+                                      child: Text(
+                                        user['thisDayPoints']
+                                                    ?[league.toString()]
+                                                ?.toString() ??
+                                            '0',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Center(
+                                      child: Text(
+                                        user['points']?[league.toString()]
+                                                ?.toString() ??
+                                            '0',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ))
+                          .toList(),
                     ),
-                  )),
-                  DataColumn(
-                      label: Text(AppLocalizations.of(context)!.daypoints,
-                          style: TextStyle(
-                            color: Colors.white,
-                          ))),
-                  DataColumn(
-                      label: Text(AppLocalizations.of(context)!.sumpoints,
-                          style: TextStyle(
-                            color: Colors.white,
-                          ))),
-                  // DataColumn(label: Text('Sum Points')),
-                ],
-                rows: _users
-                    .map((user) => DataRow(
-                          cells: [
-                            DataCell(
-                              Center(
-                                child: Text(user['displayName'] ?? '0',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                    )),
-                              ),
-                            ),
-                            DataCell(
-                              Center(
-                                child: Text(
-                                    user['thisDayPoints']?[league.toString()]
-                                            ?.toString() ??
-                                        '0',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                    )),
-                              ),
-                            ),
-                            DataCell(
-                              Center(
-                                child: Text(
-                                    user['points']?[league.toString()]
-                                            ?.toString() ??
-                                        '0',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                    )),
-                              ),
-                            ),
-                          ],
-                        ))
-                    .toList(),
-              ),
-            ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
         TextButton.icon(
@@ -400,7 +419,7 @@ class TableScreenContentState extends State<TableScreenContent> {
           label: Text(
             AppLocalizations.of(context)!.invitefriend,
             style: TextStyle(
-              color: white, // White color for the team names
+              color: white,
             ),
           ),
           onPressed: () => _inviteFriend(selectedGroupName),

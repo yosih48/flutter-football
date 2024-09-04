@@ -250,138 +250,142 @@ class _GameDetailsState extends State<GameDetails> {
     );
   }
 
-  Widget _buildGuessesTable() {
+ Widget _buildGuessesTable() {
     return Column(
       children: [
-        _userGroups.isNotEmpty?
-        DropdownButton<String>(
-          value: selectedGroupName,
-          dropdownColor: cards, // Set the dropdown background color
-          style: TextStyle(
-            color: Colors.white, // Set the dropdown text color
-            fontSize: 16.0,
-          ),
-          items: _userGroups.entries.map((entry) {
-            return DropdownMenuItem<String>(
-              value: entry.value,
-              child: Text(
-                entry.value,
-                style: TextStyle(
-                  color: Colors.white, // Set the dropdown item text color
-                ),
+        if (_userGroups.isNotEmpty)
+          Container(
+            width: 300,
+            child: DropdownButton<String>(
+              value: selectedGroupName,
+              dropdownColor: cards,
+              style: TextStyle(color: Colors.white, fontSize: 16.0),
+              isExpanded: true,
+              items: _userGroups.entries.map((entry) {
+                return DropdownMenuItem<String>(
+                  value: entry.value,
+                  child:
+                      Text(entry.value, style: TextStyle(color: Colors.white)),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  setState(() {
+                    selectedGroupName = newValue;
+                  });
+                  print(newValue);
+                  _fetchGuesses(newValue);
+                }
+              },
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.only(top: 10.0),
+            child: GestureDetector(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => TableScreen()),
               ),
-            );
-          }).toList(),
-          onChanged: (String? newValue) {
-            if (newValue != null) {
-              setState(() {
-                selectedGroupName = newValue;
-              });
-              print(newValue);
-              _fetchGuesses(newValue);
-          
-            }
-          },
-        ): 
-
-        Padding(
-          padding: const EdgeInsets.only(top: 10.0),
-          child: GestureDetector(
-                      onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => TableScreen(),
-                    ),
-                  ),
-
-            child: Text(
-                    AppLocalizations.of(context)!.joingrouptoseefreinds,
-                style: TextStyle(
-                      color: Colors.white,
-                    ),
+              child: Text(
+                AppLocalizations.of(context)!.joingrouptoseefreinds,
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ),
-        ),
-        if(_userGroups.isNotEmpty)
-        _guessesWithNames.isNotEmpty?
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: DataTable(
-            columns:  [
-              DataColumn(
-                  label: Text(
-                AppLocalizations.of(context)!.username,
-                style: TextStyle(
-                  color: Colors.white,
-                ),
-              )),
-              DataColumn(
-                  label: Text(
-                AppLocalizations.of(context)!.guess,
-                style: TextStyle(
-                  color: Colors.white,
-                ),
-              )),
-              DataColumn(
-                  label: Text(
-                AppLocalizations.of(context)!.sumpoints,
-                style: TextStyle(
-                  color: Colors.white,
-                ),
-              )),
-            ],
-            rows: _guessesWithNames
-                .map((guessWithName) => DataRow(
-                      cells: [
-                        DataCell(
-                          Center(
-                            child: Text(
-                              guessWithName.userName,
-                              style: TextStyle(
-                                color: Colors.white,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          Center(
-                            child: Text(
-                              '${guessWithName.guess.homeTeamGoals} - ${guessWithName.guess.awayTeamGoals}',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.white,
+        if (_userGroups.isNotEmpty)
+          if (_guessesWithNames.isNotEmpty)
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                    child: DataTable(
+                      columnSpacing: 0,
+                      horizontalMargin: 0,
+                      columns: [
+                        DataColumn(
+                          label: Expanded(
+                            child: Center(
+                              child: Text(
+                                AppLocalizations.of(context)!.username,
+                                style: TextStyle(color: Colors.white),
                               ),
                             ),
                           ),
                         ),
-                        DataCell(
-                          Center(
-                            child: Text(
-                              guessWithName.guess.sumPoints % 1 == 0
-                                  ? guessWithName.guess.sumPoints
-                                      .toInt()
-                                      .toString()
-                                  : guessWithName.guess.sumPoints.toString(),
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.white,
+                        DataColumn(
+                          label: Expanded(
+                            child: Center(
+                              child: Text(
+                                AppLocalizations.of(context)!.guess,
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ),
+                        DataColumn(
+                          label: Expanded(
+                            child: Center(
+                              child: Text(
+                                AppLocalizations.of(context)!.sumpoints,
+                                style: TextStyle(color: Colors.white),
                               ),
                             ),
                           ),
                         ),
                       ],
-                    ))
-                .toList(),
-          ),
-        ):
-        Padding(
-          padding: const EdgeInsets.only(top: 10),
-          child: Text('אין ניחושים',
-              style: TextStyle(
-                      color: Colors.white,
+                      rows: _guessesWithNames
+                          .map((guessWithName) => DataRow(
+                                cells: [
+                                  DataCell(
+                                    Center(
+                                      child: Text(
+                                        guessWithName.userName,
+                                        style: TextStyle(color: Colors.white),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Center(
+                                      child: Text(
+                                        '${guessWithName.guess.homeTeamGoals} - ${guessWithName.guess.awayTeamGoals}',
+                                        style: TextStyle(color: Colors.white),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Center(
+                                      child: Text(
+                                        guessWithName.guess.sumPoints % 1 == 0
+                                            ? guessWithName.guess.sumPoints
+                                                .toInt()
+                                                .toString()
+                                            : guessWithName.guess.sumPoints
+                                                .toString(),
+                                        style: TextStyle(color: Colors.white),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ))
+                          .toList(),
                     ),
-          ),
-        ),
+                  ),
+                );
+              },
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Text(
+                'אין ניחושים',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
       ],
     );
   }
