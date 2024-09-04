@@ -58,11 +58,11 @@ class TableScreenContent extends StatefulWidget {
 class TableScreenContentState extends State<TableScreenContent> {
   List<Map<String, dynamic>> _users = [];
   int selectedIndex = 0;
-  late String selectedGroupName ="";
+  late String selectedGroupName = "";
   Map<String, String> _userGroups = {};
   int league = 2;
   late String currentUserId;
-    bool isLoading = true;
+  bool isLoading = true;
   //  Map<String, dynamic> user = {};
   TextEditingController _inviteCodeController = TextEditingController();
   void updateSelectedIndex(int index) {
@@ -76,7 +76,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                   ? 140
                   : 3;
       selectedIndex = index;
-             Provider.of<UserProvider>(context, listen: false)
+      Provider.of<UserProvider>(context, listen: false)
           .setselectedLeageId(league);
     });
     _fetchUsersForGroup(selectedGroupName);
@@ -95,8 +95,7 @@ class TableScreenContentState extends State<TableScreenContent> {
               SizedBox(height: 10),
               Text(inviteCode, style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 20),
-              Text(
-                  AppLocalizations.of(context)!.shareinvitecode),
+              Text(AppLocalizations.of(context)!.shareinvitecode),
             ],
           ),
           actions: <Widget>[
@@ -146,7 +145,8 @@ class TableScreenContentState extends State<TableScreenContent> {
           title: Text(AppLocalizations.of(context)!.joingroup),
           content: TextField(
             controller: _inviteCodeController,
-            decoration: InputDecoration(hintText: AppLocalizations.of(context)!.enterinvitecode),
+            decoration: InputDecoration(
+                hintText: AppLocalizations.of(context)!.enterinvitecode),
           ),
           actions: <Widget>[
             TextButton(
@@ -176,7 +176,7 @@ class TableScreenContentState extends State<TableScreenContent> {
   void initState() {
     super.initState();
     currentUserId = widget.authProvider.currentUser?.id ?? 'Not logged in';
-  league = widget.userProvider.selectedLeageId ?? 2;
+    league = widget.userProvider.selectedLeageId ?? 2;
     _fetchUserGroups();
   }
 
@@ -201,7 +201,6 @@ class TableScreenContentState extends State<TableScreenContent> {
 
           _fetchUsersForGroup(selectedGroupName);
         }
-        
       });
     } catch (e) {
       print('Failed to fetch user groups: $e');
@@ -222,7 +221,7 @@ class TableScreenContentState extends State<TableScreenContent> {
             num pointsB = b['points']?[league.toString()] ?? 0;
             return pointsB.compareTo(pointsA); // Sort in descending order
           });
-           isLoading = false;
+        isLoading = false;
         //  print('users: ${_users}');
       });
     } catch (e) {
@@ -261,67 +260,68 @@ class TableScreenContentState extends State<TableScreenContent> {
           color: Colors.white, // Set the color of the arrow icon to white
         ),
       ),
-      body: 
-      isLoading
+      body: isLoading
           ? Center(child: CircularProgressIndicator())
-          :
-      Column(
-        children: [
-          ToggleButtonsSample(
-            options: [
+          : Column(
+              children: [
+                ToggleButtonsSample(
+                  options: [
                     AppLocalizations.of(context)!.championsleague,
                     AppLocalizations.of(context)!.ligathaal,
                     AppLocalizations.of(context)!.laliga,
                     AppLocalizations.of(context)!.europaleague,
-
-            ],
-            onSelectionChanged: updateSelectedIndex,
-            initialSelection:  
-            league == 2
-                ? 0
-                : league == 383
-                    ? 1
-                    : league == 140
-                        ? 2
-                        : 3,
-          ),
-          Expanded(
-            child: table(league),
-          ),
-        ],
-      ),
+                  ],
+                  onSelectionChanged: updateSelectedIndex,
+                  initialSelection: league == 2
+                      ? 0
+                      : league == 383
+                          ? 1
+                          : league == 140
+                              ? 2
+                              : 3,
+                ),
+                Expanded(
+                  child: table(league),
+                ),
+              ],
+            ),
     );
   }
 
   Widget table(league) {
     return Column(
       children: [
-        DropdownButton<String>(
-          value: selectedGroupName,
-          dropdownColor: cards, // Set the dropdown background color
-          style: TextStyle(
-            color: Colors.white, // Set the dropdown text color
-            fontSize: 16.0,
-          ),
-          items: _userGroups.entries.map((entry) {
-            return DropdownMenuItem<String>(
-              value: entry.value,
-              child: Text(
-                entry.value,
-                style: TextStyle(
-                  color: Colors.white, // Set the dropdown item text color
+        Container(
+         
+          width: 300,
+          child: DropdownButton<String>(
+            value: selectedGroupName,
+            dropdownColor: cards, // Set the dropdown background color
+            style: TextStyle(
+              color: Colors.white, // Set the dropdown text color
+              fontSize: 16.0,
+            ),
+               isExpanded: true, 
+            items: _userGroups.entries.map((entry) {
+              return DropdownMenuItem<String>(
+                value: entry.value,
+                child: Text(
+                  entry.value,
+                  style: TextStyle(
+                    color: Colors.white, // Set the dropdown item text color
+                  ),
                 ),
-              ),
-            );
-          }).toList(),
-          onChanged: (String? newValue) {
-            if (newValue != null) {
-              setState(() {
-                selectedGroupName = newValue;
-              });
-              _fetchUsersForGroup(newValue);
-            }
-          },
+              );
+            }).toList(),
+            onChanged: (String? newValue) {
+              if (newValue != null) {
+                setState(() {
+                  selectedGroupName = newValue;
+                });
+                _fetchUsersForGroup(newValue);
+              }
+            },
+          ),
         ),
         Expanded(
           child: SingleChildScrollView(
@@ -329,7 +329,7 @@ class TableScreenContentState extends State<TableScreenContent> {
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
-                columns:  [
+                columns: [
                   DataColumn(
                       label: Text(
                     AppLocalizations.of(context)!.username,
