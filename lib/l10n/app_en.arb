@@ -17,7 +17,7 @@
     "logout": "log Out",
     "addemployee": "add Employee",
     "addcustomer": "add Customer",
-    "username": "name",
+    "name": "name",
     "email": "email address",
     "admin": "admin",
     "department": "department",

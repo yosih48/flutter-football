@@ -339,7 +339,7 @@ Widget table(league) {
                           label: Expanded(
                             child: Center(
                               child: Text(
-                                AppLocalizations.of(context)!.username,
+                                AppLocalizations.of(context)!.name,
                                 style: TextStyle(color: Colors.white),
                               ),
                             ),

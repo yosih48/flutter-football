@@ -21,9 +21,9 @@ import '../responsive/mobile_screen_layout.dart';
 import '../responsive/rsponsive_layout_screen.dart';
 import '../responsive/web_screen_layout.dart';
 import '../utils/colors.dart';
-// import '../widgets/text_field_input.dart';
-// import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-// import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -151,7 +151,7 @@ Future<void> sendFCMTokenToServer(String? fcmToken) async {
                     controller: fieldTextEditingController,
                     focusNode: fieldFocusNode,
                     decoration: InputDecoration(
-                      labelText: 'user name',
+                      labelText: AppLocalizations.of(context)!.username,
                       labelStyle: TextStyle(
                         color: Colors.blue, // Change this to your desired color
                       ),
@@ -219,7 +219,7 @@ Future<void> sendFCMTokenToServer(String? fcmToken) async {
               TextField(
                 controller: _passwordController,
                 decoration: InputDecoration(
-                  labelText: 'password',
+                  labelText: AppLocalizations.of(context)!.password,
                   labelStyle: TextStyle(
                     color: Colors.blue, // Change this to your desired color
                   ),
@@ -251,7 +251,7 @@ Future<void> sendFCMTokenToServer(String? fcmToken) async {
                           ),
                         )
                       : Text(
-                          'login',
+                          AppLocalizations.of(context)!.login,
                           style: TextStyle(
                             color: Colors
                                 .white, // Change the input text color to blue
@@ -277,16 +277,28 @@ Future<void> sendFCMTokenToServer(String? fcmToken) async {
                 children: [
                   Container(
                     child: 
-          
-                             GestureDetector(
+                    
+                     Text(
+                     AppLocalizations.of(context)!.donthaveanaccount,
+                      style: TextStyle(
+                        color:
+                            Colors.white, // Change the input text color to blue
+                      ),
+                    ),
+     
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    
+                  ),
+                                          GestureDetector(
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => const SignupScreen(),
                       ),
                     ),
                     child: Container(
-                      child: Text(
-                        'signup',
+                      child: 
+                      Text(
+                        AppLocalizations.of(context)!.signup,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -294,17 +306,7 @@ Future<void> sendFCMTokenToServer(String? fcmToken) async {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 8),
                     ),
-                  ),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    
-                  ),
-                     Text(
-                      ' ?dont have account',
-                      style: TextStyle(
-                        color:
-                            Colors.white, // Change the input text color to blue
-                      ),
-                    ),
+                                          )
                 ],
               )
               //transition to sign up
