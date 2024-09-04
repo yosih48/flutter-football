@@ -48,7 +48,46 @@
     "attendance": "Attendance",
     "day": "Day",
     "hours": "hours",
-    "yourguess": "Your Guess"
+    "yourguess": "Your Guess",
+    "leavegroup": "Are you sure you want to leave this group",
+    "leavethegroup": "Leave Group",
+    "leave": "leave",
+    "createnewgroup": "Create New Group",
+    "entergroupname": "Enter group name",
+    "create": "Create",
+    "mygroups": "My Groups",
+    "confirmsignout": "Confirm Signout",
+    "leaveapp": "Are you sure you want to sign out",
+    "yes": "yes",
+    "signout": "Sign Out",
+    "notifications": "Notifications",
+    "chooseallcompetitions": "Choose All Competitions",
+    "joingrouptoseefreinds": "Join Group To See Freinds Guesses",
+    "username": "User Name",
+    "guess": "Guess",
+    "sumpoints": "Points",
+    "noguessesfound": "No new or updated guesses to submit",
+    "savedsuccessfully": "saved successfully",
+    "thisleague": "This League",
+    "todayonly": "Today only",
+    "championsleague": "Champions League",
+    "ligathaal": "Ligat Haal",
+    "europaleague": "Europa League",
+    "laliga": "La Liga",
+    "nogames": "No games",
+    "invitefriend": "Invite Friend",
+    "invitecodecopy": "Invite code copied to clipboard:",
+    "shareinvitecode": "Share this code with your friend to invite them to the group.",
+    "joingroup": "Join Group",
+    "enterinvitecode": "Enter invite code",
+    "join": "Join",
+     "table": "Table",
+    "joingroup": "Join Group",
+    "daypoints": "daily points"
+    
+    
+
+    
     
 
              

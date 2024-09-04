@@ -17,6 +17,8 @@ import 'package:football/widgets/toggleButton.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../models/users.dart';
 
@@ -231,7 +233,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
     if (newGuesses.isEmpty && updatedGuesses.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("No new or updated guesses to submit")),
+        SnackBar(content: Text(AppLocalizations.of(context)!.noguessesfound)),
       );
       return;
     }
@@ -271,7 +273,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     if (allSuccessful) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text("נשמר בהצלחה")),
+            content: Text(AppLocalizations.of(context)!.savedsuccessfully)),
       );
       _fetchGuesses(clientId); // Refresh guesses after submission
     } else {
@@ -287,19 +289,19 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
-        title: Text(
-          'games',
-          style: TextStyle(
-            color: white, // White color for the team names
-          ),
-        ),
+        // title: Text(
+        //   'games',
+        //   style: TextStyle(
+        //     color: white, // White color for the team names
+        //   ),
+        // ),
         backgroundColor: Colors.transparent,
         actions: [
           Row(
             children: [
               if(_showOnlyTodayGames)
               Text(
-                'This League',
+                AppLocalizations.of(context)!.thisleague,
                 style: TextStyle(
                     color: white, fontSize: 14 // White color for the team names
                     ),
@@ -323,7 +325,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                 ),
               ),
               Text(
-                'Today only',
+                 AppLocalizations.of(context)!.todayonly,
                 style: TextStyle(
                   color: white, 
                   fontSize: 14 // White color for the team names
@@ -350,14 +352,11 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         children: [
           ToggleButtonsSample(
             options: [
-              'Champ',
-              'Israel',
-
-              'Spain',
-              'אירופית'
-              // AppLocalizations.of(context)!.opens,
-              // AppLocalizations.of(context)!.history
-            ],
+              AppLocalizations.of(context)!.championsleague ,
+              AppLocalizations.of(context)!.ligathaal ,
+              AppLocalizations.of(context)!.laliga ,
+              AppLocalizations.of(context)!.europaleague ,
+        ],
             onSelectionChanged: updateSelectedIndex,
             initialSelection: league == 2
                 ? 0
@@ -373,7 +372,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                 : _games.isEmpty
                     ? Center(
                         child: Text(
-                          'No games',
+                           AppLocalizations.of(context)!.nogames,
                           style: TextStyle(
                             color: Colors.white, // Customize the text color
                             fontSize: 20, // Customize the font size

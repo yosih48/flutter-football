@@ -15,6 +15,8 @@ import 'package:football/theme/colors.dart';
 import 'package:football/widgets/toggleButton.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 class TableScreen extends StatelessWidget {
   final String? selectedGroupName;
@@ -85,16 +87,16 @@ class TableScreenContentState extends State<TableScreenContent> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Invite Friend'),
+          title: Text(AppLocalizations.of(context)!.invitefriend),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Invite code copied to clipboard:'),
+              Text(AppLocalizations.of(context)!.invitecodecopy),
               SizedBox(height: 10),
               Text(inviteCode, style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 20),
               Text(
-                  'Share this code with your friend to invite them to the group.'),
+                  AppLocalizations.of(context)!.shareinvitecode),
             ],
           ),
           actions: <Widget>[
@@ -141,20 +143,20 @@ class TableScreenContentState extends State<TableScreenContent> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Join Group'),
+          title: Text(AppLocalizations.of(context)!.joingroup),
           content: TextField(
             controller: _inviteCodeController,
-            decoration: InputDecoration(hintText: "Enter invite code"),
+            decoration: InputDecoration(hintText: AppLocalizations.of(context)!.enterinvitecode),
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child: Text(AppLocalizations.of(context)!.join),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             ElevatedButton(
-              child: Text('Join'),
+              child: Text(AppLocalizations.of(context)!.invitefriend),
               onPressed: () async {
                 if (_inviteCodeController.text.isNotEmpty) {
                   await GroupsMethods().addGroupToUser(
@@ -234,12 +236,12 @@ class TableScreenContentState extends State<TableScreenContent> {
       backgroundColor: background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: Text(
-          'Table',
-          style: TextStyle(
-            color: white, // White color for the team names
-          ),
-        ),
+        // title: Text(
+        //   AppLocalizations.of(context)!.table,
+        //   style: TextStyle(
+        //     color: white, // White color for the team names
+        //   ),
+        // ),
         actions: [
           TextButton.icon(
             icon: Icon(
@@ -247,7 +249,7 @@ class TableScreenContentState extends State<TableScreenContent> {
               color: Colors.white,
             ),
             label: Text(
-              'הצטרף לקבוצה',
+              AppLocalizations.of(context)!.joingroup,
               style: TextStyle(
                 color: white, // White color for the team names
               ),
@@ -266,7 +268,13 @@ class TableScreenContentState extends State<TableScreenContent> {
       Column(
         children: [
           ToggleButtonsSample(
-            options: ['Champ', 'Israel', 'Spain', 'אירופית'],
+            options: [
+                    AppLocalizations.of(context)!.championsleague,
+                    AppLocalizations.of(context)!.ligathaal,
+                    AppLocalizations.of(context)!.laliga,
+                    AppLocalizations.of(context)!.europaleague,
+
+            ],
             onSelectionChanged: updateSelectedIndex,
             initialSelection:  
             league == 2
@@ -321,21 +329,21 @@ class TableScreenContentState extends State<TableScreenContent> {
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
-                columns: const [
+                columns:  [
                   DataColumn(
                       label: Text(
-                    'name',
+                    AppLocalizations.of(context)!.username,
                     style: TextStyle(
                       color: Colors.white,
                     ),
                   )),
                   DataColumn(
-                      label: Text('day points',
+                      label: Text(AppLocalizations.of(context)!.daypoints,
                           style: TextStyle(
                             color: Colors.white,
                           ))),
                   DataColumn(
-                      label: Text('sum points',
+                      label: Text(AppLocalizations.of(context)!.sumpoints,
                           style: TextStyle(
                             color: Colors.white,
                           ))),
@@ -390,7 +398,7 @@ class TableScreenContentState extends State<TableScreenContent> {
             color: Colors.white,
           ),
           label: Text(
-            'הזמן חברים',
+            AppLocalizations.of(context)!.invitefriend,
             style: TextStyle(
               color: white, // White color for the team names
             ),

@@ -7,6 +7,8 @@ import 'package:football/resources/usersMethods.dart';
 import 'package:football/theme/colors.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 class FavoritsScreen extends StatefulWidget {
   const FavoritsScreen({super.key});
@@ -41,11 +43,10 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     try {
       final user = await authProvider.ensureUserLoaded();
-      
+
       if (user != null) {
         setState(() {
           userId = user.id;
-       
         });
         print('User ID: ${user.id}');
         print('User Name: ${user.name}');
@@ -131,7 +132,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: Text(
-          'התראות',
+          AppLocalizations.of(context)!.notifications,
           style: TextStyle(
             color: white, // White color for the team names
           ),
@@ -148,7 +149,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                     scale: 0.9,
                     child: SwitchListTile(
                       title: Text(
-                        'בחירת כל התחרויות',
+                        AppLocalizations.of(context)!.chooseallcompetitions,
                         style: TextStyle(
                           color: white, // White color for the team names
                         ),
@@ -160,12 +161,9 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                         });
                         updateDatabase(name, email);
                       },
-                      activeColor: Colors
-                          .blue, 
-                      inactiveThumbColor: Colors
-                          .white, 
-                      inactiveTrackColor: Colors
-                          .grey, 
+                      activeColor: Colors.blue,
+                      inactiveThumbColor: Colors.white,
+                      inactiveTrackColor: Colors.grey,
                     ),
                   ),
                 ),

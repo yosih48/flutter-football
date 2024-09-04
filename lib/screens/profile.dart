@@ -10,7 +10,9 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:provider/provider.dart';
-
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+// AppLocalizations.of(context)!.assigncall
 class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -115,21 +117,25 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: cards,
-          title: Text('Leave Group',
+          title: Text(
+            AppLocalizations.of(context)!.leavethegroup,
             style: TextStyle(color: Colors.white),
           ),
-          content: Text('Are you sure you want to leave this group?',
+          content: Text(
+            AppLocalizations.of(context)!.leavegroup,
             style: TextStyle(color: Colors.white),
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel',
+              child: Text(
+                AppLocalizations.of(context)!.cancel,
                 style: TextStyle(color: Colors.blue),
               ),
               onPressed: () => Navigator.of(context).pop(false),
             ),
             TextButton(
-              child: Text('Leave',
+              child: Text(
+                AppLocalizations.of(context)!.leave,
                 style: TextStyle(color: Colors.blue),
               ),
               onPressed: () => Navigator.of(context).pop(true),
@@ -255,20 +261,20 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Create New Group'),
+          title: Text(AppLocalizations.of(context)!.createnewgroup),
           content: TextField(
             controller: _groupNameController,
-            decoration: InputDecoration(hintText: "Enter group name"),
+            decoration: InputDecoration(hintText: AppLocalizations.of(context)!.entergroupname),
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child: Text(AppLocalizations.of(context)!.cancel),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             ElevatedButton(
-              child: Text('Create'),
+              child: Text(AppLocalizations.of(context)!.create),
               onPressed: () {
                 if (_groupNameController.text.isNotEmpty) {
                   _createNewGroup(_groupNameController.text);
@@ -291,7 +297,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
-        title: Text('הקבוצות שלי', style: TextStyle(color: Colors.white)),
+        // title: Text(AppLocalizations.of(context)!.mygroups, style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -314,13 +320,13 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('My Groups',
+                  Text(AppLocalizations.of(context)!.mygroups,
                       style: TextStyle(
                           color: Colors.white, fontWeight: FontWeight.bold)),
                   TextButton.icon(
                     icon: Icon(Icons.add),
                     label: Text(
-                      'צור קבוצה',
+                      AppLocalizations.of(context)!.createnewgroup,
                       style: TextStyle(
                           color: Colors.white), // Change the color here
                     ),
@@ -438,24 +444,24 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                     return AlertDialog(
                       backgroundColor: cards,
                       title: Text(
-                        'Confirm Signout',
+                        AppLocalizations.of(context)!.confirmsignout,
                         style: TextStyle(color: Colors.white),
                       ),
                       content: Text(
-                        'Are you sure you want to sign out?',
+                        AppLocalizations.of(context)!.leaveapp,
                         style: TextStyle(color: Colors.white),
                       ),
                       actions: <Widget>[
                         TextButton(
                           child: Text(
-                            'Cancel',
+                           AppLocalizations.of(context)!.cancel,
                             style: TextStyle(color: Colors.blue),
                           ),
                           onPressed: () => Navigator.of(context).pop(false),
                         ),
                         TextButton(
                           child: Text(
-                            'Signout',
+                            AppLocalizations.of(context)!.yes,
                             style: TextStyle(color: Colors.blue),
                           ),
                           onPressed: () => Navigator.of(context).pop(true),
@@ -474,7 +480,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                   }
                 }
               },
-              child: const Text('Signout'),
+              child:  Text(AppLocalizations.of(context)!.signout),
             ),
             SizedBox(
               height: 20.0,

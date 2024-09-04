@@ -57,7 +57,7 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
       // MyWidget(),
       bottomNavigationBar: CupertinoTabBar(
         backgroundColor: mobileBackgroundColor,
-        
+         activeColor: Colors.blue,
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(

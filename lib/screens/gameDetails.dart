@@ -8,6 +8,8 @@ import 'package:football/screens/table.dart';
 import 'package:football/theme/colors.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 class GameDetails extends StatefulWidget {
   final gameOriginalId;
@@ -120,12 +122,12 @@ class _GameDetailsState extends State<GameDetails> {
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
-        title: Text(
-          'Game Details',
-          style: TextStyle(
-            color: white, // White color for the team names
-          ),
-        ),
+        // title: Text(
+        //   'Game Details',
+        //   style: TextStyle(
+        //     color: white, // White color for the team names
+        //   ),
+        // ),
         backgroundColor: Colors.transparent,
         iconTheme: IconThemeData(
           color: Colors.white, // Set the color of the arrow icon to white
@@ -291,7 +293,8 @@ class _GameDetailsState extends State<GameDetails> {
                     ),
                   ),
 
-            child: Text('הצטרף לקבוצה כדי לראות ניחושים של חברים',
+            child: Text(
+                    AppLocalizations.of(context)!.joingrouptoseefreinds,
                 style: TextStyle(
                       color: Colors.white,
                     ),
@@ -303,24 +306,24 @@ class _GameDetailsState extends State<GameDetails> {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: DataTable(
-            columns: const [
+            columns:  [
               DataColumn(
                   label: Text(
-                'user name',
+                AppLocalizations.of(context)!.username,
                 style: TextStyle(
                   color: Colors.white,
                 ),
               )),
               DataColumn(
                   label: Text(
-                'Guess',
+                AppLocalizations.of(context)!.guess,
                 style: TextStyle(
                   color: Colors.white,
                 ),
               )),
               DataColumn(
                   label: Text(
-                'Sum Points',
+                AppLocalizations.of(context)!.sumpoints,
                 style: TextStyle(
                   color: Colors.white,
                 ),

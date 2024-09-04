@@ -65,14 +65,15 @@ class _ToggleButtonsSampleState extends State<ToggleButtonsSample> {
                 });
                 widget.onSelectionChanged(index);
               },
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8.0)),
+              borderRadius:
+                  const BorderRadius.vertical(bottom: Radius.circular(8.0)),
               selectedBorderColor: blue,
               selectedColor: Colors.white,
               // fillColor: Colors.red[200],
-              color:grey,
+              color: grey,
               constraints: const BoxConstraints(
                 minHeight: 40.0,
-                minWidth: 80.0,
+                minWidth: 90.0,
               ),
               isSelected: _selectedOptions,
               children: widget.options.map((option) => Text(option)).toList(),
