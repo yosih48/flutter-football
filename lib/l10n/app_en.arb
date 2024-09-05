@@ -88,7 +88,8 @@
     "createpassword": "Create password",
     "loginfailed": "Login failed",
     "registrationfailed": "Registration failed",
-    "registrationsuccessful": "Registration successful"
+    "registrationsuccessful": "Registration successful",
+    "forgotpassword": "Forgot Password?"
     
     
 

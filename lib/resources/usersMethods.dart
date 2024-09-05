@@ -1,5 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:football/models/users.dart';
 import 'package:http/http.dart' as http;
 
@@ -77,4 +78,47 @@ Future<Map<String, dynamic>> fetchUserById(String userId) async {
       // Show error message to user
     }
   }
+
+Future<String> sendEmail(String email) async {
+    try {
+      print('Sending email to: $email');
+      var response = await http.post(
+        Uri.parse('https://leagues.onrender.com/users/forgotPass'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'email': email,
+        }),
+      );
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final jsonObject = jsonDecode(response.body);
+        print('Decoded JSON: $jsonObject');
+
+        if (jsonObject != null && jsonObject['error'] == false) {
+          print('JSON object error is false');
+          String resetToken = jsonObject['newToken'];
+          print('Token received: $resetToken');
+          return resetToken;
+        } else {
+          print('JSON object error is true or null');
+          throw Exception('Email not registered or other error');
+        }
+      } else {
+        print('Non-200 status code');
+        throw Exception('Failed to load users: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Exception caught in sendEmail: $e');
+      throw e;
+    }
+  }
+
+
+
+
+
 }

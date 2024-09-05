@@ -87,8 +87,8 @@
     "createpassword": "צור סיסמה",
      "loginfailed": "שגיאת תחברות",
      "registrationfailed": "שגיאת רישום",
-     "registrationsuccessful": "נרשמת בהצלחה"
-    
+     "registrationsuccessful": "נרשמת בהצלחה",
+    "forgotpassword": "שכחתי סיסמה"
 
              
 }

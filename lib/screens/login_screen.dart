@@ -7,6 +7,8 @@
 import 'dart:convert';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:football/models/memoryToken.dart';
+import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/signup_screen.dart';
 import 'package:football/theme/colors.dart';
 import 'package:provider/provider.dart';
@@ -23,7 +25,7 @@ import '../responsive/web_screen_layout.dart';
 import '../utils/colors.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -50,6 +52,46 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+Future<void> sendResetEmail() async {
+    try {
+      final resetToken =
+          await UsersMethods().sendEmail(_usernameController.text);
+      print('Reset token received: $resetToken');
+
+      // Store token in memory
+      TokenManager.setToken(resetToken);
+      print('Token stored in memory');
+
+      // Show dialog
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Email Sent'),
+              content: Text(
+                  'A link has been sent to your email account. This link will be valid for 3 minutes only.'),
+              actions: <Widget>[
+                TextButton(
+                  child: Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
+    } catch (e) {
+      print('Exception in sendResetEmail: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    }
+  }
 
   void loginUser() async {
     if (!mounted) return;
@@ -57,17 +99,15 @@ class _LoginScreenState extends State<LoginScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     try {
-
-   String? fcmToken = await FirebaseMessaging.instance.getToken();
-    print('fcmToken: $fcmToken');
+      String? fcmToken = await FirebaseMessaging.instance.getToken();
+      print('fcmToken: $fcmToken');
 
       await authProvider.login(
           _usernameController.text, _passwordController.text, fcmToken);
-          
+
 // String? fcmToken = await FirebaseMessaging.instance.getToken();
 // print('fcmToken: ${fcmToken}');
 //  await sendFCMTokenToServer(fcmToken);
-
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -75,38 +115,44 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     }
   }
-Future<void> sendFCMTokenToServer(String? fcmToken) async {
-  if (fcmToken == null) {
-    print('FCM token is null. Unable to send to server.');
-    return;
-  }
 
-  final String userId = '6584aceb503733cfc6418e98'; // Replace with actual user ID from your auth system
-  final String email = _usernameController.text; // Replace with actual user ID from your auth system
-  final String serverUrl = 'https://leagues.onrender.com/users/store-fcm-token'; // Replace with your actual server URL
-
-  try {
-    final response = await http.post(
-      Uri.parse(serverUrl),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'userId': userId,
-        'fcmToken': fcmToken,
-        'email': email,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      print('FCM token sent to server successfully');
-    } else {
-      print('Failed to send FCM token to server. Status code: ${response.statusCode}');
+  Future<void> sendFCMTokenToServer(String? fcmToken) async {
+    if (fcmToken == null) {
+      print('FCM token is null. Unable to send to server.');
+      return;
     }
-  } catch (e) {
-    print('Error sending FCM token to server: $e');
+
+    final String userId =
+        '6584aceb503733cfc6418e98'; // Replace with actual user ID from your auth system
+    final String email = _usernameController
+        .text; // Replace with actual user ID from your auth system
+    final String serverUrl =
+        'https://leagues.onrender.com/users/store-fcm-token'; // Replace with your actual server URL
+
+    try {
+      final response = await http.post(
+        Uri.parse(serverUrl),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'userId': userId,
+          'fcmToken': fcmToken,
+          'email': email,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('FCM token sent to server successfully');
+      } else {
+        print(
+            'Failed to send FCM token to server. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error sending FCM token to server: $e');
+    }
   }
-}
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
@@ -239,6 +285,20 @@ Future<void> sendFCMTokenToServer(String? fcmToken) async {
                 ),
                 cursorColor: Colors.blue,
               ),
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: authProvider.isLoading ? null : sendResetEmail,
+                child: Container(
+                  child: Text(
+                    AppLocalizations.of(context)!.forgotpassword,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+
               const SizedBox(height: 24),
 
               InkWell(
@@ -276,28 +336,23 @@ Future<void> sendFCMTokenToServer(String? fcmToken) async {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    child: 
-                    
-                     Text(
-                     AppLocalizations.of(context)!.donthaveanaccount,
+                    child: Text(
+                      AppLocalizations.of(context)!.donthaveanaccount,
                       style: TextStyle(
                         color:
                             Colors.white, // Change the input text color to blue
                       ),
                     ),
-     
                     padding: const EdgeInsets.symmetric(horizontal: 4),
-                    
                   ),
-                                          GestureDetector(
+                  GestureDetector(
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => const SignupScreen(),
                       ),
                     ),
                     child: Container(
-                      child: 
-                      Text(
+                      child: Text(
                         AppLocalizations.of(context)!.signup,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
@@ -306,7 +361,7 @@ Future<void> sendFCMTokenToServer(String? fcmToken) async {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 8),
                     ),
-                                          )
+                  )
                 ],
               )
               //transition to sign up
