@@ -11,6 +11,7 @@ import 'package:football/models/memoryToken.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/signup_screen.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/widgets/googleSignIn.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:football/models/users.dart';
@@ -26,7 +27,7 @@ import '../utils/colors.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:google_sign_in/google_sign_in.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -300,16 +301,19 @@ Future<void> sendResetEmail() async {
               GestureDetector(
                 onTap: authProvider.isLoading ? null : sendResetEmail,
                 child: Container(
-                  child: Text(
-                    AppLocalizations.of(context)!.forgotpassword,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  child: Align(
+                        alignment: Alignment.centerRight,
+                    child: Text(
+                      AppLocalizations.of(context)!.forgotpassword,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
               ),
-
+ GoogleSignInButton(),
               const SizedBox(height: 24),
 
               InkWell(
