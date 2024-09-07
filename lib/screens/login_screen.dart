@@ -55,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
 Future<void> sendResetEmail() async {
     try {
       final resetToken =
-          await UsersMethods().sendEmail(_usernameController.text);
+          await UsersMethods().sendEmail(_usernameController.text,  context);
       print('Reset token received: $resetToken');
 
       // Store token in memory
@@ -68,9 +68,20 @@ Future<void> sendResetEmail() async {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text('Email Sent'),
+              backgroundColor: cards,
+              title: Text(AppLocalizations.of(context)!.emailsent,
+                      style: TextStyle(
+                 
+                      color: Colors.white,
+                    ),
+              ),
               content: Text(
-                  'A link has been sent to your email account. This link will be valid for 3 minutes only.'),
+                 AppLocalizations.of(context)!.emailsentlink,
+                         style: TextStyle(
+                
+                      color: Colors.white,
+                    ),
+                 ),
               actions: <Widget>[
                 TextButton(
                   child: Text('OK'),

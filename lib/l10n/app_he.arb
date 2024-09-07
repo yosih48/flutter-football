@@ -88,7 +88,9 @@
      "loginfailed": "שגיאת תחברות",
      "registrationfailed": "שגיאת רישום",
      "registrationsuccessful": "נרשמת בהצלחה",
-    "forgotpassword": "שכחתי סיסמה"
+    "forgotpassword": "שכחתי סיסמה",
+    "emailsent": "נשלח אימייל",
+    "emailsentlink": "נשלח אליך אימייל עם קישור לאיפוס סיסמה. קישור זה תקף ל3 דקות בלבד."
 
              
 }

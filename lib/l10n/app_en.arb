@@ -89,11 +89,13 @@
     "loginfailed": "Login failed",
     "registrationfailed": "Registration failed",
     "registrationsuccessful": "Registration successful",
-    "forgotpassword": "Forgot Password?"
+    "forgotpassword": "Forgot Password?",
+    "emailsent": "Email Sent",
+    "emailsentlink": "A link has been sent to your email account. This link will be valid for 3 minutes only."
     
     
 
-    
+
     
 
              

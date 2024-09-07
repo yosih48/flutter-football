@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:football/models/users.dart';
 import 'package:http/http.dart' as http;
@@ -79,7 +80,7 @@ Future<Map<String, dynamic>> fetchUserById(String userId) async {
     }
   }
 
-Future<String> sendEmail(String email) async {
+Future<String> sendEmail(String email, context) async {
     try {
       print('Sending email to: $email');
       var response = await http.post(
@@ -109,7 +110,11 @@ Future<String> sendEmail(String email) async {
         }
       } else {
         print('Non-200 status code');
-        throw Exception('Failed to load users: ${response.statusCode}');
+      //       ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(content: Text('לא נמצאה כתובת אימייל')),
+      // );
+      throw Exception('לא נמצאה כתובת אימייל');  
+        
       }
     } catch (e) {
       print('Exception caught in sendEmail: $e');
