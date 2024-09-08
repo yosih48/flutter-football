@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:football/screens/profile.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -6,22 +7,23 @@ import 'dart:convert';
 class GoogleSignInButton extends StatelessWidget {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
-    clientId:
-        '486608585579-0sm88eet3sqd83g3oapjiac2lqvdafeb.apps.googleusercontent.com',
+    // clientId:
+    // '486608585579-0sm88eet3sqd83g3oapjiac2lqvdafeb.apps.googleusercontent.com',
   );
 
   Future<void> _handleSignIn(BuildContext context) async {
     print('_handleSignIn');
     try {
-      await _googleSignIn
-          .signOut(); // Sign out before signing in to ensure a fresh attempt
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser != null) {
-        print('googleUser not null');
-        final GoogleSignInAuthentication googleAuth =
-            await googleUser.authentication;
-        final String? idToken = googleAuth.idToken;
+        // Get the authentication object
+        final String googleAuth =
+            await googleUser.id;
 
+        // Get the ID token
+        final String? idToken = googleAuth;
+        print(googleUser);
+        print(idToken);
         if (idToken != null) {
           // Send the ID token to your server
           final response = await http.post(
@@ -81,7 +83,14 @@ class GoogleSignInButton extends StatelessWidget {
             Text("Sign In with Google")
           ],
         ),
-        onPressed: () => _handleSignIn(context),
+        onPressed: () {
+          _handleSignIn(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => ProfileScreen()), // Navigation with push
+          );
+        },
       ),
     );
   }
