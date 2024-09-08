@@ -17,11 +17,11 @@ class GoogleSignInButton extends StatelessWidget {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser != null) {
         // Get the authentication object
-        final String googleAuth =
-            await googleUser.id;
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
 
         // Get the ID token
-        final String? idToken = googleAuth;
+        final String? idToken = googleAuth.idToken;
         print(googleUser);
         print(idToken);
         if (idToken != null) {
