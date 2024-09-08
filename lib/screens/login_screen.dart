@@ -313,10 +313,8 @@ Future<void> sendResetEmail() async {
                   ),
                 ),
               ),
- GoogleSignInButton(),
-              const SizedBox(height: 24),
-
-              InkWell(
+                 const SizedBox(height: 24),
+                            InkWell(
                 onTap: authProvider.isLoading ? null : loginUser,
                 child: Container(
                   child: authProvider.isLoading
@@ -341,7 +339,19 @@ Future<void> sendResetEmail() async {
                       ),
                       color: blueColor),
                 ),
+                
               ),
+                 const SizedBox(height: 12),
+              Text('OR',
+                    style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+ GoogleSignInButton(),
+           
+
+
               const SizedBox(height: 12),
               Flexible(
                 child: Container(),

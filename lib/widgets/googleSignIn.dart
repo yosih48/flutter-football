@@ -6,17 +6,20 @@ import 'dart:convert';
 class GoogleSignInButton extends StatelessWidget {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
-      clientId: '181890860612-i0jm803ej1logp1st6uaklnu0igan6qb.apps.googleusercontent.com',
+    clientId:
+        '486608585579-0sm88eet3sqd83g3oapjiac2lqvdafeb.apps.googleusercontent.com',
   );
 
   Future<void> _handleSignIn(BuildContext context) async {
-     print('_handleSignIn');
+    print('_handleSignIn');
     try {
-      await _googleSignIn.signOut(); // Sign out before signing in to ensure a fresh attempt
+      await _googleSignIn
+          .signOut(); // Sign out before signing in to ensure a fresh attempt
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser != null) {
         print('googleUser not null');
-        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
         final String? idToken = googleAuth.idToken;
 
         if (idToken != null) {
@@ -54,9 +57,36 @@ class GoogleSignInButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      child: Text('Sign in with Google'),
-      onPressed: () => _handleSignIn(context),
+    return Padding(
+      padding: const EdgeInsets.only(left: 0, right: 0, top: 10),
+      child: MaterialButton(
+        color: Colors.white,
+        elevation: 10,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              height: 30.0,
+              width: 30.0,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                    image: AssetImage('assets/googleimage.png'),
+                    fit: BoxFit.cover),
+                shape: BoxShape.circle,
+              ),
+            ),
+            SizedBox(
+              width: 5,
+            ),
+            Text("Sign In with Google")
+          ],
+        ),
+        onPressed: () => _handleSignIn(context),
+      ),
     );
   }
-}
+} 
+
+
+
+  // onPressed: () => _handleSignIn(context),
