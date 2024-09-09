@@ -300,11 +300,14 @@ Future<void> sendResetEmail() async {
               GestureDetector(
                 onTap: authProvider.isLoading ? null : sendResetEmail,
                 child: Container(
-                  child: Text(
-                    AppLocalizations.of(context)!.forgotpassword,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      AppLocalizations.of(context)!.forgotpassword,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
