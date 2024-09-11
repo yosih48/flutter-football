@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/widgets/teamLInks.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -98,10 +99,13 @@ class GameWidget extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: 6.0),
-                  Image.network(
-                    game.home.logo,
-                    width: 24.0,
-                    height: 24.0,
+                  GestureDetector(
+                     onTap: () => TeamLinkHandler.linkToTeam(game.home.name),
+                    child: Image.network(
+                      game.home.logo,
+                      width: 24.0,
+                      height: 24.0,
+                    ),
                   ),
                   SizedBox(width: 18.0),
                   if (game.status.long == "Not Started")
@@ -204,10 +208,13 @@ class GameWidget extends StatelessWidget {
                       ),
                     ),
                   SizedBox(width: 18.0),
-                  Image.network(
-                    game.away.logo,
-                    width: 24.0,
-                    height: 24.0,
+                  GestureDetector(
+                      onTap: () => TeamLinkHandler.linkToTeam(game.away.name),
+                    child: Image.network(
+                      game.away.logo,
+                      width: 24.0,
+                      height: 24.0,
+                    ),
                   ),
                   SizedBox(width: 6.0),
                   Expanded(
