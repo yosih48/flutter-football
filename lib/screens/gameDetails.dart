@@ -49,44 +49,42 @@ class _GameDetailsState extends State<GameDetails> {
       Map<String, dynamic> userData =
           await UsersMethods().fetchUserById(currentUserId);
       setState(() {
-      //   _userGroups = Map<String, String>.from(userData['groupID'] ?? {});
-      //   print(_userGroups);
+        //   _userGroups = Map<String, String>.from(userData['groupID'] ?? {});
+        //   print(_userGroups);
 
-
-      //  selectedGroupName = _userGroups.values.first;
-      //       _fetchGuesses(selectedGroupName);
+        //  selectedGroupName = _userGroups.values.first;
+        //       _fetchGuesses(selectedGroupName);
 
         Map<String, String> tempGroups =
             Map<String, String>.from(userData['groupID'] ?? {});
 
         // Remove the 'public' group if it exists
-        tempGroups
-            .removeWhere((key, value) => value.toLowerCase() == 'public');
+        tempGroups.removeWhere((key, value) => value.toLowerCase() == 'public');
 
         // Assign the filtered map to _userGroups
         _userGroups = tempGroups;
 
         print(_userGroups);
-
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        // selectedGroupName = userProvider.selectedGroupName;
         // Check if _userGroups is not empty before accessing first value
-        if (_userGroups.isNotEmpty) {
-          selectedGroupName = _userGroups.values.first;
+        if (_userGroups.isNotEmpty && userProvider.selectedGroupName != 'public') {
+          // print('  userProvider.selectedGroupName: ${userProvider.selectedGroupName}');
+          // selectedGroupName = _userGroups.values.first;
+          selectedGroupName = userProvider.selectedGroupName;
           _fetchGuesses(selectedGroupName);
         } else {
+          selectedGroupName = _userGroups.values.first;
+             _fetchGuesses(selectedGroupName);
           // Handle the case when no groups are left after removing 'public'
           print('No groups available after removing public');
           // You might want to set a default state or show a message to the user
         }
-
-
- 
       });
     } catch (e) {
       print('Failed to fetch user groups: $e');
     }
   }
-
- 
 
   Future<void> _fetchGuesses(groupName) async {
     // final userProvider = Provider.of<UserProvider>(context, listen: false);
@@ -250,7 +248,7 @@ class _GameDetailsState extends State<GameDetails> {
     );
   }
 
- Widget _buildGuessesTable() {
+  Widget _buildGuessesTable() {
     return Column(
       children: [
         if (_userGroups.isNotEmpty)
