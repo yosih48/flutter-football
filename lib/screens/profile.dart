@@ -6,12 +6,15 @@ import 'package:football/resources/groupsMethods.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/screens/table.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/widgets/SharedPreferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 // AppLocalizations.of(context)!.assigncall
 class ProfileScreen extends StatelessWidget {
   @override
@@ -56,9 +59,19 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   void initState() {
     super.initState();
     currentUserId = widget.authProvider.currentUser?.id ?? 'Not logged in';
-    currentUserEmail = widget.authProvider.currentUser?.email ?? 'Not logged in';
-_fetchUserData();
+    currentUserEmail =
+        widget.authProvider.currentUser?.email ?? 'Not logged in';
+    _loadSelectedGroupName();
+    _fetchUserData();
     _fetchUserGroups();
+  }
+
+  Future<void> _loadSelectedGroupName() async {
+    final groupName = await SharedPreferencesUtil.getSelectedGroupName();
+    setState(() {
+      selectedGroupName = groupName!;
+    });
+    print('selectedGroupName shared: ${selectedGroupName}');
   }
 
   Future<void> _fetchUserGroups() async {
@@ -213,30 +226,29 @@ _fetchUserData();
       // Show error message to user
     }
   }
- Future<void> _fetchUserData() async {
+
+  Future<void> _fetchUserData() async {
     // Fetch user data including groupID
     // This is a placeholder - replace with your actual API call
     try {
       final _user = await UsersMethods().fetchUserById(currentUserId);
-       
-        print('_user: ${_user}');
-        setState(() {
-      
-          user = Map<String, String>.from(_user['groupID'] ?? {});
-                print(' user: ${user}');
-        });
-   
+
+      print('_user: ${_user}');
+      setState(() {
+        user = Map<String, String>.from(_user['groupID'] ?? {});
+        print(' user: ${user}');
+      });
     } catch (e) {
       print('Error fetching user data: $e');
     }
   }
+
   Future<void> _addGroupToUser(String groupName) async {
     final existingGroupKeys =
         user?.keys?.map((key) => int.parse(key))?.toList() ?? [];
     final nextKey = existingGroupKeys.isEmpty
         ? 1
         : (existingGroupKeys.reduce(max) + 1).toString();
-        
 
     final url = Uri.parse('https://leagues.onrender.com/users/');
     try {
@@ -280,49 +292,43 @@ _fetchUserData();
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-             backgroundColor: cards,
-          title: Text(AppLocalizations.of(context)!.createnewgroup,
-            style: TextStyle(color: Colors.white,fontSize: 14 ),
+          backgroundColor: cards,
+          title: Text(
+            AppLocalizations.of(context)!.createnewgroup,
+            style: TextStyle(color: Colors.white, fontSize: 14),
           ),
           content: TextField(
             controller: _groupNameController,
             decoration: InputDecoration(
               labelText: AppLocalizations.of(context)!.entergroupname,
-               labelStyle: TextStyle(
-                        color: Colors.blue, // Change this to your desired color
-                      ),
-                   enabledBorder: UnderlineInputBorder(
+              labelStyle: TextStyle(
+                color: Colors.blue, // Change this to your desired color
+              ),
+              enabledBorder: UnderlineInputBorder(
                 borderSide: BorderSide(
                     color: Colors.blue), // Bottom border color when enabled
               ),
               focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(
-                    color: Colors.blue,
-                    width:
-                        2.0),
-                         // Bottom border color when focused, with thicker border
+                borderSide: BorderSide(color: Colors.blue, width: 2.0),
+                // Bottom border color when focused, with thicker border
               ),
-              
             ),
-                         style: TextStyle(
-                      color:
-                          Colors.white, // Change the input text color to blue
-                    ),
-                    cursorColor: Colors.blue,
+            style: TextStyle(
+              color: Colors.white, // Change the input text color to blue
+            ),
+            cursorColor: Colors.blue,
           ),
           actions: <Widget>[
             TextButton(
               child: Text(AppLocalizations.of(context)!.cancel,
-                 style: TextStyle(color: Colors.blue)
-              ),
+                  style: TextStyle(color: Colors.blue)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             ElevatedButton(
               child: Text(AppLocalizations.of(context)!.create,
-                 style: TextStyle(color: Colors.blue)
-              ),
+                  style: TextStyle(color: Colors.blue)),
               onPressed: () {
                 if (_groupNameController.text.isNotEmpty) {
                   _createNewGroup(_groupNameController.text);
@@ -407,7 +413,7 @@ _fetchUserData();
                               context,
                               MaterialPageRoute(
                                   builder: (context) => TableScreen(
-                                      selectedGroupName: groupName)),
+                                      selectedGroupName: selectedGroupName)),
                             );
                           },
                           child: Card(
@@ -434,15 +440,20 @@ _fetchUserData();
                                   IconButton(
                                     icon: Icon(
                                       Icons.star,
-                                      color: selectedGroup.selectedGroupName ==
+                                      color: selectedGroupName ==
                                               groupName
                                           ? Colors.amber
                                           : Colors.white,
                                     ),
-                                    onPressed: () {
+                                    onPressed: () async {
+                                      print(selectedGroupName);
                                       selectedGroup
                                           .setSelectedGroupName(groupName);
-
+                                      final prefs =
+                                          await SharedPreferences.getInstance();
+                                      await prefs.setString(
+                                          'selectedGroupName', groupName);
+                                      _loadSelectedGroupName();
                                       print(' set groupName: ${groupName}');
                                       // Navigate back or show a confirmation
                                     },
@@ -502,7 +513,7 @@ _fetchUserData();
                       actions: <Widget>[
                         TextButton(
                           child: Text(
-                           AppLocalizations.of(context)!.cancel,
+                            AppLocalizations.of(context)!.cancel,
                             style: TextStyle(color: Colors.blue),
                           ),
                           onPressed: () => Navigator.of(context).pop(false),
@@ -528,7 +539,7 @@ _fetchUserData();
                   }
                 }
               },
-              child:  Text(AppLocalizations.of(context)!.signout),
+              child: Text(AppLocalizations.of(context)!.signout),
             ),
             SizedBox(
               height: 20.0,

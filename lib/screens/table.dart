@@ -12,6 +12,7 @@ import 'package:football/resources/guessesMethods.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/widgets/SharedPreferences.dart';
 import 'package:football/widgets/toggleButton.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -88,26 +89,33 @@ class TableScreenContentState extends State<TableScreenContent> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: cards,
-          title: Text(AppLocalizations.of(context)!.invitefriend,
-           style: TextStyle(color: Colors.white,fontSize: 14),
+          title: Text(
+            AppLocalizations.of(context)!.invitefriend,
+            style: TextStyle(color: Colors.white, fontSize: 14),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(AppLocalizations.of(context)!.invitecodecopy,
-               style: TextStyle(color: Colors.white),),
+              Text(
+                AppLocalizations.of(context)!.invitecodecopy,
+                style: TextStyle(color: Colors.white),
+              ),
               SizedBox(height: 10),
-              Text(inviteCode, style: TextStyle(fontWeight: FontWeight.bold,color:Colors.white)),
+              Text(inviteCode,
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.white)),
               SizedBox(height: 20),
-              Text(AppLocalizations.of(context)!.shareinvitecode,
-                 style: TextStyle(color: Colors.white),
+              Text(
+                AppLocalizations.of(context)!.shareinvitecode,
+                style: TextStyle(color: Colors.white),
               ),
             ],
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('OK',
-                 style: TextStyle(color: Colors.blue),
+              child: Text(
+                'OK',
+                style: TextStyle(color: Colors.blue),
               ),
               onPressed: () {
                 Navigator.of(context).pop();
@@ -129,15 +137,13 @@ class TableScreenContentState extends State<TableScreenContent> {
         (g) => g['name'] == groupName,
       );
 
-   
-        // Copy the group's code to the clipboard
-        final groupCode = group['_id'];
-        await FlutterClipboard.copy(groupCode);
-        print('Group code copied: $groupCode');
+      // Copy the group's code to the clipboard
+      final groupCode = group['_id'];
+      await FlutterClipboard.copy(groupCode);
+      print('Group code copied: $groupCode');
 
-        // Show the invite dialog
-        _showInviteDialog(groupCode);
- 
+      // Show the invite dialog
+      _showInviteDialog(groupCode);
     } catch (e) {
       print('Error inviting friend: $e');
     }
@@ -148,49 +154,41 @@ class TableScreenContentState extends State<TableScreenContent> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-              backgroundColor: cards,
+          backgroundColor: cards,
           title: Text(AppLocalizations.of(context)!.joingroup,
-           style: TextStyle(color: Colors.white, fontSize: 14)
-          ),
+              style: TextStyle(color: Colors.white, fontSize: 14)),
           content: TextField(
             controller: _inviteCodeController,
             decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.enterinvitecode,
-                     labelStyle: TextStyle(
-                        color: Colors.blue, // Change this to your desired color
-                      ),
-                                     enabledBorder: UnderlineInputBorder(
+              labelText: AppLocalizations.of(context)!.enterinvitecode,
+              labelStyle: TextStyle(
+                color: Colors.blue, // Change this to your desired color
+              ),
+              enabledBorder: UnderlineInputBorder(
                 borderSide: BorderSide(
                     color: Colors.blue), // Bottom border color when enabled
               ),
               focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(
-                    color: Colors.blue,
-                    width:
-                        2.0),
-                         // Bottom border color when focused, with thicker border
+                borderSide: BorderSide(color: Colors.blue, width: 2.0),
+                // Bottom border color when focused, with thicker border
               ),
-                
-                ),
-                                 style: TextStyle(
-                      color:
-                          Colors.white, // Change the input text color to blue
-                    ),
-                    cursorColor: Colors.blue,
+            ),
+            style: TextStyle(
+              color: Colors.white, // Change the input text color to blue
+            ),
+            cursorColor: Colors.blue,
           ),
           actions: <Widget>[
             TextButton(
               child: Text(AppLocalizations.of(context)!.cancel,
-               style: TextStyle(color: Colors.blue)
-              ),
+                  style: TextStyle(color: Colors.blue)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             ElevatedButton(
               child: Text(AppLocalizations.of(context)!.join,
-               style: TextStyle(color: Colors.blue)
-              ),
+                  style: TextStyle(color: Colors.blue)),
               onPressed: () async {
                 if (_inviteCodeController.text.isNotEmpty) {
                   await GroupsMethods().addGroupToUser(
@@ -211,10 +209,19 @@ class TableScreenContentState extends State<TableScreenContent> {
     super.initState();
     currentUserId = widget.authProvider.currentUser?.id ?? 'Not logged in';
     league = widget.userProvider.selectedLeageId ?? 2;
+        _loadSelectedGroupName();
     _fetchUserGroups();
   }
-
+  Future<void> _loadSelectedGroupName() async {
+    final groupName = await SharedPreferencesUtil.getSelectedGroupName();
+    setState(() {
+      selectedGroupName = groupName!;
+    });
+      print('selectedGroupName shared: ${selectedGroupName}');
+  }
   Future<void> _fetchUserGroups() async {
+    final groupName = await SharedPreferencesUtil.getSelectedGroupName();
+
     try {
       Map<String, dynamic> userData =
           await UsersMethods().fetchUserById(currentUserId);
@@ -223,18 +230,18 @@ class TableScreenContentState extends State<TableScreenContent> {
 
         final selectedGroup = Provider.of<UserProvider>(context, listen: false);
 
-        if (_userGroups.isNotEmpty) {
-          if (selectedGroup.selectedGroupName == 'default') {
-            // Assign the first value from _userGroups
-            selectedGroupName = _userGroups.values.first;
-          } else {
-            // Otherwise, use the value from selectedGroup
-            selectedGroupName =
-                widget.selectedGroupName ?? selectedGroup.selectedGroupName;
-          }
+        // if (_userGroups.isNotEmpty) {
+        //   if (selectedGroup.selectedGroupName == 'default') {
+        //     // Assign the first value from _userGroups
+        //     selectedGroupName = _userGroups.values.first;
+        //   } else {
+        //     // Otherwise, use the value from selectedGroup
+        //     selectedGroupName =
+        //         widget.selectedGroupName ?? selectedGroup.selectedGroupName;
+        //   }
 
+        // }
           _fetchUsersForGroup(selectedGroupName);
-        }
       });
     } catch (e) {
       print('Failed to fetch user groups: $e');
@@ -322,7 +329,7 @@ class TableScreenContentState extends State<TableScreenContent> {
     );
   }
 
-Widget table(league) {
+  Widget table(league) {
     return Column(
       children: [
         Container(
