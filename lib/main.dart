@@ -76,11 +76,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
    }
 void _handleMessage(RemoteMessage message) {
   if (message.data['screen'] == 'game_details') {
-    navigatorKey.currentState?.pushNamed('/game_details', arguments: {
-      'leagueName': message.data['leagueName'],
-      'home': message.data['home'],
-      'away': message.data['away'],
-    });
+    navigatorKey.currentState?.pushNamed('/game_details');
   }
 }
 
@@ -160,9 +156,9 @@ class GameApp extends StatelessWidget {
         
       ),
               routes: {
-        '/game_details': (context) => GamesScreen(),
+        '/game_details': (context) =>GamesScreen(),
 
-        // '/screen4': (context) => const Screen4(),
+      
       },
     );
   }
