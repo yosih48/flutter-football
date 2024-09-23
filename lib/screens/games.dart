@@ -357,6 +357,12 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               AppLocalizations.of(context)!.laliga ,
               AppLocalizations.of(context)!.europaleague ,
         ],
+        imageUrls: [
+              'https://media.api-sports.io/football/leagues/2.png',
+              'https://media.api-sports.io/football/leagues/383.png',
+              'https://media.api-sports.io/football/leagues/140.png',
+              'https://media.api-sports.io/football/leagues/3.png', // Assuming this is Europa League
+            ],
             onSelectionChanged: updateSelectedIndex,
             initialSelection: league == 2
                 ? 0

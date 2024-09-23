@@ -14,11 +14,13 @@ class ToggleButtonsSample extends StatefulWidget {
     super.key,
     required this.onSelectionChanged,
     required this.options,
+    required this.imageUrls,
     this.initialSelection = 0,
   });
 
   final void Function(int) onSelectionChanged;
   final List<String> options;
+  final List<String> imageUrls;
   final int initialSelection;
   @override
   State<ToggleButtonsSample> createState() => _ToggleButtonsSampleState();
@@ -47,39 +49,60 @@ class _ToggleButtonsSampleState extends State<ToggleButtonsSample> {
 
     return Center(
       child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            // ToggleButtons with a single selection.
-
-            const SizedBox(height: 5),
-            ToggleButtons(
-              direction: vertical ? Axis.vertical : Axis.horizontal,
-              onPressed: (int index) {
-                setState(() {
-                  // The button that is tapped is set to true, and the others to false.
-                  for (int i = 0; i < _selectedOptions.length; i++) {
-                    _selectedOptions[i] = i == index;
-                  }
-                });
-                widget.onSelectionChanged(index);
-              },
-              borderRadius:
-                  const BorderRadius.vertical(bottom: Radius.circular(8.0)),
-              selectedBorderColor: blue,
-              selectedColor: Colors.white,
-              // fillColor: Colors.red[200],
-              color: grey,
-              constraints: const BoxConstraints(
-                minHeight: 40.0,
-                minWidth: 90.0,
+        scrollDirection: Axis.horizontal,
+        child: ToggleButtons(
+          direction: Axis.horizontal,
+          onPressed: (int index) {
+            setState(() {
+              for (int i = 0; i < _selectedOptions.length; i++) {
+                _selectedOptions[i] = i == index;
+              }
+            });
+            widget.onSelectionChanged(index);
+          },
+        borderRadius: BorderRadius.circular(0),
+           selectedBorderColor: Colors.transparent,
+          borderColor: Colors.transparent,
+          selectedColor: Colors.blue,
+          fillColor: Colors.transparent,
+          color: Colors.grey,
+          constraints: const BoxConstraints(
+            minHeight: 70.0,
+            minWidth: 80.0,
+          ),
+          isSelected: _selectedOptions,
+          children: List.generate(widget.options.length, (index) {
+                return Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: _selectedOptions[index]
+                        ? Colors.blue
+                        : Colors.transparent,
+                    width: 2.0,
+                  ),
+                ),
               ),
-              isSelected: _selectedOptions,
-              children: widget.options.map((option) => Text(option)).toList(),
-            ),
-            const SizedBox(height: 20),
-          ],
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                        Image.network(
+                      widget.imageUrls[index],
+                      width: 24,
+                      height: 24,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(Icons.error, size: 24);
+                      },
+                    ),
+                    const SizedBox(height: 4),
+                    Text(widget.options[index], style: TextStyle(fontSize: 12)),
+                  ],
+                ),
+              ),
+            );
+          }),
         ),
       ),
     );
