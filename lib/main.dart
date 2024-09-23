@@ -20,7 +20,7 @@ import 'package:firebase_core/firebase_core.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Don't call Firebase.initializeApp() here
@@ -60,7 +60,31 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
          );
        }
      });
+       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    print('A new onMessageOpenedApp event was published!');
+    _handleMessage(message);
+  });
+
+  // Add this: Check if the app was opened from a notification when it was terminated
+  FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
+    if (message != null) {
+      print('App opened from terminated state');
+      _handleMessage(message);
+    }
+  });
+
    }
+void _handleMessage(RemoteMessage message) {
+  if (message.data['screen'] == 'game_details') {
+    navigatorKey.currentState?.pushNamed('/game_details', arguments: {
+      'leagueName': message.data['leagueName'],
+      'home': message.data['home'],
+      'away': message.data['away'],
+    });
+  }
+}
+
+
 void main() async {
   // Ensure that plugin services are initialized
   WidgetsFlutterBinding.ensureInitialized();
@@ -71,6 +95,7 @@ void main() async {
   final storage = FlutterSecureStorage();
   
   await Firebase.initializeApp();
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler,);
   await FirebaseMessagingService.initialize();
   // You can now use the storage in your AuthProvider if needed
   runApp(
@@ -92,7 +117,7 @@ class GameApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-
+      navigatorKey: navigatorKey,
  theme: ThemeData(
     primarySwatch: Colors.blue, // Sets the primary color to blue
     textTheme: TextTheme(
@@ -132,7 +157,13 @@ class GameApp extends StatelessWidget {
               ? MobileScreenLayout()
               : LoginScreen();
         },
+        
       ),
+              routes: {
+        '/game_details': (context) => GamesScreen(),
+
+        // '/screen4': (context) => const Screen4(),
+      },
     );
   }
 }
