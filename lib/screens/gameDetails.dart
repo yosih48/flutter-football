@@ -6,6 +6,7 @@ import 'package:football/resources/guessesMethods.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/table.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/widgets/SharedPreferences.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -39,11 +40,17 @@ class _GameDetailsState extends State<GameDetails> {
     currentUserId = userProvider.currentUserId!;
 
     print('currentUserId: ${currentUserId}');
-
+    _loadSelectedGroupName();
     _fetchUserGroups();
     _fetchGuesses(selectedGroupName);
   }
-
+  Future<void> _loadSelectedGroupName() async {
+    final groupName = await SharedPreferencesUtil.getSelectedGroupName();
+    setState(() {
+      selectedGroupName = groupName!;
+    });
+    print('selectedGroupName shared: ${selectedGroupName}');
+  }
   Future<void> _fetchUserGroups() async {
     try {
       Map<String, dynamic> userData =
@@ -71,7 +78,7 @@ class _GameDetailsState extends State<GameDetails> {
         if (_userGroups.isNotEmpty && userProvider.selectedGroupName != 'public') {
           // print('  userProvider.selectedGroupName: ${userProvider.selectedGroupName}');
           // selectedGroupName = _userGroups.values.first;
-          selectedGroupName = userProvider.selectedGroupName;
+          // selectedGroupName = userProvider.selectedGroupName;
           _fetchGuesses(selectedGroupName);
         } else {
           selectedGroupName = _userGroups.values.first;

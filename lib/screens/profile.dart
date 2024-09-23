@@ -446,7 +446,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                                           : Colors.white,
                                     ),
                                     onPressed: () async {
-                                      print(selectedGroupName);
+                         
                                       selectedGroup
                                           .setSelectedGroupName(groupName);
                                       final prefs =
