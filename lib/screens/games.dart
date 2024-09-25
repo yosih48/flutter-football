@@ -13,6 +13,7 @@ import 'package:football/screens/gameDetails.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/widgets/gamesCard.dart';
+import 'package:football/widgets/teamSelect.dart';
 import 'package:football/widgets/toggleButton.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -63,6 +64,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   late String email;
   int selectedIndex = 0;
   bool isLoading = true;
+
   void updateSelectedIndex(int index) {
     print(index);
     setState(() {
@@ -74,8 +76,9 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               : index == 2
                   ? 140
                   : 3;
+                   
       selectedIndex = index;
-
+    
       Provider.of<UserProvider>(context, listen: false)
           .setselectedLeageId(league);
     });
@@ -110,6 +113,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     });
     _fetchGames(league);
   }
+
   void toggleshowOnlyThisLeagueTodayGames() {
     setState(() {
       _showOnlyThisLeagueTodayGames = !_showOnlyThisLeagueTodayGames;
@@ -117,19 +121,15 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     _fetchGames(league);
   }
 
-
-
   Future<void> _fetchGames(league) async {
-     isLoading = true;
+    isLoading = true;
     try {
       List<Game> fetchedGames;
 
       if (_showOnlyTodayGames) {
         fetchedGames = await GamesMethods().fetchAllGames(
-          league,
-         _showOnlyThisLeagueTodayGames,
-         onlyTodayGames: _showOnlyTodayGames
-        );
+            league, _showOnlyThisLeagueTodayGames,
+            onlyTodayGames: _showOnlyTodayGames);
       } else {
         fetchedGames = await GamesMethods().fetchGamesForLeague(league);
       }
@@ -183,7 +183,6 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     List<Map<String, dynamic>> updatedGuesses = [];
 
     for (var game in _games) {
-  
       var controllers = _guessControllers[game.fixtureId];
       if (controllers != null) {
         var homeScore = controllers['home']?.text;
@@ -203,7 +202,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             // No matching guess found
             existingGuess = null;
           }
-           print(' leagueId: ${game.league.id}');
+          print(' leagueId: ${game.league.id}');
           var guessData = {
             'userID': clientId,
             'gameID': game.fixtureId,
@@ -285,7 +284,6 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
@@ -299,49 +297,48 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         actions: [
           Row(
             children: [
-              if(_showOnlyTodayGames)
+              if (_showOnlyTodayGames)
+                Text(
+                  AppLocalizations.of(context)!.thisleague,
+                  style: TextStyle(
+                      color: white,
+                      fontSize: 14 // White color for the team names
+                      ),
+                ),
+              if (_showOnlyTodayGames)
+                Transform.scale(
+                  scale: 0.6,
+                  child: Switch(
+                    value: _showOnlyThisLeagueTodayGames,
+                    onChanged: (value) {
+                      // setState(() {
+                      //  _showOnlyThisLeagueTodayGames = value;
+                      //   isLoading = true;
+                      //   _fetchGames(league);
+                      // });
+                      toggleshowOnlyThisLeagueTodayGames();
+                    },
+                    activeColor: Colors.blue,
+                    inactiveThumbColor: Colors.white,
+                    inactiveTrackColor: Colors.grey,
+                  ),
+                ),
               Text(
-                AppLocalizations.of(context)!.thisleague,
+                AppLocalizations.of(context)!.todayonly,
                 style: TextStyle(
                     color: white, fontSize: 14 // White color for the team names
                     ),
-              ),
-                 if (_showOnlyTodayGames)
-              Transform.scale(
-                scale: 0.6,
-                child: Switch(
-                  value: _showOnlyThisLeagueTodayGames,
-                  onChanged: (value) {
-                    // setState(() {
-                    //  _showOnlyThisLeagueTodayGames = value;
-                    //   isLoading = true;
-                    //   _fetchGames(league);
-                    // });
-                    toggleshowOnlyThisLeagueTodayGames();
-                  },
-                          activeColor: Colors.blue,
-                  inactiveThumbColor: Colors.white,
-                  inactiveTrackColor: Colors.grey, 
-                ),
-              ),
-              Text(
-                 AppLocalizations.of(context)!.todayonly,
-                style: TextStyle(
-                  color: white, 
-                  fontSize: 14 // White color for the team names
-                ),
               ),
               Transform.scale(
                 scale: 0.6,
                 child: Switch(
                   value: _showOnlyTodayGames,
                   onChanged: (value) {
-             
                     toggleShowOnlyTodayGames();
                   },
-                          activeColor: Colors.blue,
+                  activeColor: Colors.blue,
                   inactiveThumbColor: Colors.white,
-                  inactiveTrackColor: Colors.grey, 
+                  inactiveTrackColor: Colors.grey,
                 ),
               ),
             ],
@@ -352,12 +349,12 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         children: [
           ToggleButtonsSample(
             options: [
-              AppLocalizations.of(context)!.championsleague ,
-              AppLocalizations.of(context)!.ligathaal ,
-              AppLocalizations.of(context)!.laliga ,
-              AppLocalizations.of(context)!.europaleague ,
-        ],
-        imageUrls: [
+              AppLocalizations.of(context)!.championsleague,
+              AppLocalizations.of(context)!.ligathaal,
+              AppLocalizations.of(context)!.laliga,
+              AppLocalizations.of(context)!.europaleague,
+            ],
+            imageUrls: [
               'https://media.api-sports.io/football/leagues/2.png',
               'https://media.api-sports.io/football/leagues/383.png',
               'https://media.api-sports.io/football/leagues/140.png',
@@ -372,13 +369,34 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                         ? 2
                         : 3,
           ),
+          SizedBox(
+            height: 5,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TeamSelectionButton(
+                games: _games,
+                clientId: clientId,
+                email: email,
+                league: league,
+                onTeamSelected: (selectedTeam) {
+                  print('Selected team: $selectedTeam');
+                  // Do something with the selected team
+                },
+              ),
+            ],
+          ),
+                 SizedBox(
+            height: 5,
+          ),
           Expanded(
             child: isLoading
-        ? Center(child: CircularProgressIndicator())
+                ? Center(child: CircularProgressIndicator())
                 : _games.isEmpty
                     ? Center(
                         child: Text(
-                           AppLocalizations.of(context)!.nogames,
+                          AppLocalizations.of(context)!.nogames,
                           style: TextStyle(
                             color: Colors.white, // Customize the text color
                             fontSize: 20, // Customize the font size
@@ -393,17 +411,15 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _submitAllGuesses,
-          backgroundColor: Colors.blue, 
+        backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         tooltip: 'Submit All Guesses', // Add a tooltip
         child: Icon(Icons.send),
-   
       ),
     );
   }
 
   ListView listView(List<Game> filteredGames) {
-
     return ListView.separated(
       itemCount: filteredGames.length,
       itemBuilder: (BuildContext context, int index) {

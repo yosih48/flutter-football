@@ -90,7 +90,10 @@
      "registrationsuccessful": "נרשמת בהצלחה",
     "forgotpassword": "שכחתי סיסמה",
     "emailsent": "נשלח אימייל",
-    "emailsentlink": "נשלח אליך אימייל עם קישור לאיפוס סיסמה. קישור זה תקף ל3 דקות בלבד."
-
+    "emailsentlink": "נשלח אליך אימייל עם קישור לאיפוס סיסמה. קישור זה תקף ל3 דקות בלבד.",
+     "choosewinner": "בחר זוכה",
+    "teamcannotbechanged": "שים לב לא ניתן לשנות את הבחירה",
+    "saveteam": "שמור קבוצה",
+    "chooseteam": "בחר קבוצה"
              
 }

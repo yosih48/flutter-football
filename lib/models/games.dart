@@ -45,6 +45,7 @@ class Game {
       venue: Venue.fromJson(json['fixture']['venue']),
       status: Status.fromJson(json['fixture']['status']),
       league: League.fromJson(json['league']),
+   
       home: Team.fromJson(json['teams']['home']),
       away: Team.fromJson(json['teams']['away']),
        goals: Goals.fromJson(json['goals'] ?? {}),

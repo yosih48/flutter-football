@@ -91,8 +91,11 @@
     "registrationsuccessful": "Registration successful",
     "forgotpassword": "Forgot Password?",
     "emailsent": "Email Sent",
-    "emailsentlink": "A link has been sent to your email account. This link will be valid for 3 minutes only."
-    
+    "emailsentlink": "A link has been sent to your email account. This link will be valid for 3 minutes only.",
+    "choosewinner": "Choose Winner",
+    "teamcannotbechanged": "choosen team can not be change",
+    "saveteam": "Save Team",
+    "chooseteam": "Choose Team"
     
 
 
