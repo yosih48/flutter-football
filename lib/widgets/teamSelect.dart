@@ -240,14 +240,15 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
 
     if (hasWinner) {
       print('has winner');
-      return Text(
-        '${AppLocalizations.of(context)!.yourwinner}: $selectedTeam',
-        style: TextStyle(
-          color:
-              Colors.white, // Light gray color for the "Your guess" and score
-          fontSize: 18.0,
-        ),
-      );
+          return SizedBox();
+      // return Text(
+      //   '${AppLocalizations.of(context)!.yourwinner}: $selectedTeam',
+      //   style: TextStyle(
+      //     color:
+      //         Colors.white, // Light gray color for the "Your guess" and score
+      //     fontSize: 18.0,
+      //   ),
+      // );
     }
     if (isBeforeFirstGame)
       return Row(
