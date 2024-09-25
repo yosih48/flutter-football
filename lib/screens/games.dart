@@ -373,8 +373,11 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             height: 5,
           ),
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            // mainAxisAlignment: MainAxisAlignment.center,
             children: [
+                   SizedBox(
+                width: 5,
+              ),
               TeamSelectionButton(
                 games: _games,
                 clientId: clientId,

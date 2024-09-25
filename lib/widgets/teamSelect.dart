@@ -68,7 +68,7 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
           print(selectedTeam);
         } else {
           hasWinner = false;
-           selectedTeam = null; 
+          selectedTeam = null;
         }
         isLoading = false;
       });
@@ -126,7 +126,10 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Team saved successfully')),
+          
         );
+                      _fetchUserData();
+
       } else {
         print(
             'Users update group Fetch failed with status: ${response.statusCode}');
@@ -146,72 +149,91 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
   void _showTeamSelectionDialog() async {
     final teams = await _fetchAllTeams();
     print('teams: ${teams}');
-      if (selectedTeam != null && !teams.contains(selectedTeam)) {
+    if (selectedTeam != null && !teams.contains(selectedTeam)) {
       selectedTeam = null;
     }
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-             backgroundColor: cards,
-          title: Text(
-            AppLocalizations.of(context)!.teamcannotbechanged,
-           style: TextStyle(color: Colors.red, fontSize: 16),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButton<String>(
-                // value: selectedTeam,
-                hint: Text(AppLocalizations.of(context)!.chooseteam,
+        String? localSelectedTeam = selectedTeam;
+        return StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+          return AlertDialog(
+            backgroundColor: cards,
+            title: Text(
+              AppLocalizations.of(context)!.teamcannotbechanged,
+              style: TextStyle(color: Colors.red, fontSize: 16),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButton<String>(
+                  // value: selectedTeam,
+                  hint: Text(AppLocalizations.of(context)!.chooseteam,
                       style: TextStyle(
-                      color:
-                          Colors.blue, // Change the input text color to blue
-                    )
+                        color:
+                            Colors.blue, // Change the input text color to blue
+                      )),
+                  isExpanded: true,
+                  items: teams.map((String team) {
+                    return DropdownMenuItem<String>(
+                      value: team,
+                      child: Text(team),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedTeam = newValue;
+                      localSelectedTeam = newValue;
+                 
+                    });
+                  },
                 ),
-                isExpanded: true,
-                items: teams.map((String team) {
-                  return DropdownMenuItem<String>(
-                    value: team,
-                    child: Text(team),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedTeam = newValue;
-                  });
-                },
-              ),
-                    SizedBox(height: 20),
-              if (selectedTeam != null) ...[
+                SizedBox(height: 20),
+                if (selectedTeam != null) ...[
                 Text(
-                  'Selected Team: $selectedTeam',
-                  style: TextStyle(fontWeight: FontWeight.bold,
+                  '$localSelectedTeam',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
                     color: Colors.blue,
                   ),
                 ),
-              ],
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: isWinnerButtonEnabled
-                    ? () {
-                        saveTeam();
-                        Navigator.of(context).pop();
-                      }
-                    : null,
-                child: Text(AppLocalizations.of(context)!.saveteam,
-                    style: TextStyle(color: Colors.blue)
+                ],
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: isWinnerButtonEnabled
+                      ? () {
+                          saveTeam();
+                          Navigator.of(context).pop();
+                        }
+                      : null,
+                  child: Text(AppLocalizations.of(context)!.saveteam,
+                      style: TextStyle(color: Colors.blue)),
                 ),
-              ),
-            ],
-          ),
-        );
+              ],
+            ),
+          );
+        });
       },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    // Sort the games list by fixture.date to find the first game
+    // widget.games.sort((a, b) => a['date'].compareTo(b['fixture']['date']));
+
+ 
+    // Get the date of the first game
+    DateTime? firstGameDate;
+    if (widget.games.isNotEmpty) {
+      firstGameDate = widget.games[0].date.toUtc();
+    }
+    DateTime currentTimeUtc = DateTime.now().toUtc();
+    // Check if the current time is before the first game date
+    bool isBeforeFirstGame =
+        firstGameDate != null && currentTimeUtc.isBefore(firstGameDate);
+    print(isBeforeFirstGame);
     if (isLoading) {
       return CircularProgressIndicator();
     }
@@ -219,7 +241,7 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
     if (hasWinner) {
       print('has winner');
       return Text(
-        'Selected Winner: $selectedTeam',
+        '${AppLocalizations.of(context)!.yourwinner}: $selectedTeam',
         style: TextStyle(
           color:
               Colors.white, // Light gray color for the "Your guess" and score
@@ -227,18 +249,26 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
         ),
       );
     }
-    return TextButton.icon(
-      icon: Icon(
-        Icons.add,
-        color: Colors.white,
-      ),
-      label: Text(
-        AppLocalizations.of(context)!.choosewinner,
-        style: TextStyle(
-          color: white,
-        ),
-      ),
-      onPressed: _showTeamSelectionDialog,
-    );
+    if (isBeforeFirstGame)
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          TextButton.icon(
+            icon: Icon(
+              Icons.add,
+              color: Colors.white,
+            ),
+            label: Text(
+              AppLocalizations.of(context)!.choosewinner,
+              style: TextStyle(
+                color: white,
+              ),
+            ),
+            onPressed: _showTeamSelectionDialog,
+          ),
+        ],
+      );
+
+    return SizedBox();
   }
 }
