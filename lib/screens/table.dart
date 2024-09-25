@@ -209,16 +209,20 @@ class TableScreenContentState extends State<TableScreenContent> {
     super.initState();
     currentUserId = widget.authProvider.currentUser?.id ?? 'Not logged in';
     league = widget.userProvider.selectedLeageId ?? 2;
-        _loadSelectedGroupName();
+    _loadSelectedGroupName();
     _fetchUserGroups();
   }
+
   Future<void> _loadSelectedGroupName() async {
     final groupName = await SharedPreferencesUtil.getSelectedGroupName();
     setState(() {
-      selectedGroupName = groupName!;
+       selectedGroupName = (widget.selectedGroupName != null? widget.selectedGroupName: groupName!)!;
+      print('widget.selectedGroupName');
+      print(widget.selectedGroupName);
     });
-      print('selectedGroupName shared: ${selectedGroupName}');
+    print('selectedGroupName shared: ${selectedGroupName}');
   }
+
   Future<void> _fetchUserGroups() async {
     final groupName = await SharedPreferencesUtil.getSelectedGroupName();
 
@@ -241,7 +245,7 @@ class TableScreenContentState extends State<TableScreenContent> {
         //   }
 
         // }
-          _fetchUsersForGroup(selectedGroupName);
+        _fetchUsersForGroup(selectedGroupName);
       });
     } catch (e) {
       print('Failed to fetch user groups: $e');
@@ -312,7 +316,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                     AppLocalizations.of(context)!.laliga,
                     AppLocalizations.of(context)!.europaleague,
                   ],
-                    imageUrls: [
+                  imageUrls: [
                     'https://media.api-sports.io/football/leagues/2.png',
                     'https://media.api-sports.io/football/leagues/383.png',
                     'https://media.api-sports.io/football/leagues/140.png',

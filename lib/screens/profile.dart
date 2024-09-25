@@ -413,7 +413,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                               context,
                               MaterialPageRoute(
                                   builder: (context) => TableScreen(
-                                      selectedGroupName: selectedGroupName)),
+                                      selectedGroupName: groupName)),
                             );
                           },
                           child: Card(
