@@ -51,17 +51,17 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
   }
 
   Future<void> _fetchUserData() async {
-    print('_fetchUserDataaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+ 
     try {
       final userData = await UsersMethods().fetchUserById(widget.clientId);
       final leagueId = widget.league;
       final winner = userData['winner']?['$leagueId'];
       // final winner = userData['winner'];
-      print('winner');
+    
       print(winner);
       setState(() {
         if (winner != null) {
-          print('winner != null');
+        
 
           selectedTeam = winner;
           hasWinner = true;

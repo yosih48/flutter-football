@@ -48,6 +48,7 @@ class ProfileScreenContent extends StatefulWidget {
 
 class _ProfileScreenContentState extends State<ProfileScreenContent> {
   Map<String, String> _userGroups = {};
+  Map<String, String> _userWinners = {};
   List<Map<String, dynamic>> _groupsInfo = [];
   late String currentUserId;
   late String currentUserEmail;
@@ -84,8 +85,10 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
         final userProvider = Provider.of<UserProvider>(context, listen: false);
         print(userProvider.selectedGroupName);
         _userGroups = Map<String, String>.from(userData['groupID'] ?? {});
+        _userWinners = Map<String, String>.from(userData['winner'] ?? {});
         _groupsInfo = groupsInfo;
-
+        print(_userGroups);
+        print(_userWinners);
         if (userProvider.selectedGroupName == 'default') {
           String selectedGroup;
 
@@ -344,6 +347,15 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
 
   @override
   Widget build(BuildContext context) {
+    final allowedGroupIds = {'383', '2', '140', '3'};
+
+// Filter the _userWinners based on allowedGroupIds
+    final filteredWinners = _userWinners.entries
+        .where((entry) => allowedGroupIds.contains(entry.key))
+        .fold<Map<String, String>>({}, (map, entry) {
+      map[entry.key] = entry.value;
+      return map;
+    });
     final selectedGroup = Provider.of<UserProvider>(context);
 
     print('selectedGroup : ${selectedGroup.selectedGroupName}');
@@ -479,6 +491,70 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                                         ),
                                 ],
                               ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+                      Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(AppLocalizations.of(context)!.yourwinners,
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+           
+                ],
+              ),
+            ),
+            SizedBox(height: 4,),
+                        Expanded(
+
+                          
+              child: _userWinners.isEmpty
+                  ? Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      padding: EdgeInsets.zero,
+                        itemCount: filteredWinners.length,
+                      itemBuilder: (context, index) {
+                        String groupId = filteredWinners.keys.elementAt(index);
+                        String groupName =
+                            filteredWinners.values.elementAt(index);
+            
+                        return Card(
+                          child: ListTile(
+                            tileColor: cards,
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 2),
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.grey,
+                              child: Text(groupName[0],
+                                  style: TextStyle(color: Colors.white)),
+                              radius: 18,
+                            ),
+                            title: 
+                                                  Row(
+                              mainAxisSize: MainAxisSize
+                                  .min, // Ensures the Row takes up only the necessary width
+                              children: [
+                          Text(groupId == '2'? AppLocalizations.of(context)!.championsleague: groupId =='383'?AppLocalizations.of(context)!.ligathaal: groupId =='140'? AppLocalizations.of(context)!.laliga :AppLocalizations.of(context)!.europaleague ,
+                              style: TextStyle(
+                                    color:
+                                        white, fontSize: 14.0 // White color for the team names
+                                  ),
+                          ),
+                                                
+                              ],
+                            ),
+                     
+                            trailing:
+              Text(
+                              groupName,
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 16),
+                              textAlign: TextAlign.right,
                             ),
                           ),
                         );
