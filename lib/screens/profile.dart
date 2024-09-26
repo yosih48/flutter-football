@@ -366,209 +366,17 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
         // title: Text(AppLocalizations.of(context)!.mygroups, style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-      ),
-      extendBodyBehindAppBar: true,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF16181b), Color(0xFF16181b)],
-          ),
-        ),
-        child: Column(
-          children: [
-            SizedBox(
-                height: kToolbarHeight +
-                    100), // This accommodates the AppBar height
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(AppLocalizations.of(context)!.mygroups,
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold)),
-                  TextButton.icon(
-                    icon: Icon(Icons.add),
-                    label: Text(
-                      AppLocalizations.of(context)!.createnewgroup,
-                      style: TextStyle(
-                          color: Colors.white), // Change the color here
-                    ),
-                    onPressed: _showCreateGroupDialog,
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors
-                          .white, // This changes the color of the icon and text
-                    ),
-                  )
-                ],
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: TextButton.icon(
+              icon: Icon(Icons.exit_to_app, color: Colors.white),
+              label: Text(
+                AppLocalizations.of(context)!.signout,
+                style: TextStyle(color: Colors.white),
               ),
-            ),
-            //  SizedBox(height: 10),
-            Expanded(
-              child: _userGroups.isEmpty
-                  ? Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      padding: EdgeInsets.zero,
-                      itemCount: _userGroups.length,
-                      itemBuilder: (context, index) {
-                        String groupId = _userGroups.keys.elementAt(index);
-                        String groupName = _userGroups.values.elementAt(index);
-                        bool isCreator = _groupsInfo.any((group) =>
-                            group['name'] == groupName &&
-                                group['createdBy'] == currentUserId ||
-                            groupName == 'public');
-                        return InkWell(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => TableScreen(
-                                      selectedGroupName: groupName)),
-                            );
-                          },
-                          child: Card(
-                            child: ListTile(
-                              tileColor: cards,
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 2),
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.grey,
-                                child: Text(groupName[0],
-                                    style: TextStyle(color: Colors.white)),
-                                radius: 18,
-                              ),
-                              title: Text(
-                                groupName,
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 16),
-                                textAlign: TextAlign.right,
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize
-                                    .min, // Ensures the Row takes up only the necessary width
-                                children: [
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.star,
-                                      color: selectedGroupName ==
-                                              groupName
-                                          ? Colors.amber
-                                          : Colors.white,
-                                    ),
-                                    onPressed: () async {
-                         
-                                      selectedGroup
-                                          .setSelectedGroupName(groupName);
-                                      final prefs =
-                                          await SharedPreferences.getInstance();
-                                      await prefs.setString(
-                                          'selectedGroupName', groupName);
-                                      _loadSelectedGroupName();
-                                      print(' set groupName: ${groupName}');
-                                      // Navigate back or show a confirmation
-                                    },
-                                  ),
-                                  !isCreator
-                                      ? IconButton(
-                                          icon: Icon(Icons.exit_to_app,
-                                              color: Colors.white),
-                                          onPressed: () {
-                                            leaveGroup(groupName);
-                                            print('Exiting group: $groupName');
-                                          },
-                                        )
-                                      : Opacity(
-                                          opacity:
-                                              0.0, // Makes the button invisible
-                                          child: IconButton(
-                                            icon: Icon(Icons
-                                                .exit_to_app), // Same icon as the visible button
-                                            onPressed:
-                                                () {}, // No action required
-                                          ),
-                                        ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-                      Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(AppLocalizations.of(context)!.yourwinners,
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold)),
-           
-                ],
-              ),
-            ),
-            SizedBox(height: 4,),
-                        Expanded(
-
-                          
-              child: _userWinners.isEmpty
-                  ? Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      padding: EdgeInsets.zero,
-                        itemCount: filteredWinners.length,
-                      itemBuilder: (context, index) {
-                        String groupId = filteredWinners.keys.elementAt(index);
-                        String groupName =
-                            filteredWinners.values.elementAt(index);
-            
-                        return Card(
-                          child: ListTile(
-                            tileColor: cards,
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 2),
-                            leading: CircleAvatar(
-                              backgroundColor: Colors.grey,
-                              child: Text(groupName[0],
-                                  style: TextStyle(color: Colors.white)),
-                              radius: 18,
-                            ),
-                            title: 
-                                                  Row(
-                              mainAxisSize: MainAxisSize
-                                  .min, // Ensures the Row takes up only the necessary width
-                              children: [
-                          Text(groupId == '2'? AppLocalizations.of(context)!.championsleague: groupId =='383'?AppLocalizations.of(context)!.ligathaal: groupId =='140'? AppLocalizations.of(context)!.laliga :AppLocalizations.of(context)!.europaleague ,
-                              style: TextStyle(
-                                    color:
-                                        white, fontSize: 14.0 // White color for the team names
-                                  ),
-                          ),
-                                                
-                              ],
-                            ),
-                     
-                            trailing:
-              Text(
-                              groupName,
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 16),
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+              style: TextButton.styleFrom(
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
               ),
               onPressed: () async {
                 final authProvider =
@@ -615,14 +423,227 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                   }
                 }
               },
-              child: Text(AppLocalizations.of(context)!.signout),
             ),
-            SizedBox(
-              height: 20.0,
-            )
-          ],
+          )
+        ],
+      ),
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF16181b), Color(0xFF16181b)],
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              SizedBox(
+                  height: kToolbarHeight +
+                      60), // This accommodates the AppBar height
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(AppLocalizations.of(context)!.mygroups,
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold)),
+                    TextButton.icon(
+                      icon: Icon(Icons.add),
+                      label: Text(
+                        AppLocalizations.of(context)!.createnewgroup,
+                        style: TextStyle(
+                            color: Colors.white), // Change the color here
+                      ),
+                      onPressed: _showCreateGroupDialog,
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors
+                            .white, // This changes the color of the icon and text
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              //  SizedBox(height: 10),
+              usersGroups(selectedGroup),
+              SizedBox(
+                height: 4,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(AppLocalizations.of(context)!.yourwinners,
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 6,
+              ),
+              usersWinners(
+                  userWinners: _userWinners, filteredWinners: filteredWinners),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  usersGroups(UserProvider selectedGroup) {
+    return _userGroups.isEmpty
+        ? Center(child: CircularProgressIndicator())
+        : ListView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            itemCount: _userGroups.length,
+            itemBuilder: (context, index) {
+              String groupId = _userGroups.keys.elementAt(index);
+              String groupName = _userGroups.values.elementAt(index);
+              bool isCreator = _groupsInfo.any((group) =>
+                  group['name'] == groupName &&
+                      group['createdBy'] == currentUserId ||
+                  groupName == 'public');
+              return InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            TableScreen(selectedGroupName: groupName)),
+                  );
+                },
+                child: Card(
+                  child: ListTile(
+                    tileColor: cards,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.grey,
+                      child: Text(groupName[0],
+                          style: TextStyle(color: Colors.white)),
+                      radius: 18,
+                    ),
+                    title: Text(
+                      groupName,
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                      textAlign: TextAlign.right,
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize
+                          .min, // Ensures the Row takes up only the necessary width
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            Icons.star,
+                            color: selectedGroupName == groupName
+                                ? Colors.amber
+                                : Colors.white,
+                          ),
+                          onPressed: () async {
+                            selectedGroup.setSelectedGroupName(groupName);
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setString(
+                                'selectedGroupName', groupName);
+                            _loadSelectedGroupName();
+                            print(' set groupName: ${groupName}');
+                            // Navigate back or show a confirmation
+                          },
+                        ),
+                        !isCreator
+                            ? IconButton(
+                                icon: Icon(Icons.exit_to_app,
+                                    color: Colors.white),
+                                onPressed: () {
+                                  leaveGroup(groupName);
+                                  print('Exiting group: $groupName');
+                                },
+                              )
+                            : Opacity(
+                                opacity: 0.0, // Makes the button invisible
+                                child: IconButton(
+                                  icon: Icon(Icons
+                                      .exit_to_app), // Same icon as the visible button
+                                  onPressed: () {}, // No action required
+                                ),
+                              ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+  }
+}
+
+class usersWinners extends StatelessWidget {
+  const usersWinners({
+    super.key,
+    required Map<String, String> userWinners,
+    required this.filteredWinners,
+  }) : _userWinners = userWinners;
+
+  final Map<String, String> _userWinners;
+  final Map<String, String> filteredWinners;
+
+  @override
+  Widget build(BuildContext context) {
+    return _userWinners.isEmpty
+        ? Center(child: CircularProgressIndicator())
+        : ListView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            itemCount: filteredWinners.length,
+            itemBuilder: (context, index) {
+              String groupId = filteredWinners.keys.elementAt(index);
+              String groupName = filteredWinners.values.elementAt(index);
+
+              return Card(
+                child: ListTile(
+                  tileColor: cards,
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.grey,
+                    child: Text(groupName[0],
+                        style: TextStyle(color: Colors.white)),
+                    radius: 18,
+                  ),
+                  title: Row(
+                    mainAxisSize: MainAxisSize
+                        .min, // Ensures the Row takes up only the necessary width
+                    children: [
+                      Text(
+                        groupId == '2'
+                            ? AppLocalizations.of(context)!.championsleague
+                            : groupId == '383'
+                                ? AppLocalizations.of(context)!.ligathaal
+                                : groupId == '140'
+                                    ? AppLocalizations.of(context)!.laliga
+                                    : AppLocalizations.of(context)!
+                                        .europaleague,
+                        style: TextStyle(
+                            color: white,
+                            fontSize: 14.0 // White color for the team names
+                            ),
+                      ),
+                    ],
+                  ),
+                  trailing: Text(
+                    groupName,
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+              );
+            },
+          );
   }
 }

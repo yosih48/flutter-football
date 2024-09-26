@@ -64,6 +64,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   late String email;
   int selectedIndex = 0;
   bool isLoading = true;
+  bool buttonLoading = false;
 
   void updateSelectedIndex(int index) {
     print(index);
@@ -76,9 +77,9 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               : index == 2
                   ? 140
                   : 3;
-                   
+
       selectedIndex = index;
-    
+
       Provider.of<UserProvider>(context, listen: false)
           .setselectedLeageId(league);
     });
@@ -178,7 +179,11 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   }
 
   Future<void> _submitAllGuesses() async {
-// print(' league: ${league}');
+    if (buttonLoading) return;
+
+    setState(() {
+      buttonLoading = true;
+    });
     List<Map<String, dynamic>> newGuesses = [];
     List<Map<String, dynamic>> updatedGuesses = [];
 
@@ -230,10 +235,14 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       }
     }
 
+
     if (newGuesses.isEmpty && updatedGuesses.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.noguessesfound)),
       );
+             setState(() {
+        buttonLoading = false;
+      });
       return;
     }
 
@@ -280,6 +289,9 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         SnackBar(content: Text("Failed to submit or update some guesses")),
       );
     }
+       setState(() {
+      buttonLoading = false;
+    });
   }
 
   @override
@@ -375,7 +387,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           Row(
             // mainAxisAlignment: MainAxisAlignment.center,
             children: [
-                   SizedBox(
+              SizedBox(
                 width: 5,
               ),
               TeamSelectionButton(
@@ -390,7 +402,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               ),
             ],
           ),
-                 SizedBox(
+          SizedBox(
             height: 5,
           ),
           Expanded(
@@ -413,11 +425,21 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _submitAllGuesses,
-        backgroundColor: Colors.blue,
+        onPressed: buttonLoading ? null : _submitAllGuesses,
+        backgroundColor: buttonLoading ? Colors.blue : Colors.blue,
         foregroundColor: Colors.white,
         tooltip: 'Submit All Guesses', // Add a tooltip
-        child: Icon(Icons.send),
+       child: buttonLoading
+            ? SizedBox(
+              
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : Icon(Icons.send),
       ),
     );
   }
