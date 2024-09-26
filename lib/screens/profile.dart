@@ -496,7 +496,10 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
 
   usersGroups(UserProvider selectedGroup) {
     return _userGroups.isEmpty
-        ? Center(child: CircularProgressIndicator())
+        ? Center(child: CircularProgressIndicator(
+            color: Colors.transparent,
+
+        ))
         : ListView.builder(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),

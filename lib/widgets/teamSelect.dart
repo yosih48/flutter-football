@@ -32,8 +32,8 @@ class TeamSelectionButton extends StatefulWidget {
 class _TeamSelectionButtonState extends State<TeamSelectionButton> {
   String? selectedTeam;
   bool isWinnerButtonEnabled = true;
-  bool isLoading = true;
-  bool hasWinner = false;
+  bool isLoading = false;
+  bool hasWinner = true;
 
   @override
   void initState() {
@@ -235,7 +235,10 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
         firstGameDate != null && currentTimeUtc.isBefore(firstGameDate);
     print(isBeforeFirstGame);
     if (isLoading) {
-      return CircularProgressIndicator();
+      return CircularProgressIndicator(
+        color: Colors.transparent,
+
+      );
     }
 
     if (hasWinner) {
