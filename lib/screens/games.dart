@@ -464,6 +464,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           guess: guess,
           homeController: _guessControllers[game.fixtureId]?['home'],
           awayController: _guessControllers[game.fixtureId]?['away'],
+    
           onTap: (context) async {
             print(game.fixtureId);
             // Your onTap logic here

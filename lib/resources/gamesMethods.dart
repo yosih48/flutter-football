@@ -45,6 +45,8 @@ class GamesMethods {
               game.odds.draw != 10 ||
               game.odds.away != 10;
           bool isFinished = game.status.long == "Match Finished";
+           bool isNotPostponedOrTBD =
+              game.status.short != 'PST' && game.status.short != 'TBD';
 
       bool isToday = false;
           if (onlyTodayGames) {
@@ -58,23 +60,21 @@ class GamesMethods {
 
 
           // Additional filter logic for specific league IDs
-       if (leagueId == 2 || leagueId == 848 || leagueId == 3) {
-            return hasOdds 
-            &&
-                    !game.league.round.contains("Qualifying") &&
-                    !game.league.round.contains("Play-offs")
-                     &&
-                   (!onlyTodayGames || isToday)
-            ||
-                isFinished &&
-                    !game.league.round.contains("Qualifying") &&
-                    !game.league.round.contains("Play-offs")
-                     &&
-                   (!onlyTodayGames || isToday);
+     if (leagueId == 2 || leagueId == 848 || leagueId == 3) {
+            return isNotPostponedOrTBD &&
+                ((hasOdds &&
+                        !game.league.round.contains("Qualifying") &&
+                        !game.league.round.contains("Play-offs") &&
+                        (!onlyTodayGames || isToday)) ||
+                    (isFinished &&
+                        !game.league.round.contains("Qualifying") &&
+                        !game.league.round.contains("Play-offs") &&
+                        (!onlyTodayGames || isToday)));
           }
-
           // return hasOdds || isFinished;
-             return (hasOdds || isFinished) && (!onlyTodayGames || isToday);
+      return isNotPostponedOrTBD &&
+              (hasOdds || isFinished) &&
+              (!onlyTodayGames || isToday);
         }).toList();
 
         // Sort the filtered games by timestamp

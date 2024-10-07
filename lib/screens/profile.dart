@@ -68,9 +68,21 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   }
 
   Future<void> _loadSelectedGroupName() async {
-    final groupName = await SharedPreferencesUtil.getSelectedGroupName();
+    final defaultGroup = 'public';
+    final sharedGroupName = await SharedPreferencesUtil.getSelectedGroupName();
+    String groupName = defaultGroup;
+    if (sharedGroupName == null) {
+      print('sharedGroupName == null');
+      await SharedPreferencesUtil.setSelectedGroupName(defaultGroup);
+      groupName = defaultGroup; // Assign defaultGroup manually
+    } else {
+        print('sharedGroupName: ${sharedGroupName}');
+        print('sharedGroupName not null');
+       groupName = sharedGroupName;
+    }
+
     setState(() {
-      selectedGroupName = groupName!;
+      selectedGroupName = groupName;
     });
     print('selectedGroupName shared: ${selectedGroupName}');
   }
@@ -471,22 +483,26 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
               SizedBox(
                 height: 4,
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(AppLocalizations.of(context)!.yourwinners,
-                        style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold)),
-                  ],
+              if (_userWinners.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(AppLocalizations.of(context)!.yourwinners,
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold)),
+                    ],
+                  ),
                 ),
-              ),
               SizedBox(
                 height: 6,
               ),
-              usersWinners(
-                  userWinners: _userWinners, filteredWinners: filteredWinners),
+              if (_userWinners.isNotEmpty)
+                usersWinners(
+                    userWinners: _userWinners,
+                    filteredWinners: filteredWinners),
             ],
           ),
         ),
@@ -496,10 +512,10 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
 
   usersGroups(UserProvider selectedGroup) {
     return _userGroups.isEmpty
-        ? Center(child: CircularProgressIndicator(
+        ? Center(
+            child: CircularProgressIndicator(
             color: Colors.transparent,
-
-        ))
+          ))
         : ListView.builder(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),

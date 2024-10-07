@@ -8,6 +8,7 @@ import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   static const _baseUrl = 'https://leagues.onrender.com/users';
@@ -220,6 +221,10 @@ class AuthProvider with ChangeNotifier {
   
     await _secureStorage.delete(key: 'auth_token');
     await _secureStorage.delete(key: 'user_id');
+
+    // Clear SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
 
       try {
       final response = await http.post(

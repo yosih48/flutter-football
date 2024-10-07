@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
+import 'package:football/resources/auth.dart';
 import 'package:football/resources/guessesMethods.dart';
 import 'package:football/resources/usersMethods.dart';
+import 'package:football/screens/login_screen.dart';
+import 'package:football/screens/profile.dart';
 import 'package:football/screens/table.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/widgets/SharedPreferences.dart';
@@ -11,6 +14,11 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+
+
+
+
+
 
 class GameDetails extends StatefulWidget {
   final gameOriginalId;
@@ -37,6 +45,7 @@ class _GameDetailsState extends State<GameDetails> {
     super.initState();
     league = widget.game.league.id;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+     print('currentUserId details: ${userProvider.currentUserId}');
     currentUserId = userProvider.currentUserId!;
 
     print('currentUserId: ${currentUserId}');
@@ -45,9 +54,21 @@ class _GameDetailsState extends State<GameDetails> {
     _fetchGuesses(selectedGroupName);
   }
   Future<void> _loadSelectedGroupName() async {
-    final groupName = await SharedPreferencesUtil.getSelectedGroupName();
+    final defaultGroup = 'public';
+    final sharedGroupName = await SharedPreferencesUtil.getSelectedGroupName();
+    String groupName = defaultGroup;
+    if (sharedGroupName == null) {
+      print('sharedGroupName == null');
+      await SharedPreferencesUtil.setSelectedGroupName(defaultGroup);
+      groupName = defaultGroup; // Assign defaultGroup manually
+    } else {
+      print('sharedGroupName: ${sharedGroupName}');
+      print('sharedGroupName not null');
+      groupName = sharedGroupName;
+    }
+
     setState(() {
-      selectedGroupName = groupName!;
+      selectedGroupName = groupName;
     });
     print('selectedGroupName shared: ${selectedGroupName}');
   }

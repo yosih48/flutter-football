@@ -209,14 +209,20 @@ class TableScreenContentState extends State<TableScreenContent> {
     super.initState();
     currentUserId = widget.authProvider.currentUser?.id ?? 'Not logged in';
     league = widget.userProvider.selectedLeageId ?? 2;
+    print('currentUserId table: ${currentUserId}');
     _loadSelectedGroupName();
     _fetchUserGroups();
   }
 
   Future<void> _loadSelectedGroupName() async {
     final groupName = await SharedPreferencesUtil.getSelectedGroupName();
+    print('groupName: ${groupName}');
     setState(() {
-       selectedGroupName = (widget.selectedGroupName != null? widget.selectedGroupName: groupName!)!;
+      selectedGroupName = (widget.selectedGroupName != null
+          ? widget.selectedGroupName
+          : groupName != null
+              ? groupName!
+              : 'public')!;
       print('widget.selectedGroupName');
       print(widget.selectedGroupName);
     });
