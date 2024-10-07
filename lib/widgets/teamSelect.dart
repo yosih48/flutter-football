@@ -229,11 +229,13 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
     if (widget.games.isNotEmpty) {
       firstGameDate = widget.games[0].date.toUtc();
     }
+    
     DateTime currentTimeUtc = DateTime.now().toUtc();
     // Check if the current time is before the first game date
     bool isBeforeFirstGame =
         firstGameDate != null && currentTimeUtc.isBefore(firstGameDate);
-    print(isBeforeFirstGame);
+
+
     if (isLoading) {
       return CircularProgressIndicator(
         color: Colors.transparent,

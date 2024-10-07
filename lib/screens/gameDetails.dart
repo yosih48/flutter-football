@@ -20,12 +20,14 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 
 
+
 class GameDetails extends StatefulWidget {
   final gameOriginalId;
+  final userId;
   final Game game;
 
   const GameDetails(
-      {super.key, required this.gameOriginalId, required this.game});
+      {super.key, required this.gameOriginalId, required this.game, this.userId});
 
   @override
   State<GameDetails> createState() => _GameDetailsState();
@@ -45,8 +47,10 @@ class _GameDetailsState extends State<GameDetails> {
     super.initState();
     league = widget.game.league.id;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-     print('currentUserId details: ${userProvider.currentUserId}');
-    currentUserId = userProvider.currentUserId!;
+  
+    // currentUserId = userProvider.currentUserId!;
+    currentUserId = widget.userId;
+
 
     print('currentUserId: ${currentUserId}');
     _loadSelectedGroupName();

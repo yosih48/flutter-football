@@ -93,7 +93,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     email = widget.authProvider.currentUser?.email ?? 'Not logged in';
     league = widget.userProvider.selectedLeageId ?? 2;
 
-    print(clientId);
+    print('clientId in games: ${clientId}');
     print(email);
     _fetchGames(league);
     _fetchGuesses(clientId);
@@ -476,6 +476,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                   builder: (context) => GameDetails(
                     gameOriginalId: game.fixtureId,
                     game: game,
+                    userId: clientId
                   ),
                 ),
               );

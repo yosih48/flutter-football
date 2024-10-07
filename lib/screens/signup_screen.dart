@@ -61,15 +61,15 @@ class _SignupScreenState extends State<SignupScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(AppLocalizations.of(context)!.registrationsuccessful)),
     );
-    navigateToLogin();
-    // Navigator.of(context).pushReplacement(
-    //   MaterialPageRoute(
-    //     builder: (context) => const ResponsiveLayout(
-    //       mobileScreenLayout: MobileScreenLayout(),
-    //       webScreenLayout: WebScreenLayout(),
-    //     ),
-    //   ),
-    // );
+    // navigateToLogin();
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => const ResponsiveLayout(
+          mobileScreenLayout: MobileScreenLayout(),
+          webScreenLayout: WebScreenLayout(),
+        ),
+      ),
+    );
   } catch (e) {
     print('Registration failed: $e');
     // Show error message to user
