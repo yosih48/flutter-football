@@ -9,8 +9,10 @@ import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:football/models/memoryToken.dart';
 import 'package:football/resources/usersMethods.dart';
+import 'package:football/screens/games.dart';
 import 'package:football/screens/signup_screen.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/widgets/googleSignIn.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:football/models/users.dart';
@@ -341,6 +343,26 @@ Future<void> sendResetEmail() async {
                       color: blueColor),
                 ),
               ),
+
+              GoogleSignInButton(
+                onSignInSuccess: (String token) {
+                  // Handle successful sign-in
+                  print('Successfully signed in with Google. JWT: ');
+                  // TODO: Store the token securely and navigate to the home screen
+                  Navigator.push(context,MaterialPageRoute(builder:(context) => GamesScreen(
+             
+                  ), 
+               
+                  ));
+                },
+                onSignInError: (String error) {
+                  // Handle sign-in error
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(error)),
+                  );
+                },
+              ),
+              
               const SizedBox(height: 12),
               Flexible(
                 child: Container(),
