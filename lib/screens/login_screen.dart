@@ -349,11 +349,9 @@ Future<void> sendResetEmail() async {
                   // Handle successful sign-in
                   print('Successfully signed in with Google. JWT: ');
                   // TODO: Store the token securely and navigate to the home screen
-                  Navigator.push(context,MaterialPageRoute(builder:(context) => GamesScreen(
-             
-                  ), 
-               
-                  ));
+               Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => GamesScreen()),
+                  );
                 },
                 onSignInError: (String error) {
                   // Handle sign-in error

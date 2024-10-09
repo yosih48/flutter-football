@@ -20,14 +20,15 @@ class GoogleSignInButton extends StatelessWidget {
 
   Future<void> _handleSignIn(BuildContext context) async {
     try {
+         await _googleSignIn.signOut(); 
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser != null) {
         final GoogleSignInAuthentication googleAuth =
             await googleUser.authentication;
         final String? idToken = googleAuth.idToken;
 
-        print(googleAuth.idToken);
-        print(idToken);
+        // print(googleAuth.idToken);
+        // print(idToken);
         if (idToken != null) {
           print('idToken != null');
           // Send the ID token to your backend
