@@ -53,7 +53,7 @@ class _GameDetailsState extends State<GameDetails> {
 
 
     print('currentUserId: ${currentUserId}');
-    _loadSelectedGroupName();
+    // _loadSelectedGroupName();
     _fetchUserGroups();
     _fetchGuesses(selectedGroupName);
   }
@@ -103,7 +103,7 @@ class _GameDetailsState extends State<GameDetails> {
         if (_userGroups.isNotEmpty && userProvider.selectedGroupName != 'public') {
           // print('  userProvider.selectedGroupName: ${userProvider.selectedGroupName}');
           // selectedGroupName = _userGroups.values.first;
-          // selectedGroupName = userProvider.selectedGroupName;
+          selectedGroupName = userProvider.selectedGroupName;
           _fetchGuesses(selectedGroupName);
         } else {
           selectedGroupName = _userGroups.values.first;
