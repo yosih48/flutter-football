@@ -344,7 +344,17 @@ Future<void> sendResetEmail() async {
                 ),
               ),
 
+              const SizedBox(height: 12),
+              Text(
+                AppLocalizations.of(context)!.or,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+
               GoogleSignInButton(
+                
                 onSignInSuccess: (String token) {
                   // Handle successful sign-in
                   print('Successfully signed in with Google. JWT: ');

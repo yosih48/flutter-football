@@ -3,8 +3,12 @@ import 'dart:convert';
 
 
 import 'package:flutter/material.dart';
+import 'package:football/main.dart';
 import 'package:football/models/users.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
+import 'package:football/responsive/mobile_screen_layout.dart';
+import 'package:football/responsive/rsponsive_layout_screen.dart';
+import 'package:football/responsive/web_screen_layout.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +16,37 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   static const _baseUrl = 'https://leagues.onrender.com/users';
+
+
+
+  static Future<Map<String, dynamic>> googleLogin(
+      String idToken, String? fcmToken, BuildContext context) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/verify-google-user'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'token': idToken,
+        'fcmToken': fcmToken ?? '',
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to authenticate with Google');
+    }
+  }
+
+
+
+
+
+
+
+
+
 
   // Login function
   static Future<Map<String, dynamic>> login(
@@ -155,6 +190,51 @@ class AuthProvider with ChangeNotifier {
   User? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   bool get isInitializing => _isInitializing;
+
+  Future<void> googleLogin(String idToken, String? fcmToken, BuildContext context) async {
+    print('Google login');
+    print(fcmToken);
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final userData = await AuthService.googleLogin(idToken, fcmToken, context);
+      _currentUser = User.fromJson(userData);
+      await _secureStorage.write(
+          key: 'auth_token', value: _currentUser!.newToken);
+      await _secureStorage.write(key: 'user_id', value: _currentUser!.id);
+      print('Google Login successful: ${_currentUser?.email}');
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const ResponsiveLayout(
+            mobileScreenLayout: MobileScreenLayout(),
+            webScreenLayout: WebScreenLayout(),
+          ),
+        ),
+      );
+      // Navigate to GamesScreen
+      // navigatorKey.currentState?.pushReplacementNamed('/game_details');
+    } catch (e) {
+      print('Google Login failed: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
   Future<void> initializeApp() async {
     final String? token = await _secureStorage.read(key: 'auth_token');
     final String? userId = await _secureStorage.read(key: 'user_id');
