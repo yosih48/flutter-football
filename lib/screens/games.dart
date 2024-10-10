@@ -6,6 +6,7 @@ import 'package:football/models/users.dart';
 import 'package:football/models/users.dart';
 import 'package:football/models/users.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
+import 'package:football/resources/appUpdates.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/gamesMethods.dart';
 import 'package:football/resources/guessesMethods.dart';
@@ -89,7 +90,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   }
 
   Map<int, Map<String, TextEditingController>> _guessControllers = {};
-  void initState() {
+  void initState(){
     super.initState();
     clientId = widget.authProvider.currentUser?.id ?? 'Not logged in';
     email = widget.authProvider.currentUser?.email ?? 'Not logged in';
@@ -298,6 +299,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
   @override
   Widget build(BuildContext context) {
+    //  checkForUpdates(context);
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
