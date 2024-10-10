@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 
-
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:football/main.dart';
 import 'package:football/models/users.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
+import 'package:football/resources/appUpdates.dart';
 import 'package:football/responsive/mobile_screen_layout.dart';
 import 'package:football/responsive/rsponsive_layout_screen.dart';
 import 'package:football/responsive/web_screen_layout.dart';
@@ -17,8 +18,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
   String _baseUrl =  '$backendUrl/users';
 class AuthService {
-  // static const _baseUrl = 'https://leagues.onrender.com/users';
-  // static const _baseUrl = 'http://10.0.2.2:5000/users';
+
 
 
 
@@ -281,8 +281,11 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> refreshUser(String token, String userId) async {
+
+
+
     try {
-      final user = await AuthService.getUserDetails(token, userId);
+      final user = await AuthService.getUserDetails(token, userId,);
       print('user in refresh');
       print(user);
       if (user != null) {
@@ -298,6 +301,7 @@ class AuthProvider with ChangeNotifier {
       rethrow;
     }
     notifyListeners();
+  //  checkForUpdates();
   }
   static const _baseUrl = 'http://10.0.2.2:5000/users';
   Future<void> signOut(userID) async {

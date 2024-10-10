@@ -1,3 +1,5 @@
+
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:football/utils/config.dart';
 import 'package:http/http.dart' as http;
 
@@ -5,13 +7,18 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-Future<void> checkForUpdates(BuildContext context) async {
-   String _baseUrl = '$backendUrl';
-  const String CURRENT_VERSION =
-      '1.0.0'; // Manually set your current app version
-  // print('checkForUpdate');
 
-  // print(CURRENT_VERSION);
+
+
+Future<void> checkForUpdates(BuildContext context) async {
+
+PackageInfo packageInfo = await PackageInfo.fromPlatform();
+
+
+String version = packageInfo.version;
+String _baseUrl = '$backendUrl';
+String CURRENT_VERSION = version; 
+
   try {
     // Make API call to check for updates
     final response = await http.get(Uri.parse('$_baseUrl/check-update'));
@@ -21,7 +28,7 @@ Future<void> checkForUpdates(BuildContext context) async {
       final data = json.decode(response.body);
       String latestVersion = data['version'];
       String downloadUrl = data['downloadUrl'];
-
+print('CURRENT_VERSION: ${CURRENT_VERSION}');
       if (latestVersion != CURRENT_VERSION) {
         // Show update dialog
         showUpdateDialog(context, downloadUrl);
@@ -35,33 +42,7 @@ Future<void> checkForUpdates(BuildContext context) async {
   }
 }
 
-// Future<void> checkForUpdates(BuildContext context) async {
-//      print('checkForUpdate');
-//   try {
-//     // Get current app version
-//     PackageInfo packageInfo = await PackageInfo.fromPlatform();
-//     String currentVersion = packageInfo.version;
-//     print(packageInfo);
-//     print(currentVersion);
-//     // Make API call to check for updates
-//     final response = await http.get(Uri.parse('$_baseUrl/check-update'));
-//     print(response);
-//     print(response.body);
 
-//     if (response.statusCode == 200) {
-//       final data = json.decode(response.body);
-//       String latestVersion = data['version'];
-//       String downloadUrl = data['downloadUrl'];
-
-//       if (latestVersion != currentVersion) {
-//         // Show update dialog
-//         showUpdateDialog(context, downloadUrl);
-//       }
-//     }
-//   } catch (e) {
-//     print('Error checking for updates: $e');
-//   }
-// }
 
 void showUpdateDialog(BuildContext context, String downloadUrl) {
   showDialog(
