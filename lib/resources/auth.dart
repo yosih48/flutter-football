@@ -301,7 +301,9 @@ class AuthProvider with ChangeNotifier {
       rethrow;
     }
     notifyListeners();
-  //  checkForUpdates();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    checkForUpdates();
+  });
   }
   static const _baseUrl = 'http://10.0.2.2:5000/users';
   Future<void> signOut(userID) async {
