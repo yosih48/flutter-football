@@ -1,14 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:football/utils/config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:football/models/users.dart';
 import 'package:http/http.dart' as http;
 
 class UsersMethods {
+    static const _baseUrl = backendUrl;
 Future<List<Map<String, dynamic>>>fetchAllUsers() async {
   print('fetchAllUsers');
-  final url = Uri.parse('https://leagues.onrender.com/users/register');
+  final url = Uri.parse('$_baseUrl/users/register');
 
   try {
     final response = await http.get(url);
@@ -84,7 +86,7 @@ Future<String> sendEmail(String email, context) async {
     try {
       print('Sending email to: $email');
       var response = await http.post(
-        Uri.parse('https://leagues.onrender.com/users/forgotPass'),
+        Uri.parse('$_baseUrl/users/forgotPass'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
         },

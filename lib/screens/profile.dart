@@ -6,6 +6,7 @@ import 'package:football/resources/groupsMethods.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/screens/table.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/utils/config.dart';
 import 'package:football/widgets/SharedPreferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -55,7 +56,8 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   TextEditingController _groupNameController = TextEditingController();
   Map<String, dynamic> user = {};
   late String selectedGroupName = "";
-
+    //  const _baseUrl = 'https://leagues.onrender.com';
+  String _baseUrl = backendUrl;
   @override
   void initState() {
     super.initState();
@@ -184,7 +186,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
       // Update the server
       try {
         final response = await http.put(
-          Uri.parse('https://leagues.onrender.com/users/'),
+          Uri.parse('$_baseUrl/users/'),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },
@@ -214,7 +216,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   }
 
   Future<void> _createNewGroup(String groupName) async {
-    final url = Uri.parse('https://leagues.onrender.com/groups/add');
+    final url = Uri.parse('$_baseUrl/groups/add');
     try {
       final response = await http.post(
         url,
@@ -265,7 +267,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
         ? 1
         : (existingGroupKeys.reduce(max) + 1).toString();
 
-    final url = Uri.parse('https://leagues.onrender.com/users/');
+    final url = Uri.parse('$_baseUrl/users/');
     try {
       final response = await http.put(
         url,

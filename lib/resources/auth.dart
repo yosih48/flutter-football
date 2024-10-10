@@ -9,13 +9,16 @@ import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/responsive/mobile_screen_layout.dart';
 import 'package:football/responsive/rsponsive_layout_screen.dart';
 import 'package:football/responsive/web_screen_layout.dart';
+import 'package:football/utils/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static const _baseUrl = 'https://leagues.onrender.com/users';
+  // static const _baseUrl = 'https://leagues.onrender.com/users';
+  // static const _baseUrl = 'http://10.0.2.2:5000/users';
+  static const _baseUrl =  '$backendUrl/users';
 
 
 
@@ -296,7 +299,7 @@ class AuthProvider with ChangeNotifier {
     }
     notifyListeners();
   }
-
+  static const _baseUrl = 'http://10.0.2.2:5000/users';
   Future<void> signOut(userID) async {
   
     await _secureStorage.delete(key: 'auth_token');
@@ -308,7 +311,7 @@ class AuthProvider with ChangeNotifier {
 
       try {
       final response = await http.post(
-        Uri.parse('https://leagues.onrender.com/users/logout'),
+        Uri.parse('$_baseUrl/logout'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },

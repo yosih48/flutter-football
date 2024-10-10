@@ -1,9 +1,11 @@
 import 'package:football/models/games.dart';
+import 'package:football/utils/config.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/material.dart';
 
 class GamesMethods {
+    static const _baseUrl = backendUrl;
   Future<List<Game>> fetchAllGames(leagueId,  bool onlyThisLeague, {bool onlyTodayGames = false} ) async {
    
     List<int> leagueIds = onlyThisLeague? [leagueId]: [2, 3, 383, 140] ;
@@ -25,7 +27,7 @@ class GamesMethods {
   }
 
   Future<List<Game>> _fetchGamesForLeague(int leagueId ,{bool onlyTodayGames = false}) async {
-    final url = Uri.parse('https://leagues.onrender.com/api/realApiData');
+    final url = Uri.parse('$_baseUrl/api/realApiData');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},

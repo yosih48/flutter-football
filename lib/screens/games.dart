@@ -12,6 +12,7 @@ import 'package:football/resources/guessesMethods.dart';
 import 'package:football/screens/gameDetails.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/utils/config.dart';
 import 'package:football/widgets/gamesCard.dart';
 import 'package:football/widgets/teamSelect.dart';
 import 'package:football/widgets/toggleButton.dart';
@@ -65,7 +66,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   int selectedIndex = 0;
   bool isLoading = true;
   bool buttonLoading = false;
-
+   //  const _baseUrl = 'https://leagues.onrender.com/users';
+ String _baseUrl = backendUrl;
   void updateSelectedIndex(int index) {
     print(index);
     setState(() {
@@ -246,8 +248,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       return;
     }
 
-    final newGuessUrl = Uri.parse('https://leagues.onrender.com/guesses/add');
-    final updateGuessUrl = Uri.parse('https://leagues.onrender.com/guesses/');
+    final newGuessUrl = Uri.parse('$_baseUrl/guesses/add');
+    final updateGuessUrl = Uri.parse('$_baseUrl/guesses/');
     bool allSuccessful = true;
 
     // Submit new guesses

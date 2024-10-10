@@ -5,6 +5,7 @@ import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/utils/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -81,6 +82,7 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
   }
 
   List<String> _fetchAllTeams() {
+
     final filteredGames = widget.games.where((game) {
       if (game.league.id == 2 || game.league.id == 848 || game.league.id == 3) {
         return !game.league.round.contains("Qualifying") &&
@@ -96,6 +98,9 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
   }
 
   Future<void> saveTeam() async {
+
+      // const _baseUrl = 'https://leagues.onrender.com/users';
+  const _baseUrl = backendUrl;
     if (selectedTeam == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please select a team first')),
@@ -106,7 +111,7 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
     final leagueId = widget.league;
     try {
       final response = await http.put(
-        Uri.parse('https://leagues.onrender.com/users/winner'),
+        Uri.parse('$_baseUrl/users/winner'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },

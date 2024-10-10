@@ -5,6 +5,7 @@ import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/utils/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -84,9 +85,11 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
   }
 
   Future<void> updateDatabase(name, email) async {
+   const _baseUrl = backendUrl;
+  //  const _baseUrl = 'https://leagues.onrender.com';
     print(leagueStates);
     final String url =
-        'https://leagues.onrender.com/users/profile'; // Replace with your actual API endpoint
+        '$_baseUrl/users/profile'; // Replace with your actual API endpoint
     final Map<String, dynamic> leagueData = {
       'championsLeague': leagueStates['ליגת אלופות'],
       'israeliLeague': leagueStates['ליגת העל'],

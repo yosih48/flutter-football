@@ -5,12 +5,14 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:football/resources/usersMethods.dart';
+import 'package:football/utils/config.dart';
 import 'package:http/http.dart' as http;
 
 class GroupsMethods {
+    static const _baseUrl = backendUrl;
 Future<List<Map<String, dynamic>>> fetchGroups() async {
     print('fetchGroups');
-    final url = Uri.parse('https://leagues.onrender.com/groups/register');
+    final url = Uri.parse('$_baseUrl/groups/register');
 
     try {
       final response = await http.get(url);
@@ -73,7 +75,7 @@ Future<List<Map<String, dynamic>>> fetchGroups() async {
       print('user email: ${user['email']}');
       print('nextKey: ${nextKey}');
       print('existingGroupKeys: ${existingGroupKeys}');
-      final url = Uri.parse('https://leagues.onrender.com/users/');
+      final url = Uri.parse('$_baseUrl/users/');
 
       final response = await http.put(
         url,

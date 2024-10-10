@@ -1,11 +1,13 @@
 import 'dart:convert';
+import 'package:football/utils/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:football/models/guesses.dart';
 
 class GuessesMethods {
+    static const _baseUrl = backendUrl;
   Future<List<Guess>> fetchThisUserGuesses(String clientId) async {
     print('clientId ${clientId}');
-    final url = Uri.parse('https://leagues.onrender.com/guesses/$clientId');
+    final url = Uri.parse('$_baseUrl/guesses/$clientId');
 
     try {
       final response = await http.get(url);
@@ -34,7 +36,7 @@ class GuessesMethods {
   Future<List<Guess>> fetchAllUsersGuesses(int gameId) async {
     print('clientId ${gameId}');
     final url =
-        Uri.parse('https://leagues.onrender.com/guesses/gameOriginal/$gameId');
+        Uri.parse('$_baseUrl/guesses/gameOriginal/$gameId');
 
     try {
       final response = await http.get(url);
@@ -62,7 +64,7 @@ class GuessesMethods {
 
   Future<String> fetchUserName(String userId) async {
     final response = await http
-        .get(Uri.parse('https://leagues.onrender.com/users/${userId}'));
+        .get(Uri.parse('$_baseUrl/users/${userId}'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -74,7 +76,7 @@ class GuessesMethods {
   }
  Future<Map<String, String>>  fetchUserGroup(String userId) async {
     final response = await http
-        .get(Uri.parse('https://leagues.onrender.com/users/${userId}'));
+        .get(Uri.parse('$_baseUrl/users/${userId}'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
