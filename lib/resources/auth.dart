@@ -305,8 +305,8 @@ class AuthProvider with ChangeNotifier {
     checkForUpdates();
   });
   }
-  static const _baseUrl = 'http://10.0.2.2:5000/users';
   Future<void> signOut(userID) async {
+ String _baseUrl = '$backendUrl/users';
   
     await _secureStorage.delete(key: 'auth_token');
     await _secureStorage.delete(key: 'user_id');
