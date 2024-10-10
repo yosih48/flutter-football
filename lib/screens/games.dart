@@ -22,7 +22,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 import '../models/users.dart';
 
 class GamesScreen extends StatelessWidget {
@@ -95,7 +95,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     clientId = widget.authProvider.currentUser?.id ?? 'Not logged in';
     email = widget.authProvider.currentUser?.email ?? 'Not logged in';
     league = widget.userProvider.selectedLeageId ?? 2;
-
+   
     print('clientId in games: ${clientId}');
     print(email);
     _fetchGames(league);
@@ -299,7 +299,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
   @override
   Widget build(BuildContext context) {
-    //  checkForUpdates(context);
+     checkForUpdates(context);
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(

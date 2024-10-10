@@ -4,8 +4,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/material.dart';
 
+    String _baseUrl = backendUrl;
 class GamesMethods {
-    static const _baseUrl = backendUrl;
   Future<List<Game>> fetchAllGames(leagueId,  bool onlyThisLeague, {bool onlyTodayGames = false} ) async {
    
     List<int> leagueIds = onlyThisLeague? [leagueId]: [2, 3, 383, 140] ;

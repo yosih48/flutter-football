@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:football/models/users.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
+import 'package:football/resources/appUpdates.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/firebase_messaging_service.dart';
 import 'package:football/responsive/mobile_screen_layout.dart';
@@ -112,6 +113,7 @@ class GameApp extends StatelessWidget {
   const GameApp({super.key});
   @override
   Widget build(BuildContext context) {
+   
     return MaterialApp(
       navigatorKey: navigatorKey,
  theme: ThemeData(

@@ -8,6 +8,7 @@ import 'dart:convert';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:football/models/memoryToken.dart';
+import 'package:football/resources/appUpdates.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/games.dart';
 import 'package:football/screens/signup_screen.dart';
@@ -117,7 +118,7 @@ Future<void> sendResetEmail() async {
 
       await authProvider.login(
           _usernameController.text, _passwordController.text, fcmToken);
-
+  
 // String? fcmToken = await FirebaseMessaging.instance.getToken();
 // print('fcmToken: ${fcmToken}');
 //  await sendFCMTokenToServer(fcmToken);

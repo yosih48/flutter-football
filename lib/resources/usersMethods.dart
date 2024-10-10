@@ -5,9 +5,9 @@ import 'package:football/utils/config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:football/models/users.dart';
 import 'package:http/http.dart' as http;
+    String _baseUrl = backendUrl;
 
 class UsersMethods {
-    static const _baseUrl = backendUrl;
 Future<List<Map<String, dynamic>>>fetchAllUsers() async {
   print('fetchAllUsers');
   final url = Uri.parse('$_baseUrl/users/register');

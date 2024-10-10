@@ -7,9 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/utils/config.dart';
 import 'package:http/http.dart' as http;
+   String _baseUrl = backendUrl;
 
 class GroupsMethods {
-    static const _baseUrl = backendUrl;
 Future<List<Map<String, dynamic>>> fetchGroups() async {
     print('fetchGroups');
     final url = Uri.parse('$_baseUrl/groups/register');

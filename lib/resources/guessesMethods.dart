@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:football/utils/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:football/models/guesses.dart';
+   String _baseUrl = backendUrl;
 
 class GuessesMethods {
-    static const _baseUrl = backendUrl;
   Future<List<Guess>> fetchThisUserGuesses(String clientId) async {
     print('clientId ${clientId}');
     final url = Uri.parse('$_baseUrl/guesses/$clientId');

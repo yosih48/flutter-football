@@ -15,10 +15,10 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+  String _baseUrl =  '$backendUrl/users';
 class AuthService {
   // static const _baseUrl = 'https://leagues.onrender.com/users';
   // static const _baseUrl = 'http://10.0.2.2:5000/users';
-  static const _baseUrl =  '$backendUrl/users';
 
 
 

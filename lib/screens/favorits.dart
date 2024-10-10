@@ -85,7 +85,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
   }
 
   Future<void> updateDatabase(name, email) async {
-   const _baseUrl = backendUrl;
+  String _baseUrl = backendUrl;
   //  const _baseUrl = 'https://leagues.onrender.com';
     print(leagueStates);
     final String url =
