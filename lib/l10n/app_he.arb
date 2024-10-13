@@ -101,6 +101,11 @@
      "signinwithgoogle": "היכנס עם חשבון גוגל",
   "results": "תוצאות",
      "profile": "פרופיל",
-     "preferences": "הבחירות שלי"
+     "preferences": "הבחירות שלי",
+          "preferences": "הבחירות שלי",
+      "updateavailable": "עדכון זמין",
+     "askforupdate": "גרסה חדשה של האפליקציה זמינה, תרצה לעדכן?",
+     "later": "מאוחר יותר",
+     "update": "עדכן"
              
 }

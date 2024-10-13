@@ -299,7 +299,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
   @override
   Widget build(BuildContext context) {
-     checkForUpdates(context);
+    //  checkForUpdates(context);
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(

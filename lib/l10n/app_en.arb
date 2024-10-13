@@ -102,7 +102,12 @@
      "signinwithgoogle": "Sign In with Google",
      "results": "results",
      "profile": "profile",
-     "preferences": "preferences"
+     "preferences": "preferences",
+          "preferences": "preferences",
+     "updateavailable": "Update Available",
+     "askforupdate": "A new version of the app is available. Would you like to update?",
+     "later": "Later",
+     "update": "Update"
     
 
 

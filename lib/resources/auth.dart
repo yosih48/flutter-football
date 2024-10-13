@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:football/main.dart';
 import 'package:football/models/users.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
+import 'package:football/resources/appUpdates.dart';
 import 'package:football/responsive/mobile_screen_layout.dart';
 import 'package:football/responsive/rsponsive_layout_screen.dart';
 import 'package:football/responsive/web_screen_layout.dart';
@@ -298,8 +299,11 @@ class AuthProvider with ChangeNotifier {
       rethrow;
     }
     notifyListeners();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+      checkForUpdates();
+    });
   }
-  static const _baseUrl = 'http://10.0.2.2:5000/users';
+  static const _baseUrl = '$backendUrl/users';
   Future<void> signOut(userID) async {
   
     await _secureStorage.delete(key: 'auth_token');

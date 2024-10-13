@@ -6,6 +6,7 @@ import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
 import 'package:football/models/users.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
+import 'package:football/resources/appUpdates.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/groupsMethods.dart';
 import 'package:football/resources/guessesMethods.dart';
@@ -18,7 +19,7 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-
+import 'package:package_info_plus/package_info_plus.dart';
 class TableScreen extends StatelessWidget {
   final String? selectedGroupName;
 
@@ -84,6 +85,7 @@ class TableScreenContentState extends State<TableScreenContent> {
   }
 
   void _showInviteDialog(String inviteCode) {
+ 
     showDialog(
       context: context,
       builder: (BuildContext context) {
