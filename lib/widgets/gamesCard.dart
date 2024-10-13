@@ -240,7 +240,7 @@ class GameWidget extends StatelessWidget {
                       '${game.odds.home}',
                       style: TextStyle(
                         color:
-                            Color(0xFF9BA4B5), // Light gray color for the odds
+                            Colors.white, // Light gray color for the odds
                         fontSize: 16.0,
                       ),
                     ),
@@ -249,7 +249,7 @@ class GameWidget extends StatelessWidget {
                       '${game.odds.draw}',
                       style: TextStyle(
                         color:
-                            Color(0xFF9BA4B5), // Light gray color for the odds
+                               Colors.white, // Light gray color for the odds
                         fontSize: 16.0,
                       ),
                     ),
@@ -258,7 +258,8 @@ class GameWidget extends StatelessWidget {
                       '${game.odds.away}',
                       style: TextStyle(
                         color:
-                            Color(0xFF9BA4B5), // Light gray color for the odds
+                                 Colors.white,  // Light gray color for the odds
+                            // Color(0xFF9BA4B5), // Light gray color for the odds
                         fontSize: 16.0,
                       ),
                     ),
