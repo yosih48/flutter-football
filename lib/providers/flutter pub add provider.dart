@@ -9,7 +9,7 @@ import '../resources/auth.dart';
 
 class UserProvider extends ChangeNotifier {
   User? _currentUser;
-   String _selectedGroupName = 'default';
+   String _selectedGroupName = 'public';
    String? _currentUserId;
    int _selectedLeageId = 2;
 

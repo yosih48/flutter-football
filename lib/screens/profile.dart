@@ -56,7 +56,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   TextEditingController _groupNameController = TextEditingController();
   Map<String, dynamic> user = {};
   late String selectedGroupName = "";
-    //  const _baseUrl = 'https://leagues.onrender.com';
+  //  const _baseUrl = 'https://leagues.onrender.com';
   String _baseUrl = backendUrl;
   @override
   void initState() {
@@ -74,13 +74,12 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     final sharedGroupName = await SharedPreferencesUtil.getSelectedGroupName();
     String groupName = defaultGroup;
     if (sharedGroupName == null) {
-      print('sharedGroupName == null');
+
       await SharedPreferencesUtil.setSelectedGroupName(defaultGroup);
       groupName = defaultGroup; // Assign defaultGroup manually
     } else {
-        print('sharedGroupName: ${sharedGroupName}');
-        print('sharedGroupName not null');
-       groupName = sharedGroupName;
+
+      groupName = sharedGroupName;
     }
 
     setState(() {
@@ -103,7 +102,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
         _groupsInfo = groupsInfo;
         print(_userGroups);
         print(_userWinners);
-        if (userProvider.selectedGroupName == 'default') {
+        if (userProvider.selectedGroupName == 'public') {
           String selectedGroup;
 
           if (_userGroups.isNotEmpty) {
@@ -117,7 +116,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
             }
           } else {
             // Handle the case when _userGroups is empty
-            selectedGroup = 'default'; // or any other default value you prefer
+            selectedGroup = 'public'; // or any other default value you prefer
           }
 
           Provider.of<UserProvider>(context, listen: false)
@@ -166,12 +165,22 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
               onPressed: () => Navigator.of(context).pop(false),
             ),
             TextButton(
-              child: Text(
-                AppLocalizations.of(context)!.leave,
-                style: TextStyle(color: Colors.blue),
-              ),
-              onPressed: () => Navigator.of(context).pop(true),
-            ),
+                child: Text(
+                  AppLocalizations.of(context)!.leave,
+                  style: TextStyle(color: Colors.blue),
+                ),
+                onPressed: ()async {
+                  final sharedGroupName = await SharedPreferencesUtil.getSelectedGroupName();
+    
+                  Navigator.of(context).pop(true);
+                if(sharedGroupName == groupName){
+           await SharedPreferencesUtil.setSelectedGroupName(
+                        'public');
+
+                   _loadSelectedGroupName();
+                }
+
+                }),
           ],
         );
       },
@@ -430,7 +439,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
 
                 if (confirmSignOut == true) {
                   Provider.of<UserProvider>(context, listen: false)
-                      .setSelectedGroupName('default');
+                      .setSelectedGroupName('public');
                   await authProvider.signOut(currentUserId);
                   if (context.mounted) {
                     // Perform any additional actions if needed
@@ -559,23 +568,6 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                       mainAxisSize: MainAxisSize
                           .min, // Ensures the Row takes up only the necessary width
                       children: [
-                        IconButton(
-                          icon: Icon(
-                            Icons.star,
-                            color: selectedGroupName == groupName
-                                ? Colors.amber
-                                : Colors.white,
-                          ),
-                          onPressed: () async {
-                            selectedGroup.setSelectedGroupName(groupName);
-                            final prefs = await SharedPreferences.getInstance();
-                            await prefs.setString(
-                                'selectedGroupName', groupName);
-                            _loadSelectedGroupName();
-                            print(' set groupName: ${groupName}');
-                            // Navigate back or show a confirmation
-                          },
-                        ),
                         !isCreator
                             ? IconButton(
                                 icon: Icon(Icons.exit_to_app,
@@ -593,6 +585,23 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                                   onPressed: () {}, // No action required
                                 ),
                               ),
+                        IconButton(
+                          icon: Icon(
+                            Icons.star,
+                            color: selectedGroupName == groupName
+                                ? Colors.amber
+                                : Colors.white,
+                          ),
+                          onPressed: () async {
+                            selectedGroup.setSelectedGroupName(groupName);
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setString(
+                                'selectedGroupName', groupName);
+                            _loadSelectedGroupName();
+                            print(' set groupName: ${groupName}');
+                            // Navigate back or show a confirmation
+                          },
+                        ),
                       ],
                     ),
                   ),

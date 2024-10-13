@@ -15,19 +15,16 @@ import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-
-
-
-
-
-
 class GameDetails extends StatefulWidget {
   final gameOriginalId;
   final userId;
   final Game game;
 
   const GameDetails(
-      {super.key, required this.gameOriginalId, required this.game, this.userId});
+      {super.key,
+      required this.gameOriginalId,
+      required this.game,
+      this.userId});
 
   @override
   State<GameDetails> createState() => _GameDetailsState();
@@ -47,16 +44,16 @@ class _GameDetailsState extends State<GameDetails> {
     super.initState();
     league = widget.game.league.id;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-  
+
     // currentUserId = userProvider.currentUserId!;
     currentUserId = widget.userId;
-
 
     print('currentUserId: ${currentUserId}');
     // _loadSelectedGroupName();
     _fetchUserGroups();
     _fetchGuesses(selectedGroupName);
   }
+
   Future<void> _loadSelectedGroupName() async {
     final defaultGroup = 'public';
     final sharedGroupName = await SharedPreferencesUtil.getSelectedGroupName();
@@ -76,6 +73,7 @@ class _GameDetailsState extends State<GameDetails> {
     });
     print('selectedGroupName shared: ${selectedGroupName}');
   }
+
   Future<void> _fetchUserGroups() async {
     try {
       Map<String, dynamic> userData =
@@ -100,14 +98,17 @@ class _GameDetailsState extends State<GameDetails> {
         final userProvider = Provider.of<UserProvider>(context, listen: false);
         // selectedGroupName = userProvider.selectedGroupName;
         // Check if _userGroups is not empty before accessing first value
-        if (_userGroups.isNotEmpty && userProvider.selectedGroupName != 'public') {
+        if (_userGroups.isNotEmpty &&
+            userProvider.selectedGroupName != 'public') {
           // print('  userProvider.selectedGroupName: ${userProvider.selectedGroupName}');
           // selectedGroupName = _userGroups.values.first;
           selectedGroupName = userProvider.selectedGroupName;
+
           _fetchGuesses(selectedGroupName);
         } else {
           selectedGroupName = _userGroups.values.first;
-             _fetchGuesses(selectedGroupName);
+      
+          _fetchGuesses(selectedGroupName);
           // Handle the case when no groups are left after removing 'public'
           print('No groups available after removing public');
           // You might want to set a default state or show a message to the user
