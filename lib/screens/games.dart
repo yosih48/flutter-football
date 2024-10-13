@@ -67,7 +67,9 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   int selectedIndex = 0;
   bool isLoading = true;
   bool buttonLoading = false;
-   //  const _baseUrl = 'https://leagues.onrender.com/users';
+   DateTime? selectedDate;
+    bool _showSelectedDateGames = false;
+
  String _baseUrl = backendUrl;
   void updateSelectedIndex(int index) {
     print(index);
@@ -127,6 +129,23 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     _fetchGames(league);
   }
 
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2025),
+    );
+    if (picked != null && picked != selectedDate) {
+      setState(() {
+        selectedDate = picked;
+      });
+      _fetchGames(league);
+    }
+  }
+
+
+
   Future<void> _fetchGames(league) async {
     isLoading = true;
     try {
@@ -135,9 +154,14 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       if (_showOnlyTodayGames) {
         fetchedGames = await GamesMethods().fetchAllGames(
             league, _showOnlyThisLeagueTodayGames,
-            onlyTodayGames: _showOnlyTodayGames);
+            onlyTodayGames: _showOnlyTodayGames,
+                selectedDate: selectedDate,
+            );
       } else {
-        fetchedGames = await GamesMethods().fetchGamesForLeague(league);
+        fetchedGames = await GamesMethods().fetchGamesForLeague(
+          league,
+           selectedDate: selectedDate,
+        );
       }
 
       setState(() {
@@ -313,6 +337,11 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         // ),
         backgroundColor: Colors.transparent,
         actions: [
+
+              IconButton(
+            icon: Icon(Icons.calendar_today),
+            onPressed: () => _selectDate(context),
+          ),
           Row(
             children: [
               if (_showOnlyTodayGames)
