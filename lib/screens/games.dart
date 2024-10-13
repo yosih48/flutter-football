@@ -60,7 +60,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   List<Game> _games = [];
   List<Guess> _guesses = [];
   int league = 2;
-  bool _showOnlyTodayGames = false;
+  // bool _showOnlyTodayGames = false;
   bool _showOnlyThisLeagueTodayGames = false;
   late String clientId;
   late String email;
@@ -115,12 +115,12 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     super.dispose();
   }
 
-  void toggleShowOnlyTodayGames() {
-    setState(() {
-      _showOnlyTodayGames = !_showOnlyTodayGames;
-    });
-    _fetchGames(league);
-  }
+  // void toggleShowOnlyTodayGames() {
+  //   setState(() {
+  //     _showOnlyTodayGames = !_showOnlyTodayGames;
+  //   });
+  //   _fetchGames(league);
+  // }
 
   void toggleshowOnlyThisLeagueTodayGames() {
     setState(() {
@@ -151,10 +151,10 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     try {
       List<Game> fetchedGames;
 
-      if (_showOnlyTodayGames) {
+        if (selectedDate != null) {
         fetchedGames = await GamesMethods().fetchAllGames(
             league, _showOnlyThisLeagueTodayGames,
-            onlyTodayGames: _showOnlyTodayGames,
+        
                 selectedDate: selectedDate,
             );
       } else {
@@ -344,7 +344,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           ),
           Row(
             children: [
-              if (_showOnlyTodayGames)
+               if (selectedDate != null)
                 Text(
                   AppLocalizations.of(context)!.thisleague,
                   style: TextStyle(
@@ -352,7 +352,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                       fontSize: 14 // White color for the team names
                       ),
                 ),
-              if (_showOnlyTodayGames)
+         if (selectedDate != null)
                 Transform.scale(
                   scale: 0.6,
                   child: Switch(
@@ -370,24 +370,24 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                     inactiveTrackColor: Colors.grey,
                   ),
                 ),
-              Text(
-                AppLocalizations.of(context)!.todayonly,
-                style: TextStyle(
-                    color: white, fontSize: 14 // White color for the team names
-                    ),
-              ),
-              Transform.scale(
-                scale: 0.6,
-                child: Switch(
-                  value: _showOnlyTodayGames,
-                  onChanged: (value) {
-                    toggleShowOnlyTodayGames();
-                  },
-                  activeColor: Colors.blue,
-                  inactiveThumbColor: Colors.white,
-                  inactiveTrackColor: Colors.grey,
-                ),
-              ),
+              // Text(
+              //   AppLocalizations.of(context)!.todayonly,
+              //   style: TextStyle(
+              //       color: white, fontSize: 14 // White color for the team names
+              //       ),
+              // ),
+              // Transform.scale(
+              //   scale: 0.6,
+              //   child: Switch(
+              //     value: _showOnlyTodayGames,
+              //     onChanged: (value) {
+              //       toggleShowOnlyTodayGames();
+              //     },
+              //     activeColor: Colors.blue,
+              //     inactiveThumbColor: Colors.white,
+              //     inactiveTrackColor: Colors.grey,
+              //   ),
+              // ),
             ],
           ),
         ],
