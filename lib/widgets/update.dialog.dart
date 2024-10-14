@@ -7,6 +7,24 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 class UpdateDialog extends StatelessWidget {
   final String downloadUrl;
   const UpdateDialog({Key? key, required this.downloadUrl}) : super(key: key);
+
+  Future<void> _launchUrl(BuildContext context) async {
+    final url = Uri.parse(downloadUrl);
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        throw 'Could not launch $url';
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to open download link: $e')),
+      );
+    }
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -35,21 +53,22 @@ class UpdateDialog extends StatelessWidget {
             style: TextStyle(color: Colors.blue, fontSize: 14),
           ),
           onPressed: () async {
-            final url = Uri.parse(downloadUrl);
-            try {
-              print('Launching URL...');
-              bool launched =
-                  await launchUrl(url, mode: LaunchMode.externalApplication);
-              print('launchUrl result: $launched');
-              if (!launched) {
-                throw 'URL launch returned false';
-              }
-            } catch (e) {
-              print('Error in URL launch process: $e');
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Failed to open download link: $e')),
-              );
-            }
+            // final url = Uri.parse(downloadUrl);
+            // try {
+            //   print('Launching URL...');
+            //   bool launched =
+            //       await launchUrl(url, mode: LaunchMode.externalApplication);
+            //   print('launchUrl result: $launched');
+            //   if (!launched) {
+            //     throw 'URL launch returned false';
+            //   }
+            // } catch (e) {
+            //   print('Error in URL launch process: $e');
+            //   ScaffoldMessenger.of(context).showSnackBar(
+            //     SnackBar(content: Text('Failed to open download link: $e')),
+            //   );
+            // }
+              _launchUrl(context);
             Navigator.of(context).pop();
           },
         ),
