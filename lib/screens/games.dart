@@ -67,10 +67,10 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   int selectedIndex = 0;
   bool isLoading = true;
   bool buttonLoading = false;
-   DateTime? selectedDate;
-    bool _showSelectedDateGames = false;
+  DateTime? selectedDate;
+  bool _showSelectedDateGames = false;
 
- String _baseUrl = backendUrl;
+  String _baseUrl = backendUrl;
   void updateSelectedIndex(int index) {
     print(index);
     setState(() {
@@ -92,13 +92,12 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   }
 
   Map<int, Map<String, TextEditingController>> _guessControllers = {};
-  void initState(){
+  void initState() {
     super.initState();
     clientId = widget.authProvider.currentUser?.id ?? 'Not logged in';
     email = widget.authProvider.currentUser?.email ?? 'Not logged in';
     league = widget.userProvider.selectedLeageId ?? 2;
-   
-   
+
     print('clientId in games: ${clientId}');
 
     print(email);
@@ -129,56 +128,62 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     _fetchGames(league);
   }
 
-Future<void> _selectDate(BuildContext context) async {
-  final DateTime? picked = await showDatePicker(
-    context: context,
-    initialDate: selectedDate ?? DateTime.now(),
-    firstDate: DateTime(2024),
-    lastDate: DateTime(2025),
-    builder: (BuildContext context, Widget? child) {
-      return Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: ColorScheme.dark(
-            primary: Colors.blue, // Header background color
-            onPrimary: Colors.white, // Header text color
-            onSurface: Colors.white, // Calendar text color
-          ),
-          textButtonTheme: TextButtonThemeData(
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.blue, // Button text color
-            ),
-          ),
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2024),
+      lastDate: DateTime(2025),
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: Colors.blue, // Header background color
+              onPrimary: Colors.white, // Header text color
+              onSurface: Colors.white, // Calendar text color
+                  //  secondary: Colors.blue, // Selected date background
+              // onSecondary: Colors.white, // Selected date text color
+            
         ),
-        child: child!,
-      );
-    },
-  );
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.blue, // Button text color
+              ),
+            ),
+                  iconTheme: IconThemeData(
+              color:
+                  Colors.blue, // Icon color (e.g., arrows in the date picker)
+            ),
   
-  if (picked != null && picked != selectedDate) {
-    setState(() {
-      selectedDate = picked;
-    });
-    _fetchGames(league);
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && picked != selectedDate) {
+      setState(() {
+        selectedDate = picked;
+      });
+      _fetchGames(league);
+    }
   }
-}
-
-
 
   Future<void> _fetchGames(league) async {
     isLoading = true;
     try {
       List<Game> fetchedGames;
 
-        if (selectedDate != null) {
+      if (selectedDate != null) {
         fetchedGames = await GamesMethods().fetchAllGames(
-            league, _showOnlyThisLeagueTodayGames,
-        
-                selectedDate: selectedDate,
-            );
+          league,
+          _showOnlyThisLeagueTodayGames,
+          selectedDate: selectedDate,
+        );
       } else {
         fetchedGames = await GamesMethods().fetchGamesForLeague(
           league,
-           selectedDate: selectedDate,
+          selectedDate: selectedDate,
         );
       }
 
@@ -282,12 +287,11 @@ Future<void> _selectDate(BuildContext context) async {
       }
     }
 
-
     if (newGuesses.isEmpty && updatedGuesses.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.noguessesfound)),
       );
-             setState(() {
+      setState(() {
         buttonLoading = false;
       });
       return;
@@ -336,7 +340,7 @@ Future<void> _selectDate(BuildContext context) async {
         SnackBar(content: Text("Failed to submit or update some guesses")),
       );
     }
-       setState(() {
+    setState(() {
       buttonLoading = false;
     });
   }
@@ -347,30 +351,27 @@ Future<void> _selectDate(BuildContext context) async {
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
-        // title: Text(
-        //   'games',
-        //   style: TextStyle(
-        //     color: white, // White color for the team names
-        //   ),
-        // ),
+        title: 
+           IconButton(
+          icon: Icon(Icons.calendar_month_rounded, color: Colors.white),
+          onPressed: () => _selectDate(context),
+        ),
         backgroundColor: Colors.transparent,
         actions: [
-
-              IconButton(
-            icon: Icon(Icons.calendar_today),
-            onPressed: () => _selectDate(context),
-          ),
+          
+    
+     
           Row(
             children: [
-               if (selectedDate != null)
+              if (selectedDate != null)
                 Text(
-                  AppLocalizations.of(context)!.thisleague,
+                  AppLocalizations.of(context)!.allleagus,
                   style: TextStyle(
                       color: white,
                       fontSize: 14 // White color for the team names
                       ),
                 ),
-         if (selectedDate != null)
+              if (selectedDate != null)
                 Transform.scale(
                   scale: 0.6,
                   child: Switch(
@@ -383,11 +384,32 @@ Future<void> _selectDate(BuildContext context) async {
                       // });
                       toggleshowOnlyThisLeagueTodayGames();
                     },
-                    activeColor: Colors.blue,
-                    inactiveThumbColor: Colors.white,
-                    inactiveTrackColor: Colors.grey,
+                    // activeColor: Colors.blue,
+                    // inactiveThumbColor: Colors.white,
+
+                    // inactiveTrackColor: Colors.blue,
+                    thumbColor: MaterialStateProperty.all(Colors.white),
+                    trackColor: MaterialStateProperty.resolveWith<Color>(
+                        (Set<MaterialState> states) {
+                      if (states.contains(MaterialState.selected)) {
+                        return Colors.blue;
+                      }
+                      return Colors.blue;
+                    }),
                   ),
                 ),
+              if (selectedDate != null)
+                Text(
+                  AppLocalizations.of(context)!.thisleague,
+                  style: TextStyle(
+                      color: white,
+                      fontSize: 14 // White color for the team names
+                      ),
+                ),
+              SizedBox(
+                width: 12.0,
+              )
+
               // Text(
               //   AppLocalizations.of(context)!.todayonly,
               //   style: TextStyle(
@@ -482,9 +504,8 @@ Future<void> _selectDate(BuildContext context) async {
         backgroundColor: buttonLoading ? Colors.blue : Colors.blue,
         foregroundColor: Colors.white,
         tooltip: 'Submit All Guesses', // Add a tooltip
-       child: buttonLoading
+        child: buttonLoading
             ? SizedBox(
-              
                 width: 24,
                 height: 24,
                 child: CircularProgressIndicator(
@@ -517,7 +538,6 @@ Future<void> _selectDate(BuildContext context) async {
           guess: guess,
           homeController: _guessControllers[game.fixtureId]?['home'],
           awayController: _guessControllers[game.fixtureId]?['away'],
-    
           onTap: (context) async {
             print(game.fixtureId);
             // Your onTap logic here
@@ -527,10 +547,9 @@ Future<void> _selectDate(BuildContext context) async {
                 context,
                 MaterialPageRoute(
                   builder: (context) => GameDetails(
-                    gameOriginalId: game.fixtureId,
-                    game: game,
-                    userId: clientId
-                  ),
+                      gameOriginalId: game.fixtureId,
+                      game: game,
+                      userId: clientId),
                 ),
               );
           },

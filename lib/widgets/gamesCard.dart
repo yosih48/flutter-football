@@ -86,16 +86,19 @@ class GameWidget extends StatelessWidget {
                   Expanded(
                     child: Align(
                       alignment: Alignment.centerLeft,
-                      child: Text(
-                        game.home.name,
-                        style: TextStyle(
-                          color: Colors.white, // White color for the team names
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13.0,
+                      child: GestureDetector(
+                            onTap: () => TeamLinkHandler.linkToTeam(game.home.name),
+                        child: Text(
+                          game.home.name,
+                          style: TextStyle(
+                            color: Colors.white, // White color for the team names
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13.0,
+                          ),
+                          overflow: TextOverflow.visible,
+                          maxLines: 2,
+                          textAlign: TextAlign.left,
                         ),
-                        overflow: TextOverflow.visible,
-                        maxLines: 2,
-                        textAlign: TextAlign.left,
                       ),
                     ),
                   ),
@@ -221,16 +224,19 @@ class GameWidget extends StatelessWidget {
                   Expanded(
                     child: Align(
                       alignment: Alignment.centerRight,
-                      child: Text(
-                        game.away.name,
-                        style: TextStyle(
-                          color: Colors.white, // White color for the team names
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13.0,
+                      child: GestureDetector(
+                                 onTap: () => TeamLinkHandler.linkToTeam(game.away.name),
+                        child: Text(
+                          game.away.name,
+                          style: TextStyle(
+                            color: Colors.white, // White color for the team names
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13.0,
+                          ),
+                          overflow: TextOverflow
+                              .visible, // Allow the text to wrap to the next line
+                          maxLines: 2, // Set the maximum number of lines
                         ),
-                        overflow: TextOverflow
-                            .visible, // Allow the text to wrap to the next line
-                        maxLines: 2, // Set the maximum number of lines
                       ),
                     ),
                   ),

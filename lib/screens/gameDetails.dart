@@ -10,6 +10,7 @@ import 'package:football/screens/profile.dart';
 import 'package:football/screens/table.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/widgets/SharedPreferences.dart';
+import 'package:football/widgets/teamLinks.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -180,7 +181,7 @@ class _GameDetailsState extends State<GameDetails> {
   Widget _buildGameCard() {
     return Card(
       color: cards,
-      margin: EdgeInsets.all(16.0),
+      margin: EdgeInsets.all(8.0),
       child: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
@@ -254,15 +255,18 @@ class _GameDetailsState extends State<GameDetails> {
         if (!isHome) _buildTeamLogo(team),
         SizedBox(width: 6.0),
         Flexible(
-          child: Text(
-            team.name,
-            style: TextStyle(
-              color: Colors.white, // White color for the team names
-              fontWeight: FontWeight.bold,
-              fontSize: 14.0,
+          child: GestureDetector(
+                 onTap: () => TeamLinkHandler.linkToTeam(team.name),
+            child: Text(
+              team.name,
+              style: TextStyle(
+                color: Colors.white, // White color for the team names
+                fontWeight: FontWeight.bold,
+                fontSize: 14.0,
+              ),
+              overflow: TextOverflow.ellipsis,
+              textAlign: isHome ? TextAlign.right : TextAlign.left,
             ),
-            overflow: TextOverflow.ellipsis,
-            textAlign: isHome ? TextAlign.right : TextAlign.left,
           ),
         ),
         if (isHome) ...[
@@ -274,10 +278,13 @@ class _GameDetailsState extends State<GameDetails> {
   }
 
   Widget _buildTeamLogo(Team team) {
-    return Image.network(
-      team.logo,
-      width: 24.0,
-      height: 24.0,
+    return GestureDetector(
+        onTap: () => TeamLinkHandler.linkToTeam(team.name),
+      child: Image.network(
+        team.logo,
+        width: 24.0,
+        height: 24.0,
+      ),
     );
   }
 

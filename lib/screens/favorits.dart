@@ -85,8 +85,8 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
   }
 
   Future<void> updateDatabase(name, email) async {
-  String _baseUrl = backendUrl;
-  //  const _baseUrl = 'https://leagues.onrender.com';
+    String _baseUrl = backendUrl;
+    //  const _baseUrl = 'https://leagues.onrender.com';
     print(leagueStates);
     final String url =
         '$_baseUrl/users/profile'; // Replace with your actual API endpoint
@@ -214,6 +214,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                         });
                         updateDatabase(name, email);
                       },
+                       thumbColor: MaterialStateProperty.all(Colors.white),
                       activeColor: Colors
                           .blue, // White color for the switch when it's on
                       inactiveThumbColor: Colors
