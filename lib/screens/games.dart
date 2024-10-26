@@ -14,6 +14,7 @@ import 'package:football/screens/gameDetails.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/utils/config.dart';
+import 'package:football/widgets/ToggleButtonsGames.dart';
 import 'package:football/widgets/gamesCard.dart';
 import 'package:football/widgets/teamSelect.dart';
 import 'package:football/widgets/toggleButton.dart';
@@ -434,6 +435,9 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       ),
       body: Column(
         children: [
+                 SizedBox(
+            height: 5,
+          ),
           ToggleButtonsSample(
             options: [
               AppLocalizations.of(context)!.championsleague,
@@ -447,6 +451,26 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               'https://media.api-sports.io/football/leagues/140.png',
               'https://media.api-sports.io/football/leagues/3.png', // Assuming this is Europa League
             ],
+            onSelectionChanged: updateSelectedIndex,
+            initialSelection: league == 2
+                ? 0
+                : league == 383
+                    ? 1
+                    : league == 140
+                        ? 2
+                        : 3,
+          ),
+               SizedBox(
+            height: 5,
+          ),
+          ToggleButtonsGames(
+            options: [
+          'משחקי היום',
+          'כל התוצאות',
+         
+          
+            ],
+      
             onSelectionChanged: updateSelectedIndex,
             initialSelection: league == 2
                 ? 0
