@@ -142,20 +142,18 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               primary: Colors.blue, // Header background color
               onPrimary: Colors.white, // Header text color
               onSurface: Colors.white, // Calendar text color
-                  //  secondary: Colors.blue, // Selected date background
+              //  secondary: Colors.blue, // Selected date background
               // onSecondary: Colors.white, // Selected date text color
-            
-        ),
+            ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
                 foregroundColor: Colors.blue, // Button text color
               ),
             ),
-                  iconTheme: IconThemeData(
+            iconTheme: IconThemeData(
               color:
                   Colors.blue, // Icon color (e.g., arrows in the date picker)
             ),
-  
           ),
           child: child!,
         );
@@ -352,16 +350,29 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
-        title: 
-           IconButton(
-          icon: Icon(Icons.calendar_month_rounded, color: Colors.white),
+        title: IconButton(
+          icon: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(Icons.calendar_today, color: Colors.white, size: 28),
+              if (selectedDate != null)
+                Positioned(
+                  bottom: 3,
+                  child: Text(
+                    '${selectedDate!.day}',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           onPressed: () => _selectDate(context),
         ),
         backgroundColor: Colors.transparent,
         actions: [
-          
-    
-     
           Row(
             children: [
               if (selectedDate != null)
@@ -435,7 +446,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       ),
       body: Column(
         children: [
-                 SizedBox(
+          SizedBox(
             height: 5,
           ),
           ToggleButtonsSample(
@@ -460,17 +471,14 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                         ? 2
                         : 3,
           ),
-               SizedBox(
+          SizedBox(
             height: 5,
           ),
           ToggleButtonsGames(
             options: [
-          'משחקי היום',
-          'כל התוצאות',
-         
-          
+              'משחקי היום',
+              'כל התוצאות',
             ],
-      
             onSelectionChanged: updateSelectedIndex,
             initialSelection: league == 2
                 ? 0
