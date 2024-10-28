@@ -14,7 +14,7 @@ import 'package:football/screens/gameDetails.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/utils/config.dart';
-import 'package:football/widgets/ToggleButtonsGames.dart';
+
 import 'package:football/widgets/gamesCard.dart';
 import 'package:football/widgets/teamSelect.dart';
 import 'package:football/widgets/toggleButton.dart';
@@ -98,7 +98,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     clientId = widget.authProvider.currentUser?.id ?? 'Not logged in';
     email = widget.authProvider.currentUser?.email ?? 'Not logged in';
     league = widget.userProvider.selectedLeageId ?? 2;
-
+    selectedDate = DateTime.now().copyWith(
+        hour: 0, minute: 0, second: 0, millisecond: 0, microsecond: 0);
     print('clientId in games: ${clientId}');
 
     print(email);
@@ -135,6 +136,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       initialDate: selectedDate ?? DateTime.now(),
       firstDate: DateTime(2024),
       lastDate: DateTime(2025),
+      //  helpText: 'Select date', // Optional: customize header text
+      // locale: Locale('en', ''),
       builder: (BuildContext context, Widget? child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -155,14 +158,20 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                   Colors.blue, // Icon color (e.g., arrows in the date picker)
             ),
           ),
-          child: child!,
+          child: child ?? Container(),
         );
       },
+         cancelText: AppLocalizations.of(context)!.cleardate, 
     );
 
     if (picked != null && picked != selectedDate) {
       setState(() {
         selectedDate = picked;
+      });
+      _fetchGames(league);
+    }else if (picked == null) {
+      setState(() {
+        selectedDate = null;
       });
       _fetchGames(league);
     }
@@ -174,11 +183,14 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       List<Game> fetchedGames;
 
       if (selectedDate != null) {
+        print('selectedDate != null');
+        print(selectedDate);
         fetchedGames = await GamesMethods().fetchAllGames(
           league,
           _showOnlyThisLeagueTodayGames,
           selectedDate: selectedDate,
         );
+        print(fetchedGames);
       } else {
         fetchedGames = await GamesMethods().fetchGamesForLeague(
           league,
@@ -474,23 +486,23 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           SizedBox(
             height: 5,
           ),
-          ToggleButtonsGames(
-            options: [
-              'משחקי היום',
-              'כל התוצאות',
-            ],
-            onSelectionChanged: updateSelectedIndex,
-            initialSelection: league == 2
-                ? 0
-                : league == 383
-                    ? 1
-                    : league == 140
-                        ? 2
-                        : 3,
-          ),
-          SizedBox(
-            height: 5,
-          ),
+          // ToggleButtonsGames(
+          //   options: [
+          //     'משחקי היום',
+          //     'כל התוצאות',
+          //   ],
+          //   onSelectionChanged: updateSelectedIndex,
+          //   initialSelection: league == 2
+          //       ? 0
+          //       : league == 383
+          //           ? 1
+          //           : league == 140
+          //               ? 2
+          //               : 3,
+          // ),
+          // SizedBox(
+          //   height: 5,
+          // ),
           Row(
             // mainAxisAlignment: MainAxisAlignment.center,
             children: [
