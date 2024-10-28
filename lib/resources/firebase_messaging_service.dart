@@ -1,5 +1,12 @@
+
+
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:football/main.dart';
+import 'package:football/models/games.dart';
+import 'package:football/resources/gamesMethods.dart';
+import 'package:football/screens/gameDetails.dart';
 
 class FirebaseMessagingService {
   static final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
@@ -64,4 +71,40 @@ class FirebaseMessagingService {
       );
     }
   }
+
+
+
+Future<void> setupNotifications() async {
+    // Handle notification when app is in background
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      handleNotificationNavigation(message.data);
+    });
+
+    // Handle notification when app is terminated
+    FirebaseMessaging.instance
+        .getInitialMessage()
+        .then((RemoteMessage? message) {
+      if (message != null) {
+        handleNotificationNavigation(message.data);
+      }
+    });
+
+    // Handle notification when app is in foreground
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      // Show local notification or handle as needed
+      // You might want to show a custom dialog or snackbar here
+     
+    });
+  }
+
+
+
+
+
+
+
+
+
+
+
 }
