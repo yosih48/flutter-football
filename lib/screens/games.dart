@@ -184,13 +184,13 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
       if (selectedDate != null) {
         print('selectedDate != null');
-        print(selectedDate);
+      
         fetchedGames = await GamesMethods().fetchAllGames(
           league,
           _showOnlyThisLeagueTodayGames,
           selectedDate: selectedDate,
         );
-        print(fetchedGames);
+       
       } else {
         fetchedGames = await GamesMethods().fetchGamesForLeague(
           league,
@@ -542,7 +542,16 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                           ),
                         ),
                       )
-                    : listView(_games),
+                    : RefreshIndicator(
+                        onRefresh: () async {
+                          // Add your refresh logic here
+                          // This function must return a Future
+                          await Future.delayed(
+                              Duration(seconds: 1)); // Example delay
+                    _fetchGames(league);
+                        },
+                        
+                        child: listView(_games)),
           ),
         ],
       ),
@@ -567,6 +576,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
   ListView listView(List<Game> filteredGames) {
     return ListView.separated(
+         physics: AlwaysScrollableScrollPhysics(),
       itemCount: filteredGames.length,
       itemBuilder: (BuildContext context, int index) {
         final game = filteredGames[index];
