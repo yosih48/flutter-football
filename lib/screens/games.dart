@@ -161,7 +161,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           child: child ?? Container(),
         );
       },
-         cancelText: AppLocalizations.of(context)!.cleardate, 
+      cancelText: AppLocalizations.of(context)!.cleardate,
     );
 
     if (picked != null && picked != selectedDate) {
@@ -169,7 +169,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         selectedDate = picked;
       });
       _fetchGames(league);
-    }else if (picked == null) {
+    } else if (picked == null) {
       setState(() {
         selectedDate = null;
       });
@@ -359,6 +359,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   @override
   Widget build(BuildContext context) {
     //  checkForUpdates(context);
+   
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
@@ -389,17 +390,19 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             children: [
               if (selectedDate != null)
                 Text(
-                  AppLocalizations.of(context)!.allleagus,
+                  AppLocalizations.of(context)!.thisleague,
                   style: TextStyle(
                       color: white,
                       fontSize: 14 // White color for the team names
                       ),
                 ),
+
               if (selectedDate != null)
                 Transform.scale(
                   scale: 0.6,
                   child: Switch(
-                    value: _showOnlyThisLeagueTodayGames,
+                    value: !_showOnlyThisLeagueTodayGames,
+                    // value: false,
                     onChanged: (value) {
                       // setState(() {
                       //  _showOnlyThisLeagueTodayGames = value;
@@ -424,7 +427,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                 ),
               if (selectedDate != null)
                 Text(
-                  AppLocalizations.of(context)!.thisleague,
+                  AppLocalizations.of(context)!.allleagus,
                   style: TextStyle(
                       color: white,
                       fontSize: 14 // White color for the team names
