@@ -26,114 +26,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Don't call Firebase.initializeApp() here
-  print("Handling a background message: ${message.messageId}");
-}
-
-Future<void> setupFirebaseMessaging() async {
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-
-  const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
-
-  final InitializationSettings initializationSettings = InitializationSettings(
-    android: initializationSettingsAndroid,
-    iOS: null,
-  );
-
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    RemoteNotification? notification = message.notification;
-    AndroidNotification? android = message.notification?.android;
-
-    if (notification != null && android != null) {
-      flutterLocalNotificationsPlugin.show(
-        notification.hashCode,
-        notification.title,
-        notification.body,
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            'high_importance_channel',
-            'High Importance Notifications',
-            importance: Importance.max,
-            priority: Priority.high,
-          ),
-        ),
-      );
-    }
-  });
-  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-    print('A new onMessageOpenedApp event was published!');
-    _handleMessage(message);
-  });
-
-  // Add this: Check if the app was opened from a notification when it was terminated
-  FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
-    if (message != null) {
-      print('App opened from terminated state');
-      _handleMessage(message);
-    }
-  });
-}
-
-void _handleMessage(RemoteMessage message) {
-  if (message.data['screen'] == 'game_details') {
-    navigatorKey.currentState?.pushNamed('/game_details');
-  }
-}
-
-Future<List<Game>> _fetchGames(int league) async {
-  return await GamesMethods().fetchGamesForLeague(
-    league,
-    selectedDate: DateTime.now().copyWith(
-        hour: 0, minute: 0, second: 0, millisecond: 0, microsecond: 0),
-  );
-}
 
 
-
-
-
-
-
-
-
-
-
-
-void handleNotificationNavigation(Map<String, dynamic> data) async {
-  print('handleNotificationNavigation');
-  print(data);
-  if (data['screen'] == 'game_points_details') {
-    int gameId = int.parse(data['gameId']);
-    int leagueId = int.parse(data['league']);
-     print(data['league']);
-     print(data['gameId']);
-     print(data['userId']);
-     print(data['screen']);
-    // Fetch the list of games for the league
-    List<Game> fetchedGames = await _fetchGames(leagueId);
-    // Create a Game object from the notification data
-    // Find the specific game by ID
-    Game? game = fetchedGames.firstWhere(
-      (g) => g.fixtureId == gameId,
-    );
-
-    // Navigate to GameDetails screen
-    Navigator.of(navigatorKey.currentContext!).push(
-      MaterialPageRoute(
-        builder: (context) => GameDetails(
-          gameOriginalId: int.parse(data['gameId']),
-          game: game,
-          userId: data['userId'],
-        ),
-      ),
-    );
-  }
-}
 
 void main() async {
   // Ensure that plugin services are initialized
@@ -145,9 +39,7 @@ void main() async {
   final storage = FlutterSecureStorage();
 
   await Firebase.initializeApp();
-  FirebaseMessaging.onBackgroundMessage(
-    _firebaseMessagingBackgroundHandler,
-  );
+
   await FirebaseMessagingService.initialize();
   // You can now use the storage in your AuthProvider if needed
   runApp(
