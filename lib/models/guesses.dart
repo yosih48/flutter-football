@@ -15,6 +15,7 @@ class Guess {
   final DateTime updatedAt;
   final int? direct;
   final int? direction;
+  
 
   Guess({
     required this.id,
@@ -31,6 +32,7 @@ class Guess {
     required this.updatedAt,
     this.direct,
     this.direction,
+    
   });
 
   factory Guess.fromJson(Map<String, dynamic> json) {

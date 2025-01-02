@@ -135,7 +135,9 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       context: context,
       initialDate: selectedDate ?? DateTime.now(),
       firstDate: DateTime(2024),
-      lastDate: DateTime(2025),
+      // lastDate: DateTime(2025),
+       lastDate: DateTime(DateTime.now().year + 1),
+      
       //  helpText: 'Select date', // Optional: customize header text
       // locale: Locale('en', ''),
       builder: (BuildContext context, Widget? child) {
