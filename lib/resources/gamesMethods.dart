@@ -92,13 +92,15 @@ class GamesMethods {
      if (leagueId == 2 || leagueId == 848 || leagueId == 3) {
             return isNotPostponedOrTBD &&
                 ((hasOdds &&
-                        !game.league.round.contains("Qualifying") &&
-                        !game.league.round.contains("Play-offs") &&
+                        !game.league.round.contains("Qualifying")
+                        && game.league.round != "Play-offs"
+                        &&
                         // (!onlyTodayGames || isToday)) ||
                         (    isSelectedDate)) ||
                     (isFinished &&
-                        !game.league.round.contains("Qualifying") &&
-                        !game.league.round.contains("Play-offs") &&
+                        !game.league.round.contains("Qualifying") 
+                        && game.league.round != "Play-offs"
+                        &&
                         // (!onlyTodayGames || isToday)));
                         (    isSelectedDate)));
           }
