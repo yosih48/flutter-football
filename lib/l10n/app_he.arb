@@ -108,6 +108,10 @@
      "later": "מאוחר יותר",
      "update": "עדכן",
       "allleagus": "כל הליגות",
-    "cleardate": "נקה סינון"
+    "cleardate": "נקה סינון",
+     "statistics": "סטטיסטיקות",
+      "totalGuesses": "סה\"כ ניחושים",
+     "directGuesses": "סה\"כ ניחושים מדוייקים",
+     "directionGuesses": "סה\"כ ניחושי כיוון"
              
 }

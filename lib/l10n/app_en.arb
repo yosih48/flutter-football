@@ -109,7 +109,11 @@
      "later": "Later",
      "update": "Update",
      "allleagus": "All Leagus",
-     "cleardate": "Clear date"
+     "cleardate": "Clear date",
+     "statistics": "Statistics",
+     "totalGuesses": "Total Guesses",
+     "directGuesses": "Direct Guesses",
+     "directionGuesses": "Direction Guesses"
     
 
 

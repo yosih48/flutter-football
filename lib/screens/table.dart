@@ -12,6 +12,7 @@ import 'package:football/resources/groupsMethods.dart';
 import 'package:football/resources/guessesMethods.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/login_screen.dart';
+import 'package:football/screens/statistics.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/widgets/SharedPreferences.dart';
 import 'package:football/widgets/toggleButton.dart';
@@ -427,6 +428,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                       ],
                       rows: _users
                           .map((user) => DataRow(
+                     
                                 cells: [
                                   DataCell(
                                     Center(
@@ -436,6 +438,17 @@ class TableScreenContentState extends State<TableScreenContent> {
                                         style: TextStyle(color: Colors.white),
                                       ),
                                     ),
+                                         onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => Statistics(
+                                            userId: user['_id'],
+                                            leagueId: league,
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
                                   DataCell(
                                     Center(
@@ -448,6 +461,17 @@ class TableScreenContentState extends State<TableScreenContent> {
                                         style: TextStyle(color: Colors.white),
                                       ),
                                     ),
+                                                   onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => Statistics(
+                                            userId: user['_id'],
+                                            leagueId: league,
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
                                   DataCell(
                                     Center(
@@ -459,6 +483,17 @@ class TableScreenContentState extends State<TableScreenContent> {
                                         style: TextStyle(color: Colors.white),
                                       ),
                                     ),
+                                                   onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => Statistics(
+                                            userId: user['_id'],
+                                            leagueId: league,
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ],
                               ))
