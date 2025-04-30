@@ -477,9 +477,9 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                       case 3:
                         return AppLocalizations.of(context)!.europaleague;
                       case 39:
-                        return 'Premier League';
+                        return AppLocalizations.of(context)!.premierleague;
                       case 78:
-                        return 'Bundesliga';
+                        return  AppLocalizations.of(context)!.bundesleague;
                       default:
                         return '';
                     }

@@ -74,11 +74,9 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     final sharedGroupName = await SharedPreferencesUtil.getSelectedGroupName();
     String groupName = defaultGroup;
     if (sharedGroupName == null) {
-
       await SharedPreferencesUtil.setSelectedGroupName(defaultGroup);
       groupName = defaultGroup; // Assign defaultGroup manually
     } else {
-
       groupName = sharedGroupName;
     }
 
@@ -169,17 +167,16 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                   AppLocalizations.of(context)!.leave,
                   style: TextStyle(color: Colors.blue),
                 ),
-                onPressed: ()async {
-                  final sharedGroupName = await SharedPreferencesUtil.getSelectedGroupName();
-    
+                onPressed: () async {
+                  final sharedGroupName =
+                      await SharedPreferencesUtil.getSelectedGroupName();
+
                   Navigator.of(context).pop(true);
-                if(sharedGroupName == groupName){
-           await SharedPreferencesUtil.setSelectedGroupName(
-                        'public');
+                  if (sharedGroupName == groupName) {
+                    await SharedPreferencesUtil.setSelectedGroupName('public');
 
-                   _loadSelectedGroupName();
-                }
-
+                    _loadSelectedGroupName();
+                  }
                 }),
           ],
         );
@@ -371,8 +368,6 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   @override
   Widget build(BuildContext context) {
     final allowedGroupIds = {'383', '2', '140', '3'};
-
-// Filter the _userWinners based on allowedGroupIds
     final filteredWinners = _userWinners.entries
         .where((entry) => allowedGroupIds.contains(entry.key))
         .fold<Map<String, String>>({}, (map, entry) {
@@ -381,25 +376,26 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     });
     final selectedGroup = Provider.of<UserProvider>(context);
 
-    print('selectedGroup : ${selectedGroup.selectedGroupName}');
-
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
-        // title: Text(AppLocalizations.of(context)!.mygroups, style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
+          Container(
+            margin: EdgeInsets.only(right: 16),
             child: TextButton.icon(
-              icon: Icon(Icons.exit_to_app, color: Colors.white),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.red.withOpacity(0.1),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+              icon: Icon(Icons.exit_to_app, color: Colors.red),
               label: Text(
                 AppLocalizations.of(context)!.signout,
-                style: TextStyle(color: Colors.white),
-              ),
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
+                style: TextStyle(color: Colors.red),
               ),
               onPressed: () async {
                 final authProvider =
@@ -428,7 +424,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                         TextButton(
                           child: Text(
                             AppLocalizations.of(context)!.yes,
-                            style: TextStyle(color: Colors.blue),
+                            style: TextStyle(color: Colors.red),
                           ),
                           onPressed: () => Navigator.of(context).pop(true),
                         ),
@@ -441,9 +437,6 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                   Provider.of<UserProvider>(context, listen: false)
                       .setSelectedGroupName('public');
                   await authProvider.signOut(currentUserId);
-                  if (context.mounted) {
-                    // Perform any additional actions if needed
-                  }
                 }
               },
             ),
@@ -461,59 +454,115 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
         ),
         child: SingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                  height: kToolbarHeight +
-                      60), // This accommodates the AppBar height
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              SizedBox(height: kToolbarHeight + 20),
+
+              // Profile Header
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(AppLocalizations.of(context)!.mygroups,
-                        style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold)),
-                    TextButton.icon(
-                      icon: Icon(Icons.add),
-                      label: Text(
-                        AppLocalizations.of(context)!.createnewgroup,
-                        style: TextStyle(
-                            color: Colors.white), // Change the color here
+                    Text(
+                      AppLocalizations.of(context)!.mygroups,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
                       ),
-                      onPressed: _showCreateGroupDialog,
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors
-                            .white, // This changes the color of the icon and text
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      "Manage your groups and competitions",
+                      style: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 14,
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),
-              //  SizedBox(height: 10),
-              usersGroups(selectedGroup),
-              SizedBox(
-                height: 4,
+
+              SizedBox(height: 24),
+
+              // Create Group Button
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: 16),
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  icon: Icon(Icons.add_circle_outline),
+                  label: Text(
+                    AppLocalizations.of(context)!.createnewgroup,
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  onPressed: _showCreateGroupDialog,
+                ),
               ),
-              if (_userWinners.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+              SizedBox(height: 24),
+
+              // Groups List
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: cards.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: usersGroups(selectedGroup),
+              ),
+
+              SizedBox(height: 24),
+
+              // Winners Section
+              if (_userWinners.isNotEmpty) ...[
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(AppLocalizations.of(context)!.yourwinners,
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold)),
+                      Text(
+                        AppLocalizations.of(context)!.yourwinners,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        "Your winning predictions",
+                        style: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: 14,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              SizedBox(
-                height: 6,
-              ),
-              if (_userWinners.isNotEmpty)
-                usersWinners(
+                SizedBox(height: 16),
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: cards.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: usersWinners(
                     userWinners: _userWinners,
-                    filteredWinners: filteredWinners),
+                    filteredWinners: filteredWinners,
+                  ),
+                ),
+              ],
+
+              SizedBox(height: 24),
             ],
           ),
         ),
@@ -521,17 +570,33 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     );
   }
 
-  usersGroups(UserProvider selectedGroup) {
+  Widget usersGroups(UserProvider selectedGroup) {
     return _userGroups.isEmpty
         ? Center(
-            child: CircularProgressIndicator(
-            color: Colors.transparent,
-          ))
-        : ListView.builder(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.group_outlined, size: 48, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    "No groups yet",
+                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+          )
+        : ListView.separated(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
-            padding: EdgeInsets.zero,
+            padding: EdgeInsets.all(8),
             itemCount: _userGroups.length,
+            separatorBuilder: (context, index) => Divider(
+              color: Colors.white.withOpacity(0.1),
+              height: 1,
+            ),
             itemBuilder: (context, index) {
               String groupId = _userGroups.keys.elementAt(index);
               String groupName = _userGroups.values.elementAt(index);
@@ -539,72 +604,61 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                   group['name'] == groupName &&
                       group['createdBy'] == currentUserId ||
                   groupName == 'public');
-              return InkWell(
+
+              return ListTile(
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) =>
-                            TableScreen(selectedGroupName: groupName)),
+                      builder: (context) =>
+                          TableScreen(selectedGroupName: groupName),
+                    ),
                   );
                 },
-                child: Card(
-                  child: ListTile(
-                    tileColor: cards,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.grey,
-                      child: Text(groupName[0],
-                          style: TextStyle(color: Colors.white)),
-                      radius: 18,
-                    ),
-                    title: Text(
-                      groupName,
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                      textAlign: TextAlign.right,
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize
-                          .min, // Ensures the Row takes up only the necessary width
-                      children: [
-                        !isCreator
-                            ? IconButton(
-                                icon: Icon(Icons.exit_to_app,
-                                    color: Colors.white),
-                                onPressed: () {
-                                  leaveGroup(groupName);
-                                  print('Exiting group: $groupName');
-                                },
-                              )
-                            : Opacity(
-                                opacity: 0.0, // Makes the button invisible
-                                child: IconButton(
-                                  icon: Icon(Icons
-                                      .exit_to_app), // Same icon as the visible button
-                                  onPressed: () {}, // No action required
-                                ),
-                              ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.star,
-                            color: selectedGroupName == groupName
-                                ? Colors.amber
-                                : Colors.white,
-                          ),
-                          onPressed: () async {
-                            selectedGroup.setSelectedGroupName(groupName);
-                            final prefs = await SharedPreferences.getInstance();
-                            await prefs.setString(
-                                'selectedGroupName', groupName);
-                            _loadSelectedGroupName();
-                            print(' set groupName: ${groupName}');
-                            // Navigate back or show a confirmation
-                          },
-                        ),
-                      ],
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                leading: CircleAvatar(
+                  backgroundColor: Colors.blue.withOpacity(0.1),
+                  child: Text(
+                    groupName[0].toUpperCase(),
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
+                ),
+                title: Text(
+                  groupName,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!isCreator)
+                      IconButton(
+                        icon: Icon(Icons.exit_to_app,
+                            color: Colors.red.withOpacity(0.7)),
+                        onPressed: () => leaveGroup(groupName),
+                      ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.star,
+                        color: selectedGroupName == groupName
+                            ? Colors.amber
+                            : Colors.grey.withOpacity(0.5),
+                      ),
+                      onPressed: () async {
+                        selectedGroup.setSelectedGroupName(groupName);
+                        await SharedPreferences.getInstance().then((prefs) =>
+                            prefs.setString('selectedGroupName', groupName));
+                        _loadSelectedGroupName();
+                      },
+                    ),
+                  ],
                 ),
               );
             },
@@ -625,51 +679,107 @@ class usersWinners extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _userWinners.isEmpty
-        ? Center(child: CircularProgressIndicator())
-        : ListView.builder(
+        ? Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.emoji_events_outlined,
+                      size: 48, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    "No winners yet",
+                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+          )
+        : ListView.separated(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
-            padding: EdgeInsets.zero,
+            padding: EdgeInsets.all(8),
             itemCount: filteredWinners.length,
+            separatorBuilder: (context, index) => Divider(
+              color: Colors.white.withOpacity(0.1),
+              height: 1,
+            ),
             itemBuilder: (context, index) {
               String groupId = filteredWinners.keys.elementAt(index);
               String groupName = filteredWinners.values.elementAt(index);
 
-              return Card(
-                child: ListTile(
-                  tileColor: cards,
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.grey,
-                    child: Text(groupName[0],
-                        style: TextStyle(color: Colors.white)),
-                    radius: 18,
+              String leagueName = '';
+              Color leagueColor = Colors.blue;
+
+              switch (groupId) {
+                case '2':
+                  leagueName = AppLocalizations.of(context)!.championsleague;
+                  leagueColor = Colors.blue;
+                  break;
+                case '383':
+                  leagueName = AppLocalizations.of(context)!.ligathaal;
+                  leagueColor = Colors.green;
+                  break;
+                case '140':
+                  leagueName = AppLocalizations.of(context)!.laliga;
+                  leagueColor = Colors.orange;
+                  break;
+                case '3':
+                  leagueName = AppLocalizations.of(context)!.europaleague;
+                  leagueColor = Colors.purple;
+                  break;
+              }
+
+              return ListTile(
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: leagueColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  title: Row(
-                    mainAxisSize: MainAxisSize
-                        .min, // Ensures the Row takes up only the necessary width
-                    children: [
-                      Text(
-                        groupId == '2'
-                            ? AppLocalizations.of(context)!.championsleague
-                            : groupId == '383'
-                                ? AppLocalizations.of(context)!.ligathaal
-                                : groupId == '140'
-                                    ? AppLocalizations.of(context)!.laliga
-                                    : AppLocalizations.of(context)!
-                                        .europaleague,
-                        style: TextStyle(
-                            color: white,
-                            fontSize: 14.0 // White color for the team names
-                            ),
-                      ),
-                    ],
+                  child: Center(
+                    child: Image.network(
+                      'https://media.api-sports.io/football/leagues/$groupId.png',
+                      width: 24,
+                      height: 24,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(Icons.emoji_events, color: leagueColor);
+                      },
+                    ),
                   ),
-                  trailing: Text(
+                ),
+                title: Text(
+                  leagueName,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                subtitle: Text(
+                  "Your prediction",
+                  style: TextStyle(
+                    color: Colors.grey[400],
+                    fontSize: 12,
+                  ),
+                ),
+                trailing: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: leagueColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
                     groupName,
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      color: leagueColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
               );
