@@ -15,6 +15,7 @@ class GameWidget extends StatelessWidget {
   final Function(BuildContext) onTap;
   final TextEditingController? homeController;
   final TextEditingController? awayController;
+  
   GameWidget({
     required this.game,
     this.guess,
