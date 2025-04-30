@@ -117,7 +117,10 @@
      "directGuesses": "Direct Guesses",
      "directionGuesses": "Direction Guesses",
      "send": "send",
-     "chooseleagues": "my Leagues"
+     "chooseleagues": "my Leagues",
+     "managegroups": "Manage your groups and competitions",
+     "winningpredictions": "Your winning predictions",
+     "yourprediction": "Your prediction"
     
 
 

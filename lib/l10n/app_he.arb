@@ -116,5 +116,8 @@
      "directGuesses": "ניחושים מדוייקים",
      "directionGuesses": "ניחושי כיוון",
      "send": "שלח",
-    "chooseleagues": "הליגות שלי"
+    "chooseleagues": "הליגות שלי",
+      "managegroups": "ניהול הקבוצות והתחרויות שלך",
+  "winningpredictions": "ניחושי הזוכות שלך",
+  "yourprediction": "הזוכה שלך"
 }

@@ -468,23 +468,23 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                       AppLocalizations.of(context)!.mygroups,
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 24,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 8),
-                    Text(
-                      "Manage your groups and competitions",
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 14,
-                      ),
-                    ),
+                    // SizedBox(height: 8),
+                    // Text(
+                    //   AppLocalizations.of(context)!.managegroups,
+                    //   style: TextStyle(
+                    //     color: Colors.grey[400],
+                    //     fontSize: 14,
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
 
-              SizedBox(height: 24),
+              SizedBox(height: 16),
 
               // Create Group Button
               Container(
@@ -533,18 +533,18 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                         AppLocalizations.of(context)!.yourwinners,
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 24,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 8),
-                      Text(
-                        "Your winning predictions",
-                        style: TextStyle(
-                          color: Colors.grey[400],
-                          fontSize: 14,
-                        ),
-                      ),
+                      // SizedBox(height: 8),
+                      // Text(
+                      //   AppLocalizations.of(context)!.winningpredictions,
+                      //   style: TextStyle(
+                      //     color: Colors.grey[400],
+                      //     fontSize: 14,
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),
@@ -761,7 +761,7 @@ class usersWinners extends StatelessWidget {
                   ),
                 ),
                 subtitle: Text(
-                  "Your prediction",
+                  AppLocalizations.of(context)!.yourprediction,
                   style: TextStyle(
                     color: Colors.grey[400],
                     fontSize: 12,
