@@ -342,37 +342,59 @@ class TableScreenContentState extends State<TableScreenContent> {
               children: [
                 Container(
                   margin: EdgeInsets.symmetric(vertical: 8),
-                  child: ToggleButtonsSample(
-                    options: [
-                      AppLocalizations.of(context)!.championsleague,
-                      AppLocalizations.of(context)!.ligathaal,
-                      AppLocalizations.of(context)!.laliga,
-                      AppLocalizations.of(context)!.europaleague,
-                      'Premier League',
-                      'Bundesliga',
-                    ],
-                    imageUrls: [
-                      'https://media.api-sports.io/football/leagues/2.png',
-                      'https://media.api-sports.io/football/leagues/383.png',
-                      'https://media.api-sports.io/football/leagues/140.png',
-                      'https://media.api-sports.io/football/leagues/3.png',
-                      'https://media.api-sports.io/football/leagues/39.png',
-                      'https://media.api-sports.io/football/leagues/78.png',
-                    ],
-                    onSelectionChanged: updateSelectedIndex,
-                    initialSelection: league == 2
-                        ? 0
-                        : league == 383
-                            ? 1
-                            : league == 140
-                                ? 2
-                                : league == 3
-                                    ? 3
-                                    : league == 39
-                                        ? 4
-                                        : league == 78
-                                            ? 5
-                                            : 0,
+                  child: FutureBuilder<Map<String, dynamic>>(
+                    future: UsersMethods().fetchUserById(currentUserId),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        final userData = snapshot.data!;
+                        final chosenLeagues = Map<String, bool>.from(
+                            userData['chosenLeagues'] ?? {});
+
+                        // Create filtered lists based on chosen leagues
+                        final enabledLeagues = <int>[
+                          if (chosenLeagues['2'] == true) 2,
+                          if (chosenLeagues['383'] == true) 383,
+                          if (chosenLeagues['140'] == true) 140,
+                          if (chosenLeagues['3'] == true) 3,
+                          if (chosenLeagues['39'] == true) 39,
+                          if (chosenLeagues['78'] == true) 78,
+                        ];
+
+                        final options = enabledLeagues.map((id) {
+                          switch (id) {
+                            case 2:
+                              return AppLocalizations.of(context)!
+                                  .championsleague;
+                            case 383:
+                              return AppLocalizations.of(context)!.ligathaal;
+                            case 140:
+                              return AppLocalizations.of(context)!.laliga;
+                            case 3:
+                              return AppLocalizations.of(context)!.europaleague;
+                            case 39:
+                              return 'Premier League';
+                            case 78:
+                              return 'Bundesliga';
+                            default:
+                              return '';
+                          }
+                        }).toList();
+
+                        final imageUrls = enabledLeagues.map((id) {
+                          return 'https://media.api-sports.io/football/leagues/$id.png';
+                        }).toList();
+
+                        return ToggleButtonsSample(
+                          options: options,
+                          imageUrls: imageUrls,
+                          onSelectionChanged: (index) {
+                            updateSelectedIndex(index);
+                          },
+                          initialSelection: enabledLeagues.indexOf(league),
+                        );
+                      }
+                      return CircularProgressIndicator();
+                    },
                   ),
                 ),
                 Container(

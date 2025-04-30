@@ -62,7 +62,7 @@
     "yes": "yes",
     "signout": "Sign Out",
     "notifications": "Notifications",
-    "chooseallcompetitions": "Choose All Competitions",
+    "chooseallcompetitions": "Choose All Leagues",
     "joingrouptoseefreinds": "Join Group To See Freinds Guesses",
     "username": "User Name",
     "guess": "Guess",
@@ -75,6 +75,8 @@
     "ligathaal": "Ligat Haal",
     "europaleague": "Europa League",
     "laliga": "La Liga",
+     "bundesleague": "bundes League",
+    "premierleague": "premier League",
     "nogames": "No games",
     "invitefriend": "Invite Friend",
     "invitecodecopy": "Invite code copied to clipboard:",
@@ -114,7 +116,8 @@
      "totalGuesses": "Total Guesses",
      "directGuesses": "Direct Guesses",
      "directionGuesses": "Direction Guesses",
-     "send": "send"
+     "send": "send",
+     "chooseleagues": "my Leagues"
     
 
 

@@ -61,7 +61,7 @@
     "yes": "כן",
     "signout": "התנתק",
     "notifications": "התראות",
-    "chooseallcompetitions": "בחירת כל התחרויות",
+    "chooseallcompetitions": "בחירת כל הליגות",
     "joingrouptoseefreinds": "הצטרף לקבוצה כדי לראות ניחושים של חברים",
     "name": " שם",
     "guess": "ניחוש",
@@ -74,6 +74,8 @@
     "ligathaal": "ליגת העל",
     "europaleague": "ליגה אירופית",
     "laliga": "ליגה ספרדית",
+    "bundesleague": "ליגה גרמנית",
+    "premierleague": "ליגה אנגלית",
     "nogames": "אין משחקים",
      "invitefriend": "הזמן חברים",
     "invitecodecopy": "קוד הזמנה הועתק ללוח:",
@@ -113,6 +115,6 @@
       "totalGuesses": "סה\"כ ניחושים",
      "directGuesses": "ניחושים מדוייקים",
      "directionGuesses": "ניחושי כיוון",
-     "send": "שלח"
-             
+     "send": "שלח",
+    "chooseleagues": "הליגות שלי"
 }
