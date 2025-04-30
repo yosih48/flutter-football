@@ -77,12 +77,18 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     setState(() {
       isLoading = true;
       league = index == 0
-          ? 2
+          ? 2 // Champions League
           : index == 1
-              ? 383
+              ? 383 // Ligat Ha'al
               : index == 2
-                  ? 140
-                  : 3;
+                  ? 140 // La Liga
+                  : index == 3
+                      ? 3 // Europa League
+                      : index == 4
+                          ? 39 // Premier League
+                          : index == 5
+                              ? 78 // Bundesliga
+                              : 2; // Default to Champions League
 
       selectedIndex = index;
 
@@ -131,51 +137,52 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: selectedDate ?? DateTime.now(),
-      firstDate: DateTime(2024),
-      // lastDate: DateTime(2025),
-       lastDate: DateTime(DateTime.now().year + 1),
-      
-      //  helpText: 'Select date', // Optional: customize header text
-      // locale: Locale('en', ''),
-      builder: (BuildContext context, Widget? child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.dark(
-              primary: Colors.blue, // Header background color
-              onPrimary: Colors.white, // Header text color
-              onSurface: Colors.white, // Calendar text color
-              //  secondary: Colors.blue, // Selected date background
-              // onSecondary: Colors.white, // Selected date text color
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.blue, // Button text color
+    try {
+      final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: selectedDate ?? DateTime.now(),
+        firstDate: DateTime(2024),
+        lastDate: DateTime(DateTime.now().year + 1),
+        builder: (BuildContext context, Widget? child) {
+          return Theme(
+            data: ThemeData.dark().copyWith(
+              colorScheme: ColorScheme.dark(
+                primary: Colors.blue,
+                onPrimary: Colors.white,
+                surface: Color(0xFF303030),
+                onSurface: Colors.white,
               ),
+              dialogBackgroundColor: Color(0xFF303030),
             ),
-            iconTheme: IconThemeData(
-              color:
-                  Colors.blue, // Icon color (e.g., arrows in the date picker)
-            ),
-          ),
-          child: child ?? Container(),
-        );
-      },
-      cancelText: AppLocalizations.of(context)!.cleardate,
-    );
+            child: child ?? Container(),
+          );
+        },
+      );
 
-    if (picked != null && picked != selectedDate) {
-      setState(() {
-        selectedDate = picked;
-      });
-      _fetchGames(league);
-    } else if (picked == null) {
-      setState(() {
-        selectedDate = null;
-      });
-      _fetchGames(league);
+      if (picked != null) {
+        setState(() {
+          selectedDate = picked;
+          _showOnlyThisLeagueTodayGames =
+              false; // Reset the filter when date changes
+        });
+        _fetchGames(league);
+      } else if (picked == null && selectedDate != null) {
+        // User pressed cancel, clear the date
+        setState(() {
+          selectedDate = null;
+          _showOnlyThisLeagueTodayGames = false;
+        });
+        _fetchGames(league);
+      }
+    } catch (e) {
+      print('Error showing date picker: $e');
+      // Show error message to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error opening date picker'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -186,13 +193,12 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
       if (selectedDate != null) {
         print('selectedDate != null');
-      
+
         fetchedGames = await GamesMethods().fetchAllGames(
           league,
           _showOnlyThisLeagueTodayGames,
           selectedDate: selectedDate,
         );
-       
       } else {
         fetchedGames = await GamesMethods().fetchGamesForLeague(
           league,
@@ -360,258 +366,240 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
   @override
   Widget build(BuildContext context) {
-    //  checkForUpdates(context);
-   
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
-        title: IconButton(
-          icon: Stack(
-            alignment: Alignment.center,
-            children: [
-              Icon(Icons.calendar_today, color: Colors.white, size: 28),
-              if (selectedDate != null)
-                Positioned(
-                  bottom: 3,
-                  child: Text(
-                    '${selectedDate!.day}',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        title: GestureDetector(
+          onTap: () => _selectDate(context),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(
+                  Icons.calendar_today,
+                  color: Colors.blue,
+                  size: 28,
+                ),
+                if (selectedDate != null)
+                  Positioned(
+                    bottom: 4,
+                    child: Text(
+                      '${selectedDate!.day}',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
-          onPressed: () => _selectDate(context),
         ),
-        backgroundColor: Colors.transparent,
         actions: [
-          Row(
-            children: [
-              if (selectedDate != null)
-                Text(
-                  AppLocalizations.of(context)!.thisleague,
-                  style: TextStyle(
+          if (selectedDate != null)
+            Container(
+              margin: EdgeInsets.only(right: 16),
+              child: Row(
+                children: [
+                  Text(
+                    AppLocalizations.of(context)!.thisleague,
+                    style: TextStyle(
                       color: white,
-                      fontSize: 14 // White color for the team names
-                      ),
-                ),
-
-              if (selectedDate != null)
-                Transform.scale(
-                  scale: 0.6,
-                  child: Switch(
-                    value: !_showOnlyThisLeagueTodayGames,
-                    // value: false,
-                    onChanged: (value) {
-                      // setState(() {
-                      //  _showOnlyThisLeagueTodayGames = value;
-                      //   isLoading = true;
-                      //   _fetchGames(league);
-                      // });
-                      toggleshowOnlyThisLeagueTodayGames();
-                    },
-                    // activeColor: Colors.blue,
-                    // inactiveThumbColor: Colors.white,
-
-                    // inactiveTrackColor: Colors.blue,
-                    thumbColor: MaterialStateProperty.all(Colors.white),
-                    trackColor: MaterialStateProperty.resolveWith<Color>(
-                        (Set<MaterialState> states) {
-                      if (states.contains(MaterialState.selected)) {
-                        return Colors.blue;
-                      }
-                      return Colors.blue;
-                    }),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-              if (selectedDate != null)
-                Text(
-                  AppLocalizations.of(context)!.allleagus,
-                  style: TextStyle(
+                  Transform.scale(
+                    scale: 0.8,
+                    child: Switch(
+                      value: !_showOnlyThisLeagueTodayGames,
+                      onChanged: (value) {
+                        toggleshowOnlyThisLeagueTodayGames();
+                      },
+                      activeColor: Colors.blue,
+                      activeTrackColor: Colors.blue.withOpacity(0.5),
+                      inactiveThumbColor: Colors.white,
+                      inactiveTrackColor: Colors.grey.withOpacity(0.5),
+                    ),
+                  ),
+                  Text(
+                    AppLocalizations.of(context)!.allleagus,
+                    style: TextStyle(
                       color: white,
-                      fontSize: 14 // White color for the team names
-                      ),
-                ),
-              SizedBox(
-                width: 12.0,
-              )
-
-              // Text(
-              //   AppLocalizations.of(context)!.todayonly,
-              //   style: TextStyle(
-              //       color: white, fontSize: 14 // White color for the team names
-              //       ),
-              // ),
-              // Transform.scale(
-              //   scale: 0.6,
-              //   child: Switch(
-              //     value: _showOnlyTodayGames,
-              //     onChanged: (value) {
-              //       toggleShowOnlyTodayGames();
-              //     },
-              //     activeColor: Colors.blue,
-              //     inactiveThumbColor: Colors.white,
-              //     inactiveTrackColor: Colors.grey,
-              //   ),
-              // ),
-            ],
-          ),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
       body: Column(
         children: [
-          SizedBox(
-            height: 5,
+          Container(
+            margin: EdgeInsets.symmetric(vertical: 8),
+            child: ToggleButtonsSample(
+              options: [
+                AppLocalizations.of(context)!.championsleague,
+                AppLocalizations.of(context)!.ligathaal,
+                AppLocalizations.of(context)!.laliga,
+                AppLocalizations.of(context)!.europaleague,
+                'Premier League',
+                'Bundesliga',
+              ],
+              imageUrls: [
+                'https://media.api-sports.io/football/leagues/2.png',
+                'https://media.api-sports.io/football/leagues/383.png',
+                'https://media.api-sports.io/football/leagues/140.png',
+                'https://media.api-sports.io/football/leagues/3.png',
+                'https://media.api-sports.io/football/leagues/39.png',
+                'https://media.api-sports.io/football/leagues/78.png',
+              ],
+              onSelectionChanged: updateSelectedIndex,
+              initialSelection: league == 2
+                  ? 0
+                  : league == 383
+                      ? 1
+                      : league == 140
+                          ? 2
+                          : league == 3
+                              ? 3
+                              : league == 39
+                                  ? 4
+                                  : league == 78
+                                      ? 5
+                                      : 0,
+            ),
           ),
-          ToggleButtonsSample(
-            options: [
-              AppLocalizations.of(context)!.championsleague,
-              AppLocalizations.of(context)!.ligathaal,
-              AppLocalizations.of(context)!.laliga,
-              AppLocalizations.of(context)!.europaleague,
-            ],
-            imageUrls: [
-              'https://media.api-sports.io/football/leagues/2.png',
-              'https://media.api-sports.io/football/leagues/383.png',
-              'https://media.api-sports.io/football/leagues/140.png',
-              'https://media.api-sports.io/football/leagues/3.png', // Assuming this is Europa League
-            ],
-            onSelectionChanged: updateSelectedIndex,
-            initialSelection: league == 2
-                ? 0
-                : league == 383
-                    ? 1
-                    : league == 140
-                        ? 2
-                        : 3,
-          ),
-          SizedBox(
-            height: 5,
-          ),
-          // ToggleButtonsGames(
-          //   options: [
-          //     'משחקי היום',
-          //     'כל התוצאות',
-          //   ],
-          //   onSelectionChanged: updateSelectedIndex,
-          //   initialSelection: league == 2
-          //       ? 0
-          //       : league == 383
-          //           ? 1
-          //           : league == 140
-          //               ? 2
-          //               : 3,
-          // ),
-          // SizedBox(
-          //   height: 5,
-          // ),
-          Row(
-            // mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 5,
-              ),
-              TeamSelectionButton(
-                games: _games,
-                clientId: clientId,
-                email: email,
-                league: league,
-                onTeamSelected: (selectedTeam) {
-                  print('Selected team: $selectedTeam');
-                  // Do something with the selected team
-                },
-              ),
-            ],
-          ),
-          SizedBox(
-            height: 5,
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TeamSelectionButton(
+                    games: _games,
+                    clientId: clientId,
+                    email: email,
+                    league: league,
+                    onTeamSelected: (selectedTeam) {
+                      print('Selected team: $selectedTeam');
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
           Expanded(
             child: isLoading
-                ? Center(child: CircularProgressIndicator())
+                ? Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                    ),
+                  )
                 : _games.isEmpty
                     ? Center(
-                        child: Text(
-                          AppLocalizations.of(context)!.nogames,
-                          style: TextStyle(
-                            color: Colors.white, // Customize the text color
-                            fontSize: 20, // Customize the font size
-                            fontWeight:
-                                FontWeight.bold, // Customize the font weight
-                          ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.scoreboard_outlined,
+                              size: 48,
+                              color: Colors.grey,
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              AppLocalizations.of(context)!.nogames,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
                       )
                     : RefreshIndicator(
                         onRefresh: () async {
-                          // Add your refresh logic here
-                          // This function must return a Future
-                          await Future.delayed(
-                              Duration(seconds: 1)); // Example delay
-                    _fetchGames(league);
+                          await Future.delayed(Duration(seconds: 1));
+                          _fetchGames(league);
                         },
-                        
-                        child: listView(_games)),
+                        color: Colors.blue,
+                        child: listView(_games),
+                      ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: buttonLoading ? null : _submitAllGuesses,
-        backgroundColor: buttonLoading ? Colors.blue : Colors.blue,
+        backgroundColor: buttonLoading ? Colors.grey : Colors.blue,
         foregroundColor: Colors.white,
-        tooltip: 'Submit All Guesses', // Add a tooltip
-        child: buttonLoading
+        elevation: 4,
+        icon: buttonLoading
             ? SizedBox(
-                width: 24,
-                height: 24,
+                width: 20,
+                height: 20,
                 child: CircularProgressIndicator(
                   color: Colors.white,
                   strokeWidth: 2,
                 ),
               )
             : Icon(Icons.send),
+        label: Text(
+          AppLocalizations.of(context)!.send,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }
 
   ListView listView(List<Game> filteredGames) {
     return ListView.separated(
-         physics: AlwaysScrollableScrollPhysics(),
+      physics: AlwaysScrollableScrollPhysics(),
       itemCount: filteredGames.length,
       itemBuilder: (BuildContext context, int index) {
         final game = filteredGames[index];
         final matchingGuesses =
             _guesses.where((g) => g.gameOriginalId == game.fixtureId).toList();
         final guess = matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
-        // Ensure controllers exist for this game
         if (_guessControllers[game.fixtureId] == null) {
           _guessControllers[game.fixtureId] = {
             'home': TextEditingController(),
             'away': TextEditingController(),
           };
         }
-        return GameWidget(
-          game: game,
-          guess: guess,
-          homeController: _guessControllers[game.fixtureId]?['home'],
-          awayController: _guessControllers[game.fixtureId]?['away'],
-          onTap: (context) async {
-            print(game.fixtureId);
-            // Your onTap logic here
-            print('Game tapped!');
-            if (game.status.long != "Not Started")
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => GameDetails(
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: GameWidget(
+            game: game,
+            guess: guess,
+            homeController: _guessControllers[game.fixtureId]?['home'],
+            awayController: _guessControllers[game.fixtureId]?['away'],
+            onTap: (context) async {
+              if (game.status.long != "Not Started") {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GameDetails(
                       gameOriginalId: game.fixtureId,
                       game: game,
-                      userId: clientId),
-                ),
-              );
-          },
+                      userId: clientId,
+                    ),
+                  ),
+                );
+              }
+            },
+          ),
         );
       },
       separatorBuilder: (BuildContext context, int index) =>
