@@ -11,7 +11,7 @@ class GamesMethods {
     DateTime? selectedDate,
   } ) async {
    
-    List<int> leagueIds = onlyThisLeague? [leagueId]: [2, 3, 383, 140 ,39 ,78] ;
+    List<int> leagueIds = onlyThisLeague? [leagueId]: [2, 3, 383, 140 ,39 ] ;
 
 
     List<Game> allGames = [];

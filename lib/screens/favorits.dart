@@ -32,7 +32,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
     'ליגה ספרדית': false,
     'ליגה אירופית': false,
     'ליגה אנגלית': false,
-    'ליגה גרמנית': false,
+    // 'ליגה גרמנית': false,
   };
 
   Map<int, bool> chosenLeagues = {
@@ -41,7 +41,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
     140: true, // La Liga
     3: true, // Europa League
     39: true, // Premier League
-    78: true, // Bundesliga
+    // 78: true, // Bundesliga
   };
 
   @override
@@ -86,7 +86,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         notificationStates['ליגה ספרדית'] = snetEmail['140'] ?? false;
         notificationStates['ליגת העל'] = snetEmail['383'] ?? false;
         notificationStates['ליגה אנגלית'] = snetEmail['39'] ?? false;
-        notificationStates['ליגה גרמנית'] = snetEmail['78'] ?? false;
+        // notificationStates['ליגה גרמנית'] = snetEmail['78'] ?? false;
 
         // Load chosen leagues
         chosenLeagues[2] = chosenLeaguesData['2'] ?? true;
@@ -94,7 +94,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         chosenLeagues[140] = chosenLeaguesData['140'] ?? true;
         chosenLeagues[383] = chosenLeaguesData['383'] ?? true;
         chosenLeagues[39] = chosenLeaguesData['39'] ?? true;
-        chosenLeagues[78] = chosenLeaguesData['78'] ?? true;
+        // chosenLeagues[78] = chosenLeaguesData['78'] ?? true;
 
         isLoading = false;
       });
@@ -123,7 +123,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         'europeLeague': notificationStates['ליגה אירופית'],
         'premierLeague': notificationStates['ליגה אנגלית'],
         'premierLeague': notificationStates['ליגה אנגלית'],
-        'bundesLeague': notificationStates['ליגה גרמנית'],
+        // 'bundesLeague': notificationStates['ליגה גרמנית'],
         'africaLeague': false,
         'conferenceLeague': false,
         'euroLeague': false,
@@ -219,7 +219,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       'ליגה ספרדית': {'subtitle': 'ספרד', 'id': '140'},
       'ליגה אירופית': {'subtitle': 'אירופה', 'id': '3'},
       'ליגה אנגלית': {'subtitle': 'אנגליה', 'id': '39'},
-      'בונדסליגה': {'subtitle': 'גרמניה', 'id': '78'},
+      // 'בונדסליגה': {'subtitle': 'גרמניה', 'id': '78'},
     };
 
     return ListView(
@@ -261,12 +261,12 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              subtitle: Text(
-                subtitle,
-                style: TextStyle(
-                  color: Colors.grey,
-                ),
-              ),
+              // subtitle: Text(
+              //   subtitle,
+              //   style: TextStyle(
+              //     color: Colors.grey,
+              //   ),
+              // ),
               secondary: Container(
                 width: 32,
                 height: 32,
