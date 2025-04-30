@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
 import 'package:football/resources/usersMethods.dart';
+import 'package:football/resources/gamesMethods.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/utils/config.dart';
 import 'package:http/http.dart' as http;
@@ -11,7 +12,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 class TeamSelectionButton extends StatefulWidget {
-  final List<Game> games;
+  // final List<Game> games;
   final clientId;
   final email;
   final league;
@@ -19,7 +20,7 @@ class TeamSelectionButton extends StatefulWidget {
 
   const TeamSelectionButton({
     Key? key,
-    required this.games,
+    // required this.games,
     required this.clientId,
     required this.email,
     required this.league,
@@ -35,19 +36,31 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
   bool isWinnerButtonEnabled = true;
   bool isLoading = false;
   bool hasWinner = true;
+  List<Game> _allLeagueGames = [];
 
   @override
   void initState() {
     super.initState();
     _fetchUserData();
+    _fetchAllLeagueGames();
   }
 
   void didUpdateWidget(TeamSelectionButton oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.league != widget.league) {
-      // The league has changed, trigger the logic to fetch new games or data
-
       _fetchUserData();
+      _fetchAllLeagueGames();
+    }
+  }
+
+  Future<void> _fetchAllLeagueGames() async {
+    try {
+      final games = await GamesMethods().fetchGamesForLeague(widget.league);
+      setState(() {
+        _allLeagueGames = games;
+      });
+    } catch (e) {
+      print('Error fetching all league games: $e');
     }
   }
 
@@ -83,7 +96,7 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
 
   List<String> _fetchAllTeams() {
 
-    final filteredGames = widget.games.where((game) {
+    final filteredGames = _allLeagueGames.where((game) {
       if (game.league.id == 2 || game.league.id == 848 || game.league.id == 3) {
         return !game.league.round.contains("Qualifying") &&
             !game.league.round.contains("Play-offs");
@@ -109,46 +122,48 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
     }
 
     final leagueId = widget.league;
-    try {
-      final response = await http.put(
-        Uri.parse('$_baseUrl/users/winner'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, dynamic>{
-          '_id': widget.clientId,
-          'email': widget.email,
-          'winner': {
-            'winner.$leagueId': selectedTeam,
-          },
-        }),
-      );
+    print('league id: ${leagueId}');
+    print('selectedTeam: ${selectedTeam}');
+    // try {
+    //   final response = await http.put(
+    //     Uri.parse('$_baseUrl/users/winner'),
+    //     headers: <String, String>{
+    //       'Content-Type': 'application/json; charset=UTF-8',
+    //     },
+    //     body: jsonEncode(<String, dynamic>{
+    //       '_id': widget.clientId,
+    //       'email': widget.email,
+    //       'winner': {
+    //         'winner.$leagueId': selectedTeam,
+    //       },
+    //     }),
+    //   );
 
-      if (response.statusCode == 200) {
-        print('User updated successfully');
-        setState(() {
-          isWinnerButtonEnabled = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Team saved successfully')),
+    //   if (response.statusCode == 200) {
+    //     print('User updated successfully');
+    //     setState(() {
+    //       isWinnerButtonEnabled = false;
+    //     });
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       SnackBar(content: Text('Team saved successfully')),
           
-        );
-                      _fetchUserData();
+    //     );
+    //                   _fetchUserData();
 
-      } else {
-        print(
-            'Users update group Fetch failed with status: ${response.statusCode}');
-        print(jsonDecode(response.body));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save team')),
-        );
-      }
-    } catch (error) {
-      print('Error editing guesses: $error');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred while saving the team')),
-      );
-    }
+    //   } else {
+    //     print(
+    //         'Users update group Fetch failed with status: ${response.statusCode}');
+    //     print(jsonDecode(response.body));
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       SnackBar(content: Text('Failed to save team')),
+    //     );
+    //   }
+    // } catch (error) {
+    //   print('Error editing guesses: $error');
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(content: Text('An error occurred while saving the team')),
+    //   );
+    // }
   }
 
   void _showTeamSelectionDialog() async {
@@ -226,13 +241,13 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
   @override
   Widget build(BuildContext context) {
     // Sort the games list by fixture.date to find the first game
-    // widget.games.sort((a, b) => a['date'].compareTo(b['fixture']['date']));
+    _allLeagueGames.sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
- 
     // Get the date of the first game
     DateTime? firstGameDate;
-    if (widget.games.isNotEmpty) {
-      firstGameDate = widget.games[0].date.toUtc();
+    if (_allLeagueGames.isNotEmpty) {
+      firstGameDate = _allLeagueGames[0].date.toUtc();
+      print('firstGameDate: ${_allLeagueGames[0].date}');
     }
     
     DateTime currentTimeUtc = DateTime.now().toUtc();
@@ -260,6 +275,9 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
       //   ),
       // );
     }
+    // else{
+      //  print('isBeforeFirstGame: ${isBeforeFirstGame}');
+    // }
     if (isBeforeFirstGame)
       return Row(
         mainAxisAlignment: MainAxisAlignment.start,

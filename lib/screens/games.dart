@@ -508,7 +508,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               children: [
                 Expanded(
                   child: TeamSelectionButton(
-                    games: _games,
+                    // games: _games,
                     clientId: clientId,
                     email: email,
                     league: league,
