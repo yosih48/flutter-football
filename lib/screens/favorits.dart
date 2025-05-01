@@ -32,6 +32,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
     'ליגה ספרדית': false,
     'ליגה אירופית': false,
     'ליגה אנגלית': false,
+    'קונפרנס ליג': false,
     // 'ליגה גרמנית': false,
   };
 
@@ -41,6 +42,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
     140: true, // La Liga
     3: true, // Europa League
     39: true, // Premier League
+    848: true, // conference league
     // 78: true, // Bundesliga
   };
 
@@ -86,6 +88,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         notificationStates['ליגה ספרדית'] = snetEmail['140'] ?? false;
         notificationStates['ליגת העל'] = snetEmail['383'] ?? false;
         notificationStates['ליגה אנגלית'] = snetEmail['39'] ?? false;
+        notificationStates['קונפרנס ליג'] = snetEmail['848'] ?? false;
         // notificationStates['ליגה גרמנית'] = snetEmail['78'] ?? false;
 
         // Load chosen leagues
@@ -94,6 +97,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         chosenLeagues[140] = chosenLeaguesData['140'] ?? true;
         chosenLeagues[383] = chosenLeaguesData['383'] ?? true;
         chosenLeagues[39] = chosenLeaguesData['39'] ?? true;
+        chosenLeagues[848] = chosenLeaguesData['848'] ?? true;
         // chosenLeagues[78] = chosenLeaguesData['78'] ?? true;
 
         isLoading = false;
@@ -122,10 +126,10 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         'spanishLeague': notificationStates['ליגה ספרדית'],
         'europeLeague': notificationStates['ליגה אירופית'],
         'premierLeague': notificationStates['ליגה אנגלית'],
-        'premierLeague': notificationStates['ליגה אנגלית'],
+        'conferenceLeague': notificationStates['קונפרנס ליג'],
         // 'bundesLeague': notificationStates['ליגה גרמנית'],
         'africaLeague': false,
-        'conferenceLeague': false,
+        // 'conferenceLeague': false,
         'euroLeague': false,
         'copaLeague': false,
       };
@@ -219,6 +223,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       'ליגה ספרדית': {'subtitle': 'ספרד', 'id': '140'},
       'ליגה אירופית': {'subtitle': 'אירופה', 'id': '3'},
       'ליגה אנגלית': {'subtitle': 'אנגליה', 'id': '39'},
+      'קונפרנס ליג': {'subtitle': 'אירופה', 'id': '848'},
       // 'בונדסליגה': {'subtitle': 'גרמניה', 'id': '78'},
     };
 
@@ -313,6 +318,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       3: AppLocalizations.of(context)!.europaleague,
       39: AppLocalizations.of(context)!.premierleague,
       78: AppLocalizations.of(context)!.bundesleague,
+      848: AppLocalizations.of(context)!.conferenceleague,
     };
 
     final leagueIcons = {
@@ -322,6 +328,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       3: 'https://media.api-sports.io/football/leagues/3.png',
       39: 'https://media.api-sports.io/football/leagues/39.png',
       78: 'https://media.api-sports.io/football/leagues/78.png',
+      848: 'https://media.api-sports.io/football/leagues/848.png',
     };
 
     return ListView(

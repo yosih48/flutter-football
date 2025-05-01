@@ -88,7 +88,9 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                       : index == 4
                           ? 39 // Premier League
                           : index == 5
-                              ? 78 // Bundesliga
+                              ? 848 // Bundesliga
+                                 :index == 6
+                              ? 78 //conferenceleague
                               : 2; // Default to Champions League
 
       selectedIndex = index;
@@ -464,6 +466,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                   if (chosenLeagues['3'] == true) 3,
                   if (chosenLeagues['39'] == true) 39,
                   if (chosenLeagues['78'] == true) 78,
+                  if (chosenLeagues['848'] == true) 848,
                 ];
 
                 final options = enabledLeagues.map((id) {
@@ -480,6 +483,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                       return AppLocalizations.of(context)!.premierleague;
                     case 78:
                       return AppLocalizations.of(context)!.bundesleague;
+                    case 848:
+                      return AppLocalizations.of(context)!.conferenceleague;
                     default:
                       return '';
                   }
@@ -536,6 +541,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                   if (chosenLeagues['3'] == true) 3,
                   if (chosenLeagues['39'] == true) 39,
                   if (chosenLeagues['78'] == true) 78,
+                  if (chosenLeagues['848'] == true) 848,
                 ];
                 
                 return isLoading
