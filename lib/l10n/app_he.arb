@@ -118,7 +118,16 @@
      "directionGuesses": "ניחושי כיוון",
      "send": "שלח",
     "chooseleagues": "הליגות שלי",
-      "managegroups": "ניהול הקבוצות והתחרויות שלך",
+    "managegroups": "ניהול הקבוצות והתחרויות שלך",
   "winningpredictions": "ניחושי הזוכות שלך",
-  "yourprediction": "הזוכה שלך"
+  "yourprediction": "הזוכה שלך",
+  "notificationWarning": "אזהרת התראות",
+  "cannotEnablenotification": "לא ניתן להפעיל התראות כי הליגה לא נמצאת ברשימת הליגות שבחרת.",
+  "enableLeagueFirst": "אנא הפעל תחילה את הליגה בלשונית 'ליגות נבחרות'.",
+  "ok": "אישור",
+  "goToChosenLeagues": "עבור לליגות נבחרות",
+  "allLeagues": "כל הליגות",
+   "noEnabledLeagues": "אין ליגות זמינות להתראות",
+  "enableLeaguesFirst": "אנא הפעל תחילה ליגות בלשונית 'הליגות שלי'",
+  "goToChosenLeagues": "עבור לליגות נבחרות"
 }

@@ -121,7 +121,10 @@
      "chooseleagues": "my Leagues",
      "managegroups": "Manage your groups and competitions",
      "winningpredictions": "Your winning predictions",
-     "yourprediction": "Your prediction"
+     "yourprediction": "Your prediction",
+  "noEnabledLeagues": "No leagues available for notifications",
+  "enableLeaguesFirst": "Please enable leagues in the Chosen Leagues tab first",
+  "goToChosenLeagues": "Go to Chosen Leagues"
     
 
 
