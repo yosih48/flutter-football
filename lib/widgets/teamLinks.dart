@@ -412,7 +412,19 @@ class TeamLinkHandler {
         url =
             "https://www.365scores.com/he/football/team/rayo-vallecano-174";
         break;
-      default:
+      case "Ironi Tiberias":
+        url =
+            "https://www.365scores.com/he/football/team/ironi-tiberias-606";
+        break;
+      case "Rayo Vallecano":
+        url =
+            "https://www.365scores.com/he/football/team/rayo-vallecano-174";
+        break;
+      case "Ironi Kiryat Shmona":
+        url =
+            "https://www.365scores.com/he/football/team/kiryat-shmona-563";
+        break;
+     default:
         print("No predefined URL found for team: $teamName");
         // Fallback to a search URL if no predefined URL is found
         url =
