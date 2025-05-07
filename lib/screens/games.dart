@@ -89,9 +89,9 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                           ? 39 // Premier League
                           : index == 5
                               ? 848 // Bundesliga
-                                 :index == 6
-                              ? 78 //conferenceleague
-                              : 2; // Default to Champions League
+                              : index == 6
+                                  ? 78 //conferenceleague
+                                  : 2; // Default to Champions League
 
       selectedIndex = index;
 
@@ -446,199 +446,123 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             ),
         ],
       ),
-  body: Column(
-      children: [
-        Container(
-          margin: EdgeInsets.symmetric(vertical: 8),
-          child: FutureBuilder<Map<String, dynamic>>(
-            future: UsersMethods().fetchUserById(clientId),
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                final userData = snapshot.data!;
-                final chosenLeagues =
-                    Map<String, bool>.from(userData['chosenLeagues'] ?? {});
+      body: Column(
+        children: [
+          Container(
+            margin: EdgeInsets.symmetric(vertical: 8),
+            child: FutureBuilder<Map<String, dynamic>>(
+              future: UsersMethods().fetchUserById(clientId),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  final userData = snapshot.data!;
+                  final chosenLeagues =
+                      Map<String, bool>.from(userData['chosenLeagues'] ?? {});
 
-                // Create filtered lists based on chosen leagues
-                final enabledLeagues = <int>[
-                  if (chosenLeagues['2'] == true) 2,
-                  if (chosenLeagues['383'] == true) 383,
-                  if (chosenLeagues['140'] == true) 140,
-                  if (chosenLeagues['3'] == true) 3,
-                  if (chosenLeagues['39'] == true) 39,
-                  if (chosenLeagues['78'] == true) 78,
-                  if (chosenLeagues['848'] == true) 848,
-                ];
+                  // Create filtered lists based on chosen leagues
+                  final enabledLeagues = <int>[
+                    if (chosenLeagues['2'] == true) 2,
+                    if (chosenLeagues['383'] == true) 383,
+                    if (chosenLeagues['140'] == true) 140,
+                    if (chosenLeagues['3'] == true) 3,
+                    if (chosenLeagues['39'] == true) 39,
+                    if (chosenLeagues['78'] == true) 78,
+                    if (chosenLeagues['848'] == true) 848,
+                  ];
 
-                final options = enabledLeagues.map((id) {
-                  switch (id) {
-                    case 2:
-                      return AppLocalizations.of(context)!.championsleague;
-                    case 383:
-                      return AppLocalizations.of(context)!.ligathaal;
-                    case 140:
-                      return AppLocalizations.of(context)!.laliga;
-                    case 3:
-                      return AppLocalizations.of(context)!.europaleague;
-                    case 39:
-                      return AppLocalizations.of(context)!.premierleague;
-                    case 78:
-                      return AppLocalizations.of(context)!.bundesleague;
-                    case 848:
-                      return AppLocalizations.of(context)!.conferenceleague;
-                    default:
-                      return '';
-                  }
-                }).toList();
+                  final options = enabledLeagues.map((id) {
+                    switch (id) {
+                      case 2:
+                        return AppLocalizations.of(context)!.championsleague;
+                      case 383:
+                        return AppLocalizations.of(context)!.ligathaal;
+                      case 140:
+                        return AppLocalizations.of(context)!.laliga;
+                      case 3:
+                        return AppLocalizations.of(context)!.europaleague;
+                      case 39:
+                        return AppLocalizations.of(context)!.premierleague;
+                      case 78:
+                        return AppLocalizations.of(context)!.bundesleague;
+                      case 848:
+                        return AppLocalizations.of(context)!.conferenceleague;
+                      default:
+                        return '';
+                    }
+                  }).toList();
 
-                final imageUrls = enabledLeagues.map((id) {
-                  return 'https://media.api-sports.io/football/leagues/$id.png';
-                }).toList();
+                  final imageUrls = enabledLeagues.map((id) {
+                    return 'https://media.api-sports.io/football/leagues/$id.png';
+                  }).toList();
 
-                return ToggleButtonsSample(
-                  options: options,
-                  imageUrls: imageUrls,
-                  onSelectionChanged: (index) {
-                    updateSelectedIndex(index);
-                  },
-                  initialSelection: enabledLeagues.indexOf(league),
-                );
-              }
-              return CircularProgressIndicator();
-            },
+                  return ToggleButtonsSample(
+                    options: options,
+                    imageUrls: imageUrls,
+                    onSelectionChanged: (index) {
+                      updateSelectedIndex(index);
+                    },
+                    initialSelection: enabledLeagues.indexOf(league),
+                  );
+                }
+                return CircularProgressIndicator();
+              },
+            ),
           ),
-        ),
-        Container(
-          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: TeamSelectionButton(
-                  // games: _games,
-                  clientId: clientId,
-                  email: email,
-                  league: league,
-                  onTeamSelected: (selectedTeam) {
-                    print('Selected team: $selectedTeam');
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: FutureBuilder<Map<String, dynamic>>(
-            future: UsersMethods().fetchUserById(clientId),
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                final userData = snapshot.data!;
-                final chosenLeagues =
-                    Map<String, bool>.from(userData['chosenLeagues'] ?? {});
-                
-                final enabledLeagues = <int>[
-                  if (chosenLeagues['2'] == true) 2,
-                  if (chosenLeagues['383'] == true) 383,
-                  if (chosenLeagues['140'] == true) 140,
-                  if (chosenLeagues['3'] == true) 3,
-                  if (chosenLeagues['39'] == true) 39,
-                  if (chosenLeagues['78'] == true) 78,
-                  if (chosenLeagues['848'] == true) 848,
-                ];
-                
-                return isLoading
-                    ? Center(
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                        ),
-                      )
-                    : _games.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.scoreboard_outlined,
-                                  size: 48,
-                                  color: Colors.grey,
-                                ),
-                                SizedBox(height: 16),
-                                Text(
-                                  AppLocalizations.of(context)!.nogames,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : RefreshIndicator(
-                            onRefresh: () async {
-                              await Future.delayed(Duration(seconds: 1));
-                              _fetchGames(league);
-                            },
-                            color: Colors.blue,
-                            child: listView(_games, enabledLeagues),
-                          );
-              }
-              return Center(child: CircularProgressIndicator());
-            },
-          ),
-        ),
-      ],
-    ),
-    floatingActionButton: FloatingActionButton.extended(
-      onPressed: buttonLoading ? null : _submitAllGuesses,
-      backgroundColor: buttonLoading ? Colors.grey : Colors.blue,
-      foregroundColor: Colors.white,
-      elevation: 4,
-      icon: buttonLoading
-          ? SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                color: Colors.white,
-                strokeWidth: 2,
-              ),
-            )
-          : Icon(Icons.send),
-      label: Text(
-        AppLocalizations.of(context)!.send,
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    ),
-  );
-}
-
-ListView listView(List<Game> filteredGames, List<int> enabledLeagues) {
-    // Filter games based on the enabledLeagues before displaying
-    final List<Game> displayGames = filteredGames.where((game) {
-      // Check if the game's leagueId is in the user's chosen leagues
-      return enabledLeagues.contains(game.league.id);
-    }).toList();
-        // Return empty container with a message if no games match the enabled leagues
-    if (displayGames.isEmpty) {
-      print('displayGames.isEmpty');
-      return ListView.builder(
-        physics: AlwaysScrollableScrollPhysics(),
-        itemCount: 1,
-        itemBuilder: (context, index) {
-          return Container(
-              height: MediaQuery.of(context).size.height * 0.7, // Use most of available height
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                    
-                  Icon(
-                                 Icons.scoreboard_outlined,
-                    size: 48,
-                    color: Colors.grey,
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TeamSelectionButton(
+                    // games: _games,
+                    clientId: clientId,
+                    email: email,
+                    league: league,
+                    onTeamSelected: (selectedTeam) {
+                      print('Selected team: $selectedTeam');
+                    },
                   ),
-                  SizedBox(height: 16),
-                    Text(
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: FutureBuilder<Map<String, dynamic>>(
+              future: UsersMethods().fetchUserById(clientId),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  final userData = snapshot.data!;
+                  final chosenLeagues =
+                      Map<String, bool>.from(userData['chosenLeagues'] ?? {});
+
+                  final enabledLeagues = <int>[
+                    if (chosenLeagues['2'] == true) 2,
+                    if (chosenLeagues['383'] == true) 383,
+                    if (chosenLeagues['140'] == true) 140,
+                    if (chosenLeagues['3'] == true) 3,
+                    if (chosenLeagues['39'] == true) 39,
+                    if (chosenLeagues['78'] == true) 78,
+                    if (chosenLeagues['848'] == true) 848,
+                  ];
+
+                  return isLoading
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.blue),
+                          ),
+                        )
+                      : _games.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.scoreboard_outlined,
+                                    size: 48,
+                                    color: Colors.grey,
+                                  ),
+                                  SizedBox(height: 16),
+                                  Text(
                                     AppLocalizations.of(context)!.nogames,
                                     style: TextStyle(
                                       color: Colors.white,
@@ -646,7 +570,83 @@ ListView listView(List<Game> filteredGames, List<int> enabledLeagues) {
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
-               
+                                ],
+                              ),
+                            )
+                          : RefreshIndicator(
+                              onRefresh: () async {
+                                await Future.delayed(Duration(seconds: 1));
+                                _fetchGames(league);
+                              },
+                              color: Colors.blue,
+                              child: listView(_games, enabledLeagues),
+                            );
+                }
+                return Center(child: CircularProgressIndicator());
+              },
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: buttonLoading ? null : _submitAllGuesses,
+        backgroundColor: buttonLoading ? Colors.grey : Colors.blue,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        icon: buttonLoading
+            ? SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : Icon(Icons.send),
+        label: Text(
+          AppLocalizations.of(context)!.send,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  ListView listView(List<Game> filteredGames, List<int> enabledLeagues) {
+    // Filter games based on the enabledLeagues before displaying
+    final List<Game> displayGames = filteredGames.where((game) {
+      // Check if the game's leagueId is in the user's chosen leagues
+      return enabledLeagues.contains(game.league.id);
+    }).toList();
+    // Return empty container with a message if no games match the enabled leagues
+    if (displayGames.isEmpty) {
+      print('displayGames.isEmpty');
+      return ListView.builder(
+        physics: AlwaysScrollableScrollPhysics(),
+        itemCount: 1,
+        itemBuilder: (context, index) {
+          return Container(
+            height: MediaQuery.of(context).size.height *
+                0.7, // Use most of available height
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.scoreboard_outlined,
+                    size: 48,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    AppLocalizations.of(context)!.nogames,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -669,13 +669,12 @@ ListView listView(List<Game> filteredGames, List<int> enabledLeagues) {
           };
         }
         return Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
           child: GameWidget(
             game: game,
             guess: guess,
             homeController: _guessControllers[game.fixtureId]?['home'],
             awayController: _guessControllers[game.fixtureId]?['away'],
-           
             onTap: (context) async {
               if (game.status.long != "Not Started") {
                 await Navigator.push(

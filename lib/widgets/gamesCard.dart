@@ -9,13 +9,14 @@ import 'package:intl/intl.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 class GameWidget extends StatelessWidget {
   final Game game;
   final Guess? guess;
   final Function(BuildContext) onTap;
   final TextEditingController? homeController;
   final TextEditingController? awayController;
-  
+
   GameWidget({
     required this.game,
     this.guess,
@@ -79,7 +80,7 @@ class GameWidget extends StatelessWidget {
                 ],
               ),
               SizedBox(
-                height: 8.0,
+                height: 14.0,
               ),
               Row(
                 children: [
@@ -88,11 +89,12 @@ class GameWidget extends StatelessWidget {
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: GestureDetector(
-                            onTap: () => TeamLinkHandler.linkToTeam(game.home.name),
+                        onTap: () => TeamLinkHandler.linkToTeam(game.home.name),
                         child: Text(
                           game.home.name,
                           style: TextStyle(
-                            color: Colors.white, // White color for the team names
+                            color:
+                                Colors.white, // White color for the team names
                             fontWeight: FontWeight.bold,
                             fontSize: 13.0,
                           ),
@@ -104,8 +106,8 @@ class GameWidget extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: 6.0),
-              GestureDetector(
-                     onTap: () => TeamLinkHandler.linkToTeam(game.home.name),
+                  GestureDetector(
+                    onTap: () => TeamLinkHandler.linkToTeam(game.home.name),
                     child: Image.network(
                       game.home.logo,
                       width: 24.0,
@@ -158,7 +160,9 @@ class GameWidget extends StatelessWidget {
                             ],
                           ),
                         ),
-                        Text(' - '),
+                        Text('  :  ', style: TextStyle(
+                            color: Colors.white,
+                          ),),
                         SizedBox(
                           width: 40,
                           height: 50,
@@ -213,8 +217,8 @@ class GameWidget extends StatelessWidget {
                       ),
                     ),
                   SizedBox(width: 18.0),
-          GestureDetector(
-                     onTap: () => TeamLinkHandler.linkToTeam(game.away.name),
+                  GestureDetector(
+                    onTap: () => TeamLinkHandler.linkToTeam(game.away.name),
                     child: Image.network(
                       game.away.logo,
                       width: 24.0,
@@ -226,11 +230,12 @@ class GameWidget extends StatelessWidget {
                     child: Align(
                       alignment: Alignment.centerRight,
                       child: GestureDetector(
-                                 onTap: () => TeamLinkHandler.linkToTeam(game.away.name),
+                        onTap: () => TeamLinkHandler.linkToTeam(game.away.name),
                         child: Text(
                           game.away.name,
                           style: TextStyle(
-                            color: Colors.white, // White color for the team names
+                            color:
+                                Colors.white, // White color for the team names
                             fontWeight: FontWeight.bold,
                             fontSize: 13.0,
                           ),
@@ -243,7 +248,7 @@ class GameWidget extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: 8.0),
+              SizedBox(height: 12.0),
               if (game.status.long == "Not Started")
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -254,27 +259,28 @@ class GameWidget extends StatelessWidget {
                     Text(
                       '${game.odds.home}',
                       style: TextStyle(
-                        color:
-                            Colors.white, // Light gray color for the odds
+                        color: Colors.white, // Light gray color for the odds
                         fontSize: 16.0,
                       ),
                     ),
-                    SizedBox(width:1.0,),
+                    SizedBox(
+                      width: 1.0,
+                    ),
                     Text(
                       '${game.odds.draw}',
                       style: TextStyle(
-                        color:
-                               Colors.white, // Light gray color for the odds
+                        color: Colors.white, // Light gray color for the odds
                         fontSize: 16.0,
                       ),
                     ),
-                     SizedBox(width: 1.0,),
+                    SizedBox(
+                      width: 1.0,
+                    ),
                     Text(
                       '${game.odds.away}',
                       style: TextStyle(
-                        color:
-                                 Colors.white,  // Light gray color for the odds
-                            // Color(0xFF9BA4B5), // Light gray color for the odds
+                        color: Colors.white, // Light gray color for the odds
+                        // Color(0xFF9BA4B5), // Light gray color for the odds
                         fontSize: 16.0,
                       ),
                     ),
