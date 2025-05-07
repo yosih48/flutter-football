@@ -344,6 +344,74 @@ class TeamLinkHandler {
         url =
             "https://www.365scores.com/he/football/team/czech-republic-5040";
         break;
+      case "Athletic Club":
+        url =
+            "https://www.365scores.com/he/football/team/athletic-bilbao-144";
+        break;
+      case "Tottenham":
+        url =
+            "https://www.365scores.com/he/football/team/tottenham-114";
+        break;
+      case "Chelsea":
+        url =
+            "https://www.365scores.com/he/football/team/chelsea-106";
+        break;
+      case "Djurgardens IF":
+        url =
+            "https://www.365scores.com/he/football/team/djurgardens-if-1892";
+        break;
+      case "Fiorentina":
+        url =
+            "https://www.365scores.com/he/football/team/fiorentina-228";
+        break;
+      case "Las Palmas":
+        url =
+            "https://www.365scores.com/he/football/team/las-palmas-167";
+        break;
+      case "Osasuna":
+        url =
+            "https://www.365scores.com/he/football/team/osasuna-143";
+        break;
+      case "Valladolid":
+        url =
+            "https://www.365scores.com/he/football/team/real-valladolid-141";
+        break;
+      case "Girona":
+        url =
+            "https://www.365scores.com/he/football/team/girona-175";
+        break;
+      case "Celta Vigo":
+        url =
+            "https://www.365scores.com/he/football/team/celta-vigo-158";
+        break;
+      case "Alaves":
+        url =
+            "https://www.365scores.com/he/football/team/alaves-168";
+        break;
+      case "Leganes":
+        url =
+            "https://www.365scores.com/he/football/team/cd-leganes-9242";
+        break;
+      case "Espanyol":
+        url =
+            "https://www.365scores.com/he/football/team/espanyol-136";
+        break;
+      case "Mallorca":
+        url =
+            "https://www.365scores.com/he/football/team/mallorca-142";
+        break;
+      case "Villarreal":
+        url =
+            "https://www.365scores.com/he/football/team/villarreal-133";
+        break;
+      case "Getafe":
+        url =
+            "https://www.365scores.com/he/football/team/getafe-140";
+        break;
+      case "Rayo Vallecano":
+        url =
+            "https://www.365scores.com/he/football/team/rayo-vallecano-174";
+        break;
       default:
         print("No predefined URL found for team: $teamName");
         // Fallback to a search URL if no predefined URL is found

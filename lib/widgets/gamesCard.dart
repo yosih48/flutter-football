@@ -57,7 +57,7 @@ class GameWidget extends StatelessWidget {
                               game.status.long == "Second Half" ||
                               game.status.long == "Halftime")
                           ? Colors.red
-                          : Color(0xFF9BA4B5).withOpacity(0.6),
+                          : Color(0xFF9BA4B5).withOpacity(0.9),
                       fontSize: 14.0,
                     ),
                   ),
@@ -73,7 +73,7 @@ class GameWidget extends StatelessWidget {
                   Text(
                     DateFormat('dd/MM/yy').format(game.date),
                     style: TextStyle(
-                      color: Color(0xFF9BA4B5).withOpacity(0.6),
+                      color: Color(0xFF9BA4B5).withOpacity(0.9),
                       fontSize: 14.0,
                     ),
                   ),
@@ -160,9 +160,12 @@ class GameWidget extends StatelessWidget {
                             ],
                           ),
                         ),
-                        Text('  :  ', style: TextStyle(
+                        Text(
+                          '  :  ',
+                          style: TextStyle(
                             color: Colors.white,
-                          ),),
+                          ),
+                        ),
                         SizedBox(
                           width: 40,
                           height: 50,
