@@ -412,7 +412,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: selectedGroupName,
-                      dropdownColor: Color(0xFF303030),
+                      dropdownColor: cards,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16.0,
