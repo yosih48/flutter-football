@@ -195,7 +195,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       List<Game> fetchedGames;
 
       if (selectedDate != null) {
-        print('selectedDate != null');
+        print(
+            '📅 Loading games for league $league on ${selectedDate!.day}/${selectedDate!.month}');
 
         fetchedGames = await GamesMethods().fetchAllGames(
           league,
@@ -203,6 +204,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           selectedDate: selectedDate,
         );
       } else {
+        print('📅 Loading games for league $league (no date filter)');
         fetchedGames = await GamesMethods().fetchGamesForLeague(
           league,
           selectedDate: selectedDate,
@@ -222,6 +224,24 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         }
         isLoading = false;
       });
+
+      // Print info about any live games
+      final liveGames = fetchedGames
+          .where((game) =>
+              game.status.short == '1H' ||
+              game.status.short == '2H' ||
+              game.status.short == 'HT' ||
+              game.status.short == 'ET' ||
+              game.status.short == 'BT' ||
+              game.status.short == 'P' ||
+              game.status.short == 'INT')
+          .toList();
+
+      if (liveGames.isNotEmpty) {
+        print('⚽ Loaded ${liveGames.length} live games');
+      } else {
+        print('📊 No live games currently in progress');
+      }
     } catch (e) {
       print('Failed to fetch games: $e');
     }
@@ -365,6 +385,78 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     setState(() {
       buttonLoading = false;
     });
+  }
+
+  // New method for handling manual refresh with force refresh
+  Future<void> _handleManualRefresh() async {
+    try {
+      List<Game> refreshedGames;
+
+      if (selectedDate != null) {
+        if (_showOnlyThisLeagueTodayGames) {
+          // Refresh only current league
+          print(
+              '🔄 Manual refresh: forcing refresh for league $league on ${selectedDate!.day}/${selectedDate!.month}');
+          refreshedGames = await GamesMethods().forceRefreshGames(
+            league,
+            selectedDate: selectedDate,
+          );
+        } else {
+          // Refresh multiple leagues
+          print(
+              '🔄 Manual refresh: forcing refresh for all leagues on ${selectedDate!.day}/${selectedDate!.month}');
+          refreshedGames = [];
+          final gamesMethods = GamesMethods();
+          // Force refresh all visible leagues
+          final leagueIds = [2, 3, 383, 140, 39, 848, 78];
+          for (int id in leagueIds) {
+            final games = await gamesMethods.forceRefreshGames(
+              id,
+              selectedDate: selectedDate,
+            );
+            refreshedGames.addAll(games);
+          }
+          refreshedGames.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+        }
+      } else {
+        // Just refresh current league if no date selected
+        print(
+            '🔄 Manual refresh: forcing refresh for league $league (no date filter)');
+        refreshedGames = await GamesMethods().forceRefreshGames(
+          league,
+          selectedDate: selectedDate,
+        );
+      }
+
+      setState(() {
+        _games = refreshedGames;
+        for (var game in _games) {
+          if (_guessControllers[game.fixtureId] == null) {
+            _guessControllers[game.fixtureId] = {
+              'home': TextEditingController(),
+              'away': TextEditingController(),
+            };
+          }
+        }
+      });
+
+      // Show a feedback message to the user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Games updated'),
+          // backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      print('Failed to refresh games: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Refresh failed'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -574,11 +666,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                               ),
                             )
                           : RefreshIndicator(
-                              onRefresh: () async {
-                                await Future.delayed(Duration(seconds: 1));
-                                _fetchGames(league);
-                              },
-                              color: Colors.blue,
+                              onRefresh: _handleManualRefresh,
+                              color: Colors.grey,
                               child: listView(_games, enabledLeagues),
                             );
                 }

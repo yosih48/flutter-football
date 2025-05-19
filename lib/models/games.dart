@@ -16,7 +16,7 @@ class Game {
 
   Game({
     required this.fixtureId,
-   this.referee,
+    this.referee,
     required this.timezone,
     required this.date,
     required this.timestamp,
@@ -39,20 +39,50 @@ class Game {
       date: DateTime.parse(json['fixture']['date']),
       timestamp: json['fixture']['timestamp'],
       periods: {
-        'first': json['fixture']['periods']['first'] ?? 0,  // Provide default values
+        'first':
+            json['fixture']['periods']['first'] ?? 0, // Provide default values
         'second': json['fixture']['periods']['second'] ?? 0,
       },
       venue: Venue.fromJson(json['fixture']['venue']),
       status: Status.fromJson(json['fixture']['status']),
       league: League.fromJson(json['league']),
-   
       home: Team.fromJson(json['teams']['home']),
       away: Team.fromJson(json['teams']['away']),
-       goals: Goals.fromJson(json['goals'] ?? {}),
+      goals: Goals.fromJson(json['goals'] ?? {}),
       score: Score.fromJson(json['score'] ?? {}),
       odds: Odds.fromJson(
           json['odds'] ?? {'away': '10', 'home': '10', 'draw': '10'}),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'fixture': {
+        'id': fixtureId,
+        'referee': referee,
+        'timezone': timezone,
+        'date': date.toIso8601String(),
+        'timestamp': timestamp,
+        'periods': {
+          'first': periods['first'],
+          'second': periods['second'],
+        },
+        'venue': venue.toJson(),
+        'status': status.toJson(),
+      },
+      'league': league.toJson(),
+      'teams': {
+        'home': home.toJson(),
+        'away': away.toJson(),
+      },
+      'goals': goals.toJson(),
+      'score': score.toJson(),
+      'odds': {
+        'Home': odds.home.toString(),
+        'Draw': odds.draw.toString(),
+        'Away': odds.away.toString(),
+      },
+    };
   }
 }
 
@@ -83,6 +113,14 @@ class Odds {
       return defaultValue;
     }
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'Home': home.toString(),
+      'Draw': draw.toString(),
+      'Away': away.toString(),
+    };
+  }
 }
 
 class Venue {
@@ -98,10 +136,18 @@ class Venue {
 
   factory Venue.fromJson(Map<String, dynamic> json) {
     return Venue(
-      id: json['id'] ?? 0,  // Provide a default value if null
-      name: json['name'] ?? '',  // Provide a default value if null
-      city: json['city'] ?? '', 
+      id: json['id'] ?? 0, // Provide a default value if null
+      name: json['name'] ?? '', // Provide a default value if null
+      city: json['city'] ?? '',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'city': city,
+    };
   }
 }
 
@@ -122,6 +168,14 @@ class Status {
       short: json['short'],
       elapsed: json['elapsed'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'long': long,
+      'short': short,
+      'elapsed': elapsed,
+    };
   }
 }
 
@@ -155,6 +209,18 @@ class League {
       round: json['round'],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'country': country,
+      'logo': logo,
+      'flag': flag,
+      'season': season,
+      'round': round,
+    };
+  }
 }
 
 class Team {
@@ -178,6 +244,15 @@ class Team {
       winner: json['winner'],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'logo': logo,
+      'winner': winner,
+    };
+  }
 }
 
 class Goals {
@@ -194,6 +269,13 @@ class Goals {
       home: json['home'],
       away: json['away'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'home': home,
+      'away': away,
+    };
   }
 }
 
@@ -229,5 +311,14 @@ class Score {
         'away': json['penalty']['away'],
       },
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'halftime': halftime,
+      'fulltime': fulltime,
+      'extratime': extratime,
+      'penalty': penalty,
+    };
   }
 }
