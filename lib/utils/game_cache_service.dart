@@ -5,11 +5,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 class GameCacheService {
   static const String _cacheKeyPrefix = 'games_cache_';
   static const String _cacheTimestampPrefix = 'games_timestamp_';
+  static const String _masterCacheKey = 'leagues_with_games_';
 
   // Cache expiration durations in milliseconds
   static const int _finishedGamesCacheDuration =
       24 * 60 * 60 * 1000; // 24 hours
-  static const int _upcomingGamesCacheDuration = 30 * 60 * 1000; // 30 minutes
+  static const int _upcomingGamesCacheDuration = 15 * 60 * 1000; // 30 minutes
+  static const int _masterCacheDuration = 6 * 60 * 60 * 1000; // 6 hours
 
   // Store games in cache by league and date
   Future<void> cacheGames(
@@ -27,8 +29,69 @@ class GameCacheService {
     await prefs.setInt('$_cacheTimestampPrefix$cacheKey',
         DateTime.now().millisecondsSinceEpoch);
 
+    // Update the master cache to indicate this league has games on this date
+    await _updateMasterCache(leagueId, date, games.isNotEmpty);
+
     print(
         '💾 Cached ${games.length} games for league $leagueId${date != null ? " on ${date.day}/${date.month}" : ""}');
+  }
+
+  // Update master cache of leagues with games for a specific date
+  Future<void> _updateMasterCache(
+      int leagueId, DateTime? date, bool hasGames) async {
+    if (date == null) return; // Only track by specific dates
+
+    final prefs = await SharedPreferences.getInstance();
+    final masterKey = '$_masterCacheKey${date.year}_${date.month}_${date.day}';
+
+    // Get existing data
+    final existingData = prefs.getString(masterKey);
+    Map<String, dynamic> leaguesWithGames = {};
+
+    if (existingData != null) {
+      leaguesWithGames = Map<String, dynamic>.from(jsonDecode(existingData));
+    }
+
+    // Update the entry for this league
+    leaguesWithGames[leagueId.toString()] = hasGames;
+
+    // Save back to cache with timestamp
+    await prefs.setString(masterKey, jsonEncode(leaguesWithGames));
+    await prefs.setInt('${_cacheTimestampPrefix}$masterKey',
+        DateTime.now().millisecondsSinceEpoch);
+  }
+
+  // Get a list of leagues that have games on a specific date
+  Future<List<int>> getLeaguesWithGames(DateTime date) async {
+    final prefs = await SharedPreferences.getInstance();
+    final masterKey = '$_masterCacheKey${date.year}_${date.month}_${date.day}';
+
+    // Check if master cache exists and is valid
+    final existingData = prefs.getString(masterKey);
+    final timestamp = prefs.getInt('${_cacheTimestampPrefix}$masterKey');
+
+    if (existingData == null || timestamp == null) {
+      print('🔍 No master cache found for ${date.day}/${date.month}');
+      return []; // No cache data
+    }
+
+    // Check if cache is still valid
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - timestamp > _masterCacheDuration) {
+      print('⌛ Master cache expired for ${date.day}/${date.month}');
+      return []; // Expired cache
+    }
+
+    // Parse and filter leagues that have games
+    final Map<String, dynamic> leaguesData = jsonDecode(existingData);
+    final List<int> leaguesWithGames = leaguesData.entries
+        .where((entry) => entry.value == true)
+        .map((entry) => int.parse(entry.key))
+        .toList();
+
+    print(
+        '📋 Found ${leaguesWithGames.length} leagues with games on ${date.day}/${date.month}: ${leaguesWithGames.join(', ')}');
+    return leaguesWithGames;
   }
 
   // Get cached games if available and valid
@@ -41,10 +104,10 @@ class GameCacheService {
       print(
           '🔍 No cache found for league $leagueId${date != null ? " on ${date.day}/${date.month}" : ""}');
       return null;
-    }else{
-          print(
-          '🔍 cache found for league $leagueId${date != null ? " on ${date.day}/${date.month}" : ""}');
     }
+
+    print(
+        '🔍 Cache found for league $leagueId${date != null ? " on ${date.day}/${date.month}" : ""}');
 
     final timestamp = prefs.getInt('$_cacheTimestampPrefix$cacheKey');
     if (timestamp == null) {
@@ -142,7 +205,8 @@ class GameCacheService {
 
     for (final key in keys) {
       if (key.startsWith(_cacheKeyPrefix) ||
-          key.startsWith(_cacheTimestampPrefix)) {
+          key.startsWith(_cacheTimestampPrefix) ||
+          key.startsWith(_masterCacheKey)) {
         await prefs.remove(key);
       }
     }

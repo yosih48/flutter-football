@@ -16,35 +16,100 @@ class GamesMethods {
     bool onlyTodayGames = false,
     DateTime? selectedDate,
   }) async {
-    List<int> leagueIds =
-        onlyThisLeague ? [leagueId] : [2, 3, 383, 140, 39, 848];
+    // If only fetching a specific league, use the regular method
+    if (onlyThisLeague) {
+      print('🔍 Fetching games for single league $leagueId only');
+      return await fetchGamesForLeague(leagueId,
+          onlyTodayGames: onlyTodayGames, selectedDate: selectedDate);
+    }
+
+    List<int> allLeagueIds = [2, 3, 383, 140, 39, 848];
     List<Game> allGames = [];
-
-    // Instead of a single flag, track which leagues need fresh data
     List<int> leaguesToFetch = [];
-    bool hasAnyLiveGames = false;
 
-    // Try to get games from cache for each league
-    for (int id in leagueIds) {
-      print('🔍 Searching cache for league $id');
-      final cachedGames = await _cacheService.getCachedGames(id, selectedDate);
-      if (cachedGames != null) {
-        // If we have cached games, check if any are live
-        if (_cacheService.hasLiveGames(cachedGames)) {
-          print(
-              '⚡ Found live games in league $id - will fetch fresh data for this league');
-          hasAnyLiveGames = true;
-          leaguesToFetch.add(id);
-        } else {
-          // Use the cached games if they're valid and not live
-          print('✅ Using cached games for league $id');
-          allGames.addAll(cachedGames);
+    // If a date is specified, try to use the master cache to know which leagues have games
+    if (selectedDate != null) {
+      // Try to get the list of leagues that have games on this date from master cache
+      List<int> leaguesWithGames =
+          await _cacheService.getLeaguesWithGames(selectedDate);
+
+      if (leaguesWithGames.isNotEmpty) {
+        // We have information about which leagues have games
+        print(
+            '📋 Using master cache - only checking leagues with games: ${leaguesWithGames.join(', ')}');
+
+        // Only check these leagues
+        List<int> leaguesToCheck =
+            leaguesWithGames.where((id) => allLeagueIds.contains(id)).toList();
+
+        // Try to get games from cache for each active league
+        for (int id in leaguesToCheck) {
+          print('🔍 Searching cache for league $id');
+          final cachedGames =
+              await _cacheService.getCachedGames(id, selectedDate);
+          if (cachedGames != null) {
+            // If we have cached games, check if any are live
+            if (_cacheService.hasLiveGames(cachedGames)) {
+              print(
+                  '⚡ Found live games in league $id - will fetch fresh data for this league');
+              leaguesToFetch.add(id);
+            } else {
+              // Use the cached games if they're valid and not live
+              print('✅ Using cached games for league $id');
+              allGames.addAll(cachedGames);
+            }
+          } else {
+            // If we don't have cache for this specific league, add it to leagues to fetch
+            print(
+                '🔍 No cache available for league $id - will fetch fresh data for this league only');
+            leaguesToFetch.add(id);
+          }
         }
       } else {
-        // If we don't have cache for this specific league, add it to leagues to fetch
+        // No master cache, so we don't know which leagues have games
+        // We'll do a full check on the first league, then use its results to update master cache
         print(
-            '🔍 No cache available for league $id - will fetch fresh data for this league only');
-        leaguesToFetch.add(id);
+            '🔍 No master cache available - checking first league to build master cache');
+
+        // Try the first league
+        final firstLeagueGames = await _fetchGamesForLeague(allLeagueIds[0],
+            onlyTodayGames: onlyTodayGames, selectedDate: selectedDate);
+
+        // Cache the results
+        await _cacheService.cacheGames(
+            firstLeagueGames, allLeagueIds[0], selectedDate);
+        allGames.addAll(firstLeagueGames);
+
+        // Now check the rest of the leagues normally
+        leaguesToFetch = allLeagueIds.sublist(1);
+      }
+    } else {
+      // No date specified, can't use master cache optimization
+      // Instead of a single flag, track which leagues need fresh data
+      print('📅 No date filter specified - checking all leagues individually');
+
+      // Try to get games from cache for each league
+      for (int id in allLeagueIds) {
+        print('🔍 Searching cache for league $id');
+        final cachedGames =
+            await _cacheService.getCachedGames(id, selectedDate);
+        if (cachedGames != null) {
+          // If we have cached games, check if any are live
+          if (_cacheService.hasLiveGames(cachedGames)) {
+            print(
+                '⚡ Found live games in league $id - will fetch fresh data for this league');
+            leaguesToFetch.add(id);
+          } else {
+            // Use the cached games if they're valid and not live
+            print('✅ Using cached games for league $id');
+            allGames.addAll(cachedGames);
+          }
+        } else {
+          // If we don't have cache for this specific league, add it to leagues to fetch
+          print(
+              '🔍 No cache available for league $id - will fetch fresh data for this league only');
+          leaguesToFetch.add(id);
+        }
       }
     }
 
