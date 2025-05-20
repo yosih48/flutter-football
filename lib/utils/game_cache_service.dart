@@ -41,6 +41,9 @@ class GameCacheService {
       print(
           '🔍 No cache found for league $leagueId${date != null ? " on ${date.day}/${date.month}" : ""}');
       return null;
+    }else{
+          print(
+          '🔍 cache found for league $leagueId${date != null ? " on ${date.day}/${date.month}" : ""}');
     }
 
     final timestamp = prefs.getInt('$_cacheTimestampPrefix$cacheKey');

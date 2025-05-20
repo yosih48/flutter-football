@@ -190,6 +190,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   }
 
   Future<void> _fetchGames(league) async {
+    print(' _fetchGames _showOnlyThisLeagueTodayGames: $_showOnlyThisLeagueTodayGames');
+
     isLoading = true;
     try {
       List<Game> fetchedGames;
