@@ -132,17 +132,25 @@ class FirebaseMessagingService {
         List<Game> fetchedGames = await _fetchGames(leagueId);
         print(fetchedGames);
         Game? game = fetchedGames.firstWhere(
-          
           (g) => g.fixtureId == gameId,
           orElse: () => throw Exception('Game not found'),
         );
         print(game);
         print('Navigating to game details for game: ${game.fixtureId}');
+        
+        // Find the index of the current game in the fetched games list
+        int initialIndex = fetchedGames.indexWhere((g) => g.fixtureId == gameId);
+        if (initialIndex == -1) {
+          throw Exception('Game not found in fetched games list');
+        }
+
         navigatorKey.currentState?.push(
           MaterialPageRoute(
             builder: (context) => GameDetails(
               gameOriginalId: gameId,
               game: game,
+              games: fetchedGames,
+              initialIndex: initialIndex,
               userId: data['userId'],
             ),
           ),

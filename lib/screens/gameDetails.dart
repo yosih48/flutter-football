@@ -20,12 +20,17 @@ class GameDetails extends StatefulWidget {
   final gameOriginalId;
   final userId;
   final Game game;
+  final List<Game> games;
+  final int initialIndex;
 
-  const GameDetails(
-      {super.key,
-      required this.gameOriginalId,
-      required this.game,
-      this.userId});
+  const GameDetails({
+    super.key,
+    required this.gameOriginalId,
+    required this.game,
+    required this.games,
+    required this.initialIndex,
+    this.userId,
+  });
 
   @override
   State<GameDetails> createState() => _GameDetailsState();
@@ -40,112 +45,30 @@ class _GameDetailsState extends State<GameDetails> {
   late String selectedGroupName = "";
   Map<String, String> _userGroups = {};
   bool isLoading = true;
+  late int _currentIndex;
+  late Game _currentGame;
+
   @override
   void initState() {
     super.initState();
-    league = widget.game.league.id;
+    _currentIndex = widget.initialIndex;
+    print('widget.initialIndex:${widget.initialIndex}');
+    _currentGame = widget.games[_currentIndex];
+    league = _currentGame.league.id;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-
-    // currentUserId = userProvider.currentUserId!;
     currentUserId = widget.userId;
-
-    print('currentUserId: ${currentUserId}');
-    // _loadSelectedGroupName();
     _fetchUserGroups();
     _fetchGuesses(selectedGroupName);
   }
 
-  Future<void> _loadSelectedGroupName() async {
-    final defaultGroup = 'public';
-    final sharedGroupName = await SharedPreferencesUtil.getSelectedGroupName();
-    String groupName = defaultGroup;
-    if (sharedGroupName == null) {
-      print('sharedGroupName == null');
-      await SharedPreferencesUtil.setSelectedGroupName(defaultGroup);
-      groupName = defaultGroup; // Assign defaultGroup manually
-    } else {
-      print('sharedGroupName: ${sharedGroupName}');
-      print('sharedGroupName not null');
-      groupName = sharedGroupName;
-    }
-
-    setState(() {
-      selectedGroupName = groupName;
-    });
-    print('selectedGroupName shared: ${selectedGroupName}');
-  }
-
-  Future<void> _fetchUserGroups() async {
-    try {
-      Map<String, dynamic> userData =
-          await UsersMethods().fetchUserById(currentUserId);
+  void _navigateToGame(int newIndex) {
+    if (newIndex >= 0 && newIndex < widget.games.length) {
       setState(() {
-        //   _userGroups = Map<String, String>.from(userData['groupID'] ?? {});
-        //   print(_userGroups);
-
-        //  selectedGroupName = _userGroups.values.first;
-        //       _fetchGuesses(selectedGroupName);
-
-        Map<String, String> tempGroups =
-            Map<String, String>.from(userData['groupID'] ?? {});
-
-        // Remove the 'public' group if it exists
-        tempGroups.removeWhere((key, value) => value.toLowerCase() == 'public');
-
-        // Assign the filtered map to _userGroups
-        _userGroups = tempGroups;
-
-        print(_userGroups);
-        final userProvider = Provider.of<UserProvider>(context, listen: false);
-        // selectedGroupName = userProvider.selectedGroupName;
-        // Check if _userGroups is not empty before accessing first value
-        if (_userGroups.isNotEmpty &&
-            userProvider.selectedGroupName != 'public') {
-          // print('  userProvider.selectedGroupName: ${userProvider.selectedGroupName}');
-          // selectedGroupName = _userGroups.values.first;
-          selectedGroupName = userProvider.selectedGroupName;
-
-          _fetchGuesses(selectedGroupName);
-        } else {
-          selectedGroupName = _userGroups.values.first;
-
-          _fetchGuesses(selectedGroupName);
-          // Handle the case when no groups are left after removing 'public'
-          print('No groups available after removing public');
-          // You might want to set a default state or show a message to the user
-        }
+        _currentIndex = newIndex;
+        _currentGame = widget.games[newIndex];
+        isLoading = true;
       });
-    } catch (e) {
-      print('Failed to fetch user groups: $e');
-    }
-  }
-
-  Future<void> _fetchGuesses(groupName) async {
-    // final userProvider = Provider.of<UserProvider>(context, listen: false);
-    // selectedGroupName = userProvider.selectedGroupName;
-
-    try {
-      final guesses =
-          await GuessesMethods().fetchAllUsersGuesses(widget.gameOriginalId);
-      final callService = CallService();
-      final guessesWithNames = await Future.wait(
-          guesses.map((guess) => callService.getGuessWithNames(guess)));
-
-      final filteredGuesses = guessesWithNames.where((guessWithName) {
-        return guessWithName.userGroups.values.contains(groupName);
-      }).toList();
-
-      setState(() {
-        _guessesWithNames = filteredGuesses;
-        isLoading = false;
-      });
-      //     for (var guessWithName in _guessesWithNames) {
-      //   print(guessWithName.userGroups);
-      // }
-    } catch (e, stackTrace) {
-      print('Failed to fetch guesses: $e');
-      print('Stack trace: $stackTrace');
-      // You might want to show an error message to the user here
+      _fetchGuesses(selectedGroupName);
     }
   }
 
@@ -154,15 +77,9 @@ class _GameDetailsState extends State<GameDetails> {
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
-        // title: Text(
-        //   'Game Details',
-        //   style: TextStyle(
-        //     color: white, // White color for the team names
-        //   ),
-        // ),
         backgroundColor: Colors.transparent,
         iconTheme: IconThemeData(
-          color: Colors.white, // Set the color of the arrow icon to white
+          color: Colors.white,
         ),
       ),
       body: isLoading
@@ -179,23 +96,69 @@ class _GameDetailsState extends State<GameDetails> {
   }
 
   Widget _buildGameCard() {
-    return Card(
-      color: cards,
-      margin: EdgeInsets.all(12.0),
-      child: Padding(
-        padding:
-            EdgeInsets.only(top: 8.0, bottom: 24.0, right: 16.0, left: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildGameHeader(),
-            SizedBox(height: 16.0),
-            _buildTeamScores(),
-            SizedBox(height: 8.0),
-            // Add any additional rows here
-          ],
+    return Stack(
+      children: [
+        Card(
+          color: cards,
+          margin: EdgeInsets.all(12.0),
+          child: Padding(
+            padding: EdgeInsets.only(top: 8.0, bottom: 24.0, right: 16.0, left: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildGameHeader(),
+                SizedBox(height: 16.0),
+                _buildTeamScores(),
+                SizedBox(height: 8.0),
+              ],
+            ),
+          ),
         ),
-      ),
+        // Right arrow
+      
+          if (_currentIndex > 0)
+          Positioned(
+            right: 10,
+            top: 10,
+            bottom: 0,
+            child: Center(
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  // color: Colors.black.withOpacity(0.5),
+                  // shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+                  onPressed: () => _navigateToGame(_currentIndex - 1),
+                ),
+              ),
+            ),
+          ),
+        // Left arrow
+
+       if (_currentIndex < widget.games.length - 1)
+          Positioned(
+            left: 10,
+            top: 10,
+            bottom: 0,
+            child: Center(
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  // color: Colors.black.withOpacity(0.5),
+                  // shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: Icon(Icons.arrow_forward_ios, color: Colors.white, size: 20),
+                  onPressed: () => _navigateToGame(_currentIndex + 1),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -204,18 +167,18 @@ class _GameDetailsState extends State<GameDetails> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          widget.game.status.long,
+          _currentGame.status.long,
           style: TextStyle(
-            color: (widget.game.status.long == "First Half" ||
-                    widget.game.status.long == "Second Half" ||
-                    widget.game.status.long == "Halftime")
+            color: (_currentGame.status.long == "First Half" ||
+                    _currentGame.status.long == "Second Half" ||
+                    _currentGame.status.long == "Halftime")
                 ? Colors.red
                 : Color(0xFF9BA4B5).withOpacity(0.6),
             fontSize: 14.0,
           ),
         ),
         Text(
-          DateFormat('dd/MM/yy').format(widget.game.date),
+          DateFormat('dd/MM/yy').format(_currentGame.date),
           style: TextStyle(
             color: Color(0xFF9BA4B5).withOpacity(0.9),
             fontSize: 14.0,
@@ -229,20 +192,20 @@ class _GameDetailsState extends State<GameDetails> {
     return Row(
       children: [
         Expanded(
-          child: _buildTeamInfo(widget.game.home, isHome: true),
+          child: _buildTeamInfo(_currentGame.home, isHome: true),
         ),
         SizedBox(width: 8.0),
         Text(
-          '${widget.game.goals.home} - ${widget.game.goals.away}',
+          '${_currentGame.goals.home} - ${_currentGame.goals.away}',
           style: TextStyle(
-            color: Colors.white, // White color for the team names
+            color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 18.0,
           ),
         ),
         SizedBox(width: 8.0),
         Expanded(
-          child: _buildTeamInfo(widget.game.away, isHome: false),
+          child: _buildTeamInfo(_currentGame.away, isHome: false),
         ),
       ],
     );
@@ -462,5 +425,61 @@ class _GameDetailsState extends State<GameDetails> {
             ),
       ],
     );
+  }
+
+  Future<void> _fetchUserGroups() async {
+    try {
+      Map<String, dynamic> userData =
+          await UsersMethods().fetchUserById(currentUserId);
+      setState(() {
+        Map<String, String> tempGroups =
+            Map<String, String>.from(userData['groupID'] ?? {});
+
+        // Remove the 'public' group if it exists
+        tempGroups.removeWhere((key, value) => value.toLowerCase() == 'public');
+
+        // Assign the filtered map to _userGroups
+        _userGroups = tempGroups;
+
+        print(_userGroups);
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        // Check if _userGroups is not empty before accessing first value
+        if (_userGroups.isNotEmpty &&
+            userProvider.selectedGroupName != 'public') {
+          selectedGroupName = userProvider.selectedGroupName;
+
+          _fetchGuesses(selectedGroupName);
+        } else {
+          selectedGroupName = _userGroups.values.first;
+
+          _fetchGuesses(selectedGroupName);
+          // Handle the case when no groups are left after removing 'public'
+          print('No groups available after removing public');
+        }
+      });
+    } catch (e) {
+      print('Failed to fetch user groups: $e');
+    }
+  }
+
+  Future<void> _fetchGuesses(groupName) async {
+    try {
+      final guesses = await GuessesMethods().fetchAllUsersGuesses(_currentGame.fixtureId);
+      final callService = CallService();
+      final guessesWithNames = await Future.wait(
+          guesses.map((guess) => callService.getGuessWithNames(guess)));
+
+      final filteredGuesses = guessesWithNames.where((guessWithName) {
+        return guessWithName.userGroups.values.contains(groupName);
+      }).toList();
+
+      setState(() {
+        _guessesWithNames = filteredGuesses;
+        isLoading = false;
+      });
+    } catch (e, stackTrace) {
+      print('Failed to fetch guesses: $e');
+      print('Stack trace: $stackTrace');
+    }
   }
 }

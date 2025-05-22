@@ -774,6 +774,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                     builder: (context) => GameDetails(
                       gameOriginalId: game.fixtureId,
                       game: game,
+                      games: displayGames,
+                      initialIndex: displayGames.indexOf(game),
                       userId: clientId,
                     ),
                   ),
