@@ -96,69 +96,87 @@ class _GameDetailsState extends State<GameDetails> {
   }
 
   Widget _buildGameCard() {
-    return Stack(
-      children: [
-        Card(
-          color: cards,
-          margin: EdgeInsets.all(12.0),
-          child: Padding(
-            padding: EdgeInsets.only(top: 8.0, bottom: 24.0, right: 16.0, left: 16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildGameHeader(),
-                SizedBox(height: 16.0),
-                _buildTeamScores(),
-                SizedBox(height: 8.0),
-              ],
-            ),
-          ),
-        ),
-        // Right arrow
-      
-          if (_currentIndex > 0)
-          Positioned(
-            right: 10,
-            top: 10,
-            bottom: 0,
-            child: Center(
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  // color: Colors.black.withOpacity(0.5),
-                  // shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  icon: Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-                  onPressed: () => _navigateToGame(_currentIndex - 1),
-                ),
+    return GestureDetector(
+      onHorizontalDragEnd: (DragEndDetails details) {
+        if (details.primaryVelocity! < 0) {
+          // Swipe right - go to previous game
+          if (_currentIndex > 0) {
+            _navigateToGame(_currentIndex - 1);
+          }
+        } else if (details.primaryVelocity! > 0) {
+          // Swipe left - go to next game
+          if (_currentIndex < widget.games.length - 1) {
+            _navigateToGame(_currentIndex + 1);
+          }
+        }
+      },
+      child: Stack(
+        children: [
+          Card(
+            color: cards,
+            margin: EdgeInsets.all(12.0),
+            child: Padding(
+              padding: EdgeInsets.only(
+                  top: 8.0, bottom: 24.0, right: 16.0, left: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildGameHeader(),
+                  SizedBox(height: 16.0),
+                  _buildTeamScores(),
+                  SizedBox(height: 8.0),
+                ],
               ),
             ),
           ),
-        // Left arrow
+          // Right arrow
 
-       if (_currentIndex < widget.games.length - 1)
-          Positioned(
-            left: 10,
-            top: 10,
-            bottom: 0,
-            child: Center(
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  // color: Colors.black.withOpacity(0.5),
-                  // shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  icon: Icon(Icons.arrow_forward_ios, color: Colors.white, size: 20),
-                  onPressed: () => _navigateToGame(_currentIndex + 1),
+          if (_currentIndex > 0)
+            Positioned(
+              right: 10,
+              top: 10,
+              bottom: 0,
+              child: Center(
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                      // color: Colors.black.withOpacity(0.5),
+                      // shape: BoxShape.circle,
+                      ),
+                  child: IconButton(
+                    icon: Icon(Icons.arrow_back_ios,
+                        color: Colors.white, size: 20),
+                    onPressed: () => _navigateToGame(_currentIndex - 1),
+                  ),
                 ),
               ),
             ),
-          ),
-      ],
+          // Left arrow
+
+          if (_currentIndex < widget.games.length - 1)
+            Positioned(
+              left: 10,
+              top: 10,
+              bottom: 0,
+              child: Center(
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                      // color: Colors.black.withOpacity(0.5),
+                      // shape: BoxShape.circle,
+                      ),
+                  child: IconButton(
+                    icon: Icon(Icons.arrow_forward_ios,
+                        color: Colors.white, size: 20),
+                    onPressed: () => _navigateToGame(_currentIndex + 1),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -464,7 +482,8 @@ class _GameDetailsState extends State<GameDetails> {
 
   Future<void> _fetchGuesses(groupName) async {
     try {
-      final guesses = await GuessesMethods().fetchAllUsersGuesses(_currentGame.fixtureId);
+      final guesses =
+          await GuessesMethods().fetchAllUsersGuesses(_currentGame.fixtureId);
       final callService = CallService();
       final guessesWithNames = await Future.wait(
           guesses.map((guess) => callService.getGuessWithNames(guess)));
