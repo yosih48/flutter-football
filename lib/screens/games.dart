@@ -64,6 +64,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   int league = 2;
   // bool _showOnlyTodayGames = false;
   bool _showOnlyThisLeagueTodayGames = false;
+  bool _showOnlyLiveGames = false;
   late String clientId;
   late String email;
   int selectedIndex = 0;
@@ -137,6 +138,12 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       _showOnlyThisLeagueTodayGames = !_showOnlyThisLeagueTodayGames;
     });
     _fetchGames(league);
+  }
+
+  void toggleShowOnlyLiveGames() {
+    setState(() {
+      _showOnlyLiveGames = !_showOnlyLiveGames;
+    });
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -501,6 +508,35 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           ),
         ),
         actions: [
+          // Live games switch
+          Container(
+            margin: EdgeInsets.only(right: 8),
+            child: Row(
+              children: [
+                Text(
+                  'Live',
+                  style: TextStyle(
+                    color: white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Transform.scale(
+                  scale: 0.8,
+                  child: Switch(
+                    value: _showOnlyLiveGames,
+                    onChanged: (value) {
+                      toggleShowOnlyLiveGames();
+                    },
+                    activeColor: Colors.red,
+                    activeTrackColor: Colors.red.withOpacity(0.5),
+                    inactiveThumbColor: Colors.white,
+                    inactiveTrackColor: Colors.grey.withOpacity(0.5),
+                  ),
+                ),
+              ],
+            ),
+          ),
           if (selectedDate != null)
             Container(
               margin: EdgeInsets.only(right: 16),
@@ -705,12 +741,26 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   }
 
   ListView listView(List<Game> filteredGames, List<int> enabledLeagues) {
-    // Filter games based on the enabledLeagues before displaying
+    // Filter games based on the enabledLeagues and live games filter
     final List<Game> displayGames = filteredGames.where((game) {
       // Check if the game's leagueId is in the user's chosen leagues
-      return enabledLeagues.contains(game.league.id);
+      bool isInEnabledLeagues = enabledLeagues.contains(game.league.id);
+      
+      // If live games filter is enabled, only show live games
+      if (_showOnlyLiveGames) {
+        bool isLive = game.status.short == '1H' ||
+                     game.status.short == '2H' ||
+                     game.status.short == 'HT' ||
+                     game.status.short == 'ET' ||
+                     game.status.short == 'BT' ||
+                     game.status.short == 'P' ||
+                     game.status.short == 'INT';
+        return isInEnabledLeagues && isLive;
+      }
+      
+      return isInEnabledLeagues;
     }).toList();
-    // Return empty container with a message if no games match the enabled leagues
+    // Return empty container with a message if no games match the filters
     if (displayGames.isEmpty) {
       print('displayGames.isEmpty');
       return ListView.builder(
@@ -725,13 +775,15 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.scoreboard_outlined,
+                    _showOnlyLiveGames ? Icons.live_tv : Icons.scoreboard_outlined,
                     size: 48,
                     color: Colors.grey,
                   ),
                   SizedBox(height: 16),
                   Text(
-                    AppLocalizations.of(context)!.nogames,
+                    _showOnlyLiveGames 
+                        ? 'No live games right now'
+                        : AppLocalizations.of(context)!.nogames,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
