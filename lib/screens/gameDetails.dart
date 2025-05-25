@@ -48,6 +48,26 @@ class _GameDetailsState extends State<GameDetails> {
   late int _currentIndex;
   late Game _currentGame;
 
+    Color getStatusColor(String status) {
+    switch (status) {
+      case "First Half":
+      case "Second Half":
+      case "Extra Time":
+        return Colors.red;
+      case "Halftime":
+        return Colors.orange;
+      case "Not Started":
+        return Colors.grey;
+      case "Match Finished":
+        return Colors.green;
+      case "Postponed":
+      case "TBD":
+        return Colors.yellow;
+      default:
+        return Color(0xFF9BA4B5).withOpacity(0.9);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -194,13 +214,13 @@ class _GameDetailsState extends State<GameDetails> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          _currentGame.status.long,
+          // _currentGame.status.elapsed.toString(),
+                   (_currentGame.status.long == "First Half" ||
+                  _currentGame.status.long == "Second Half")
+              ? "${_currentGame.status.elapsed}'"
+              : _currentGame.status.long,
           style: TextStyle(
-            color: (_currentGame.status.long == "First Half" ||
-                    _currentGame.status.long == "Second Half" ||
-                    _currentGame.status.long == "Halftime")
-                ? Colors.red
-                : Color(0xFF9BA4B5).withOpacity(0.6),
+           color: getStatusColor(_currentGame.status.long),
             fontSize: 14.0,
           ),
         ),

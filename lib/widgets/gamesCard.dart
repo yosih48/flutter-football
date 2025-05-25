@@ -30,6 +30,26 @@ class GameWidget extends StatelessWidget {
       awayController!.text = guess!.awayTeamGoals.toString();
     }
   }
+  Color getStatusColor(String status) {
+    switch (status) {
+      case "First Half":
+      case "Second Half":
+      case "Extra Time":
+        return Colors.red;
+      case "Halftime":
+        return Colors.orange;
+      case "Not Started":
+        return Colors.grey;
+      case "Match Finished":
+        return Colors.green;
+      case "Postponed":
+      case "TBD":
+        return Colors.yellow;
+      default:
+        return Color(0xFF9BA4B5).withOpacity(0.9);
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -51,13 +71,12 @@ class GameWidget extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    game.status.long,
+                   (game.status.long == "First Half" ||
+                            game.status.long == "Second Half")
+                        ? "${game.status.elapsed}'"
+                        : game.status.long,
                     style: TextStyle(
-                      color: (game.status.long == "First Half" ||
-                              game.status.long == "Second Half" ||
-                              game.status.long == "Halftime")
-                          ? Colors.red
-                          : Color(0xFF9BA4B5).withOpacity(0.9),
+                color: getStatusColor(game.status.long),
                       fontSize: 14.0,
                     ),
                   ),
