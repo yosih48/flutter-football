@@ -98,14 +98,18 @@ class _GameDetailsState extends State<GameDetails> {
   Widget _buildGameCard() {
     return GestureDetector(
       onHorizontalDragEnd: (DragEndDetails details) {
-        if (details.primaryVelocity! < 0) {
+        if (details.primaryVelocity! < 0 ) {
+
           // Swipe right - go to previous game
-          if (_currentIndex > 0) {
+          if (_currentIndex > 0 && widget.games[_currentIndex - 1].status.long != "Not Started") {
+            print(widget.games[_currentIndex - 1].home.name);
+        
             _navigateToGame(_currentIndex - 1);
           }
         } else if (details.primaryVelocity! > 0) {
+    
           // Swipe left - go to next game
-          if (_currentIndex < widget.games.length - 1) {
+          if (_currentIndex < widget.games.length - 1 && widget.games[_currentIndex + 1].status.long != "Not Started") {
             _navigateToGame(_currentIndex + 1);
           }
         }
@@ -131,7 +135,10 @@ class _GameDetailsState extends State<GameDetails> {
           ),
           // Right arrow
 
-          if (_currentIndex > 0)
+          if (_currentIndex > 0 
+          && widget.games[_currentIndex - 1].status.long != "Not Started"
+          )
+          
             Positioned(
               right: 10,
               top: 10,
@@ -154,7 +161,9 @@ class _GameDetailsState extends State<GameDetails> {
             ),
           // Left arrow
 
-          if (_currentIndex < widget.games.length - 1)
+          if (_currentIndex < widget.games.length - 1 
+          && widget.games[_currentIndex + 1].status.long != "Not Started"
+          )
             Positioned(
               left: 10,
               top: 10,
