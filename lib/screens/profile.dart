@@ -596,7 +596,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                   Icon(Icons.group_outlined, size: 48, color: Colors.grey),
                   SizedBox(height: 16),
                   Text(
-                    "No groups yet",
+                    AppLocalizations.of(context)!.nogroupsyet,
                     style: TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                 ],
