@@ -89,9 +89,11 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                       : index == 4
                           ? 39 // Premier League
                           : index == 5
-                              ? 848 // Bundesliga
-                              : index == 6
-                                  ? 78 //conferenceleague
+                              ? 848 // conferenceleague
+                          : index == 6
+                              ? 15 // Club World Cup
+                              : index == 7
+                                  ? 78 //Bundesliga
                                   : 2; // Default to Champions League
 
       selectedIndex = index;
@@ -418,7 +420,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           refreshedGames = [];
           final gamesMethods = GamesMethods();
           // Force refresh all visible leagues
-          final leagueIds = [2, 3, 383, 140, 39, 848, 78];
+          final leagueIds = [2, 3, 383, 140, 39, 848, 15,78];
           for (int id in leagueIds) {
             final games = await gamesMethods.forceRefreshGames(
               id,
@@ -598,6 +600,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                     if (chosenLeagues['39'] == true) 39,
                     if (chosenLeagues['78'] == true) 78,
                     if (chosenLeagues['848'] == true) 848,
+                    if (chosenLeagues['15'] == true) 15,
                   ];
 
                   final options = enabledLeagues.map((id) {
@@ -616,6 +619,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                         return AppLocalizations.of(context)!.bundesleague;
                       case 848:
                         return AppLocalizations.of(context)!.conferenceleague;
+                      case 15:
+                        return AppLocalizations.of(context)!.clubworldcup;
                       default:
                         return '';
                     }
@@ -673,6 +678,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                     if (chosenLeagues['39'] == true) 39,
                     if (chosenLeagues['78'] == true) 78,
                     if (chosenLeagues['848'] == true) 848,
+                    if (chosenLeagues['15'] == true) 15,
                   ];
 
                   return isLoading

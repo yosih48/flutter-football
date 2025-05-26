@@ -33,6 +33,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
     'ליגה אירופית': false,
     'ליגה אנגלית': false,
     'קונפרנס ליג': false,
+    'גביע מועדונים': false,
     // 'ליגה גרמנית': false,
   };
 
@@ -434,6 +435,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       39: AppLocalizations.of(context)!.premierleague,
       78: AppLocalizations.of(context)!.bundesleague,
       848: AppLocalizations.of(context)!.conferenceleague,
+      15: AppLocalizations.of(context)!.clubworldcup,
     };
 
     final leagueIcons = {

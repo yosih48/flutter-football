@@ -23,7 +23,7 @@ class GamesMethods {
           onlyTodayGames: onlyTodayGames, selectedDate: selectedDate);
     }
 
-    List<int> allLeagueIds = [2, 3, 383, 140, 39, 848];
+    List<int> allLeagueIds = [2, 3, 383, 140, 39, 848, 15];
     List<Game> allGames = [];
     List<int> leaguesToFetch = [];
 

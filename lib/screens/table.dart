@@ -82,10 +82,12 @@ class TableScreenContentState extends State<TableScreenContent> {
                       ? 3 // Europa League
                       : index == 4
                           ? 39 // Premier League
-                          : index == 5
-                              ? 848 // Bundesliga
-                              :index == 6
-                              ? 78 //conferenceleague
+                               : index == 5
+                              ? 848 // conferenceleague
+                              : index == 6
+                                  ? 15 // Club World Cup
+                                  : index == 7
+                                      ? 78 //Bundesliga
                               : 2; // Default to Champions League
       selectedIndex = index;
       Provider.of<UserProvider>(context, listen: false)
@@ -361,6 +363,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                           if (chosenLeagues['39'] == true) 39,
                           if (chosenLeagues['78'] == true) 78,
                           if (chosenLeagues['848'] == true) 848,
+                             if (chosenLeagues['15'] == true) 15,
                         ];
 
                         final options = enabledLeagues.map((id) {
@@ -380,6 +383,8 @@ class TableScreenContentState extends State<TableScreenContent> {
                             return AppLocalizations.of(context)!.bundesleague;
                             case 848:
                             return AppLocalizations.of(context)!.conferenceleague;
+                              case 15:
+                              return AppLocalizations.of(context)!.clubworldcup;
                             default:
                               return '';
                           }

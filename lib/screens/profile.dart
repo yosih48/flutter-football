@@ -372,7 +372,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
 
   @override
   Widget build(BuildContext context) {
-    final allowedGroupIds = {'383', '2', '140', '3'};
+    final allowedGroupIds = {'383', '2', '140', '3' ,'39', '848', '15'};
     final filteredWinners = _userWinners.entries
         .where((entry) => allowedGroupIds.contains(entry.key))
         .fold<Map<String, String>>({}, (map, entry) {
@@ -742,6 +742,18 @@ class usersWinners extends StatelessWidget {
                   break;
                 case '3':
                   leagueName = AppLocalizations.of(context)!.europaleague;
+                  leagueColor = Colors.purple;
+                  break;
+                case '39':
+                  leagueName = AppLocalizations.of(context)!.premierleague;
+                  leagueColor = Colors.purple;
+                  break;
+                case '848':
+                  leagueName = AppLocalizations.of(context)!.conferenceleague;
+                  leagueColor = Colors.purple;
+                  break;
+                case '15':
+                  leagueName = AppLocalizations.of(context)!.clubworldcup;
                   leagueColor = Colors.purple;
                   break;
               }
