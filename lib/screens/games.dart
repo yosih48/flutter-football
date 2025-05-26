@@ -152,6 +152,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         context: context,
         initialDate: selectedDate ?? DateTime.now(),
         firstDate: DateTime(2024),
+        cancelText: AppLocalizations.of(context)!.cleardatefilter,
         lastDate: DateTime(DateTime.now().year + 1),
         builder: (BuildContext context, Widget? child) {
           return Theme(
@@ -450,13 +451,13 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       });
 
       // Show a feedback message to the user
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Games updated'),
-          // backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text('Games updated'),
+      //     // backgroundColor: Colors.green,
+      //     duration: Duration(seconds: 2),
+      //   ),
+      // );
     } catch (e) {
       print('Failed to refresh games: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -782,7 +783,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                   SizedBox(height: 16),
                   Text(
                     _showOnlyLiveGames 
-                        ? 'No live games right now'
+                        ? AppLocalizations.of(context)!.nolivegames
                         : AppLocalizations.of(context)!.nogames,
                     style: TextStyle(
                       color: Colors.white,

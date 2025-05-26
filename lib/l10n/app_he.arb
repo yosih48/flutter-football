@@ -129,5 +129,7 @@
   "allLeagues": "כל הליגות",
    "noEnabledLeagues": "אין ליגות זמינות להתראות",
   "enableLeaguesFirst": "אנא הפעל תחילה ליגות בלשונית 'הליגות שלי'",
-  "goToChosenLeagues": "עבור לליגות נבחרות"
+  "goToChosenLeagues": "עבור לליגות נבחרות",
+  "nolivegames": "אין משחקים חיים כרגע",
+  "cleardatefilter": "נקה סינון"
 }

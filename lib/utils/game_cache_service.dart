@@ -10,7 +10,7 @@ class GameCacheService {
   // Cache expiration durations in milliseconds
   static const int _finishedGamesCacheDuration =
       24 * 60 * 60 * 1000; // 24 hours
-  static const int _upcomingGamesCacheDuration = 15 * 60 * 1000; // 30 minutes
+  static const int _upcomingGamesCacheDuration = 7 * 60 * 1000; // 15 minutes
   static const int _masterCacheDuration = 6 * 60 * 60 * 1000; // 6 hours
 
   // Store games in cache by league and date
