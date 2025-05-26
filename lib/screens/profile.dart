@@ -51,6 +51,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   Map<String, String> _userGroups = {};
   Map<String, String> _userWinners = {};
   List<Map<String, dynamic>> _groupsInfo = [];
+  bool _isLoadingGroups = true;
   late String currentUserId;
   late String currentUserEmail;
   TextEditingController _groupNameController = TextEditingController();
@@ -122,9 +123,13 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
         }
         Provider.of<UserProvider>(context, listen: false)
             .setCurrentUser(currentUserId);
+        _isLoadingGroups = false;
       });
     } catch (e) {
       print('Failed to fetch user groups: $e');
+      setState(() {
+        _isLoadingGroups = false;
+      });
     }
   }
 
@@ -517,7 +522,17 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                   color: cards.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: usersGroups(selectedGroup),
+                child: _isLoadingGroups
+                    ? Container(
+                        height: 120,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.blue),
+                          ),
+                        ),
+                      )
+                    : usersGroups(selectedGroup),
               ),
 
               SizedBox(height: 24),

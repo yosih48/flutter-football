@@ -126,7 +126,8 @@
   "enableLeaguesFirst": "Please enable leagues in the Chosen Leagues tab first",
   "goToChosenLeagues": "Go to Chosen Leagues",
   "nolivegames": "No live games right now",
-   "cleardatefilter": "clear"
+   "cleardatefilter": "clear",
+   "nogroupsyet": "No groups yet"
     
 
 
