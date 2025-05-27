@@ -163,7 +163,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         'europeLeague': notificationStates['ליגה אירופית'],
         'premierLeague': notificationStates['ליגה אנגלית'],
         'conferenceLeague': notificationStates['קונפרנס ליג'],
-        'ClubWorldCup': notificationStates['גביע מועדונים'],
+        'clubworldcup': notificationStates['גביע מועדונים'],
         // 'bundesLeague': notificationStates['ליגה גרמנית'],
         'africaLeague': false,
         // 'conferenceLeague': false,
@@ -190,6 +190,29 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       }
     } catch (e) {
       print('Error updating database: $e');
+    }
+  }
+
+  String _getLocalizedLeagueName(String hebrewLeagueName) {
+    switch (hebrewLeagueName) {
+      case 'ליגת אלופות':
+        return AppLocalizations.of(context)!.championsleague;
+      case 'ליגת העל':
+        return AppLocalizations.of(context)!.ligathaal;
+      case 'ליגה ספרדית':
+        return AppLocalizations.of(context)!.laliga;
+      case 'ליגה אירופית':
+        return AppLocalizations.of(context)!.europaleague;
+      case 'ליגה אנגלית':
+        return AppLocalizations.of(context)!.premierleague;
+      case 'קונפרנס ליג':
+        return AppLocalizations.of(context)!.conferenceleague;
+      case 'גביע מועדונים':
+        return AppLocalizations.of(context)!.clubworldcup;
+      // case 'ליגה גרמנית':
+      //   return AppLocalizations.of(context)!.bundesleague;
+      default:
+        return hebrewLeagueName; // Fallback to the original name if no match
     }
   }
 
@@ -329,7 +352,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   child: SwitchListTile(
                     title: Text(
-                      leagueName,
+                      _getLocalizedLeagueName(leagueName),
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w500,

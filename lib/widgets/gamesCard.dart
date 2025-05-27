@@ -364,7 +364,7 @@ class GameWidget extends StatelessWidget {
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          '${guess!.sumPoints % 1 == 0 ? guess!.sumPoints.toInt() : guess!.sumPoints} נקודות ',
+                          '${guess!.sumPoints % 1 == 0 ? guess!.sumPoints.toInt() : guess!.sumPoints} ${AppLocalizations.of(context)!.points}',
                           style: TextStyle(
                             color: Color(0xFF9BA4B5).withOpacity(0.6),
                             fontSize: 14.0,
