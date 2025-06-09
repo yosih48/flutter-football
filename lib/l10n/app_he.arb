@@ -138,5 +138,7 @@
   "nolivegames": "אין משחקים חיים כרגע",
   "cleardatefilter": "נקה סינון",
    "nogroupsyet": "אינך חבר בקבוצות עדיין",
-     "points": "נקודות"
+     "points": "נקודות",
+     "pst":"נק'",
+     "topScorerPoints":"ניקוד על שערים:"
 }

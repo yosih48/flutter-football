@@ -133,7 +133,9 @@
   "nolivegames": "No live games right now",
    "cleardatefilter": "clear",
    "nogroupsyet": "No groups yet",
-   "points": "points"
+   "points": "points",
+   "pst":"pst",
+    "topScorerPoints":"goals Points:"
     
 
 

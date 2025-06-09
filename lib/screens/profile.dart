@@ -51,6 +51,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   Map<String, String> _userGroups = {};
   Map<String, String> _userWinners = {};
   Map<String, String> _userTopScorer = {};
+  Map<String, int> _userTopScorerPoints = {};
   List<Map<String, dynamic>> _groupsInfo = [];
   bool _isLoadingGroups = true;
   bool _showWinners = true; // Toggle state for Winners/Top Scorers
@@ -101,6 +102,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
         _userGroups = Map<String, String>.from(userData['groupID'] ?? {});
         _userWinners = Map<String, String>.from(userData['winner'] ?? {});
         _userTopScorer = Map<String, String>.from(userData['topScorer'] ?? {});
+        _userTopScorerPoints = Map<String, int>.from(userData['topScorerPoints'] ?? {});
         _groupsInfo = groupsInfo;
         print(_userGroups);
         print(_userWinners);
@@ -648,6 +650,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                         : usersTopScorers(
                             key: ValueKey('topScorers'),
                             userTopScorers: _userTopScorer,
+                            userTopScorerPoints: _userTopScorerPoints,
                             filteredTopScorers: _userTopScorer.entries
                                 .where((entry) => allowedGroupIds.contains(entry.key))
                                 .fold<Map<String, String>>({}, (map, entry) {
@@ -901,10 +904,12 @@ class usersTopScorers extends StatelessWidget {
   const usersTopScorers({
     super.key,
     required Map<String, String> userTopScorers,
+    required this.userTopScorerPoints,
     required this.filteredTopScorers,
   }) : _userTopScorers = userTopScorers;
 
   final Map<String, String> _userTopScorers;
+  final Map<String, int> userTopScorerPoints;
   final Map<String, String> filteredTopScorers;
 
   @override
@@ -1003,43 +1008,100 @@ class usersTopScorers extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                subtitle: Text(
-                  AppLocalizations.of(context)!.yourprediction ?? "Your prediction",
-                  style: TextStyle(
-                    color: Colors.grey[400],
-                    fontSize: 12,
-                  ),
-                ),
-                trailing: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: leagueColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: leagueColor.withOpacity(0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.sports_soccer,
-                        color: leagueColor,
-                        size: 16,
+                subtitle: Row(
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.topScorerPoints ?? "Goals Points",
+                      style: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 14,
                       ),
-                      SizedBox(width: 6),
-                      Text(
-                        topScorerName,
-                        style: TextStyle(
-                          color: leagueColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                    ),
+                    SizedBox(width: 5,),
+                    if (userTopScorerPoints[groupId] != null)
+                    Text(
+                     '${userTopScorerPoints[groupId]}' ' ${AppLocalizations.of(context)!.pst}',
+                      style: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 14,
+                      ),
+                    ),
+                     if (userTopScorerPoints[groupId] == null)
+                        Text(
+                     '0' ' ${AppLocalizations.of(context)!.pst}',
+                      style: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+                trailing: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // Points display
+                    // if (userTopScorerPoints[groupId] != null) ...[
+                    //   Container(
+                    //     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    //     decoration: BoxDecoration(
+                    //       color: Colors.green.withOpacity(0.1),
+                    //       borderRadius: BorderRadius.circular(12),
+                    //       border: Border.all(
+                    //         color: Colors.green.withOpacity(0.3),
+                    //         width: 1,
+                    //       ),
+                    //     ),
+                    //     child: Text(
+                    //       '${userTopScorerPoints[groupId]}' ' ${AppLocalizations.of(context)!.pst}',
+                    //       style: TextStyle(
+                    //         color: Colors.green,
+                    //         fontWeight: FontWeight.bold,
+                    //         fontSize: 12,
+                    //       ),
+                    //     ),
+                    //   ),
+                    //   SizedBox(height: 6),
+                    // ],
+                    // Player name display
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: leagueColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: leagueColor.withOpacity(0.3),
+                          width: 1,
                         ),
                       ),
-                    ],
-                  ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.sports_soccer,
+                            color: leagueColor,
+                            size: 16,
+                          ),
+                          SizedBox(width: 6),
+                          ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: 100),
+                            child: Text(
+                              topScorerName,
+                              style: TextStyle(
+                                color: leagueColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
+
+                
               );
             },
           );
