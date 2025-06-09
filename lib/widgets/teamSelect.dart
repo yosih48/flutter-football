@@ -124,46 +124,46 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
     final leagueId = widget.league;
     print('league id: ${leagueId}');
     print('selectedTeam: ${selectedTeam}');
-    // try {
-    //   final response = await http.put(
-    //     Uri.parse('$_baseUrl/users/winner'),
-    //     headers: <String, String>{
-    //       'Content-Type': 'application/json; charset=UTF-8',
-    //     },
-    //     body: jsonEncode(<String, dynamic>{
-    //       '_id': widget.clientId,
-    //       'email': widget.email,
-    //       'winner': {
-    //         'winner.$leagueId': selectedTeam,
-    //       },
-    //     }),
-    //   );
+    try {
+      final response = await http.put(
+        Uri.parse('$_baseUrl/users/winner'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, dynamic>{
+          '_id': widget.clientId,
+          'email': widget.email,
+          'winner': {
+            'winner.$leagueId': selectedTeam,
+          },
+        }),
+      );
 
-    //   if (response.statusCode == 200) {
-    //     print('User updated successfully');
-    //     setState(() {
-    //       isWinnerButtonEnabled = false;
-    //     });
-    //     ScaffoldMessenger.of(context).showSnackBar(
-    //       SnackBar(content: Text('Team saved successfully')),
+      if (response.statusCode == 200) {
+        print('User updated successfully');
+        setState(() {
+          isWinnerButtonEnabled = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Team saved successfully')),
           
-    //     );
-    //                   _fetchUserData();
+        );
+                      _fetchUserData();
 
-    //   } else {
-    //     print(
-    //         'Users update group Fetch failed with status: ${response.statusCode}');
-    //     print(jsonDecode(response.body));
-    //     ScaffoldMessenger.of(context).showSnackBar(
-    //       SnackBar(content: Text('Failed to save team')),
-    //     );
-    //   }
-    // } catch (error) {
-    //   print('Error editing guesses: $error');
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(content: Text('An error occurred while saving the team')),
-    //   );
-    // }
+      } else {
+        print(
+            'Users update group Fetch failed with status: ${response.statusCode}');
+        print(jsonDecode(response.body));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save team')),
+        );
+      }
+    } catch (error) {
+      print('Error editing guesses: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred while saving the team')),
+      );
+    }
   }
 
   void _showTeamSelectionDialog() async {
