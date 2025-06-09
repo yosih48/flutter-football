@@ -135,7 +135,8 @@
    "nogroupsyet": "No groups yet",
    "points": "points",
    "pst":"pst",
-    "topScorerPoints":"goals Points:"
+    "topScorerPoints":"goals Points:",
+    "noTopScorersYet":"No top scorers yet"
     
 
 

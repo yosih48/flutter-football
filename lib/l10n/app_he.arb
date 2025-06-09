@@ -140,5 +140,6 @@
    "nogroupsyet": "אינך חבר בקבוצות עדיין",
      "points": "נקודות",
      "pst":"נק'",
-     "topScorerPoints":"ניקוד על שערים:"
+     "topScorerPoints":"ניקוד על שערים:",
+     "noTopScorersYet":"לא נבחרו מלכי שערים"
 }

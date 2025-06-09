@@ -931,7 +931,8 @@ class usersTopScorers extends StatelessWidget {
                       size: 48, color: Colors.grey),
                   SizedBox(height: 16),
                   Text(
-                    "No top scorers yet",
+                    AppLocalizations.of(context)!.noTopScorersYet,
+                
                     style: TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                 ],
