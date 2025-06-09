@@ -50,8 +50,10 @@ class ProfileScreenContent extends StatefulWidget {
 class _ProfileScreenContentState extends State<ProfileScreenContent> {
   Map<String, String> _userGroups = {};
   Map<String, String> _userWinners = {};
+  Map<String, String> _userTopScorer = {};
   List<Map<String, dynamic>> _groupsInfo = [];
   bool _isLoadingGroups = true;
+  bool _showWinners = true; // Toggle state for Winners/Top Scorers
   late String currentUserId;
   late String currentUserEmail;
   TextEditingController _groupNameController = TextEditingController();
@@ -98,9 +100,11 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
         print(userProvider.selectedGroupName);
         _userGroups = Map<String, String>.from(userData['groupID'] ?? {});
         _userWinners = Map<String, String>.from(userData['winner'] ?? {});
+        _userTopScorer = Map<String, String>.from(userData['topScorer'] ?? {});
         _groupsInfo = groupsInfo;
         print(_userGroups);
         print(_userWinners);
+        print(_userTopScorer);
         if (userProvider.selectedGroupName == 'public') {
           String selectedGroup;
 
@@ -374,6 +378,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   Widget build(BuildContext context) {
     final allowedGroupIds = {'383', '2', '140', '3' ,'39', '848', '15'};
     final filteredWinners = _userWinners.entries
+   
         .where((entry) => allowedGroupIds.contains(entry.key))
         .fold<Map<String, String>>({}, (map, entry) {
       map[entry.key] = entry.value;
@@ -537,29 +542,91 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
 
               SizedBox(height: 24),
 
-              // Winners Section
-              if (_userWinners.isNotEmpty) ...[
+              // Winners/Top Scorers Toggle Section
+              if (_userWinners.isNotEmpty || _userTopScorer.isNotEmpty) ...[
                 Container(
                   margin: EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      Text(
-                        AppLocalizations.of(context)!.yourwinners,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _showWinners = true),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: _showWinners 
+                                  ? Colors.blue.withOpacity(0.2)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: _showWinners 
+                                    ? Colors.blue
+                                    : Colors.grey.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.emoji_events,
+                                  color: _showWinners ? Colors.blue : Colors.grey,
+                                  size: 20,
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  AppLocalizations.of(context)!.yourwinners,
+                                  style: TextStyle(
+                                    color: _showWinners ? Colors.blue : Colors.grey,
+                                    fontSize: 16,
+                                    fontWeight: _showWinners ? FontWeight.bold : FontWeight.normal,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                      // SizedBox(height: 8),
-                      // Text(
-                      //   AppLocalizations.of(context)!.winningpredictions,
-                      //   style: TextStyle(
-                      //     color: Colors.grey[400],
-                      //     fontSize: 14,
-                      //   ),
-                      // ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _showWinners = false),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: !_showWinners 
+                                  ? Colors.blue.withOpacity(0.2)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: !_showWinners 
+                                    ? Colors.blue
+                                    : Colors.grey.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.sports_soccer,
+                                  color: !_showWinners ? Colors.blue : Colors.grey,
+                                  size: 20,
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  AppLocalizations.of(context)!.topScorers ?? "Top Scorers",
+                                  style: TextStyle(
+                                    color: !_showWinners ? Colors.blue : Colors.grey,
+                                    fontSize: 16,
+                                    fontWeight: !_showWinners ? FontWeight.bold : FontWeight.normal,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -570,9 +637,24 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                     color: cards.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: usersWinners(
-                    userWinners: _userWinners,
-                    filteredWinners: filteredWinners,
+                  child: AnimatedSwitcher(
+                    duration: Duration(milliseconds: 300),
+                    child: _showWinners
+                        ? usersWinners(
+                            key: ValueKey('winners'),
+                            userWinners: _userWinners,
+                            filteredWinners: filteredWinners,
+                          )
+                        : usersTopScorers(
+                            key: ValueKey('topScorers'),
+                            userTopScorers: _userTopScorer,
+                            filteredTopScorers: _userTopScorer.entries
+                                .where((entry) => allowedGroupIds.contains(entry.key))
+                                .fold<Map<String, String>>({}, (map, entry) {
+                              map[entry.key] = entry.value;
+                              return map;
+                            }),
+                          ),
                   ),
                 ),
               ],
@@ -788,7 +870,7 @@ class usersWinners extends StatelessWidget {
                   ),
                 ),
                 subtitle: Text(
-                  AppLocalizations.of(context)!.yourprediction,
+                  AppLocalizations.of(context)!.yourprediction ?? "Your prediction",
                   style: TextStyle(
                     color: Colors.grey[400],
                     fontSize: 12,
@@ -807,6 +889,155 @@ class usersWinners extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
+                  ),
+                ),
+              );
+            },
+          );
+  }
+}
+
+class usersTopScorers extends StatelessWidget {
+  const usersTopScorers({
+    super.key,
+    required Map<String, String> userTopScorers,
+    required this.filteredTopScorers,
+  }) : _userTopScorers = userTopScorers;
+
+  final Map<String, String> _userTopScorers;
+  final Map<String, String> filteredTopScorers;
+
+  @override
+  Widget build(BuildContext context) {
+    return _userTopScorers.isEmpty
+        ? Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.sports_soccer_outlined,
+                      size: 48, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    "No top scorers yet",
+                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+          )
+        : ListView.separated(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.all(8),
+            itemCount: filteredTopScorers.length,
+            separatorBuilder: (context, index) => Divider(
+              color: Colors.white.withOpacity(0.1),
+              height: 1,
+            ),
+            itemBuilder: (context, index) {
+              String groupId = filteredTopScorers.keys.elementAt(index);
+              String topScorerName = filteredTopScorers.values.elementAt(index);
+
+              String leagueName = '';
+              Color leagueColor = Colors.blue;
+
+              switch (groupId) {
+                case '2':
+                  leagueName = AppLocalizations.of(context)!.championsleague;
+                  leagueColor = Colors.blue;
+                  break;
+                case '383':
+                  leagueName = AppLocalizations.of(context)!.ligathaal;
+                  leagueColor = Colors.green;
+                  break;
+                case '140':
+                  leagueName = AppLocalizations.of(context)!.laliga;
+                  leagueColor = Colors.orange;
+                  break;
+                case '3':
+                  leagueName = AppLocalizations.of(context)!.europaleague;
+                  leagueColor = Colors.purple;
+                  break;
+                case '39':
+                  leagueName = AppLocalizations.of(context)!.premierleague;
+                  leagueColor = Colors.purple;
+                  break;
+                case '848':
+                  leagueName = AppLocalizations.of(context)!.conferenceleague;
+                  leagueColor = Colors.purple;
+                  break;
+                case '15':
+                  leagueName = AppLocalizations.of(context)!.clubworldcup;
+                  leagueColor = Colors.purple;
+                  break;
+              }
+
+              return ListTile(
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: leagueColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: Image.network(
+                      'https://media.api-sports.io/football/leagues/$groupId.png',
+                      width: 24,
+                      height: 24,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(Icons.sports_soccer, color: leagueColor);
+                      },
+                    ),
+                  ),
+                ),
+                title: Text(
+                  leagueName,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                subtitle: Text(
+                  AppLocalizations.of(context)!.yourprediction ?? "Your prediction",
+                  style: TextStyle(
+                    color: Colors.grey[400],
+                    fontSize: 12,
+                  ),
+                ),
+                trailing: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: leagueColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: leagueColor.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.sports_soccer,
+                        color: leagueColor,
+                        size: 16,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        topScorerName,
+                        style: TextStyle(
+                          color: leagueColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               );
