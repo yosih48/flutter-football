@@ -135,8 +135,8 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
         body: jsonEncode(<String, dynamic>{
           '_id': widget.clientId,
           'email': widget.email,
-          'topScorer': cleanedPlayerName,
-          'topScorer:': {
+        
+          'topScorer': {
             'topScorer.$leagueId': cleanedPlayerName,
           },
         }),
@@ -190,7 +190,7 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
               children: [
                 DropdownButton<String>(
                   // value: selectedPlayer,
-                  hint: Text(AppLocalizations.of(context)!.chooseteam,
+                  hint: Text(AppLocalizations.of(context)!.choosPlayer,
                       style: TextStyle(
                         color:
                             Colors.blue, // Change the input text color to blue
@@ -227,7 +227,7 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
                           Navigator.of(context).pop();
                         }
                       : null,
-                  child: Text(AppLocalizations.of(context)!.saveteam,
+                  child: Text(AppLocalizations.of(context)!.savePlayer,
                       style: TextStyle(color: Colors.blue)),
                 ),
               ],
@@ -286,7 +286,7 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
               color: Colors.white,
             ),
             label: Text(
-              AppLocalizations.of(context)!.choosewinner,
+              AppLocalizations.of(context)!.chooseTopScorer,
               style: TextStyle(
                 color: white,
               ),
