@@ -18,6 +18,7 @@ import 'package:football/utils/config.dart';
 
 import 'package:football/widgets/gamesCard.dart';
 import 'package:football/widgets/teamSelect.dart';
+import 'package:football/widgets/playerSelect.dart';
 import 'package:football/widgets/toggleButton.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -90,11 +91,11 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                           ? 39 // Premier League
                           : index == 5
                               ? 848 // conferenceleague
-                          : index == 6
-                              ? 15 // Club World Cup
-                              : index == 7
-                                  ? 78 //Bundesliga
-                                  : 2; // Default to Champions League
+                              : index == 6
+                                  ? 15 // Club World Cup
+                                  : index == 7
+                                      ? 78 //Bundesliga
+                                      : 2; // Default to Champions League
 
       selectedIndex = index;
 
@@ -200,7 +201,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   }
 
   Future<void> _fetchGames(league) async {
-    print(' _fetchGames _showOnlyThisLeagueTodayGames: $_showOnlyThisLeagueTodayGames');
+    print(
+        ' _fetchGames _showOnlyThisLeagueTodayGames: $_showOnlyThisLeagueTodayGames');
 
     isLoading = true;
     try {
@@ -420,7 +422,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           refreshedGames = [];
           final gamesMethods = GamesMethods();
           // Force refresh all visible leagues
-          final leagueIds = [2, 3, 383, 140, 39, 848, 15,78];
+          final leagueIds = [2, 3, 383, 140, 39, 848, 15, 78];
           for (int id in leagueIds) {
             final games = await gamesMethods.forceRefreshGames(
               id,
@@ -658,6 +660,17 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                     },
                   ),
                 ),
+                Expanded(
+                  child: PlayerSelectionButton(
+                    // games: _games,
+                    clientId: clientId,
+                    email: email,
+                    league: league,
+                    onPlayerSelected: (selectedPlayer) {
+                      print('Selected player: $selectedPlayer');
+                    },
+                  ),
+                ),
               ],
             ),
           ),
@@ -752,19 +765,19 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     final List<Game> displayGames = filteredGames.where((game) {
       // Check if the game's leagueId is in the user's chosen leagues
       bool isInEnabledLeagues = enabledLeagues.contains(game.league.id);
-      
+
       // If live games filter is enabled, only show live games
       if (_showOnlyLiveGames) {
         bool isLive = game.status.short == '1H' ||
-                     game.status.short == '2H' ||
-                     game.status.short == 'HT' ||
-                     game.status.short == 'ET' ||
-                     game.status.short == 'BT' ||
-                     game.status.short == 'P' ||
-                     game.status.short == 'INT';
+            game.status.short == '2H' ||
+            game.status.short == 'HT' ||
+            game.status.short == 'ET' ||
+            game.status.short == 'BT' ||
+            game.status.short == 'P' ||
+            game.status.short == 'INT';
         return isInEnabledLeagues && isLive;
       }
-      
+
       return isInEnabledLeagues;
     }).toList();
     // Return empty container with a message if no games match the filters
@@ -782,13 +795,15 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    _showOnlyLiveGames ? Icons.live_tv : Icons.scoreboard_outlined,
+                    _showOnlyLiveGames
+                        ? Icons.live_tv
+                        : Icons.scoreboard_outlined,
                     size: 48,
                     color: Colors.grey,
                   ),
                   SizedBox(height: 16),
                   Text(
-                    _showOnlyLiveGames 
+                    _showOnlyLiveGames
                         ? AppLocalizations.of(context)!.nolivegames
                         : AppLocalizations.of(context)!.nogames,
                     style: TextStyle(
