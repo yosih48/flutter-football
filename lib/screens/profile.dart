@@ -395,7 +395,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
         elevation: 0,
         actions: [
           Container(
-            margin: EdgeInsets.only(right: 16),
+            margin: EdgeInsets.only(left: 16),
             child: TextButton.icon(
               style: TextButton.styleFrom(
                 backgroundColor: Colors.red.withOpacity(0.1),
@@ -503,7 +503,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                 margin: EdgeInsets.symmetric(horizontal: 16),
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                  backgroundColor: Colors.blue.withOpacity(0.1),
                     foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -511,10 +511,16 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                     ),
                     elevation: 0,
                   ),
-                  icon: Icon(Icons.add_circle_outline),
+                  icon: Icon(Icons.add_circle_outline,
+                        color: Colors.blue,
+                      size: 20,
+                  ),
                   label: Text(
                     AppLocalizations.of(context)!.createnewgroup,
-                    style: TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: 16,
+                           color: Colors.blue,
+                        fontWeight: FontWeight.w500,
+                    ),
                   ),
                   onPressed: _showCreateGroupDialog,
                 ),
