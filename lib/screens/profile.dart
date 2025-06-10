@@ -795,7 +795,7 @@ class usersWinners extends StatelessWidget {
                       size: 48, color: Colors.grey),
                   SizedBox(height: 16),
                   Text(
-                    "No winners yet",
+                   AppLocalizations.of(context)!.noWinnersYet,
                     style: TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                 ],
@@ -851,7 +851,7 @@ class usersWinners extends StatelessWidget {
 
               return ListTile(
                 contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    EdgeInsets.symmetric(horizontal: 2, vertical: 8),
                 leading: Container(
                   width: 40,
                   height: 40,
@@ -988,7 +988,7 @@ class usersTopScorers extends StatelessWidget {
 
               return ListTile(
                 contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    EdgeInsets.symmetric(horizontal: 2, vertical: 8),
                 leading: Container(
                   width: 40,
                   height: 40,
