@@ -67,7 +67,7 @@ class FirebaseMessagingService {
           }
           break;
         case '/games':
-          navigatorKey.currentState?.pushNamed('/games');
+          navigatorKey.currentState?.pushNamed('/games', arguments: routeParams);
           break;
         case '/profile':
           navigatorKey.currentState?.pushNamed('/profile');

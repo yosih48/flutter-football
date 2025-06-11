@@ -63,6 +63,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   List<Game> _games = [];
   List<Guess> _guesses = [];
   int league = 2;
+    bool _hasInitialized = false;
   // bool _showOnlyTodayGames = false;
   bool _showOnlyThisLeagueTodayGames = false;
   bool _showOnlyLiveGames = false;
@@ -121,6 +122,35 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   }
 
   @override
+  void didChangeDependencies() {
+  
+    super.didChangeDependencies();
+
+    if (!_hasInitialized) {
+      final args =
+          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+            print(' args: ${args}');
+      if (args != null) {
+        final String? leagueString = args['league'];
+        final String? tournamentId = args['tournamentId'];
+        final String? action = args['action'];
+
+        if (leagueString != null) {
+          league = int.tryParse(leagueString) ?? 2;
+        }
+
+        // Handle other parameters if needed
+        if (action == 'select_top_scorer') {
+          // Navigate to top scorer selection or show relevant UI
+        }
+      }
+
+      _hasInitialized = true;
+     
+    }
+  }
+
+
   void dispose() {
     for (var controllers in _guessControllers.values) {
       controllers['home']?.dispose();
