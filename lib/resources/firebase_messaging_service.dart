@@ -42,7 +42,8 @@ class FirebaseMessagingService {
 
   static Future<void> _handleNavigationAction(Map<String, dynamic> data) async {
     final String? routeName = data['route_name'];
-  final String? routeParamsString = data['route_params'];
+    final String? routeParamsString = data['route_params'];
+    final bool clearStack = data['clear_stack'] != null ? data['clear_stack'] : true; // Default to clearing stack
 
     Map<String, dynamic>? routeParams;
     if (routeParamsString != null) {
@@ -55,36 +56,64 @@ class FirebaseMessagingService {
     }
 
     if (routeName != null) {
-      print('Navigating to route: $routeName with params: $routeParams');
+      print('Navigating to route: $routeName with params: $routeParams, clearStack: $clearStack');
       
       // Handle parameterized routes
       switch (routeName) {
         case '/game_details':
           if (routeParams != null) {
-            await _navigateToGameDetails(routeParams);
+            await _navigateToGameDetailsFromNotification(routeParams, clearStack);
           } else {
-            navigatorKey.currentState?.pushNamed('/game_details');
+            if (clearStack) {
+              navigatorKey.currentState?.pushNamedAndRemoveUntil('/game_details', (route) => false);
+            } else {
+              navigatorKey.currentState?.pushNamed('/game_details');
+            }
           }
           break;
         case '/games':
-          navigatorKey.currentState?.pushNamed('/games', arguments: routeParams);
+          if (clearStack) {
+            navigatorKey.currentState?.pushNamedAndRemoveUntil('/games', (route) => false, arguments: routeParams);
+          } else {
+            navigatorKey.currentState?.pushNamed('/games', arguments: routeParams);
+          }
           break;
         case '/profile':
-          navigatorKey.currentState?.pushNamed('/profile');
+          if (clearStack) {
+            navigatorKey.currentState?.pushNamedAndRemoveUntil('/profile', (route) => false);
+          } else {
+            navigatorKey.currentState?.pushNamed('/profile');
+          }
           break;
         case '/leaderboard':
-          navigatorKey.currentState?.pushNamed('/leaderboard');
+          if (clearStack) {
+            navigatorKey.currentState?.pushNamedAndRemoveUntil('/leaderboard', (route) => false);
+          } else {
+            navigatorKey.currentState?.pushNamed('/leaderboard');
+          }
           break;
         case '/settings':
-          navigatorKey.currentState?.pushNamed('/settings');
+          if (clearStack) {
+            navigatorKey.currentState?.pushNamedAndRemoveUntil('/settings', (route) => false);
+          } else {
+            navigatorKey.currentState?.pushNamed('/settings');
+          }
           break;
         case '/table':
-          navigatorKey.currentState?.pushNamed('/table');
+          if (clearStack) {
+            navigatorKey.currentState?.pushNamedAndRemoveUntil('/table', (route) => false);
+          } else {
+            navigatorKey.currentState?.pushNamed('/table');
+          }
           break;
         default:
           // Try to navigate to the route directly
           try {
-            navigatorKey.currentState?.pushNamed(routeName, arguments: routeParams);
+            if (clearStack) {
+              navigatorKey.currentState?.pushNamedAndRemoveUntil(routeName, (route) => false, arguments: routeParams);
+            } else {
+              navigatorKey.currentState?.pushNamed(routeName, arguments: routeParams);
+            }
           } catch (e) {
             print('Failed to navigate to route $routeName: $e');
           }
@@ -172,6 +201,10 @@ class FirebaseMessagingService {
   }
 
   static Future<void> _navigateToGameDetails(Map<String, dynamic> params) async {
+    await _navigateToGameDetailsFromNotification(params, false);
+  }
+
+  static Future<void> _navigateToGameDetailsFromNotification(Map<String, dynamic> params, bool clearStack) async {
     try {
       int gameId = int.parse(params['gameId'].toString());
       int leagueId = int.parse(params['league'].toString());
@@ -190,17 +223,21 @@ class FirebaseMessagingService {
         throw Exception('Game not found in fetched games list');
       }
 
-      navigatorKey.currentState?.push(
-        MaterialPageRoute(
-          builder: (context) => GameDetails(
-            gameOriginalId: gameId,
-            game: game,
-            games: fetchedGames,
-            initialIndex: initialIndex,
-            userId: userId ?? '',
-          ),
+      final route = MaterialPageRoute(
+        builder: (context) => GameDetails(
+          gameOriginalId: gameId,
+          game: game,
+          games: fetchedGames,
+          initialIndex: initialIndex,
+          userId: userId ?? '',
         ),
       );
+
+      if (clearStack) {
+        navigatorKey.currentState?.pushAndRemoveUntil(route, (route) => false);
+      } else {
+        navigatorKey.currentState?.push(route);
+      }
     } catch (e) {
       print('Error navigating to game details: $e');
     }

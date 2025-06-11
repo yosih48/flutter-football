@@ -60,7 +60,28 @@ Navigate to different screens within the app.
       "gameId": "12345",
       "league": "39",
       "userId": "user123"
-    }
+    },
+    "clear_stack": true
+  }
+}
+```
+
+#### Navigation Without Clearing Stack (Shows Back Button)
+```json
+{
+  "notification": {
+    "title": "Game Update",
+    "body": "Your game has been updated"
+  },
+  "data": {
+    "action_type": "navigate",
+    "route_name": "/game_details",
+    "route_params": {
+      "gameId": "12345",
+      "league": "39",
+      "userId": "user123"
+    },
+    "clear_stack": false
   }
 }
 ```
@@ -71,7 +92,14 @@ Navigate to different screens within the app.
 - `/profile` - User profile
 - `/leaderboard` - Leaderboard screen
 - `/settings` - Settings screen
+- `/table` - Table/standings screen
 - Any custom route you add to your app
+
+#### Navigation Stack Control
+By default, notification navigation clears the navigation stack (no back button). You can control this behavior:
+
+- `"clear_stack": true` (default) - Clears navigation stack, no back button
+- `"clear_stack": false` - Preserves navigation stack, shows back button
 
 ### 2. External URL Actions (`action_type: "external_url"`)
 
@@ -213,20 +241,37 @@ const examples = {
     }
   },
 
-  // Game details with parameters
-  gameDetails: {
-    title: "Game Update",
-    body: "Your prediction results are in!",
-    data: {
-      action_type: "navigate",
-      route_name: "/game_details",
-      route_params: JSON.stringify({
-        gameId: "12345",
-        league: "39",
-        userId: "user123"
-      })
-    }
-  },
+     // Game details with parameters (no back button)
+   gameDetails: {
+     title: "Game Update",
+     body: "Your prediction results are in!",
+     data: {
+       action_type: "navigate",
+       route_name: "/game_details",
+       route_params: JSON.stringify({
+         gameId: "12345",
+         league: "39",
+         userId: "user123"
+       }),
+       clear_stack: "true"
+     }
+   },
+
+   // Game details with back button enabled
+   gameDetailsWithBack: {
+     title: "Game Update",
+     body: "Your prediction results are in!",
+     data: {
+       action_type: "navigate",
+       route_name: "/game_details",
+       route_params: JSON.stringify({
+         gameId: "12345",
+         league: "39",
+         userId: "user123"
+       }),
+       clear_stack: "false"
+     }
+   },
 
   // External URL
   externalLink: {
