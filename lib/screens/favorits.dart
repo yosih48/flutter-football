@@ -471,6 +471,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       848: 'https://media.api-sports.io/football/leagues/848.png',
       15: 'https://media.api-sports.io/football/leagues/15.png',
     };
+    
     // Map to translate league IDs to notification state keys
     final leagueIdToNotificationKey = {
       2: 'ליגת אלופות',
@@ -482,87 +483,153 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       15: 'גביע מועדונים',
       // 78: 'ליגה גרמנית',
     };
-    return ListView(
+
+    return Column(
       children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: SwitchListTile(
-            title: Text(
-              AppLocalizations.of(context)!.chooseallcompetitions,
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
+        // Search Bar
+        Container(
+          margin: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: cards,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          ),
+          child: TextField(
+            style: TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Search for competitions',
+              hintStyle: TextStyle(color: Colors.grey[400]),
+              prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
-            value: chosenLeagues.values.every((value) => value),
-            onChanged: (bool value) {
-              setState(() {
-                chosenLeagues.updateAll((key, _) => value);
-                // If user disables all leagues, also disable all notifications
-                if (!value) {
-                  notificationStates.updateAll((key, _) => false);
-                }
-              });
-              updateDatabase(name, email);
-            },
-            activeColor: Colors.blue,
-            inactiveThumbColor: Colors.white,
-            inactiveTrackColor: Colors.grey.withOpacity(0.5),
           ),
         ),
-        ...chosenLeagues.entries.map((entry) {
-          return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: SwitchListTile(
-              title: Text(
-                leagueNames[entry.key] ?? '',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
+        
+        // Popular Competitions Title
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Popular Competitions',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
               ),
-              secondary: Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: entry.value
-                      ? Colors.blue.withOpacity(0.1)
-                      : Colors.transparent,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: Image.network(
-                    leagueIcons[entry.key] ?? '',
-                    width: 24,
-                    height: 24,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Icon(Icons.sports_soccer, color: Colors.blue);
-                    },
-                  ),
-                ),
-              ),
-              value: entry.value,
-              onChanged: (bool value) {
-                setState(() {
-                  chosenLeagues[entry.key] = value;
-                  // If user disables a league, also disable its notification
-                  if (!value) {
-                    String? notificationKey =
-                        leagueIdToNotificationKey[entry.key];
-                    if (notificationKey != null) {
-                      notificationStates[notificationKey] = false;
-                    }
-                  }
-                });
-                updateDatabase(name, email);
-              },
-              activeColor: Colors.blue,
-              inactiveThumbColor: Colors.white,
-              inactiveTrackColor: Colors.grey.withOpacity(0.5),
             ),
-          );
-        }).toList(),
+          ),
+        ),
+        
+        // Leagues Grid
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            child: GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+                childAspectRatio: 0.9,
+              ),
+              itemCount: chosenLeagues.length,
+              itemBuilder: (context, index) {
+                final leagueEntry = chosenLeagues.entries.toList()[index];
+                final leagueId = leagueEntry.key;
+                final isSelected = leagueEntry.value;
+                
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      chosenLeagues[leagueId] = !isSelected;
+                      // If user disables a league, also disable its notification
+                      if (!chosenLeagues[leagueId]!) {
+                        String? notificationKey = leagueIdToNotificationKey[leagueId];
+                        if (notificationKey != null) {
+                          notificationStates[notificationKey] = false;
+                        }
+                      }
+                    });
+                    updateDatabase(name, email);
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: cards,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected ? Colors.blue : Colors.transparent,
+                        width: 2,
+                      ),
+                    ),
+                    child: Stack(
+                      children: [
+                        // Star icon for selection
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Icon(
+                            isSelected ? Icons.star : Icons.star_border,
+                            color: isSelected ? Colors.blue : Colors.grey[400],
+                            size: 20,
+                          ),
+                        ),
+                        
+                        // League content
+                        Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // League Logo - Centered and bigger
+                              Container(
+                                width: 65,
+                                height: 65,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                padding: EdgeInsets.all(10),
+                                child: Image.network(
+                                  leagueIcons[leagueId] ?? '',
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Icon(
+                                      Icons.sports_soccer,
+                                      color: Colors.blue,
+                                      size: 32,
+                                    );
+                                  },
+                                ),
+                              ),
+                              
+                              SizedBox(height: 10),
+                              
+                              // League Name
+                              Text(
+                                leagueNames[leagueId] ?? '',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
       ],
     );
   }
