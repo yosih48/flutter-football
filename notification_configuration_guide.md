@@ -46,7 +46,26 @@ Navigate to different screens within the app.
 }
 ```
 
-#### Navigation with Parameters
+#### Navigation with Parameters (Shows White Back Button)
+```json
+{
+  "notification": {
+    "title": "Game Update",
+    "body": "Your game has been updated"
+  },
+  "data": {
+    "action_type": "navigate",
+    "route_name": "/game_details",
+    "route_params": {
+      "gameId": "12345",
+      "league": "39",
+      "userId": "user123"
+    }
+  }
+}
+```
+
+#### Navigation Without Back Button (Clear Stack)
 ```json
 {
   "notification": {
@@ -66,26 +85,6 @@ Navigate to different screens within the app.
 }
 ```
 
-#### Navigation Without Clearing Stack (Shows Back Button)
-```json
-{
-  "notification": {
-    "title": "Game Update",
-    "body": "Your game has been updated"
-  },
-  "data": {
-    "action_type": "navigate",
-    "route_name": "/game_details",
-    "route_params": {
-      "gameId": "12345",
-      "league": "39",
-      "userId": "user123"
-    },
-    "clear_stack": false
-  }
-}
-```
-
 #### Available Routes
 - `/games` - Main games screen
 - `/game_details` - Game details (with parameters)
@@ -96,10 +95,10 @@ Navigate to different screens within the app.
 - Any custom route you add to your app
 
 #### Navigation Stack Control
-By default, notification navigation clears the navigation stack (no back button). You can control this behavior:
+By default, notification navigation preserves the navigation stack (shows white back button). You can control this behavior:
 
-- `"clear_stack": true` (default) - Clears navigation stack, no back button
-- `"clear_stack": false` - Preserves navigation stack, shows back button
+- `"clear_stack": false` (default) - Preserves navigation stack, shows white back button
+- `"clear_stack": true` - Clears navigation stack, no back button
 
 ### 2. External URL Actions (`action_type: "external_url"`)
 
@@ -241,8 +240,23 @@ const examples = {
     }
   },
 
-     // Game details with parameters (no back button)
+     // Game details with parameters (shows white back button)
    gameDetails: {
+     title: "Game Update",
+     body: "Your prediction results are in!",
+     data: {
+       action_type: "navigate",
+       route_name: "/game_details",
+       route_params: JSON.stringify({
+         gameId: "12345",
+         league: "39",
+         userId: "user123"
+       })
+     }
+   },
+
+   // Game details without back button (clear stack)
+   gameDetailsNoBack: {
      title: "Game Update",
      body: "Your prediction results are in!",
      data: {
@@ -254,22 +268,6 @@ const examples = {
          userId: "user123"
        }),
        clear_stack: "true"
-     }
-   },
-
-   // Game details with back button enabled
-   gameDetailsWithBack: {
-     title: "Game Update",
-     body: "Your prediction results are in!",
-     data: {
-       action_type: "navigate",
-       route_name: "/game_details",
-       route_params: JSON.stringify({
-         gameId: "12345",
-         league: "39",
-         userId: "user123"
-       }),
-       clear_stack: "false"
      }
    },
 

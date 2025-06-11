@@ -43,7 +43,7 @@ class FirebaseMessagingService {
   static Future<void> _handleNavigationAction(Map<String, dynamic> data) async {
     final String? routeName = data['route_name'];
     final String? routeParamsString = data['route_params'];
-    final bool clearStack = data['clear_stack'] != null ? data['clear_stack'] : true; // Default to clearing stack
+    final bool clearStack = data['clear_stack'] != null ? data['clear_stack'] : false; // Default to showing back button
 
     Map<String, dynamic>? routeParams;
     if (routeParamsString != null) {

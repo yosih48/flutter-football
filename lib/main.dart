@@ -64,6 +64,13 @@ class GameApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       theme: ThemeData(
         primarySwatch: Colors.blue, // Sets the primary color to blue
+        brightness: Brightness.dark, // Set dark theme
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white, // This sets the back button and text color to white
+          iconTheme: IconThemeData(color: Colors.white), // Ensures all icons are white
+          elevation: 0,
+        ),
         textTheme: TextTheme(
             // bodyText1: TextStyle(color: Colors.blue), // Default text color
             // bodyText2: TextStyle(color: Colors.blue), // Another text style
