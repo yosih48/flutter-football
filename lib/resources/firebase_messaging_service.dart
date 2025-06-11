@@ -24,6 +24,7 @@ class FirebaseMessagingService {
     
     switch (actionType) {
       case 'navigate':
+        
         await _handleNavigationAction(data);
         break;
       case 'external_url':
@@ -41,9 +42,17 @@ class FirebaseMessagingService {
 
   static Future<void> _handleNavigationAction(Map<String, dynamic> data) async {
     final String? routeName = data['route_name'];
-    final Map<String, dynamic>? routeParams = data['route_params'] != null 
-        ? Map<String, dynamic>.from(data['route_params']) 
-        : null;
+  final String? routeParamsString = data['route_params'];
+
+    Map<String, dynamic>? routeParams;
+    if (routeParamsString != null) {
+      try {
+        routeParams = json.decode(routeParamsString);
+      } catch (e) {
+        print('Error parsing route_params: $e');
+        routeParams = {};
+      }
+    }
 
     if (routeName != null) {
       print('Navigating to route: $routeName with params: $routeParams');
@@ -68,6 +77,9 @@ class FirebaseMessagingService {
           break;
         case '/settings':
           navigatorKey.currentState?.pushNamed('/settings');
+          break;
+        case '/table':
+          navigatorKey.currentState?.pushNamed('/table');
           break;
         default:
           // Try to navigate to the route directly

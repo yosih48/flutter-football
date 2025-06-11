@@ -15,6 +15,7 @@ import 'package:football/screens/gameDetails.dart';
 import 'package:football/screens/games.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/screens/profile.dart';
+import 'package:football/screens/table.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -98,6 +99,9 @@ class GameApp extends StatelessWidget {
       ),
       routes: {
         '/game_details': (context) => GamesScreen(),
+        '/games': (context) => GamesScreen(),
+        '/table': (context) => TableScreen(),
+        '/profile': (context) => ProfileScreen(),
       },
     );
   }
