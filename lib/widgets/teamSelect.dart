@@ -65,18 +65,15 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
   }
 
   Future<void> _fetchUserData() async {
- 
     try {
       final userData = await UsersMethods().fetchUserById(widget.clientId);
       final leagueId = widget.league;
       final winner = userData['winner']?['$leagueId'];
       // final winner = userData['winner'];
-    
+
       print(winner);
       setState(() {
         if (winner != null) {
-        
-
           selectedTeam = winner;
           hasWinner = true;
           print(selectedTeam);
@@ -95,7 +92,6 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
   }
 
   List<String> _fetchAllTeams() {
-
     final filteredGames = _allLeagueGames.where((game) {
       if (game.league.id == 2 || game.league.id == 848 || game.league.id == 3) {
         return !game.league.round.contains("Qualifying") &&
@@ -111,12 +107,12 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
   }
 
   Future<void> saveTeam() async {
-
-      // const _baseUrl = 'https://leagues.onrender.com/users';
-  String _baseUrl = backendUrl;
+    // const _baseUrl = 'https://leagues.onrender.com/users';
+    String _baseUrl = backendUrl;
     if (selectedTeam == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.pleaseSelectTeamFirst)),
+        SnackBar(
+            content: Text(AppLocalizations.of(context)!.pleaseSelectTeamFirst)),
       );
       return;
     }
@@ -145,17 +141,18 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
           isWinnerButtonEnabled = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.teamSavedsuccessfully)),
-          
+          SnackBar(
+              content:
+                  Text(AppLocalizations.of(context)!.teamSavedsuccessfully)),
         );
-                      _fetchUserData();
-
+        _fetchUserData();
       } else {
         print(
             'Users update group Fetch failed with status: ${response.statusCode}');
         print(jsonDecode(response.body));
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedtoSaveTeam)),
+          SnackBar(
+              content: Text(AppLocalizations.of(context)!.failedtoSaveTeam)),
         );
       }
     } catch (error) {
@@ -205,23 +202,22 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
                     setState(() {
                       selectedTeam = newValue;
                       localSelectedTeam = newValue;
-                 
                     });
                   },
                 ),
                 SizedBox(height: 20),
                 if (selectedTeam != null) ...[
-                Text(
-                  '$localSelectedTeam',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
+                  Text(
+                    '$localSelectedTeam',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                    ),
                   ),
-                ),
                 ],
                 SizedBox(height: 20),
                 ElevatedButton(
-                                style: ElevatedButton.styleFrom(
+                  style: ElevatedButton.styleFrom(
                     backgroundColor:
                         Colors.white, // Set button background to white
                   ),
@@ -243,6 +239,12 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
   }
 
   @override
+  void dispose() {
+    // Clean up any resources if needed
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     // Sort the games list by fixture.date to find the first game
     _allLeagueGames.sort((a, b) => a.timestamp.compareTo(b.timestamp));
@@ -253,23 +255,21 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
       firstGameDate = _allLeagueGames[0].date.toUtc();
       print('firstGameDate: ${_allLeagueGames[0].date}');
     }
-    
+
     DateTime currentTimeUtc = DateTime.now().toUtc();
     // Check if the current time is before the first game date
     bool isBeforeFirstGame =
         firstGameDate != null && currentTimeUtc.isBefore(firstGameDate);
 
-
     if (isLoading) {
       return CircularProgressIndicator(
         color: Colors.transparent,
-
       );
     }
 
     if (hasWinner) {
       print('has winner');
-          return SizedBox();
+      return SizedBox();
       // return Text(
       //   '${AppLocalizations.of(context)!.yourwinner}: $selectedTeam',
       //   style: TextStyle(
@@ -280,7 +280,7 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
       // );
     }
     // else{
-      //  print('isBeforeFirstGame: ${isBeforeFirstGame}');
+    //  print('isBeforeFirstGame: ${isBeforeFirstGame}');
     // }
     if (isBeforeFirstGame)
       return Row(

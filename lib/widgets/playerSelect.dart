@@ -57,9 +57,11 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
   Future<void> _fetchAllLeagueGames() async {
     try {
       final games = await GamesMethods().fetchGamesForLeague(widget.league);
-      setState(() {
-        _allLeagueGames = games;
-      });
+      if (mounted) {
+        setState(() {
+          _allLeagueGames = games;
+        });
+      }
     } catch (e) {
       print('Error fetching all league games: $e');
     }
@@ -73,26 +75,28 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
       // final winner = userData['winner'];
 
       print(winner);
-      setState(() {
-        if (winner != null) {
-          selectedPlayer = winner;
-          hasPlayer = true;
-          print(selectedPlayer);
-        } else {
-          hasPlayer = false;
-          selectedPlayer = null;
-        }
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          if (winner != null) {
+            selectedPlayer = winner;
+            hasPlayer = true;
+            print(selectedPlayer);
+          } else {
+            hasPlayer = false;
+            selectedPlayer = null;
+          }
+          isLoading = false;
+        });
+      }
     } catch (e) {
       print('Error fetching user data: $e');
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
-
-
 
   Future<List<String>> _fetchAllPlayers() async {
     try {
@@ -116,7 +120,9 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
     String _baseUrl = backendUrl;
     if (selectedPlayer == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.pleaseSelectplayerFirst)),
+        SnackBar(
+            content:
+                Text(AppLocalizations.of(context)!.pleaseSelectplayerFirst)),
       );
       return;
     }
@@ -135,7 +141,6 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
         body: jsonEncode(<String, dynamic>{
           '_id': widget.clientId,
           'email': widget.email,
-        
           'topScorer': {
             'topScorer.$leagueId': cleanedPlayerName,
           },
@@ -144,14 +149,17 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
 
       if (response.statusCode == 200) {
         print('User updated successfully');
-        setState(() {
-          isPlayerButtonEnabled = false;
-        });
+        if (mounted) {
+          setState(() {
+            isPlayerButtonEnabled = false;
+          });
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.playerSavedsuccessfully),
-           backgroundColor: cards, 
+          SnackBar(
+            content:
+                Text(AppLocalizations.of(context)!.playerSavedsuccessfully),
+            backgroundColor: cards,
           ),
-          
         );
         _fetchUserData();
       } else {
@@ -159,15 +167,17 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
             'Users update group Fetch failed with status: ${response.statusCode}');
         print(jsonDecode(response.body));
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedtoSaveplayer),
-           backgroundColor: cards, 
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.failedtoSaveplayer),
+            backgroundColor: cards,
           ),
         );
       }
     } catch (error) {
       print('Error editing guesses: $error');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.errorsavingplayer)),
+        SnackBar(
+            content: Text(AppLocalizations.of(context)!.errorsavingplayer)),
       );
     }
   }
@@ -226,7 +236,7 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
                 ],
                 SizedBox(height: 20),
                 ElevatedButton(
-                         style: ElevatedButton.styleFrom(
+                  style: ElevatedButton.styleFrom(
                     backgroundColor:
                         Colors.white, // Set button background to white
                   ),
@@ -245,6 +255,12 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
         });
       },
     );
+  }
+
+  @override
+  void dispose() {
+    // Clean up any resources if needed
+    super.dispose();
   }
 
   @override

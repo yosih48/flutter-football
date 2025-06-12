@@ -63,7 +63,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   List<Game> _games = [];
   List<Guess> _guesses = [];
   int league = 2;
-    bool _hasInitialized = false;
+  bool _hasInitialized = false;
   // bool _showOnlyTodayGames = false;
   bool _showOnlyThisLeagueTodayGames = false;
   bool _showOnlyLiveGames = false;
@@ -74,6 +74,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   bool buttonLoading = false;
   DateTime? selectedDate;
   bool _showSelectedDateGames = false;
+  Map<String, dynamic>? _cachedUserData;
+  bool _userDataLoading = true;
 
   String _baseUrl = backendUrl;
   void updateSelectedIndex(int index) {
@@ -103,7 +105,23 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       Provider.of<UserProvider>(context, listen: false)
           .setselectedLeageId(league);
     });
+    _fetchCachedUserData();
     _fetchGames(league);
+  }
+
+  Future<void> _fetchCachedUserData() async {
+    try {
+      final userData = await UsersMethods().fetchUserById(clientId);
+      setState(() {
+        _cachedUserData = userData;
+        _userDataLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching user data: $e');
+      setState(() {
+        _userDataLoading = false;
+      });
+    }
   }
 
   Map<int, Map<String, TextEditingController>> _guessControllers = {};
@@ -117,19 +135,19 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     print('clientId in games: ${clientId}');
 
     print(email);
+    _fetchCachedUserData();
     _fetchGames(league);
     _fetchGuesses(clientId);
   }
 
   @override
   void didChangeDependencies() {
-  
     super.didChangeDependencies();
 
     if (!_hasInitialized) {
       final args =
           ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-            print(' args: ${args}');
+      print(' args: ${args}');
       if (args != null) {
         final String? leagueString = args['league'];
         final String? tournamentId = args['tournamentId'];
@@ -146,10 +164,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       }
 
       _hasInitialized = true;
-     
     }
   }
-
 
   void dispose() {
     for (var controllers in _guessControllers.values) {
@@ -677,32 +693,9 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           ),
           Container(
             margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TeamSelectionButton(
-                    // games: _games,
-                    clientId: clientId,
-                    email: email,
-                    league: league,
-                    onTeamSelected: (selectedTeam) {
-                      print('Selected team: $selectedTeam');
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: PlayerSelectionButton(
-                    // games: _games,
-                    clientId: clientId,
-                    email: email,
-                    league: league,
-                    onPlayerSelected: (selectedPlayer) {
-                      print('Selected player: $selectedPlayer');
-                    },
-                  ),
-                ),
-              ],
-            ),
+            child: _userDataLoading
+                ? const SizedBox(height: 48)
+                : _buildButtonRow(),
           ),
           Expanded(
             child: FutureBuilder<Map<String, dynamic>>(
@@ -892,6 +885,94 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       separatorBuilder: (BuildContext context, int index) {
         return SizedBox(height: 4);
       },
+    );
+  }
+
+  Widget _buildButtonRow() {
+    if (_cachedUserData == null) {
+      // Fallback - show both buttons if no cached data
+      return Row(
+        children: [
+          Expanded(
+            child: TeamSelectionButton(
+              clientId: clientId,
+              email: email,
+              league: league,
+              onTeamSelected: (selectedTeam) {
+                print('Selected team: $selectedTeam');
+                _fetchCachedUserData(); // Refresh cache when team is selected
+              },
+            ),
+          ),
+          Expanded(
+            child: PlayerSelectionButton(
+              clientId: clientId,
+              email: email,
+              league: league,
+              onPlayerSelected: (selectedPlayer) {
+                print('Selected player: $selectedPlayer');
+              },
+            ),
+          ),
+        ],
+      );
+    }
+
+    final winner = _cachedUserData!['winner']?['$league'];
+    bool hasWinner = winner != null;
+
+    // Check if we're before first game (this logic is from TeamSelectionButton)
+    bool isBeforeFirstGame = false;
+    if (_games.isNotEmpty) {
+      final sortedGames = List<Game>.from(_games)
+        ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      DateTime firstGameDate = sortedGames.first.date.toUtc();
+      DateTime currentTimeUtc = DateTime.now().toUtc();
+      isBeforeFirstGame = currentTimeUtc.isBefore(firstGameDate);
+    }
+
+    bool shouldShowTeamButton = !hasWinner && isBeforeFirstGame;
+
+    return Row(
+      children: [
+        if (shouldShowTeamButton)
+          Expanded(
+            child: TeamSelectionButton(
+              clientId: clientId,
+              email: email,
+              league: league,
+              onTeamSelected: (selectedTeam) {
+                print('Selected team: $selectedTeam');
+                _fetchCachedUserData(); // Refresh cache when team is selected
+              },
+            ),
+          ),
+        if (shouldShowTeamButton)
+          Expanded(
+            child: PlayerSelectionButton(
+              clientId: clientId,
+              email: email,
+              league: league,
+              onPlayerSelected: (selectedPlayer) {
+                print('Selected player: $selectedPlayer');
+              },
+            ),
+          )
+        else
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: PlayerSelectionButton(
+                clientId: clientId,
+                email: email,
+                league: league,
+                onPlayerSelected: (selectedPlayer) {
+                  print('Selected player: $selectedPlayer');
+                },
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
