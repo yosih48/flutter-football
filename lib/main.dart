@@ -16,6 +16,7 @@ import 'package:football/screens/games.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/screens/profile.dart';
 import 'package:football/screens/table.dart';
+import 'package:football/theme/colors.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -67,6 +68,12 @@ class GameApp extends StatelessWidget {
           cursorColor: Colors.blue, // Cursor (blinking line)
           selectionColor: Colors.blue.shade100, // Text selection background
           selectionHandleColor: Colors.blue, // ← The "pin"/handle color
+        ),
+            snackBarTheme: SnackBarThemeData(
+          backgroundColor: cards, // Set background color
+          contentTextStyle:
+              TextStyle(color: Colors.white), // Optional: text color
+          actionTextColor: Colors.blue, // Optional: action button color
         ),
         primarySwatch: Colors.blue, // Sets the primary color to blue
         brightness: Brightness.dark, // Set dark theme

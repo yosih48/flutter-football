@@ -139,7 +139,17 @@
     "noTopScorersYet":"No top scorers yet",
     "noWinnersYet":"No winners yet",
     "allCompetitions":"All Competitions",
-    "provideEmail":"please provide an email address"
+    "provideEmail":"please provide an email address",
+    "provideEmail":"please provide an email address",
+    "teamSavedsuccessfully":"Team saved successfully",
+    "failedtoSaveTeam":"Failed to save team",
+    "errorsavingteam":"An error occurred while saving the team",
+    "pleaseSelectTeamFirst":"Please select a team first",
+    "playerSavedsuccessfully":"Player saved successfully",
+    "failedtoSaveplayer":"Failed to save Player",
+    "errorsavingplayer":"An error occurred while saving the player",
+    "pleaseSelectplayerFirst":"Please select a player first"
+
     
 
 

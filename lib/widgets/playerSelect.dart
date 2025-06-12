@@ -116,7 +116,7 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
     String _baseUrl = backendUrl;
     if (selectedPlayer == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please select a team first')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.pleaseSelectplayerFirst)),
       );
       return;
     }
@@ -148,7 +148,10 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
           isPlayerButtonEnabled = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Team saved successfully')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.playerSavedsuccessfully),
+           backgroundColor: cards, 
+          ),
+          
         );
         _fetchUserData();
       } else {
@@ -156,13 +159,15 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
             'Users update group Fetch failed with status: ${response.statusCode}');
         print(jsonDecode(response.body));
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save team')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedtoSaveplayer),
+           backgroundColor: cards, 
+          ),
         );
       }
     } catch (error) {
       print('Error editing guesses: $error');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred while saving the team')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.errorsavingplayer)),
       );
     }
   }
@@ -221,6 +226,10 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
                 ],
                 SizedBox(height: 20),
                 ElevatedButton(
+                         style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        Colors.white, // Set button background to white
+                  ),
                   onPressed: isPlayerButtonEnabled
                       ? () {
                           savePlayer();

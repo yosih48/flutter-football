@@ -116,7 +116,7 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
   String _baseUrl = backendUrl;
     if (selectedTeam == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please select a team first')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.pleaseSelectTeamFirst)),
       );
       return;
     }
@@ -145,7 +145,7 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
           isWinnerButtonEnabled = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Team saved successfully')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.teamSavedsuccessfully)),
           
         );
                       _fetchUserData();
@@ -155,13 +155,13 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
             'Users update group Fetch failed with status: ${response.statusCode}');
         print(jsonDecode(response.body));
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save team')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedtoSaveTeam)),
         );
       }
     } catch (error) {
       print('Error editing guesses: $error');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred while saving the team')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.errorsavingteam)),
       );
     }
   }

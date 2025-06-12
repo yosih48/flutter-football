@@ -144,5 +144,13 @@
      "noTopScorersYet":"לא נבחרו מלכי שערים",
       "noWinnersYet":"לא נבחרו זוכות",
        "allCompetitions":"כל התחרויות",
-       "provideEmail":"אנא הזן כתובת אימייל לאיפוס"
+       "provideEmail":"אנא הזן כתובת אימייל לאיפוס",
+         "teamSavedsuccessfully": "הקבוצה נשמרה בהצלחה",
+  "failedtoSaveTeam": "שמירת הקבוצה נכשלה",
+  "errorsavingteam": "אירעה שגיאה בעת שמירת הקבוצה",
+  "pleaseSelectTeamFirst": "אנא בחר קבוצה תחילה",
+    "playerSavedsuccessfully": "השחקן נשמר בהצלחה",
+  "failedtoSaveplayer": "שמירת השחקן נכשלה",
+  "errorsavingplayer": "אירעה שגיאה בעת שמירת השחקן",
+  "pleaseSelectplayerFirst": "אנא בחר שחקן תחילה"
 }
