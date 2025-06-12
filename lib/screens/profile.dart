@@ -361,6 +361,9 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
               },
             ),
             ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white, // Set button background to white
+              ),
               child: Text(AppLocalizations.of(context)!.create,
                   style: TextStyle(color: Colors.blue)),
               onPressed: () {
@@ -676,8 +679,13 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     );
   }
 
-  Widget usersGroups(UserProvider selectedGroup) {
-    return _userGroups.isEmpty
+Widget usersGroups(UserProvider selectedGroup) {
+    // Filter out 'public' group
+    final filteredGroups = _userGroups.entries
+        .where((entry) => entry.value.toLowerCase() != 'public')
+        .toList();
+
+    return filteredGroups.isEmpty
         ? Center(
             child: Padding(
               padding: EdgeInsets.all(24),
@@ -698,18 +706,19 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
             padding: EdgeInsets.all(8),
-            itemCount: _userGroups.length,
+            itemCount: filteredGroups.length,
             separatorBuilder: (context, index) => Divider(
               color: Colors.white.withOpacity(0.1),
               height: 1,
             ),
             itemBuilder: (context, index) {
-              String groupId = _userGroups.keys.elementAt(index);
-              String groupName = _userGroups.values.elementAt(index);
-              bool isCreator = _groupsInfo.any((group) =>
-                  group['name'] == groupName &&
-                      group['createdBy'] == currentUserId ||
-                  groupName == 'public');
+              final groupEntry = filteredGroups[index];
+              final groupId = groupEntry.key;
+              final groupName = groupEntry.value;
+
+              final isCreator = _groupsInfo.any((group) =>
+                  (group['name'] == groupName &&
+                      group['createdBy'] == currentUserId));
 
               return ListTile(
                 onTap: () {
@@ -759,8 +768,8 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                       ),
                       onPressed: () async {
                         selectedGroup.setSelectedGroupName(groupName);
-                        await SharedPreferences.getInstance().then((prefs) =>
-                            prefs.setString('selectedGroupName', groupName));
+                        final prefs = await SharedPreferences.getInstance();
+                        prefs.setString('selectedGroupName', groupName);
                         _loadSelectedGroupName();
                       },
                     ),

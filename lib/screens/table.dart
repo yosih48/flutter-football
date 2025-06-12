@@ -200,6 +200,9 @@ class TableScreenContentState extends State<TableScreenContent> {
               },
             ),
             ElevatedButton(
+                     style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white, // Set button background to white
+              ),
               child: Text(AppLocalizations.of(context)!.join,
                   style: TextStyle(color: Colors.blue)),
               onPressed: () async {
@@ -611,6 +614,8 @@ class TableScreenContentState extends State<TableScreenContent> {
                     ),
                   ),
                 ),
+
+         selectedGroupName != 'public'?
                 Container(
                   margin: EdgeInsets.all(16),
                   child: TextButton.icon(
@@ -636,6 +641,8 @@ class TableScreenContentState extends State<TableScreenContent> {
                     ),
                     onPressed: () => _inviteFriend(selectedGroupName),
                   ),
+                ): SizedBox(
+                  height: 2,
                 ),
               ],
             ),
