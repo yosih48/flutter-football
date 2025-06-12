@@ -143,5 +143,6 @@
      "topScorerPoints":"ניקוד על שערים:",
      "noTopScorersYet":"לא נבחרו מלכי שערים",
       "noWinnersYet":"לא נבחרו זוכות",
-       "allCompetitions":"כל התחרויות"
+       "allCompetitions":"כל התחרויות",
+       "provideEmail":"אנא הזן כתובת אימייל לאיפוס"
 }

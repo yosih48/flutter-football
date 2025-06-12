@@ -5,6 +5,8 @@ import 'package:football/utils/config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:football/models/users.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
     String _baseUrl = backendUrl;
 
 class UsersMethods {
@@ -115,7 +117,7 @@ Future<String> sendEmail(String email, context) async {
       //       ScaffoldMessenger.of(context).showSnackBar(
       //   SnackBar(content: Text('לא נמצאה כתובת אימייל')),
       // );
-      throw Exception('לא נמצאה כתובת אימייל');  
+     throw (AppLocalizations.of(context)!.provideEmail);  
         
       }
     } catch (e) {
