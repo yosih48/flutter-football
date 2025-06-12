@@ -251,12 +251,12 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                   margin: EdgeInsets.symmetric(vertical: 8),
                   child: ToggleButtonsSample(
                     options: [
-                      AppLocalizations.of(context)!.notifications,
                       AppLocalizations.of(context)!.chooseleagues,
+                      AppLocalizations.of(context)!.notifications,
                     ],
                     imageUrls: [
-                      'https://img.icons8.com/ios/50/ffffff/notification-center.png',
                       'https://img.icons8.com/ios/50/ffffff/football2.png',
+                      'https://img.icons8.com/ios/50/ffffff/notification-center.png',
                     ],
                     onSelectionChanged: (index) {
                       setState(() {
@@ -268,8 +268,10 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                 ),
                 Expanded(
                   child: selectedTab == 0
-                      ? _buildNotificationsTab(name, email)
-                      : _buildChosenLeaguesTab(name, email),
+                      ? 
+                      _buildChosenLeaguesTab(name, email)
+                      : 
+                      _buildNotificationsTab(name, email)
                 ),
               ],
             ),
@@ -471,7 +473,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       848: 'https://media.api-sports.io/football/leagues/848.png',
       15: 'https://media.api-sports.io/football/leagues/15.png',
     };
-    
+
     // Map to translate league IDs to notification state keys
     final leagueIdToNotificationKey = {
       2: 'ליגת אלופות',
@@ -487,41 +489,42 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
     return Column(
       children: [
         // Search Bar
-        Container(
-          margin: EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: cards,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.withOpacity(0.3)),
-          ),
-          child: TextField(
-            style: TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              hintText: 'Search for competitions',
-              hintStyle: TextStyle(color: Colors.grey[400]),
-              prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            ),
-          ),
-        ),
-        
+        // Container(
+        //   margin: EdgeInsets.all(16),
+        //   decoration: BoxDecoration(
+        //     color: cards,
+        //     borderRadius: BorderRadius.circular(12),
+        //     border: Border.all(color: Colors.grey.withOpacity(0.3)),
+        //   ),
+        //   child: TextField(
+        //     style: TextStyle(color: Colors.white),
+        //     decoration: InputDecoration(
+        //       hintText: 'Search for competitions',
+        //       hintStyle: TextStyle(color: Colors.grey[400]),
+        //       prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+        //       border: InputBorder.none,
+        //       contentPadding:
+        //           EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        //     ),
+        //   ),
+        // ),
+
         // Popular Competitions Title
-        Padding(
+    Padding(
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Popular Competitions',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+          child: Text(
+            AppLocalizations.of(context)!.allCompetitions,
+            textAlign: Directionality.of(context) == TextDirection.rtl
+                ? TextAlign.right
+                : TextAlign.left,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),
-        
+ SizedBox(height: 8),
         // Leagues Grid
         Expanded(
           child: Padding(
@@ -538,14 +541,15 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                 final leagueEntry = chosenLeagues.entries.toList()[index];
                 final leagueId = leagueEntry.key;
                 final isSelected = leagueEntry.value;
-                
+
                 return GestureDetector(
                   onTap: () {
                     setState(() {
                       chosenLeagues[leagueId] = !isSelected;
                       // If user disables a league, also disable its notification
                       if (!chosenLeagues[leagueId]!) {
-                        String? notificationKey = leagueIdToNotificationKey[leagueId];
+                        String? notificationKey =
+                            leagueIdToNotificationKey[leagueId];
                         if (notificationKey != null) {
                           notificationStates[notificationKey] = false;
                         }
@@ -563,6 +567,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                       ),
                     ),
                     child: Stack(
+                      alignment: Alignment.center,
                       children: [
                         // Star icon for selection
                         Positioned(
@@ -571,10 +576,10 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                           child: Icon(
                             isSelected ? Icons.star : Icons.star_border,
                             color: isSelected ? Colors.blue : Colors.grey[400],
-                            size: 20,
+                            size: 18,
                           ),
                         ),
-                        
+
                         // League content
                         Padding(
                           padding: EdgeInsets.all(12),
@@ -584,8 +589,8 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                             children: [
                               // League Logo - Centered and bigger
                               Container(
-                                width: 65,
-                                height: 65,
+                                width: 55,
+                                height: 55,
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
                                   color: Colors.white,
@@ -604,9 +609,9 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                                   },
                                 ),
                               ),
-                              
+
                               SizedBox(height: 10),
-                              
+
                               // League Name
                               Text(
                                 leagueNames[leagueId] ?? '',
