@@ -66,6 +66,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   bool _hasInitialized = false;
   bool _showOnlyThisLeagueTodayGames = false;
   bool _showOnlyLiveGames = false;
+  int? _selectedLeagueFilter;
   late String clientId;
   late String email;
   int selectedIndex = 0;
@@ -172,9 +173,42 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     _fetchGames(league);
   }
 
-  void toggleShowOnlyLiveGames() {
+  void toggleShowOnlyLiveGames() async {
+    // Toggle the today filter (show only today's games)
     setState(() {
       _showOnlyLiveGames = !_showOnlyLiveGames;
+    });
+
+    // Re-fetch games according to new preference
+    final userData = await UsersMethods().fetchUserById(clientId);
+    final chosenLeagues = Map<String, bool>.from(userData['chosenLeagues'] ?? {});
+    final enabledLeagues = <int>[
+      if (chosenLeagues['2'] == true) 2,
+      if (chosenLeagues['383'] == true) 383,
+      if (chosenLeagues['140'] == true) 140,
+      if (chosenLeagues['3'] == true) 3,
+      if (chosenLeagues['39'] == true) 39,
+      if (chosenLeagues['78'] == true) 78,
+      if (chosenLeagues['848'] == true) 848,
+      if (chosenLeagues['15'] == true) 15,
+    ];
+
+    if (_showOnlyLiveGames) {
+      selectedDate = DateTime.now();
+      await _fetchAllUpcomingGames(enabledLeagues, filterDate: selectedDate);
+    } else {
+      selectedDate = null;
+      await _fetchAllUpcomingGames(enabledLeagues);
+    }
+  }
+
+  void _toggleLeagueFilter(int leagueId) async {
+    setState(() {
+      if (_selectedLeagueFilter == leagueId) {
+        _selectedLeagueFilter = null; // Clear filter
+      } else {
+        _selectedLeagueFilter = leagueId;
+      }
     });
   }
 
@@ -644,6 +678,16 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             ),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.live_tv,
+              color: _showOnlyLiveGames ? Colors.blue : Colors.white,
+            ),
+            tooltip: 'Today',
+            onPressed: toggleShowOnlyLiveGames,
+          ),
+        ],
       ),
       body: FutureBuilder<Map<String, dynamic>>(
         future: UsersMethods().fetchUserById(clientId),
@@ -701,7 +745,9 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           }
 
           // Group games by date
-          final groupedGames = _groupGamesByDate(_games);
+          final groupedGames = _groupGamesByDate(_selectedLeagueFilter == null
+              ? _games
+              : _games.where((g) => g.league.id == _selectedLeagueFilter).toList());
           final sortedDates = groupedGames.keys.toList()..sort();
 
           return RefreshIndicator(
@@ -713,14 +759,22 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               itemCount: sortedDates.length,
               itemBuilder: (context, index) {
                 final date = sortedDates[index];
-                final gamesForDate = groupedGames[date]!;
+                var gamesForDate = groupedGames[date]!;
+
+                // Further group by league within the date
+                final Map<int, List<Game>> gamesByLeague = {};
+                for (final game in gamesForDate) {
+                  gamesByLeague.putIfAbsent(game.league.id, () => []).add(game);
+                }
+                final leagueIds = gamesByLeague.keys.toList()..sort();
+
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Date header
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: Text(
-                        // Format: Monday, June 10
                         '${DateFormat('EEEE, MMM d').format(date)}',
                         style: TextStyle(
                           color: Colors.white,
@@ -729,39 +783,72 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                         ),
                       ),
                     ),
-                    ...gamesForDate.map((game) {
-                      if (_guessControllers[game.fixtureId] == null) {
-                        _guessControllers[game.fixtureId] = {
-                          'home': TextEditingController(),
-                          'away': TextEditingController(),
-                        };
-                      }
-                      final matchingGuesses = _guesses.where((g) => g.gameOriginalId == game.fixtureId).toList();
-                      final guess = matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
-                      return Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                        child: GameWidget(
-                          game: game,
-                          guess: guess,
-                          homeController: _guessControllers[game.fixtureId]?['home'],
-                          awayController: _guessControllers[game.fixtureId]?['away'],
-                          onTap: (context) async {
-                            if (game.status.long != "Not Started") {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => GameDetails(
-                                    gameOriginalId: game.fixtureId,
-                                    game: game,
-                                    games: gamesForDate,
-                                    initialIndex: gamesForDate.indexOf(game),
-                                    userId: clientId,
+                    // League sections
+                    ...leagueIds.map((lid) {
+                      final leagueGames = gamesByLeague[lid]!;
+                      final leagueName = leagueGames.first.league.name;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          GestureDetector(
+                            onTap: () => _toggleLeagueFilter(lid),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    leagueName,
+                                    style: TextStyle(
+                                      color: _selectedLeagueFilter == lid ? Colors.blue : Colors.grey[300],
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                ),
-                              );
+                                  if (_selectedLeagueFilter == lid)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 6.0),
+                                      child: Icon(Icons.close, size: 14, color: Colors.blue),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          ...leagueGames.map((game) {
+                            if (_guessControllers[game.fixtureId] == null) {
+                              _guessControllers[game.fixtureId] = {
+                                'home': TextEditingController(),
+                                'away': TextEditingController(),
+                              };
                             }
-                          },
-                        ),
+                            final matchingGuesses = _guesses.where((g) => g.gameOriginalId == game.fixtureId).toList();
+                            final guess = matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
+                            return Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                              child: GameWidget(
+                                game: game,
+                                guess: guess,
+                                homeController: _guessControllers[game.fixtureId]?['home'],
+                                awayController: _guessControllers[game.fixtureId]?['away'],
+                                onTap: (context) async {
+                                  if (game.status.long != "Not Started") {
+                                    await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => GameDetails(
+                                          gameOriginalId: game.fixtureId,
+                                          game: game,
+                                          games: leagueGames,
+                                          initialIndex: leagueGames.indexOf(game),
+                                          userId: clientId,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            );
+                          }).toList(),
+                        ],
                       );
                     }).toList(),
                   ],
