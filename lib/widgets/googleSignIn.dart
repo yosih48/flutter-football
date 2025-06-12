@@ -72,7 +72,7 @@ class GoogleSignInButton extends StatelessWidget {
           await authProvider.googleLogin(idToken, fcmToken, context);
 
         } else {
-          throw Exception('Failed to obtain ID token from Google Sign-In');
+          throw ('Failed to obtain ID token from Google Sign-In');
         }
         print('idToken== null');
       }
@@ -105,7 +105,11 @@ class GoogleSignInButton extends StatelessWidget {
             SizedBox(
               width: 5,
             ),
-            Text(AppLocalizations.of(context)!.signinwithgoogle)
+            Text(AppLocalizations.of(context)!.signinwithgoogle,
+                style: TextStyle(
+                color: Colors.black // Change the input text color to blue
+              ),
+            )
           ],
         ),
         onPressed: () {

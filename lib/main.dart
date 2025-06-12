@@ -63,6 +63,11 @@ class GameApp extends StatelessWidget {
     return MaterialApp(
       navigatorKey: navigatorKey,
       theme: ThemeData(
+           textSelectionTheme: TextSelectionThemeData(
+          cursorColor: Colors.blue, // Cursor (blinking line)
+          selectionColor: Colors.blue.shade100, // Text selection background
+          selectionHandleColor: Colors.blue, // ← The "pin"/handle color
+        ),
         primarySwatch: Colors.blue, // Sets the primary color to blue
         brightness: Brightness.dark, // Set dark theme
         appBarTheme: AppBarTheme(
