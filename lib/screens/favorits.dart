@@ -229,8 +229,10 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         backgroundColor: Colors.transparent,
         title: Text(
           selectedTab == 0
-              ? AppLocalizations.of(context)!.notifications
-              : AppLocalizations.of(context)!.chooseleagues,
+              ? 
+               AppLocalizations.of(context)!.chooseleagues
+              :
+              AppLocalizations.of(context)!.notifications,
           style: TextStyle(
             color: Colors.white,
             fontSize: 20,
