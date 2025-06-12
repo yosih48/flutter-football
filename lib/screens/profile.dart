@@ -929,7 +929,7 @@ class usersTopScorers extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _userTopScorers.isEmpty
+    return filteredTopScorers.isEmpty
         ? Center(
             child: Padding(
               padding: EdgeInsets.all(24),

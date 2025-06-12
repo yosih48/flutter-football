@@ -221,6 +221,10 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
                 ],
                 SizedBox(height: 20),
                 ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        Colors.white, // Set button background to white
+                  ),
                   onPressed: isWinnerButtonEnabled
                       ? () {
                           saveTeam();
