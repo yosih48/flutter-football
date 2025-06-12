@@ -63,8 +63,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   List<Game> _games = [];
   List<Guess> _guesses = [];
   int league = 2;
-    bool _hasInitialized = false;
-  // bool _showOnlyTodayGames = false;
+  bool _hasInitialized = false;
   bool _showOnlyThisLeagueTodayGames = false;
   bool _showOnlyLiveGames = false;
   late String clientId;
@@ -74,8 +73,10 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   bool buttonLoading = false;
   DateTime? selectedDate;
   bool _showSelectedDateGames = false;
-
   String _baseUrl = backendUrl;
+  Map<int, Map<String, TextEditingController>> _guessControllers = {};
+  bool _hasFetchedInitialGames = false;
+
   void updateSelectedIndex(int index) {
     print(index);
     setState(() {
@@ -106,30 +107,26 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     _fetchGames(league);
   }
 
-  Map<int, Map<String, TextEditingController>> _guessControllers = {};
   void initState() {
     super.initState();
     clientId = widget.authProvider.currentUser?.id ?? 'Not logged in';
     email = widget.authProvider.currentUser?.email ?? 'Not logged in';
     league = widget.userProvider.selectedLeageId ?? 2;
-    selectedDate = DateTime.now().copyWith(
-        hour: 0, minute: 0, second: 0, millisecond: 0, microsecond: 0);
+    selectedDate = null;
     print('clientId in games: ${clientId}');
 
     print(email);
-    _fetchGames(league);
     _fetchGuesses(clientId);
   }
 
   @override
   void didChangeDependencies() {
-  
     super.didChangeDependencies();
 
     if (!_hasInitialized) {
       final args =
           ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-            print(' args: ${args}');
+      print(' args: ${args}');
       if (args != null) {
         final String? leagueString = args['league'];
         final String? tournamentId = args['tournamentId'];
@@ -138,18 +135,27 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         if (leagueString != null) {
           league = int.tryParse(leagueString) ?? 2;
         }
-
-        // Handle other parameters if needed
-        if (action == 'select_top_scorer') {
-          // Navigate to top scorer selection or show relevant UI
-        }
       }
 
+      // Fetch initial games for all enabled leagues
+      UsersMethods().fetchUserById(clientId).then((userData) {
+        final chosenLeagues = Map<String, bool>.from(userData['chosenLeagues'] ?? {});
+        final enabledLeagues = <int>[
+          if (chosenLeagues['2'] == true) 2,
+          if (chosenLeagues['383'] == true) 383,
+          if (chosenLeagues['140'] == true) 140,
+          if (chosenLeagues['3'] == true) 3,
+          if (chosenLeagues['39'] == true) 39,
+          if (chosenLeagues['78'] == true) 78,
+          if (chosenLeagues['848'] == true) 848,
+          if (chosenLeagues['15'] == true) 15,
+        ];
+        _fetchAllUpcomingGames(enabledLeagues);
+      });
+
       _hasInitialized = true;
-     
     }
   }
-
 
   void dispose() {
     for (var controllers in _guessControllers.values) {
@@ -158,13 +164,6 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     }
     super.dispose();
   }
-
-  // void toggleShowOnlyTodayGames() {
-  //   setState(() {
-  //     _showOnlyTodayGames = !_showOnlyTodayGames;
-  //   });
-  //   _fetchGames(league);
-  // }
 
   void toggleshowOnlyThisLeagueTodayGames() {
     setState(() {
@@ -503,6 +502,64 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     }
   }
 
+  // Helper: Group games by date
+  Map<DateTime, List<Game>> _groupGamesByDate(List<Game> games) {
+    final Map<DateTime, List<Game>> grouped = {};
+    for (final game in games) {
+      final date = DateTime(game.date.year, game.date.month, game.date.day);
+      grouped.putIfAbsent(date, () => []).add(game);
+    }
+    return grouped;
+  }
+
+  // Fetch all upcoming games for all enabled leagues
+  Future<void> _fetchAllUpcomingGames(List<int> enabledLeagues, {DateTime? filterDate}) async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      List<Game> allGames = [];
+      for (final leagueId in enabledLeagues) {
+        final games = await GamesMethods().fetchGamesForLeague(leagueId);
+        // Include games that are either:
+        // 1. Starting today (including live games)
+        // 2. Starting in the future
+        final now = DateTime.now();
+        final startOfToday = DateTime(now.year, now.month, now.day);
+        allGames.addAll(games.where((g) {
+          final gameDate = DateTime(g.date.year, g.date.month, g.date.day);
+          return gameDate.isAfter(startOfToday.subtract(Duration(days: 1))) || 
+                 g.status.short == '1H' || 
+                 g.status.short == '2H' || 
+                 g.status.short == 'HT';
+        }));
+      }
+
+      // Apply date filter if specified
+      if (filterDate != null) {
+        final filterDateStart = DateTime(filterDate.year, filterDate.month, filterDate.day);
+        final filterDateEnd = filterDateStart.add(Duration(days: 1));
+        allGames = allGames.where((g) => 
+          g.date.isAfter(filterDateStart.subtract(Duration(seconds: 1))) && 
+          g.date.isBefore(filterDateEnd)
+        ).toList();
+      }
+
+      // Sort games by date
+      allGames.sort((a, b) => a.date.compareTo(b.date));
+
+      setState(() {
+        _games = allGames;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Failed to fetch all upcoming games: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -511,7 +568,52 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         elevation: 0,
         backgroundColor: Colors.transparent,
         title: GestureDetector(
-          onTap: () => _selectDate(context),
+          onTap: () async {
+            final userData = await UsersMethods().fetchUserById(clientId);
+            final chosenLeagues = Map<String, bool>.from(userData['chosenLeagues'] ?? {});
+            final enabledLeagues = <int>[
+              if (chosenLeagues['2'] == true) 2,
+              if (chosenLeagues['383'] == true) 383,
+              if (chosenLeagues['140'] == true) 140,
+              if (chosenLeagues['3'] == true) 3,
+              if (chosenLeagues['39'] == true) 39,
+              if (chosenLeagues['78'] == true) 78,
+              if (chosenLeagues['848'] == true) 848,
+              if (chosenLeagues['15'] == true) 15,
+            ];
+            final picked = await showDatePicker(
+              context: context,
+              initialDate: selectedDate ?? DateTime.now(),
+              firstDate: DateTime(2024),
+              cancelText: AppLocalizations.of(context)!.cleardatefilter,
+              lastDate: DateTime(DateTime.now().year + 1),
+              builder: (BuildContext context, Widget? child) {
+                return Theme(
+                  data: ThemeData.dark().copyWith(
+                    colorScheme: ColorScheme.dark(
+                      primary: Colors.blue,
+                      onPrimary: Colors.white,
+                      surface: Color(0xFF303030),
+                      onSurface: Colors.white,
+                    ),
+                    dialogBackgroundColor: Color(0xFF303030),
+                  ),
+                  child: child ?? Container(),
+                );
+              },
+            );
+            if (picked != null) {
+              setState(() {
+                selectedDate = picked;
+              });
+              await _fetchAllUpcomingGames(enabledLeagues, filterDate: picked);
+            } else if (picked == null && selectedDate != null) {
+              setState(() {
+                selectedDate = null;
+              });
+              await _fetchAllUpcomingGames(enabledLeagues);
+            }
+          },
           child: Container(
             decoration: BoxDecoration(
               color: Colors.blue.withOpacity(0.1),
@@ -542,228 +644,132 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             ),
           ),
         ),
-        actions: [
-          // Live games switch
-          Container(
-            margin: EdgeInsets.only(right: 8),
-            child: Row(
-              children: [
-                Text(
-                  'Live',
-                  style: TextStyle(
-                    color: white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Transform.scale(
-                  scale: 0.8,
-                  child: Switch(
-                    value: _showOnlyLiveGames,
-                    onChanged: (value) {
-                      toggleShowOnlyLiveGames();
-                    },
-                    activeColor: Colors.red,
-                    activeTrackColor: Colors.red.withOpacity(0.5),
-                    inactiveThumbColor: Colors.white,
-                    inactiveTrackColor: Colors.grey.withOpacity(0.5),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (selectedDate != null)
-            Container(
-              margin: EdgeInsets.only(right: 16),
-              child: Row(
+      ),
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: UsersMethods().fetchUserById(clientId),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(child: CircularProgressIndicator());
+          }
+          final userData = snapshot.data!;
+          final chosenLeagues = Map<String, bool>.from(userData['chosenLeagues'] ?? {});
+          final enabledLeagues = <int>[
+            if (chosenLeagues['2'] == true) 2,
+            if (chosenLeagues['383'] == true) 383,
+            if (chosenLeagues['140'] == true) 140,
+            if (chosenLeagues['3'] == true) 3,
+            if (chosenLeagues['39'] == true) 39,
+            if (chosenLeagues['78'] == true) 78,
+            if (chosenLeagues['848'] == true) 848,
+            if (chosenLeagues['15'] == true) 15,
+          ];
+
+          // Fetch games if not already loaded (use post-frame callback)
+          if (!_hasFetchedInitialGames) {
+            _hasFetchedInitialGames = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _fetchAllUpcomingGames(enabledLeagues, filterDate: selectedDate);
+            });
+          }
+
+          if (isLoading) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          if (_games.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    AppLocalizations.of(context)!.thisleague,
-                    style: TextStyle(
-                      color: white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  Icon(
+                    Icons.scoreboard_outlined,
+                    size: 48,
+                    color: Colors.grey,
                   ),
-                  Transform.scale(
-                    scale: 0.8,
-                    child: Switch(
-                      value: !_showOnlyThisLeagueTodayGames,
-                      onChanged: (value) {
-                        toggleshowOnlyThisLeagueTodayGames();
-                      },
-                      activeColor: Colors.blue,
-                      activeTrackColor: Colors.blue.withOpacity(0.5),
-                      inactiveThumbColor: Colors.white,
-                      inactiveTrackColor: Colors.grey.withOpacity(0.5),
-                    ),
-                  ),
+                  SizedBox(height: 16),
                   Text(
-                    AppLocalizations.of(context)!.allleagus,
+                    AppLocalizations.of(context)!.nogames,
                     style: TextStyle(
-                      color: white,
-                      fontSize: 14,
+                      color: Colors.white,
+                      fontSize: 18,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
-            ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Container(
-            margin: EdgeInsets.symmetric(vertical: 8),
-            child: FutureBuilder<Map<String, dynamic>>(
-              future: UsersMethods().fetchUserById(clientId),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  final userData = snapshot.data!;
-                  final chosenLeagues =
-                      Map<String, bool>.from(userData['chosenLeagues'] ?? {});
+            );
+          }
 
-                  // Create filtered lists based on chosen leagues
-                  final enabledLeagues = <int>[
-                    if (chosenLeagues['2'] == true) 2,
-                    if (chosenLeagues['383'] == true) 383,
-                    if (chosenLeagues['140'] == true) 140,
-                    if (chosenLeagues['3'] == true) 3,
-                    if (chosenLeagues['39'] == true) 39,
-                    if (chosenLeagues['78'] == true) 78,
-                    if (chosenLeagues['848'] == true) 848,
-                    if (chosenLeagues['15'] == true) 15,
-                  ];
+          // Group games by date
+          final groupedGames = _groupGamesByDate(_games);
+          final sortedDates = groupedGames.keys.toList()..sort();
 
-                  final options = enabledLeagues.map((id) {
-                    switch (id) {
-                      case 2:
-                        return AppLocalizations.of(context)!.championsleague;
-                      case 383:
-                        return AppLocalizations.of(context)!.ligathaal;
-                      case 140:
-                        return AppLocalizations.of(context)!.laliga;
-                      case 3:
-                        return AppLocalizations.of(context)!.europaleague;
-                      case 39:
-                        return AppLocalizations.of(context)!.premierleague;
-                      case 78:
-                        return AppLocalizations.of(context)!.bundesleague;
-                      case 848:
-                        return AppLocalizations.of(context)!.conferenceleague;
-                      case 15:
-                        return AppLocalizations.of(context)!.clubworldcup;
-                      default:
-                        return '';
-                    }
-                  }).toList();
-
-                  final imageUrls = enabledLeagues.map((id) {
-                    return 'https://media.api-sports.io/football/leagues/$id.png';
-                  }).toList();
-
-                  return ToggleButtonsSample(
-                    options: options,
-                    imageUrls: imageUrls,
-                    onSelectionChanged: (index) {
-                      updateSelectedIndex(index);
-                    },
-                    initialSelection: enabledLeagues.indexOf(league),
-                  );
-                }
-                return CircularProgressIndicator();
+          return RefreshIndicator(
+            onRefresh: () async {
+              await _fetchAllUpcomingGames(enabledLeagues, filterDate: selectedDate);
+            },
+            color: Colors.grey,
+            child: ListView.builder(
+              itemCount: sortedDates.length,
+              itemBuilder: (context, index) {
+                final date = sortedDates[index];
+                final gamesForDate = groupedGames[date]!;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Text(
+                        // Format: Monday, June 10
+                        '${DateFormat('EEEE, MMM d').format(date)}',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    ...gamesForDate.map((game) {
+                      if (_guessControllers[game.fixtureId] == null) {
+                        _guessControllers[game.fixtureId] = {
+                          'home': TextEditingController(),
+                          'away': TextEditingController(),
+                        };
+                      }
+                      final matchingGuesses = _guesses.where((g) => g.gameOriginalId == game.fixtureId).toList();
+                      final guess = matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
+                      return Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                        child: GameWidget(
+                          game: game,
+                          guess: guess,
+                          homeController: _guessControllers[game.fixtureId]?['home'],
+                          awayController: _guessControllers[game.fixtureId]?['away'],
+                          onTap: (context) async {
+                            if (game.status.long != "Not Started") {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => GameDetails(
+                                    gameOriginalId: game.fixtureId,
+                                    game: game,
+                                    games: gamesForDate,
+                                    initialIndex: gamesForDate.indexOf(game),
+                                    userId: clientId,
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ],
+                );
               },
             ),
-          ),
-          Container(
-            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TeamSelectionButton(
-                    // games: _games,
-                    clientId: clientId,
-                    email: email,
-                    league: league,
-                    onTeamSelected: (selectedTeam) {
-                      print('Selected team: $selectedTeam');
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: PlayerSelectionButton(
-                    // games: _games,
-                    clientId: clientId,
-                    email: email,
-                    league: league,
-                    onPlayerSelected: (selectedPlayer) {
-                      print('Selected player: $selectedPlayer');
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: FutureBuilder<Map<String, dynamic>>(
-              future: UsersMethods().fetchUserById(clientId),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  final userData = snapshot.data!;
-                  final chosenLeagues =
-                      Map<String, bool>.from(userData['chosenLeagues'] ?? {});
-
-                  final enabledLeagues = <int>[
-                    if (chosenLeagues['2'] == true) 2,
-                    if (chosenLeagues['383'] == true) 383,
-                    if (chosenLeagues['140'] == true) 140,
-                    if (chosenLeagues['3'] == true) 3,
-                    if (chosenLeagues['39'] == true) 39,
-                    if (chosenLeagues['78'] == true) 78,
-                    if (chosenLeagues['848'] == true) 848,
-                    if (chosenLeagues['15'] == true) 15,
-                  ];
-
-                  return isLoading
-                      ? Center(
-                          child: CircularProgressIndicator(
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.blue),
-                          ),
-                        )
-                      : _games.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.scoreboard_outlined,
-                                    size: 48,
-                                    color: Colors.grey,
-                                  ),
-                                  SizedBox(height: 16),
-                                  Text(
-                                    AppLocalizations.of(context)!.nogames,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : RefreshIndicator(
-                              onRefresh: _handleManualRefresh,
-                              color: Colors.grey,
-                              child: listView(_games, enabledLeagues),
-                            );
-                }
-                return Center(child: CircularProgressIndicator());
-              },
-            ),
-          ),
-        ],
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: buttonLoading ? null : _submitAllGuesses,
@@ -787,111 +793,6 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           ),
         ),
       ),
-    );
-  }
-
-  ListView listView(List<Game> filteredGames, List<int> enabledLeagues) {
-    // Filter games based on the enabledLeagues and live games filter
-    final List<Game> displayGames = filteredGames.where((game) {
-      // Check if the game's leagueId is in the user's chosen leagues
-      bool isInEnabledLeagues = enabledLeagues.contains(game.league.id);
-
-      // If live games filter is enabled, only show live games
-      if (_showOnlyLiveGames) {
-        bool isLive = game.status.short == '1H' ||
-            game.status.short == '2H' ||
-            game.status.short == 'HT' ||
-            game.status.short == 'ET' ||
-            game.status.short == 'BT' ||
-            game.status.short == 'P' ||
-            game.status.short == 'INT';
-        return isInEnabledLeagues && isLive;
-      }
-
-      return isInEnabledLeagues;
-    }).toList();
-    // Return empty container with a message if no games match the filters
-    if (displayGames.isEmpty) {
-      print('displayGames.isEmpty');
-      return ListView.builder(
-        physics: AlwaysScrollableScrollPhysics(),
-        itemCount: 1,
-        itemBuilder: (context, index) {
-          return Container(
-            height: MediaQuery.of(context).size.height *
-                0.7, // Use most of available height
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    _showOnlyLiveGames
-                        ? Icons.live_tv
-                        : Icons.scoreboard_outlined,
-                    size: 48,
-                    color: Colors.grey,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    _showOnlyLiveGames
-                        ? AppLocalizations.of(context)!.nolivegames
-                        : AppLocalizations.of(context)!.nogames,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      );
-    }
-    return ListView.separated(
-      physics: AlwaysScrollableScrollPhysics(),
-      itemCount: displayGames.length,
-      itemBuilder: (BuildContext context, int index) {
-        final game = displayGames[index];
-        final matchingGuesses =
-            _guesses.where((g) => g.gameOriginalId == game.fixtureId).toList();
-        final guess = matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
-        if (_guessControllers[game.fixtureId] == null) {
-          _guessControllers[game.fixtureId] = {
-            'home': TextEditingController(),
-            'away': TextEditingController(),
-          };
-        }
-        return Padding(
-          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-          child: GameWidget(
-            game: game,
-            guess: guess,
-            homeController: _guessControllers[game.fixtureId]?['home'],
-            awayController: _guessControllers[game.fixtureId]?['away'],
-            onTap: (context) async {
-              if (game.status.long != "Not Started") {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => GameDetails(
-                      gameOriginalId: game.fixtureId,
-                      game: game,
-                      games: displayGames,
-                      initialIndex: displayGames.indexOf(game),
-                      userId: clientId,
-                    ),
-                  ),
-                );
-              }
-            },
-          ),
-        );
-      },
-      separatorBuilder: (BuildContext context, int index) {
-        return SizedBox(height: 4);
-      },
     );
   }
 }
