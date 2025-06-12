@@ -1,6 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:football/resources/auth.dart';
+import 'package:football/utils/config.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -8,6 +9,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
+String _CLIENTID = serverClientId;
 class GoogleSignInButton extends StatelessWidget {
   final Function(String) onSignInSuccess;
   final Function(String) onSignInError;
@@ -20,7 +22,7 @@ class GoogleSignInButton extends StatelessWidget {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email'],
     serverClientId:
-        '319642473794-269lu0hmmfsig13b52p9a127mjbdbrpb.apps.googleusercontent.com', // Add this line
+        _CLIENTID, 
   );
 
   Future<void> _handleSignIn(BuildContext context) async {
