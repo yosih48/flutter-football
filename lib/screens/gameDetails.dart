@@ -514,11 +514,20 @@ class _GameDetailsState extends State<GameDetails> {
       final guesses =
           await GuessesMethods().fetchAllUsersGuesses(_currentGame.fixtureId);
       final callService = CallService();
-      final guessesWithNames = await Future.wait(
-          guesses.map((guess) => callService.getGuessWithNames(guess)));
+      final guessesWithNames = <GuessWithNames>[];
+
+      for (var guess in guesses) {
+        try {
+          final guessWithName = await callService.getGuessWithNames(guess);
+          guessesWithNames.add(guessWithName);
+        } catch (e) {
+          print('Skipping guess due to error: $e');
+        }
+      }
 
       final filteredGuesses = guessesWithNames.where((guessWithName) {
-        return guessWithName.userGroups.values.contains(groupName);
+        return guessWithName.userGroups != null &&
+            guessWithName.userGroups.values.contains(groupName);
       }).toList();
 
       setState(() {
