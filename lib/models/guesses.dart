@@ -70,18 +70,16 @@ class CallService {
    final Map<String, Map<String, String>> _userGroupCache = {};
 
 
-  Future<GuessWithNames> getGuessWithNames(Guess guess) async {
-    // print("Call details: ${guess.details}");
- 
+Future<GuessWithNames> getGuessWithNames(Guess guess) async {
+    try {
+      String userName = await _getUserName(guess.userId);
+      Map<String, String> userGroups = await _getUserGroups(guess.userId);
 
-    String userName = await _getUserName(guess.userId);
-  Map<String, String> userGroups = await _getUserGroups(guess.userId);
-
-
-
-    return GuessWithNames(guess, userName,
-   userGroups
-    );
+      return GuessWithNames(guess, userName, userGroups);
+    } catch (e) {
+      print('Failed to get guess with names for userId ${guess.userId}: $e');
+      throw Exception('Failed to load user name');
+    }
   }
 
   Future<String> _getUserName(String userId) async {

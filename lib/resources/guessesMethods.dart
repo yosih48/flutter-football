@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'package:football/utils/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:football/models/guesses.dart';
-   String _baseUrl = backendUrl;
+
+String _baseUrl = backendUrl;
 
 class GuessesMethods {
   Future<List<Guess>> fetchThisUserGuesses(String clientId) async {
@@ -35,8 +36,7 @@ class GuessesMethods {
 
   Future<List<Guess>> fetchAllUsersGuesses(int gameId) async {
     print('clientId ${gameId}');
-    final url =
-        Uri.parse('$_baseUrl/guesses/gameOriginal/$gameId');
+    final url = Uri.parse('$_baseUrl/guesses/gameOriginal/$gameId');
 
     try {
       final response = await http.get(url);
@@ -50,6 +50,7 @@ class GuessesMethods {
               .map((item) => Guess.fromJson(item))
               .toList();
 
+          print('fetchAllUsersGuesses: ${guess.first.userId}');
           return guess;
         } else {
           throw Exception('Guess data is null or not a list');
@@ -63,8 +64,7 @@ class GuessesMethods {
   }
 
   Future<String> fetchUserName(String userId) async {
-    final response = await http
-        .get(Uri.parse('$_baseUrl/users/${userId}'));
+    final response = await http.get(Uri.parse('$_baseUrl/users/${userId}'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -74,9 +74,9 @@ class GuessesMethods {
       throw Exception('Failed to load user name');
     }
   }
- Future<Map<String, String>>  fetchUserGroup(String userId) async {
-    final response = await http
-        .get(Uri.parse('$_baseUrl/users/${userId}'));
+
+  Future<Map<String, String>> fetchUserGroup(String userId) async {
+    final response = await http.get(Uri.parse('$_baseUrl/users/${userId}'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
