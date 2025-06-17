@@ -128,7 +128,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     if (!_hasInitialized) {
       final args =
           ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-  
+
       if (args != null) {
         final String? leagueString = args['league'];
         final String? tournamentId = args['tournamentId'];
@@ -212,7 +212,34 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       } else {
         _selectedLeagueFilter = leagueId;
       }
+      isLoading = true;
     });
+
+    if (_selectedLeagueFilter != null) {
+      // Fetch all games for the selected league (ignore date filter)
+      final games =
+          await GamesMethods().fetchGamesForLeague(_selectedLeagueFilter!);
+      setState(() {
+        _games = games;
+        isLoading = false;
+      });
+    } else {
+      // Restore games for all enabled leagues with the current date filter
+      final userData = await UsersMethods().fetchUserById(clientId);
+      final chosenLeagues =
+          Map<String, bool>.from(userData['chosenLeagues'] ?? {});
+      final enabledLeagues = <int>[
+        if (chosenLeagues['2'] == true) 2,
+        if (chosenLeagues['383'] == true) 383,
+        if (chosenLeagues['140'] == true) 140,
+        if (chosenLeagues['3'] == true) 3,
+        if (chosenLeagues['39'] == true) 39,
+        if (chosenLeagues['78'] == true) 78,
+        if (chosenLeagues['848'] == true) 848,
+        if (chosenLeagues['15'] == true) 15,
+      ];
+      await _fetchAllUpcomingGames(enabledLeagues, filterDate: selectedDate);
+    }
   }
 
   // Future<void> _selectDate(BuildContext context) async {
@@ -579,11 +606,10 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             DateTime(filterDate.year, filterDate.month, filterDate.day);
         final filterDateEnd = filterDateStart.add(Duration(days: 1));
         allGames = allGames
-            .where((g) =>
-                g.date
-                    .isAfter(filterDateStart.subtract(Duration(seconds: 1))) 
-                    // && g.date.isBefore(filterDateEnd)
-                    )
+            .where((g) => g.date
+                    .isAfter(filterDateStart.subtract(Duration(seconds: 1)))
+                // && g.date.isBefore(filterDateEnd)
+                )
             .toList();
       }
 
@@ -646,16 +672,15 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               },
             );
             if (picked != null) {
-                 print('picked != null');
-                 print('selectedDate ${selectedDate}');
+              print('picked != null');
+              print('selectedDate ${selectedDate}');
               setState(() {
                 selectedDate = picked;
               });
               await _fetchAllUpcomingGames(enabledLeagues, filterDate: picked);
-            }
-            else if (picked == null && selectedDate != null) {
+            } else if (picked == null && selectedDate != null) {
               setState(() {
-                     print('picked == null');
+                print('picked == null');
                 print('selectedDate ${selectedDate}');
                 // selectedDate = null;
               });
@@ -860,15 +885,17 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Date header
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
-                      child: Text(
-                        '${DateFormat('EEEE, MMM d').format(date)}',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        child: Text(
+                          '${DateFormat('EEEE, MMM d').format(date)}',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
