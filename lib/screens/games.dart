@@ -113,7 +113,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     clientId = widget.authProvider.currentUser?.id ?? 'Not logged in';
     email = widget.authProvider.currentUser?.email ?? 'Not logged in';
     league = widget.userProvider.selectedLeageId ?? 2;
-    selectedDate = null;
+    selectedDate = DateTime.now();
+    print('selectedDate: ${selectedDate}');
     print('clientId in games: ${clientId}');
 
     print(email);
@@ -127,7 +128,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     if (!_hasInitialized) {
       final args =
           ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-      print(' args: ${args}');
+  
       if (args != null) {
         final String? leagueString = args['league'];
         final String? tournamentId = args['tournamentId'];
@@ -140,7 +141,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
       // Fetch initial games for all enabled leagues
       UsersMethods().fetchUserById(clientId).then((userData) {
-        final chosenLeagues = Map<String, bool>.from(userData['chosenLeagues'] ?? {});
+        final chosenLeagues =
+            Map<String, bool>.from(userData['chosenLeagues'] ?? {});
         final enabledLeagues = <int>[
           if (chosenLeagues['2'] == true) 2,
           if (chosenLeagues['383'] == true) 383,
@@ -181,7 +183,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
     // Re-fetch games according to new preference
     final userData = await UsersMethods().fetchUserById(clientId);
-    final chosenLeagues = Map<String, bool>.from(userData['chosenLeagues'] ?? {});
+    final chosenLeagues =
+        Map<String, bool>.from(userData['chosenLeagues'] ?? {});
     final enabledLeagues = <int>[
       if (chosenLeagues['2'] == true) 2,
       if (chosenLeagues['383'] == true) 383,
@@ -197,7 +200,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       selectedDate = DateTime.now();
       await _fetchAllUpcomingGames(enabledLeagues, filterDate: selectedDate);
     } else {
-      selectedDate = null;
+      // selectedDate = DateTime.now();
       await _fetchAllUpcomingGames(enabledLeagues);
     }
   }
@@ -212,56 +215,56 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     });
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    try {
-      final DateTime? picked = await showDatePicker(
-        context: context,
-        initialDate: selectedDate ?? DateTime.now(),
-        firstDate: DateTime(2024),
-        cancelText: AppLocalizations.of(context)!.cleardatefilter,
-        lastDate: DateTime(DateTime.now().year + 1),
-        builder: (BuildContext context, Widget? child) {
-          return Theme(
-            data: ThemeData.dark().copyWith(
-              colorScheme: ColorScheme.dark(
-                primary: Colors.blue,
-                onPrimary: Colors.white,
-                surface: Color(0xFF303030),
-                onSurface: Colors.white,
-              ),
-              dialogBackgroundColor: Color(0xFF303030),
-            ),
-            child: child ?? Container(),
-          );
-        },
-      );
+  // Future<void> _selectDate(BuildContext context) async {
+  //   try {
+  //     final DateTime? picked = await showDatePicker(
+  //       context: context,
+  //       initialDate: selectedDate ?? DateTime.now(),
+  //       firstDate: DateTime(2024),
+  //       cancelText: AppLocalizations.of(context)!.cleardatefilter,
+  //       lastDate: DateTime(DateTime.now().year + 1),
+  //       builder: (BuildContext context, Widget? child) {
+  //         return Theme(
+  //           data: ThemeData.dark().copyWith(
+  //             colorScheme: ColorScheme.dark(
+  //               primary: Colors.blue,
+  //               onPrimary: Colors.white,
+  //               surface: Color(0xFF303030),
+  //               onSurface: Colors.white,
+  //             ),
+  //             dialogBackgroundColor: Color(0xFF303030),
+  //           ),
+  //           child: child ?? Container(),
+  //         );
+  //       },
+  //     );
 
-      if (picked != null) {
-        setState(() {
-          selectedDate = picked;
-          _showOnlyThisLeagueTodayGames =
-              false; // Reset the filter when date changes
-        });
-        _fetchGames(league);
-      } else if (picked == null && selectedDate != null) {
-        // User pressed cancel, clear the date
-        setState(() {
-          selectedDate = null;
-          _showOnlyThisLeagueTodayGames = false;
-        });
-        _fetchGames(league);
-      }
-    } catch (e) {
-      print('Error showing date picker: $e');
-      // Show error message to user
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error opening date picker'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
+  //     if (picked != null) {
+  //       setState(() {
+  //         selectedDate = picked;
+  //         _showOnlyThisLeagueTodayGames =
+  //             false; // Reset the filter when date changes
+  //       });
+  //       _fetchGames(league);
+  //     } else if (picked == null && selectedDate != null) {
+  //       // User pressed cancel, clear the date
+  //       setState(() {
+  //         selectedDate = null;
+  //         _showOnlyThisLeagueTodayGames = false;
+  //       });
+  //       _fetchGames(league);
+  //     }
+  //   } catch (e) {
+  //     print('Error showing date picker: $e');
+  //     // Show error message to user
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text('Error opening date picker'),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //   }
+  // }
 
   Future<void> _fetchGames(league) async {
     print(
@@ -547,7 +550,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   }
 
   // Fetch all upcoming games for all enabled leagues
-  Future<void> _fetchAllUpcomingGames(List<int> enabledLeagues, {DateTime? filterDate}) async {
+  Future<void> _fetchAllUpcomingGames(List<int> enabledLeagues,
+      {DateTime? filterDate}) async {
     setState(() {
       isLoading = true;
     });
@@ -562,21 +566,25 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         final startOfToday = DateTime(now.year, now.month, now.day);
         allGames.addAll(games.where((g) {
           final gameDate = DateTime(g.date.year, g.date.month, g.date.day);
-          return gameDate.isAfter(startOfToday.subtract(Duration(days: 1))) || 
-                 g.status.short == '1H' || 
-                 g.status.short == '2H' || 
-                 g.status.short == 'HT';
+          return gameDate.isAfter(startOfToday.subtract(Duration(days: 1))) ||
+              g.status.short == '1H' ||
+              g.status.short == '2H' ||
+              g.status.short == 'HT';
         }));
       }
 
       // Apply date filter if specified
       if (filterDate != null) {
-        final filterDateStart = DateTime(filterDate.year, filterDate.month, filterDate.day);
+        final filterDateStart =
+            DateTime(filterDate.year, filterDate.month, filterDate.day);
         final filterDateEnd = filterDateStart.add(Duration(days: 1));
-        allGames = allGames.where((g) => 
-          g.date.isAfter(filterDateStart.subtract(Duration(seconds: 1))) && 
-          g.date.isBefore(filterDateEnd)
-        ).toList();
+        allGames = allGames
+            .where((g) =>
+                g.date
+                    .isAfter(filterDateStart.subtract(Duration(seconds: 1))) 
+                    // && g.date.isBefore(filterDateEnd)
+                    )
+            .toList();
       }
 
       // Sort games by date
@@ -604,7 +612,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         title: GestureDetector(
           onTap: () async {
             final userData = await UsersMethods().fetchUserById(clientId);
-            final chosenLeagues = Map<String, bool>.from(userData['chosenLeagues'] ?? {});
+            final chosenLeagues =
+                Map<String, bool>.from(userData['chosenLeagues'] ?? {});
             final enabledLeagues = <int>[
               if (chosenLeagues['2'] == true) 2,
               if (chosenLeagues['383'] == true) 383,
@@ -619,7 +628,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               context: context,
               initialDate: selectedDate ?? DateTime.now(),
               firstDate: DateTime(2024),
-              cancelText: AppLocalizations.of(context)!.cleardatefilter,
+              // cancelText: AppLocalizations.of(context)!.cleardatefilter,
               lastDate: DateTime(DateTime.now().year + 1),
               builder: (BuildContext context, Widget? child) {
                 return Theme(
@@ -637,15 +646,20 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               },
             );
             if (picked != null) {
+                 print('picked != null');
+                 print('selectedDate ${selectedDate}');
               setState(() {
                 selectedDate = picked;
               });
               await _fetchAllUpcomingGames(enabledLeagues, filterDate: picked);
-            } else if (picked == null && selectedDate != null) {
+            }
+            else if (picked == null && selectedDate != null) {
               setState(() {
-                selectedDate = null;
+                     print('picked == null');
+                print('selectedDate ${selectedDate}');
+                // selectedDate = null;
               });
-              await _fetchAllUpcomingGames(enabledLeagues);
+              // await _fetchAllUpcomingGames(enabledLeagues);
             }
           },
           child: Container(
@@ -679,13 +693,41 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.live_tv,
-              color: _showOnlyLiveGames ? Colors.blue : Colors.white,
+          Container(
+            margin: EdgeInsets.only(right: 8),
+            child: Row(
+              children: [
+                Text(
+                  'Live',
+                  style: TextStyle(
+                    color: white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Transform.scale(
+                  scale: 0.8,
+                  child: Switch(
+                    value: _showOnlyLiveGames,
+                    onChanged: (value) {
+                      toggleShowOnlyLiveGames();
+                    },
+                    activeColor: Colors.red,
+                    activeTrackColor: Colors.red.withOpacity(0.5),
+                    inactiveThumbColor: Colors.white,
+                    inactiveTrackColor: Colors.grey.withOpacity(0.5),
+                  ),
+                ),
+                // IconButton(
+                //   icon: Icon(
+                //     Icons.live_tv,
+                //     color: _showOnlyLiveGames ? Colors.blue : Colors.white,
+                //   ),
+                //   tooltip: 'Today',
+                //   onPressed: toggleShowOnlyLiveGames,
+                // ),
+              ],
             ),
-            tooltip: 'Today',
-            onPressed: toggleShowOnlyLiveGames,
           ),
         ],
       ),
@@ -696,7 +738,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             return Center(child: CircularProgressIndicator());
           }
           final userData = snapshot.data!;
-          final chosenLeagues = Map<String, bool>.from(userData['chosenLeagues'] ?? {});
+          final chosenLeagues =
+              Map<String, bool>.from(userData['chosenLeagues'] ?? {});
           final enabledLeagues = <int>[
             if (chosenLeagues['2'] == true) 2,
             if (chosenLeagues['383'] == true) 383,
@@ -744,15 +787,60 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             );
           }
 
+          // Apply league and live games filters before grouping
+          List<Game> filteredGames = _games;
+
+          // Apply league filter if needed
+          if (_selectedLeagueFilter != null) {
+            filteredGames = filteredGames
+                .where((g) => g.league.id == _selectedLeagueFilter)
+                .toList();
+          }
+
+          // Apply live games filter if needed
+          if (_showOnlyLiveGames) {
+            filteredGames = filteredGames.where((game) {
+              return ['1H', '2H', 'HT', 'ET', 'BT', 'P', 'INT']
+                  .contains(game.status.short);
+            }).toList();
+          }
+
           // Group games by date
-          final groupedGames = _groupGamesByDate(_selectedLeagueFilter == null
-              ? _games
-              : _games.where((g) => g.league.id == _selectedLeagueFilter).toList());
+          final groupedGames = _groupGamesByDate(filteredGames);
           final sortedDates = groupedGames.keys.toList()..sort();
+
+          if (groupedGames.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    _showOnlyLiveGames
+                        ? Icons.live_tv
+                        : Icons.scoreboard_outlined,
+                    size: 48,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    _showOnlyLiveGames
+                        ? AppLocalizations.of(context)!.nolivegames
+                        : AppLocalizations.of(context)!.nogames,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
 
           return RefreshIndicator(
             onRefresh: () async {
-              await _fetchAllUpcomingGames(enabledLeagues, filterDate: selectedDate);
+              await _fetchAllUpcomingGames(enabledLeagues,
+                  filterDate: selectedDate);
             },
             color: Colors.grey,
             child: ListView.builder(
@@ -773,7 +861,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                   children: [
                     // Date header
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
                       child: Text(
                         '${DateFormat('EEEE, MMM d').format(date)}',
                         style: TextStyle(
@@ -793,13 +882,16 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                           GestureDetector(
                             onTap: () => _toggleLeagueFilter(lid),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 6),
                               child: Row(
                                 children: [
                                   Text(
                                     leagueName,
                                     style: TextStyle(
-                                      color: _selectedLeagueFilter == lid ? Colors.blue : Colors.grey[300],
+                                      color: _selectedLeagueFilter == lid
+                                          ? Colors.blue
+                                          : Colors.grey[300],
                                       fontSize: 15,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -807,7 +899,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                                   if (_selectedLeagueFilter == lid)
                                     Padding(
                                       padding: const EdgeInsets.only(left: 6.0),
-                                      child: Icon(Icons.close, size: 14, color: Colors.blue),
+                                      child: Icon(Icons.close,
+                                          size: 14, color: Colors.blue),
                                     ),
                                 ],
                               ),
@@ -820,15 +913,23 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                                 'away': TextEditingController(),
                               };
                             }
-                            final matchingGuesses = _guesses.where((g) => g.gameOriginalId == game.fixtureId).toList();
-                            final guess = matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
+                            final matchingGuesses = _guesses
+                                .where(
+                                    (g) => g.gameOriginalId == game.fixtureId)
+                                .toList();
+                            final guess = matchingGuesses.isNotEmpty
+                                ? matchingGuesses.first
+                                : null;
                             return Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 1),
                               child: GameWidget(
                                 game: game,
                                 guess: guess,
-                                homeController: _guessControllers[game.fixtureId]?['home'],
-                                awayController: _guessControllers[game.fixtureId]?['away'],
+                                homeController:
+                                    _guessControllers[game.fixtureId]?['home'],
+                                awayController:
+                                    _guessControllers[game.fixtureId]?['away'],
                                 onTap: (context) async {
                                   if (game.status.long != "Not Started") {
                                     await Navigator.push(
@@ -838,7 +939,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                                           gameOriginalId: game.fixtureId,
                                           game: game,
                                           games: leagueGames,
-                                          initialIndex: leagueGames.indexOf(game),
+                                          initialIndex:
+                                              leagueGames.indexOf(game),
                                           userId: clientId,
                                         ),
                                       ),
