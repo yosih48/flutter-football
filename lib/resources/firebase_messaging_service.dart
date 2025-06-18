@@ -16,15 +16,15 @@ class FirebaseMessagingService {
       FlutterLocalNotificationsPlugin();
 
   // Dynamic notification action handler
-  static Future<void> _handleDynamicNotificationAction(Map<String, dynamic> data) async {
+  static Future<void> _handleDynamicNotificationAction(
+      Map<String, dynamic> data) async {
     print('Handling dynamic notification with data: $data');
-    
+
     final String? actionType = data['action_type'];
     final String? screen = data['screen'];
-    
+
     switch (actionType) {
       case 'navigate':
-        
         await _handleNavigationAction(data);
         break;
       case 'external_url':
@@ -43,7 +43,9 @@ class FirebaseMessagingService {
   static Future<void> _handleNavigationAction(Map<String, dynamic> data) async {
     final String? routeName = data['route_name'];
     final String? routeParamsString = data['route_params'];
-    final bool clearStack = data['clear_stack'] != null ? data['clear_stack'] : false; // Default to showing back button
+    final bool clearStack = data['clear_stack'] != null
+        ? data['clear_stack']
+        : false; // Default to showing back button
 
     Map<String, dynamic>? routeParams;
     if (routeParamsString != null) {
@@ -56,16 +58,19 @@ class FirebaseMessagingService {
     }
 
     if (routeName != null) {
-      print('Navigating to route: $routeName with params: $routeParams, clearStack: $clearStack');
-      
+      print(
+          'Navigating to route: $routeName with params: $routeParams, clearStack: $clearStack');
+
       // Handle parameterized routes
       switch (routeName) {
         case '/game_details':
           if (routeParams != null) {
-            await _navigateToGameDetailsFromNotification(routeParams, clearStack);
+            await _navigateToGameDetailsFromNotification(
+                routeParams, clearStack);
           } else {
             if (clearStack) {
-              navigatorKey.currentState?.pushNamedAndRemoveUntil('/game_details', (route) => false);
+              navigatorKey.currentState
+                  ?.pushNamedAndRemoveUntil('/game_details', (route) => false);
             } else {
               navigatorKey.currentState?.pushNamed('/game_details');
             }
@@ -73,35 +78,42 @@ class FirebaseMessagingService {
           break;
         case '/games':
           if (clearStack) {
-            navigatorKey.currentState?.pushNamedAndRemoveUntil('/games', (route) => false, arguments: routeParams);
+            navigatorKey.currentState?.pushNamedAndRemoveUntil(
+                '/games', (route) => false,
+                arguments: routeParams);
           } else {
-            navigatorKey.currentState?.pushNamed('/games', arguments: routeParams);
+            navigatorKey.currentState
+                ?.pushNamed('/games', arguments: routeParams);
           }
           break;
         case '/profile':
           if (clearStack) {
-            navigatorKey.currentState?.pushNamedAndRemoveUntil('/profile', (route) => false);
+            navigatorKey.currentState
+                ?.pushNamedAndRemoveUntil('/profile', (route) => false);
           } else {
             navigatorKey.currentState?.pushNamed('/profile');
           }
           break;
         case '/leaderboard':
           if (clearStack) {
-            navigatorKey.currentState?.pushNamedAndRemoveUntil('/leaderboard', (route) => false);
+            navigatorKey.currentState
+                ?.pushNamedAndRemoveUntil('/leaderboard', (route) => false);
           } else {
             navigatorKey.currentState?.pushNamed('/leaderboard');
           }
           break;
         case '/settings':
           if (clearStack) {
-            navigatorKey.currentState?.pushNamedAndRemoveUntil('/settings', (route) => false);
+            navigatorKey.currentState
+                ?.pushNamedAndRemoveUntil('/settings', (route) => false);
           } else {
             navigatorKey.currentState?.pushNamed('/settings');
           }
           break;
         case '/table':
           if (clearStack) {
-            navigatorKey.currentState?.pushNamedAndRemoveUntil('/table', (route) => false);
+            navigatorKey.currentState
+                ?.pushNamedAndRemoveUntil('/table', (route) => false);
           } else {
             navigatorKey.currentState?.pushNamed('/table');
           }
@@ -110,9 +122,12 @@ class FirebaseMessagingService {
           // Try to navigate to the route directly
           try {
             if (clearStack) {
-              navigatorKey.currentState?.pushNamedAndRemoveUntil(routeName, (route) => false, arguments: routeParams);
+              navigatorKey.currentState?.pushNamedAndRemoveUntil(
+                  routeName, (route) => false,
+                  arguments: routeParams);
             } else {
-              navigatorKey.currentState?.pushNamed(routeName, arguments: routeParams);
+              navigatorKey.currentState
+                  ?.pushNamed(routeName, arguments: routeParams);
             }
           } catch (e) {
             print('Failed to navigate to route $routeName: $e');
@@ -122,7 +137,8 @@ class FirebaseMessagingService {
     }
   }
 
-  static Future<void> _handleExternalUrlAction(Map<String, dynamic> data) async {
+  static Future<void> _handleExternalUrlAction(
+      Map<String, dynamic> data) async {
     final String? url = data['url'];
     if (url != null) {
       print('Opening external URL: $url');
@@ -141,12 +157,12 @@ class FirebaseMessagingService {
 
   static Future<void> _handleCustomAction(Map<String, dynamic> data) async {
     final String? actionName = data['action_name'];
-    final Map<String, dynamic>? actionData = data['action_data'] != null 
-        ? Map<String, dynamic>.from(data['action_data']) 
+    final Map<String, dynamic>? actionData = data['action_data'] != null
+        ? Map<String, dynamic>.from(data['action_data'])
         : null;
 
     print('Executing custom action: $actionName with data: $actionData');
-    
+
     // You can extend this with more custom actions as needed
     switch (actionName) {
       case 'show_dialog':
@@ -187,7 +203,8 @@ class FirebaseMessagingService {
       ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
         SnackBar(
           content: Text(data['message'] ?? 'Notification'),
-          backgroundColor: data['color'] != null ? Color(int.parse(data['color'])) : null,
+          backgroundColor:
+              data['color'] != null ? Color(int.parse(data['color'])) : null,
           duration: Duration(seconds: data['duration'] ?? 3),
         ),
       );
@@ -200,11 +217,13 @@ class FirebaseMessagingService {
     // For example: trigger a provider refresh, reload games, etc.
   }
 
-  static Future<void> _navigateToGameDetails(Map<String, dynamic> params) async {
+  static Future<void> _navigateToGameDetails(
+      Map<String, dynamic> params) async {
     await _navigateToGameDetailsFromNotification(params, false);
   }
 
-  static Future<void> _navigateToGameDetailsFromNotification(Map<String, dynamic> params, bool clearStack) async {
+  static Future<void> _navigateToGameDetailsFromNotification(
+      Map<String, dynamic> params, bool clearStack) async {
     try {
       int gameId = int.parse(params['gameId'].toString());
       int leagueId = int.parse(params['league'].toString());
@@ -212,12 +231,12 @@ class FirebaseMessagingService {
 
       print('Fetching games for league: $leagueId');
       List<Game> fetchedGames = await _fetchGames(leagueId);
-      
+
       Game? game = fetchedGames.firstWhere(
         (g) => g.fixtureId == gameId,
         orElse: () => throw Exception('Game not found'),
       );
-      
+
       int initialIndex = fetchedGames.indexWhere((g) => g.fixtureId == gameId);
       if (initialIndex == -1) {
         throw Exception('Game not found in fetched games list');
@@ -244,9 +263,10 @@ class FirebaseMessagingService {
   }
 
   // Legacy handler for backward compatibility
-  static Future<void> _handleLegacyNotificationAction(Map<String, dynamic> data) async {
+  static Future<void> _handleLegacyNotificationAction(
+      Map<String, dynamic> data) async {
     final String? screen = data['screen'];
-    
+
     switch (screen) {
       case 'game_points_details':
         await handleNotificationNavigation(data);
@@ -294,7 +314,7 @@ class FirebaseMessagingService {
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         print("Local notification tapped: ${response.payload}");
-      
+
         if (response.payload != null) {
           final Map<String, dynamic> data = json.decode(response.payload!);
           print("Notification data: $data");
@@ -353,12 +373,13 @@ class FirebaseMessagingService {
   static void _handleMessageTap(RemoteMessage message) {
     print("Message tapped: ${message.messageId}");
     print("Message data: ${message.data}");
-    
+
     // Use the new dynamic handler
     _handleDynamicNotificationAction(message.data);
   }
 
-  static Future<void> handleNotificationNavigation(Map<String, dynamic> data) async {
+  static Future<void> handleNotificationNavigation(
+      Map<String, dynamic> data) async {
     print('handleNotificationNavigation called with data: $data');
     if (data['screen'] == 'game_points_details') {
       try {
@@ -374,9 +395,10 @@ class FirebaseMessagingService {
         );
         print(game);
         print('Navigating to game details for game: ${game.fixtureId}');
-        
+
         // Find the index of the current game in the fetched games list
-        int initialIndex = fetchedGames.indexWhere((g) => g.fixtureId == gameId);
+        int initialIndex =
+            fetchedGames.indexWhere((g) => g.fixtureId == gameId);
         if (initialIndex == -1) {
           throw Exception('Game not found in fetched games list');
         }

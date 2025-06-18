@@ -58,47 +58,46 @@ class _LeagueSelectorChipsState extends State<LeagueSelectorChips> {
   @override
   Widget build(BuildContext context) {
  return Container(
-      height: 40,
-      child: SingleChildScrollView(
-        controller: _scrollController,
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: List.generate(widget.options.length, (index) {
-            final isSelected = _selectedOptions[index];
+  height: 40,
+  child: SingleChildScrollView(
+    controller: _scrollController,
+    scrollDirection: Axis.horizontal,
+    padding: const EdgeInsets.symmetric(horizontal: 16),
+    child: Row(
+      children: List.generate(widget.options.length, (index) {
+        final isSelected = _selectedOptions[index];
 
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: FilterChip(
-                label: Text(
-                  widget.options[index],
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : Colors.grey[400],
-                    fontSize: 12,
-                    fontWeight:
-                        isSelected ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                ),
-                selected: isSelected,
-                onSelected: (bool selected) {
-                  setState(() {
-                    for (int i = 0; i < _selectedOptions.length; i++) {
-                      _selectedOptions[i] = i == index;
-                    }
-                  });
-                  widget.onSelectionChanged(index);
-                },
-                backgroundColor: Colors.grey[800],
-                selectedColor: Colors.blue[600],
-                checkmarkColor: Colors.white,
-                side: BorderSide(
-                  color: isSelected ? Colors.blue[600]! : Colors.grey[700]!,
-                ),
+        return Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: FilterChip(
+            label: Text(
+              widget.options[index],
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.grey[400],
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
-            );
-          }),
-        ),
-      ),
-    );
+            ),
+            selected: isSelected,
+            onSelected: (bool selected) {
+              setState(() {
+                for (int i = 0; i < _selectedOptions.length; i++) {
+                  _selectedOptions[i] = i == index;
+                }
+              });
+              widget.onSelectionChanged(index);
+            },
+            backgroundColor: Colors.grey[800],
+            selectedColor: Colors.blue[600],
+            checkmarkColor: Colors.white,
+            side: BorderSide(
+              color: isSelected ? Colors.blue[600]! : Colors.grey[700]!,
+            ),
+          ),
+        );
+      }),
+    ),
+  ),
+);
   }
 }

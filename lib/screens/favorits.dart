@@ -229,10 +229,8 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         backgroundColor: Colors.transparent,
         title: Text(
           selectedTab == 0
-              ? 
-               AppLocalizations.of(context)!.chooseleagues
-              :
-              AppLocalizations.of(context)!.notifications,
+              ? AppLocalizations.of(context)!.chooseleagues
+              : AppLocalizations.of(context)!.notifications,
           style: TextStyle(
             color: Colors.white,
             fontSize: 20,
@@ -269,12 +267,9 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                   ),
                 ),
                 Expanded(
-                  child: selectedTab == 0
-                      ? 
-                      _buildChosenLeaguesTab(name, email)
-                      : 
-                      _buildNotificationsTab(name, email)
-                ),
+                    child: selectedTab == 0
+                        ? _buildChosenLeaguesTab(name, email)
+                        : _buildNotificationsTab(name, email)),
               ],
             ),
     );
@@ -512,7 +507,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         // ),
 
         // Popular Competitions Title
-    Padding(
+        Padding(
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Text(
             AppLocalizations.of(context)!.allCompetitions,
@@ -526,7 +521,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
             ),
           ),
         ),
- SizedBox(height: 8),
+        SizedBox(height: 8),
         // Leagues Grid
         Expanded(
           child: Padding(
