@@ -15,6 +15,7 @@ import 'package:football/screens/gameDetails.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/utils/config.dart';
+import 'package:football/widgets/LeagueSelectorChips.dart';
 
 import 'package:football/widgets/gamesCard.dart';
 import 'package:football/widgets/teamSelect.dart';
@@ -78,7 +79,30 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   Map<int, Map<String, TextEditingController>> _guessControllers = {};
   bool _hasFetchedInitialGames = false;
 
-  void updateSelectedIndex(int index) {
+  // League ID <-> Name mapping
+  String? selectedLeagueName;
+  final Map<int, String> leagueIdToName = {
+    2: "Champions League",
+    383: "Ligat Ha'al",
+    140: "La Liga",
+    3: "Europa League",
+    39: "Premier League",
+    78: "Bundesliga",
+    848: "Conference League",
+    15: "Club World Cup",
+  };
+  final Map<String, int> leagueNameToId = {
+    "Champions League": 2,
+    "Ligat Ha'al": 383,
+    "La Liga": 140,
+    "Europa League": 3,
+    "Premier League": 39,
+    "Bundesliga": 78,
+    "Conference League": 848,
+    "Club World Cup": 15,
+  };
+
+  void updateSelectedIndex(int index, enabledLeagues) {
     print(index);
     setState(() {
       isLoading = true;
@@ -105,7 +129,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       Provider.of<UserProvider>(context, listen: false)
           .setselectedLeageId(league);
     });
-    _fetchGames(league);
+    // _fetchGames(league);
+    _fetchAllUpcomingGames(enabledLeagues);
   }
 
   void initState() {
@@ -743,6 +768,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                     inactiveTrackColor: Colors.grey.withOpacity(0.5),
                   ),
                 ),
+
                 // IconButton(
                 //   icon: Icon(
                 //     Icons.live_tv,
@@ -775,6 +801,28 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             if (chosenLeagues['848'] == true) 848,
             if (chosenLeagues['15'] == true) 15,
           ];
+          final options = enabledLeagues.map((id) {
+            switch (id) {
+              case 2:
+                return AppLocalizations.of(context)!.championsleague;
+              case 383:
+                return AppLocalizations.of(context)!.ligathaal;
+              case 140:
+                return AppLocalizations.of(context)!.laliga;
+              case 3:
+                return AppLocalizations.of(context)!.europaleague;
+              case 39:
+                return AppLocalizations.of(context)!.premierleague;
+              case 78:
+                return AppLocalizations.of(context)!.bundesleague;
+              case 848:
+                return AppLocalizations.of(context)!.conferenceleague;
+              case 15:
+                return AppLocalizations.of(context)!.clubworldcup;
+              default:
+                return '';
+            }
+          }).toList();
 
           // Fetch games if not already loaded (use post-frame callback)
           if (!_hasFetchedInitialGames) {
@@ -862,127 +910,151 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             );
           }
 
+          // LeagueSelectorChips integration
+          final availableLeagues =
+              enabledLeagues.map((id) => leagueIdToName[id]!).toList();
+          selectedLeagueName ??= leagueIdToName[league];
+
           return RefreshIndicator(
             onRefresh: () async {
               await _fetchAllUpcomingGames(enabledLeagues,
                   filterDate: selectedDate);
             },
             color: Colors.grey,
-            child: ListView.builder(
-              itemCount: sortedDates.length,
-              itemBuilder: (context, index) {
-                final date = sortedDates[index];
-                var gamesForDate = groupedGames[date]!;
+            child: Column(
+              children: [
+                LeagueSelectorChips(
+                  options: options,
+                  onSelectionChanged: (index) {
+                    updateSelectedIndex(index, enabledLeagues);
+                  },
+                  initialSelection: enabledLeagues.indexOf(league),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: sortedDates.length,
+                    itemBuilder: (context, index) {
+                      final date = sortedDates[index];
+                      var gamesForDate = groupedGames[date]!;
 
-                // Further group by league within the date
-                final Map<int, List<Game>> gamesByLeague = {};
-                for (final game in gamesForDate) {
-                  gamesByLeague.putIfAbsent(game.league.id, () => []).add(game);
-                }
-                final leagueIds = gamesByLeague.keys.toList()..sort();
+                      // Further group by league within the date
+                      final Map<int, List<Game>> gamesByLeague = {};
+                      for (final game in gamesForDate) {
+                        gamesByLeague
+                            .putIfAbsent(game.league.id, () => [])
+                            .add(game);
+                      }
+                      final leagueIds = gamesByLeague.keys.toList()..sort();
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Date header
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        child: Text(
-                          '${DateFormat('EEEE, MMM d').format(date)}',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    // League sections
-                    ...leagueIds.map((lid) {
-                      final leagueGames = gamesByLeague[lid]!;
-                      final leagueName = leagueGames.first.league.name;
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          GestureDetector(
-                            onTap: () => _toggleLeagueFilter(lid),
+                          // Date header
+                          Center(
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 6),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    leagueName,
-                                    style: TextStyle(
-                                      color: _selectedLeagueFilter == lid
-                                          ? Colors.blue
-                                          : Colors.grey[300],
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  if (_selectedLeagueFilter == lid)
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 6.0),
-                                      child: Icon(Icons.close,
-                                          size: 14, color: Colors.blue),
-                                    ),
-                                ],
+                                  horizontal: 16, vertical: 12),
+                              child: Text(
+                                '${DateFormat('EEEE, MMM d').format(date)}',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
-                          ...leagueGames.map((game) {
-                            if (_guessControllers[game.fixtureId] == null) {
-                              _guessControllers[game.fixtureId] = {
-                                'home': TextEditingController(),
-                                'away': TextEditingController(),
-                              };
-                            }
-                            final matchingGuesses = _guesses
-                                .where(
-                                    (g) => g.gameOriginalId == game.fixtureId)
-                                .toList();
-                            final guess = matchingGuesses.isNotEmpty
-                                ? matchingGuesses.first
-                                : null;
-                            return Padding(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 1),
-                              child: GameWidget(
-                                game: game,
-                                guess: guess,
-                                homeController:
-                                    _guessControllers[game.fixtureId]?['home'],
-                                awayController:
-                                    _guessControllers[game.fixtureId]?['away'],
-                                onTap: (context) async {
-                                  if (game.status.long != "Not Started") {
-                                    await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => GameDetails(
-                                          gameOriginalId: game.fixtureId,
-                                          game: game,
-                                          games: leagueGames,
-                                          initialIndex:
-                                              leagueGames.indexOf(game),
-                                          userId: clientId,
+                          // League sections
+                          ...leagueIds.map((lid) {
+                            final leagueGames = gamesByLeague[lid]!;
+                            final leagueName = leagueGames.first.league.name;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                GestureDetector(
+                                  onTap: () => _toggleLeagueFilter(lid),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20, vertical: 6),
+                                    child: Row(
+                                      children: [
+                                        Text(
+                                          leagueName,
+                                          style: TextStyle(
+                                            color: _selectedLeagueFilter == lid
+                                                ? Colors.blue
+                                                : Colors.grey[300],
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
-                                      ),
-                                    );
+                                        if (_selectedLeagueFilter == lid)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                                left: 6.0),
+                                            child: Icon(Icons.close,
+                                                size: 14, color: Colors.blue),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                ...leagueGames.map((game) {
+                                  if (_guessControllers[game.fixtureId] ==
+                                      null) {
+                                    _guessControllers[game.fixtureId] = {
+                                      'home': TextEditingController(),
+                                      'away': TextEditingController(),
+                                    };
                                   }
-                                },
-                              ),
+                                  final matchingGuesses = _guesses
+                                      .where((g) =>
+                                          g.gameOriginalId == game.fixtureId)
+                                      .toList();
+                                  final guess = matchingGuesses.isNotEmpty
+                                      ? matchingGuesses.first
+                                      : null;
+                                  return Padding(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 1),
+                                    child: GameWidget(
+                                      game: game,
+                                      guess: guess,
+                                      homeController:
+                                          _guessControllers[game.fixtureId]
+                                              ?['home'],
+                                      awayController:
+                                          _guessControllers[game.fixtureId]
+                                              ?['away'],
+                                      onTap: (context) async {
+                                        if (game.status.long != "Not Started") {
+                                          await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => GameDetails(
+                                                gameOriginalId: game.fixtureId,
+                                                game: game,
+                                                games: leagueGames,
+                                                initialIndex:
+                                                    leagueGames.indexOf(game),
+                                                userId: clientId,
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  );
+                                }).toList(),
+                              ],
                             );
                           }).toList(),
                         ],
                       );
-                    }).toList(),
-                  ],
-                );
-              },
+                    },
+                  ),
+                ),
+              ],
             ),
           );
         },
