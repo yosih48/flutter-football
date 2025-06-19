@@ -878,6 +878,7 @@ print('earliestDate ${earliestDate}');
             color: Colors.grey,
             child: Column(
               children: [
+                SizedBox(height: 8,),
                 // Always show LeagueSelectorChips
                 LeagueSelectorChips(
                   options: options,
@@ -888,9 +889,11 @@ print('earliestDate ${earliestDate}');
                     print('initialIndex: $initialIndex');
                     updateSelectedIndex(selectedLeagueId, enabledLeagues);
                   },
-                  initialSelection: initialIndex,
+                  initialSelection: -1,
                 ),
-
+        SizedBox(
+                  height: 8,
+                ),
                 Expanded(
                   child:
                       _buildGamesList(filteredGames, sortedDates, groupedGames),
