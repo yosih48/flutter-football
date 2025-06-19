@@ -72,24 +72,25 @@ class TableScreenContentState extends State<TableScreenContent> {
   void updateSelectedIndex(int index) {
     print(index);
     setState(() {
-      league = index == 0
-          ? 2 // Champions League
-          : index == 1
-              ? 383 // Ligat Ha'al
-              : index == 2
-                  ? 140 // La Liga
-                  : index == 3
-                      ? 3 // Europa League
-                      : index == 4
-                          ? 39 // Premier League
-                               : index == 5
-                              ? 848 // conferenceleague
-                              : index == 6
-                                  ? 15 // Club World Cup
-                                  : index == 7
-                                      ? 78 //Bundesliga
-                              : 2; // Default to Champions League
+      // league = index == 0
+      //     ? 2 // Champions League
+      //     : index == 1
+      //         ? 383 // Ligat Ha'al
+      //         : index == 2
+      //             ? 140 // La Liga
+      //             : index == 3
+      //                 ? 3 // Europa League
+      //                 : index == 4
+      //                     ? 39 // Premier League
+      //                          : index == 5
+      //                         ? 848 // conferenceleague
+      //                         : index == 6
+      //                             ? 15 // Club World Cup
+      //                             : index == 7
+      //                                 ? 78 //Bundesliga
+      //                         : 2; // Default to Champions League
       selectedIndex = index;
+        league = index;
       Provider.of<UserProvider>(context, listen: false)
           .setselectedLeageId(league);
     });
@@ -401,7 +402,8 @@ class TableScreenContentState extends State<TableScreenContent> {
                           options: options,
                           imageUrls: imageUrls,
                           onSelectionChanged: (index) {
-                            updateSelectedIndex(index);
+                          final selectedLeagueId = enabledLeagues[index];
+                            updateSelectedIndex(selectedLeagueId);
                           },
                           initialSelection: enabledLeagues.indexOf(league),
                         );

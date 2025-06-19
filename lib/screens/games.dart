@@ -132,7 +132,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           .setselectedLeageId(league);
     });
     // _fetchGames(league);
-    _fetchAllUpcomingGames(enabledLeagues,  filterLeague: league);
+    _fetchAllUpcomingGames(enabledLeagues, filterLeague: league);
   }
 
   void initState() {
@@ -224,11 +224,10 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     ];
 
     if (_showOnlyLiveGames) {
-
       selectedDate = DateTime.now();
-      await _fetchAllUpcomingGames(enabledLeagues, filterDate: selectedDate, filterLeague: league);
+      await _fetchAllUpcomingGames(enabledLeagues,
+          filterDate: selectedDate, filterLeague: league);
     } else {
-      
       // selectedDate = DateTime.now();
       await _fetchAllUpcomingGames(enabledLeagues, filterLeague: league);
     }
@@ -611,6 +610,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     setState(() {
       isLoading = true;
     });
+    
     print('filterLeague": ${filterLeague}');
     try {
       List<Game> allGames = [];
@@ -625,16 +625,22 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         leaguesToFetch = enabledLeagues;
       }
 
+      // Determine the earliest date to include
+      final now = DateTime.now();
+      final startOfToday = DateTime(now.year, now.month, now.day);
+      final earliestDate = filterDate != null
+          ? DateTime(filterDate.year, filterDate.month, filterDate.day)
+          : startOfToday;
+print('earliestDate ${earliestDate}');
       for (final leagueId in leaguesToFetch) {
         final games = await GamesMethods().fetchGamesForLeague(leagueId);
         // Include games that are either:
         // 1. Starting today (including live games)
         // 2. Starting in the future
-        final now = DateTime.now();
-        final startOfToday = DateTime(now.year, now.month, now.day);
+
         allGames.addAll(games.where((g) {
           final gameDate = DateTime(g.date.year, g.date.month, g.date.day);
-          return gameDate.isAfter(startOfToday.subtract(Duration(days: 1))) ||
+          return gameDate.isAfter(earliestDate.subtract(Duration(days: 1))) ||
               g.status.short == '1H' ||
               g.status.short == '2H' ||
               g.status.short == 'HT';
@@ -643,6 +649,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
       // Apply date filter if specified
       if (filterDate != null) {
+    
         final filterDateStart =
             DateTime(filterDate.year, filterDate.month, filterDate.day);
         final filterDateEnd = filterDateStart.add(Duration(days: 1));
@@ -670,7 +677,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   }
 
   @override
-Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
@@ -717,7 +724,8 @@ Widget build(BuildContext context) {
               setState(() {
                 selectedDate = picked;
               });
-              await _fetchAllUpcomingGames(enabledLeagues, filterDate: picked, filterLeague: league);
+              await _fetchAllUpcomingGames(enabledLeagues,
+                  filterDate: picked, filterLeague: league);
             } else if (picked == null && selectedDate != null) {
               setState(() {
                 print('picked == null');
@@ -858,7 +866,7 @@ Widget build(BuildContext context) {
           final groupedGames = _groupGamesByDate(filteredGames);
           final sortedDates = groupedGames.keys.toList()..sort();
 
-          final initialIndex = enabledLeagues.contains(league)
+         final initialIndex = enabledLeagues.contains(league)
               ? enabledLeagues.indexOf(league)
               : 0; // fallback to 0
 
@@ -875,6 +883,7 @@ Widget build(BuildContext context) {
                   options: options,
                   onSelectionChanged: (index) {
                     final selectedLeagueId = enabledLeagues[index];
+           
                     print('League selection changed: $selectedLeagueId');
                     print('initialIndex: $initialIndex');
                     updateSelectedIndex(selectedLeagueId, enabledLeagues);
@@ -1082,5 +1091,4 @@ Widget build(BuildContext context) {
       },
     );
   }
-
 }
