@@ -70,7 +70,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   int? _selectedLeagueFilter;
   late String clientId;
   late String email;
-  int selectedIndex = 0;
+  int selectedIndex = -1;
   bool isLoading = true;
   bool buttonLoading = false;
   DateTime? selectedDate;
@@ -78,7 +78,102 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   String _baseUrl = backendUrl;
   Map<int, Map<String, TextEditingController>> _guessControllers = {};
   bool _hasFetchedInitialGames = false;
+String formatDateInHebrew(DateTime date, BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
 
+    // Get day names using localization
+    const Map<String, String> dayKeys = {
+      'Monday': 'monday',
+      'Tuesday': 'tuesday',
+      'Wednesday': 'wednesday',
+      'Thursday': 'thursday',
+      'Friday': 'friday',
+      'Saturday': 'saturday',
+      'Sunday': 'sunday',
+    };
+
+    // Get month names using localization
+    const Map<String, String> monthKeys = {
+      'Jan': 'january_short',
+      'Feb': 'february_short',
+      'Mar': 'march_short',
+      'Apr': 'april_short',
+      'May': 'may_short',
+      'Jun': 'june_short',
+      'Jul': 'july_short',
+      'Aug': 'august_short',
+      'Sep': 'september_short',
+      'Oct': 'october_short',
+      'Nov': 'november_short',
+      'Dec': 'december_short',
+    };
+
+    String dayName = DateFormat('EEEE').format(date);
+    String monthName = DateFormat('MMM').format(date);
+    int dayNumber = date.day;
+
+    // Get localized strings
+    String dayKey = dayKeys[dayName] ?? 'monday';
+    String monthKey = monthKeys[monthName] ?? 'january_short';
+
+    String localizedDay = _getLocalizedString(localizations, dayKey, dayName);
+    String localizedMonth =
+        _getLocalizedString(localizations, monthKey, monthName);
+
+    return '$localizedDay,  $dayNumber $localizedMonth';
+  }
+
+// Helper function to safely get localized strings
+  String _getLocalizedString(
+      AppLocalizations localizations, String key, String fallback) {
+    try {
+      // Use reflection or a switch statement to get the localized string
+      switch (key) {
+        case 'monday':
+          return localizations.monday;
+        case 'tuesday':
+          return localizations.tuesday;
+        case 'wednesday':
+          return localizations.wednesday;
+        case 'thursday':
+          return localizations.thursday;
+        case 'friday':
+          return localizations.friday;
+        case 'saturday':
+          return localizations.saturday;
+        case 'sunday':
+          return localizations.sunday;
+        case 'january_short':
+          return localizations.january_short;
+        case 'february_short':
+          return localizations.february_short;
+        case 'march_short':
+          return localizations.march_short;
+        case 'april_short':
+          return localizations.april_short;
+        case 'may_short':
+          return localizations.may_short;
+        case 'june_short':
+          return localizations.june_short;
+        case 'july_short':
+          return localizations.july_short;
+        case 'august_short':
+          return localizations.august_short;
+        case 'september_short':
+          return localizations.september_short;
+        case 'october_short':
+          return localizations.october_short;
+        case 'november_short':
+          return localizations.november_short;
+        case 'december_short':
+          return localizations.december_short;
+        default:
+          return fallback;
+      }
+    } catch (e) {
+      return fallback;
+    }
+  }
   // League ID <-> Name mapping
   String? selectedLeagueName;
   final Map<int, String> leagueIdToName = {
@@ -102,37 +197,48 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     "Club World Cup": 15,
   };
 
-  void updateSelectedIndex(int index, enabledLeagues) {
+  void updateSelectedIndex(int index, enabledLeagues, int chipIndex) {
     print('updateSelectedIndex');
-    print(index);
-    print(enabledLeagues);
+
+    print('selectedIndex: ${selectedIndex}');
+    print('index: ${index}');
+    print('chipIndex: ${chipIndex}');
+    print('league: ${league}');
     setState(() {
       isLoading = true;
-      // league = index == 0
-      //     ? 2 // Champions League
-      //     : index == 1
-      //         ? 383 // Ligat Ha'al
-      //         : index == 2
-      //             ? 140 // La Liga
-      //             : index == 3
-      //                 ? 3 // Europa League
-      //                 : index == 4
-      //                     ? 39 // Premier League
-      //                     : index == 5
-      //                         ? 848 // conferenceleague
-      //                         : index == 6
-      //                             ? 15 // Club World Cup
-      //                             : index == 7
-      //                                 ? 78 //Bundesliga
-      //                                 : 2; // Default to Champions League
-
-      selectedIndex = index;
+   
+    // Toggle logic: if the same chip is pressed, deselect it
+    if (selectedIndex == chipIndex) {
+       print('league == index');
+      // Deselect - reset to no selection
+      selectedIndex = -1;
+      league = -1; // or null, depending on your data type
+      Provider.of<UserProvider>(context, listen: false)
+          .setselectedLeageId(-1); // or null
+      
+      // Fetch all games without league filter
+      _fetchAllUpcomingGames(enabledLeagues, filterDate: selectedDate);
+    } else {
+         print('league != index');
+      // Select the new chip
+      selectedIndex = chipIndex;
       league = index;
       Provider.of<UserProvider>(context, listen: false)
           .setselectedLeageId(league);
-    });
-    // _fetchGames(league);
-    _fetchAllUpcomingGames(enabledLeagues, filterLeague: league);
+      
+      // Fetch games with league filter
+      _fetchAllUpcomingGames(enabledLeagues, 
+          filterDate: selectedDate, 
+          filterLeague: league);
+    }
+  });
+    //   selectedIndex = index;
+    //   league = index;
+    //   Provider.of<UserProvider>(context, listen: false)
+    //       .setselectedLeageId(league);
+    // });
+    // // _fetchGames(league);
+    // _fetchAllUpcomingGames(enabledLeagues, filterLeague: league);
   }
 
   void initState() {
@@ -229,7 +335,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           filterDate: selectedDate, filterLeague: league);
     } else {
       // selectedDate = DateTime.now();
-      await _fetchAllUpcomingGames(enabledLeagues, filterLeague: league);
+      await _fetchAllUpcomingGames(enabledLeagues);
     }
   }
 
@@ -611,7 +717,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       isLoading = true;
     });
     
-    print('filterLeague": ${filterLeague}');
+    print('filterLeague: ${filterLeague}');
     try {
       List<Game> allGames = [];
 
@@ -881,15 +987,17 @@ print('earliestDate ${earliestDate}');
                 SizedBox(height: 8,),
                 // Always show LeagueSelectorChips
                 LeagueSelectorChips(
+                 
                   options: options,
+                    selectedIndex: selectedIndex,
                   onSelectionChanged: (index) {
                     final selectedLeagueId = enabledLeagues[index];
            
                     print('League selection changed: $selectedLeagueId');
                     print('initialIndex: $initialIndex');
-                    updateSelectedIndex(selectedLeagueId, enabledLeagues);
+                    updateSelectedIndex(selectedLeagueId, enabledLeagues, index);
                   },
-                  initialSelection: -1,
+               
                 ),
         SizedBox(
                   height: 8,
@@ -1002,7 +1110,7 @@ print('earliestDate ${earliestDate}');
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Text(
-                  '${DateFormat('EEEE, MMM d').format(date)}',
+       formatDateInHebrew(date, context),
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
