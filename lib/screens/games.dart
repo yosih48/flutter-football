@@ -78,7 +78,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   String _baseUrl = backendUrl;
   Map<int, Map<String, TextEditingController>> _guessControllers = {};
   bool _hasFetchedInitialGames = false;
-String formatDateInHebrew(DateTime date, BuildContext context) {
+  String formatDateInHebrew(DateTime date, BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
 
     // Get day names using localization
@@ -174,6 +174,7 @@ String formatDateInHebrew(DateTime date, BuildContext context) {
       return fallback;
     }
   }
+
   // League ID <-> Name mapping
   String? selectedLeagueName;
   final Map<int, String> leagueIdToName = {
@@ -206,32 +207,31 @@ String formatDateInHebrew(DateTime date, BuildContext context) {
     print('league: ${league}');
     setState(() {
       isLoading = true;
-   
-    // Toggle logic: if the same chip is pressed, deselect it
-    if (selectedIndex == chipIndex) {
-       print('league == index');
-      // Deselect - reset to no selection
-      selectedIndex = -1;
-      league = -1; // or null, depending on your data type
-      Provider.of<UserProvider>(context, listen: false)
-          .setselectedLeageId(-1); // or null
-      
-      // Fetch all games without league filter
-      _fetchAllUpcomingGames(enabledLeagues, filterDate: selectedDate);
-    } else {
-         print('league != index');
-      // Select the new chip
-      selectedIndex = chipIndex;
-      league = index;
-      Provider.of<UserProvider>(context, listen: false)
-          .setselectedLeageId(league);
-      
-      // Fetch games with league filter
-      _fetchAllUpcomingGames(enabledLeagues, 
-          filterDate: selectedDate, 
-          filterLeague: league);
-    }
-  });
+
+      // Toggle logic: if the same chip is pressed, deselect it
+      if (selectedIndex == chipIndex) {
+        print('league == index');
+        // Deselect - reset to no selection
+        selectedIndex = -1;
+        league = -1; // or null, depending on your data type
+        Provider.of<UserProvider>(context, listen: false)
+            .setselectedLeageId(-1); // or null
+
+        // Fetch all games without league filter
+        _fetchAllUpcomingGames(enabledLeagues, filterDate: selectedDate);
+      } else {
+        print('league != index');
+        // Select the new chip
+        selectedIndex = chipIndex;
+        league = index;
+        Provider.of<UserProvider>(context, listen: false)
+            .setselectedLeageId(league);
+
+        // Fetch games with league filter
+        _fetchAllUpcomingGames(enabledLeagues,
+            filterDate: selectedDate, filterLeague: league);
+      }
+    });
     //   selectedIndex = index;
     //   league = index;
     //   Provider.of<UserProvider>(context, listen: false)
@@ -716,14 +716,14 @@ String formatDateInHebrew(DateTime date, BuildContext context) {
     setState(() {
       isLoading = true;
     });
-    
+
     print('filterLeague: ${filterLeague}');
     try {
       List<Game> allGames = [];
 
       // Determine which leagues to fetch from
       List<int> leaguesToFetch;
-      if (filterLeague != null) {
+      if (filterLeague != null && filterLeague != -1 ) {
         // If filtering by specific league, only fetch from that league
         leaguesToFetch = [filterLeague];
       } else {
@@ -737,7 +737,7 @@ String formatDateInHebrew(DateTime date, BuildContext context) {
       final earliestDate = filterDate != null
           ? DateTime(filterDate.year, filterDate.month, filterDate.day)
           : startOfToday;
-print('earliestDate ${earliestDate}');
+      print('earliestDate ${earliestDate}');
       for (final leagueId in leaguesToFetch) {
         final games = await GamesMethods().fetchGamesForLeague(leagueId);
         // Include games that are either:
@@ -755,7 +755,6 @@ print('earliestDate ${earliestDate}');
 
       // Apply date filter if specified
       if (filterDate != null) {
-    
         final filterDateStart =
             DateTime(filterDate.year, filterDate.month, filterDate.day);
         final filterDateEnd = filterDateStart.add(Duration(days: 1));
@@ -972,7 +971,7 @@ print('earliestDate ${earliestDate}');
           final groupedGames = _groupGamesByDate(filteredGames);
           final sortedDates = groupedGames.keys.toList()..sort();
 
-         final initialIndex = enabledLeagues.contains(league)
+          final initialIndex = enabledLeagues.contains(league)
               ? enabledLeagues.indexOf(league)
               : 0; // fallback to 0
 
@@ -984,22 +983,23 @@ print('earliestDate ${earliestDate}');
             color: Colors.grey,
             child: Column(
               children: [
-                SizedBox(height: 8,),
+                SizedBox(
+                  height: 8,
+                ),
                 // Always show LeagueSelectorChips
                 LeagueSelectorChips(
-                 
                   options: options,
-                    selectedIndex: selectedIndex,
+                  selectedIndex: selectedIndex,
                   onSelectionChanged: (index) {
                     final selectedLeagueId = enabledLeagues[index];
-           
+
                     print('League selection changed: $selectedLeagueId');
                     print('initialIndex: $initialIndex');
-                    updateSelectedIndex(selectedLeagueId, enabledLeagues, index);
+                    updateSelectedIndex(
+                        selectedLeagueId, enabledLeagues, index);
                   },
-               
                 ),
-        SizedBox(
+                SizedBox(
                   height: 8,
                 ),
                 Expanded(
@@ -1110,7 +1110,7 @@ print('earliestDate ${earliestDate}');
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Text(
-       formatDateInHebrew(date, context),
+                  formatDateInHebrew(date, context),
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -1123,6 +1123,7 @@ print('earliestDate ${earliestDate}');
             ...leagueIds.map((lid) {
               final leagueGames = gamesByLeague[lid]!;
               final leagueName = leagueGames.first.league.name;
+            
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
