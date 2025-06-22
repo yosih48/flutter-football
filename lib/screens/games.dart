@@ -329,13 +329,17 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       if (chosenLeagues['15'] == true) 15,
     ];
 
-    if (_showOnlyLiveGames) {
+    if (_showOnlyLiveGames && selectedIndex != -1) {
+      print('_showOnlyLiveGames && selectedIndex != -1');
       selectedDate = DateTime.now();
       await _fetchAllUpcomingGames(enabledLeagues,
           filterDate: selectedDate, filterLeague: league);
-    } else {
+    } else if(!_showOnlyLiveGames && selectedIndex != -1) {
+        print('!_showOnlyLiveGames');
       // selectedDate = DateTime.now();
-      await _fetchAllUpcomingGames(enabledLeagues);
+      await _fetchAllUpcomingGames(enabledLeagues,filterLeague: league);
+    }else{
+       await _fetchAllUpcomingGames(enabledLeagues);
     }
   }
 
