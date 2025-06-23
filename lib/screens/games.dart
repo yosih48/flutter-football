@@ -334,12 +334,36 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       selectedDate = DateTime.now();
       await _fetchAllUpcomingGames(enabledLeagues,
           filterDate: selectedDate, filterLeague: league);
-    } else if(!_showOnlyLiveGames && selectedIndex != -1) {
-        print('!_showOnlyLiveGames');
+    } else if (!_showOnlyLiveGames && selectedIndex != -1) {
+      print('!_showOnlyLiveGames');
       // selectedDate = DateTime.now();
-      await _fetchAllUpcomingGames(enabledLeagues,filterLeague: league);
-    }else{
-       await _fetchAllUpcomingGames(enabledLeagues);
+      await _fetchAllUpcomingGames(enabledLeagues, filterLeague: league);
+    } else {
+      await _fetchAllUpcomingGames(enabledLeagues);
+    }
+  }
+  String getLocalizedLeagueName(int leagueId, BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
+
+    switch (leagueId) {
+      case 2:
+        return localizations.championsleague;
+      case 383:
+        return localizations.ligathaal;
+      case 140:
+        return localizations.laliga;
+      case 3:
+        return localizations.europaleague;
+      case 39:
+        return localizations.premierleague;
+      case 78:
+        return localizations.bundesleague;
+      case 848:
+        return localizations.conferenceleague;
+      case 15:
+        return localizations.clubworldcup;
+      default:
+        return '';
     }
   }
 
@@ -727,7 +751,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
       // Determine which leagues to fetch from
       List<int> leaguesToFetch;
-      if (filterLeague != null && filterLeague != -1 ) {
+      if (filterLeague != null && filterLeague != -1) {
         // If filtering by specific league, only fetch from that league
         leaguesToFetch = [filterLeague];
       } else {
@@ -922,28 +946,9 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             if (chosenLeagues['848'] == true) 848,
             if (chosenLeagues['15'] == true) 15,
           ];
-          final options = enabledLeagues.map((id) {
-            switch (id) {
-              case 2:
-                return AppLocalizations.of(context)!.championsleague;
-              case 383:
-                return AppLocalizations.of(context)!.ligathaal;
-              case 140:
-                return AppLocalizations.of(context)!.laliga;
-              case 3:
-                return AppLocalizations.of(context)!.europaleague;
-              case 39:
-                return AppLocalizations.of(context)!.premierleague;
-              case 78:
-                return AppLocalizations.of(context)!.bundesleague;
-              case 848:
-                return AppLocalizations.of(context)!.conferenceleague;
-              case 15:
-                return AppLocalizations.of(context)!.clubworldcup;
-              default:
-                return '';
-            }
-          }).toList();
+ final options = enabledLeagues
+              .map((id) => getLocalizedLeagueName(id, context))
+              .toList();
 
           // Fetch games if not already loaded
           if (!_hasFetchedInitialGames) {
@@ -1126,8 +1131,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             // League sections
             ...leagueIds.map((lid) {
               final leagueGames = gamesByLeague[lid]!;
-              final leagueName = leagueGames.first.league.name;
-            
+            final leagueName = getLocalizedLeagueName(lid, context); 
+              print('lid: ${lid}');
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
