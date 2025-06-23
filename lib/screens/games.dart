@@ -28,6 +28,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/users.dart';
+import 'package:football/utils/utils.dart';
 
 class GamesScreen extends StatelessWidget {
   @override
@@ -78,6 +79,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   String _baseUrl = backendUrl;
   Map<int, Map<String, TextEditingController>> _guessControllers = {};
   bool _hasFetchedInitialGames = false;
+  bool useFakeGames = false;
   String formatDateInHebrew(DateTime date, BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
 
@@ -746,6 +748,16 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       isLoading = true;
     });
 
+    if (useFakeGames) {
+      // Load fake games from assets
+      final fakeGames = await loadFakeGames();
+      setState(() {
+        _games = fakeGames;
+        isLoading = false;
+      });
+      return;
+    }
+
     print('filterLeague: ${filterLeague}');
     try {
       List<Game> allGames = [];
@@ -926,6 +938,34 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               ],
             ),
           ),
+          IconButton(
+            icon: Icon(
+              useFakeGames ? Icons.bug_report : Icons.bug_report_outlined,
+              color: useFakeGames ? Colors.orange : Colors.white,
+            ),
+            tooltip: useFakeGames ? 'Using Fake Games' : 'Use Fake Games',
+            onPressed: () async {
+              setState(() {
+                useFakeGames = !useFakeGames;
+                isLoading = true;
+              });
+              final userData = await UsersMethods().fetchUserById(clientId);
+              final chosenLeagues =
+                  Map<String, bool>.from(userData['chosenLeagues'] ?? {});
+              final enabledLeagues = <int>[
+                if (chosenLeagues['2'] == true) 2,
+                if (chosenLeagues['383'] == true) 383,
+                if (chosenLeagues['140'] == true) 140,
+                if (chosenLeagues['3'] == true) 3,
+                if (chosenLeagues['39'] == true) 39,
+                if (chosenLeagues['78'] == true) 78,
+                if (chosenLeagues['848'] == true) 848,
+                if (chosenLeagues['15'] == true) 15,
+              ];
+              await _fetchAllUpcomingGames(enabledLeagues,
+                  filterDate: selectedDate);
+            },
+          ),
         ],
       ),
       body: FutureBuilder<Map<String, dynamic>>(
@@ -1104,12 +1144,14 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         final date = sortedDates[index];
         var gamesForDate = groupedGames[date]!;
 
-        // Further group by league within the date
-        final Map<int, List<Game>> gamesByLeague = {};
+        // Group by league
+        final Map<int, List<Game>> leagueGroups = {};
         for (final game in gamesForDate) {
-          gamesByLeague.putIfAbsent(game.league.id, () => []).add(game);
+          leagueGroups.putIfAbsent(game.league.id, () => []).add(game);
         }
-        final leagueIds = gamesByLeague.keys.toList()..sort();
+        final sortedLeagueIds = leagueGroups.keys.toList()
+          ..sort((a, b) => getLocalizedLeagueName(a, context)
+              .compareTo(getLocalizedLeagueName(b, context)));
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1130,37 +1172,21 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               ),
             ),
             // League sections
-            ...leagueIds.map((lid) {
-              final leagueGames = gamesByLeague[lid]!;
+            ...sortedLeagueIds.map((lid) {
+              final leagueGames = leagueGroups[lid]!;
               final leagueName = getLocalizedLeagueName(lid, context);
-              print('lid: ${lid}');
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  GestureDetector(
-                    onTap: () => _toggleLeagueFilter(lid),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 6),
-                      child: Row(
-                        children: [
-                          Text(
-                            leagueName,
-                            style: TextStyle(
-                              color: _selectedLeagueFilter == lid
-                                  ? Colors.blue
-                                  : Colors.grey[300],
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          if (_selectedLeagueFilter == lid)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 6.0),
-                              child: Icon(Icons.close,
-                                  size: 14, color: Colors.blue),
-                            ),
-                        ],
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                    child: Text(
+                      leagueName,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -1177,32 +1203,29 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                     final guess = matchingGuesses.isNotEmpty
                         ? matchingGuesses.first
                         : null;
-                    return Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                      child: GameWidget(
-                        game: game,
-                        guess: guess,
-                        homeController: _guessControllers[game.fixtureId]
-                            ?['home'],
-                        awayController: _guessControllers[game.fixtureId]
-                            ?['away'],
-                        onTap: (context) async {
-                          if (game.status.long != "Not Started") {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => GameDetails(
-                                  gameOriginalId: game.fixtureId,
-                                  game: game,
-                                  games: leagueGames,
-                                  initialIndex: leagueGames.indexOf(game),
-                                  userId: clientId,
-                                ),
+                    return GameWidget(
+                      game: game,
+                      guess: guess,
+                      homeController: _guessControllers[game.fixtureId]
+                          ?['home'],
+                      awayController: _guessControllers[game.fixtureId]
+                          ?['away'],
+                      onTap: (context) async {
+                        if (game.status.long != "Not Started") {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => GameDetails(
+                                gameOriginalId: game.fixtureId,
+                                game: game,
+                                games: leagueGames,
+                                initialIndex: leagueGames.indexOf(game),
+                                userId: clientId,
                               ),
-                            );
-                          }
-                        },
-                      ),
+                            ),
+                          );
+                        }
+                      },
                     );
                   }).toList(),
                 ],

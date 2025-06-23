@@ -91,6 +91,8 @@ flutter:
     - assets/icons/uefa-champions-league-2.svg
     - assets/icons/uefa-euro-2016.svg
     - assets/googleimage.png
+    - assets/fake_games.json
+    - assets/icons/champ.jpg
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
