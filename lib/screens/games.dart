@@ -342,6 +342,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       await _fetchAllUpcomingGames(enabledLeagues);
     }
   }
+
   String getLocalizedLeagueName(int leagueId, BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
 
@@ -946,7 +947,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             if (chosenLeagues['848'] == true) 848,
             if (chosenLeagues['15'] == true) 15,
           ];
- final options = enabledLeagues
+          final options = enabledLeagues
               .map((id) => getLocalizedLeagueName(id, context))
               .toList();
 
@@ -989,7 +990,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               await _fetchAllUpcomingGames(enabledLeagues,
                   filterDate: selectedDate);
             },
-            color: Colors.grey,
+            color: Colors.blue,
             child: Column(
               children: [
                 SizedBox(
@@ -1122,7 +1123,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                   formatDateInHebrew(date, context),
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -1131,7 +1132,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             // League sections
             ...leagueIds.map((lid) {
               final leagueGames = gamesByLeague[lid]!;
-            final leagueName = getLocalizedLeagueName(lid, context); 
+              final leagueName = getLocalizedLeagueName(lid, context);
               print('lid: ${lid}');
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1149,8 +1150,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                               color: _selectedLeagueFilter == lid
                                   ? Colors.blue
                                   : Colors.grey[300],
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                           if (_selectedLeagueFilter == lid)

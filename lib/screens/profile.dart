@@ -102,7 +102,8 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
         _userGroups = Map<String, String>.from(userData['groupID'] ?? {});
         _userWinners = Map<String, String>.from(userData['winner'] ?? {});
         _userTopScorer = Map<String, String>.from(userData['topScorer'] ?? {});
-        _userTopScorerPoints = Map<String, int>.from(userData['topScorerPoints'] ?? {});
+        _userTopScorerPoints =
+            Map<String, int>.from(userData['topScorerPoints'] ?? {});
         _groupsInfo = groupsInfo;
         print(_userGroups);
         print(_userWinners);
@@ -361,7 +362,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
               },
             ),
             ElevatedButton(
-                style: ElevatedButton.styleFrom(
+              style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white, // Set button background to white
               ),
               child: Text(AppLocalizations.of(context)!.create,
@@ -381,9 +382,8 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
 
   @override
   Widget build(BuildContext context) {
-    final allowedGroupIds = {'383', '2', '140', '3' ,'39', '848', '15'};
+    final allowedGroupIds = {'383', '2', '140', '3', '39', '848', '15'};
     final filteredWinners = _userWinners.entries
-   
         .where((entry) => allowedGroupIds.contains(entry.key))
         .fold<Map<String, String>>({}, (map, entry) {
       map[entry.key] = entry.value;
@@ -506,7 +506,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                 margin: EdgeInsets.symmetric(horizontal: 16),
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue.withOpacity(0.1),
+                    backgroundColor: Colors.blue.withOpacity(0.1),
                     foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -514,15 +514,17 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                     ),
                     elevation: 0,
                   ),
-                  icon: Icon(Icons.add_circle_outline,
-                        color: Colors.blue,
-                      size: 20,
+                  icon: Icon(
+                    Icons.add_circle_outline,
+                    color: Colors.blue,
+                    size: 20,
                   ),
                   label: Text(
                     AppLocalizations.of(context)!.createnewgroup,
-                    style: TextStyle(fontSize: 16,
-                           color: Colors.blue,
-                        fontWeight: FontWeight.w500,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.blue,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                   onPressed: _showCreateGroupDialog,
@@ -563,14 +565,15 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                         child: GestureDetector(
                           onTap: () => setState(() => _showWinners = true),
                           child: Container(
-                            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                            padding: EdgeInsets.symmetric(
+                                vertical: 12, horizontal: 16),
                             decoration: BoxDecoration(
-                              color: _showWinners 
+                              color: _showWinners
                                   ? Colors.blue.withOpacity(0.2)
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: _showWinners 
+                                color: _showWinners
                                     ? Colors.blue
                                     : Colors.grey.withOpacity(0.3),
                                 width: 1,
@@ -581,16 +584,21 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                               children: [
                                 Icon(
                                   Icons.emoji_events,
-                                  color: _showWinners ? Colors.blue : Colors.grey,
+                                  color:
+                                      _showWinners ? Colors.blue : Colors.grey,
                                   size: 20,
                                 ),
                                 SizedBox(width: 8),
                                 Text(
                                   AppLocalizations.of(context)!.yourwinners,
                                   style: TextStyle(
-                                    color: _showWinners ? Colors.blue : Colors.grey,
+                                    color: _showWinners
+                                        ? Colors.blue
+                                        : Colors.grey,
                                     fontSize: 16,
-                                    fontWeight: _showWinners ? FontWeight.bold : FontWeight.normal,
+                                    fontWeight: _showWinners
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                                   ),
                                 ),
                               ],
@@ -603,14 +611,15 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                         child: GestureDetector(
                           onTap: () => setState(() => _showWinners = false),
                           child: Container(
-                            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                            padding: EdgeInsets.symmetric(
+                                vertical: 12, horizontal: 16),
                             decoration: BoxDecoration(
-                              color: !_showWinners 
+                              color: !_showWinners
                                   ? Colors.blue.withOpacity(0.2)
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: !_showWinners 
+                                color: !_showWinners
                                     ? Colors.blue
                                     : Colors.grey.withOpacity(0.3),
                                 width: 1,
@@ -621,16 +630,22 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                               children: [
                                 Icon(
                                   Icons.sports_soccer,
-                                  color: !_showWinners ? Colors.blue : Colors.grey,
+                                  color:
+                                      !_showWinners ? Colors.blue : Colors.grey,
                                   size: 20,
                                 ),
                                 SizedBox(width: 8),
                                 Text(
-                                  AppLocalizations.of(context)!.topScorers ?? "Top Scorers",
+                                  AppLocalizations.of(context)!.topScorers ??
+                                      "Top Scorers",
                                   style: TextStyle(
-                                    color: !_showWinners ? Colors.blue : Colors.grey,
+                                    color: !_showWinners
+                                        ? Colors.blue
+                                        : Colors.grey,
                                     fontSize: 16,
-                                    fontWeight: !_showWinners ? FontWeight.bold : FontWeight.normal,
+                                    fontWeight: !_showWinners
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                                   ),
                                 ),
                               ],
@@ -661,7 +676,8 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                             userTopScorers: _userTopScorer,
                             userTopScorerPoints: _userTopScorerPoints,
                             filteredTopScorers: _userTopScorer.entries
-                                .where((entry) => allowedGroupIds.contains(entry.key))
+                                .where((entry) =>
+                                    allowedGroupIds.contains(entry.key))
                                 .fold<Map<String, String>>({}, (map, entry) {
                               map[entry.key] = entry.value;
                               return map;
@@ -679,7 +695,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     );
   }
 
-Widget usersGroups(UserProvider selectedGroup) {
+  Widget usersGroups(UserProvider selectedGroup) {
     // Filter out 'public' group
     final filteredGroups = _userGroups.entries
         .where((entry) => entry.value.toLowerCase() != 'public')
@@ -705,7 +721,7 @@ Widget usersGroups(UserProvider selectedGroup) {
         : ListView.separated(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
-            padding: EdgeInsets.all(8),
+            padding: EdgeInsets.all(4),
             itemCount: filteredGroups.length,
             separatorBuilder: (context, index) => Divider(
               color: Colors.white.withOpacity(0.1),
@@ -731,7 +747,7 @@ Widget usersGroups(UserProvider selectedGroup) {
                   );
                 },
                 contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 leading: CircleAvatar(
                   backgroundColor: Colors.blue.withOpacity(0.1),
                   child: Text(
@@ -746,7 +762,7 @@ Widget usersGroups(UserProvider selectedGroup) {
                   groupName,
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -804,7 +820,7 @@ class usersWinners extends StatelessWidget {
                       size: 48, color: Colors.grey),
                   SizedBox(height: 16),
                   Text(
-                   AppLocalizations.of(context)!.noWinnersYet,
+                    AppLocalizations.of(context)!.noWinnersYet,
                     style: TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                 ],
@@ -888,7 +904,8 @@ class usersWinners extends StatelessWidget {
                   ),
                 ),
                 subtitle: Text(
-                  AppLocalizations.of(context)!.yourprediction ?? "Your prediction",
+                  AppLocalizations.of(context)!.yourprediction ??
+                      "Your prediction",
                   style: TextStyle(
                     color: Colors.grey[400],
                     fontSize: 12,
@@ -941,7 +958,6 @@ class usersTopScorers extends StatelessWidget {
                   SizedBox(height: 16),
                   Text(
                     AppLocalizations.of(context)!.noTopScorersYet,
-                
                     style: TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                 ],
@@ -1027,29 +1043,33 @@ class usersTopScorers extends StatelessWidget {
                 subtitle: Row(
                   children: [
                     Text(
-                      AppLocalizations.of(context)!.topScorerPoints ?? "Goals Points",
+                      AppLocalizations.of(context)!.topScorerPoints ??
+                          "Goals Points",
                       style: TextStyle(
                         color: Colors.grey[400],
                         fontSize: 14,
                       ),
                     ),
-                    SizedBox(width: 5,),
+                    SizedBox(
+                      width: 5,
+                    ),
                     if (userTopScorerPoints[groupId] != null)
-                    Text(
-                     '${userTopScorerPoints[groupId]}' ' ${AppLocalizations.of(context)!.pst}',
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 14,
+                      Text(
+                        '${userTopScorerPoints[groupId]}'
+                        ' ${AppLocalizations.of(context)!.pst}',
+                        style: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
-                     if (userTopScorerPoints[groupId] == null)
-                        Text(
-                     '0' ' ${AppLocalizations.of(context)!.pst}',
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 14,
+                    if (userTopScorerPoints[groupId] == null)
+                      Text(
+                        '0' ' ${AppLocalizations.of(context)!.pst}',
+                        style: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
                   ],
                 ),
                 trailing: Column(
@@ -1081,7 +1101,8 @@ class usersTopScorers extends StatelessWidget {
                     // ],
                     // Player name display
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: leagueColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
@@ -1116,8 +1137,6 @@ class usersTopScorers extends StatelessWidget {
                     ),
                   ],
                 ),
-
-                
               );
             },
           );
