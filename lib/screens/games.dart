@@ -1144,14 +1144,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         final date = sortedDates[index];
         var gamesForDate = groupedGames[date]!;
 
-        // Group by league
-        final Map<int, List<Game>> leagueGroups = {};
-        for (final game in gamesForDate) {
-          leagueGroups.putIfAbsent(game.league.id, () => []).add(game);
-        }
-        final sortedLeagueIds = leagueGroups.keys.toList()
-          ..sort((a, b) => getLocalizedLeagueName(a, context)
-              .compareTo(getLocalizedLeagueName(b, context)));
+        // Sort all games for this date by time
+        gamesForDate.sort((a, b) => a.date.compareTo(b.date));
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1171,66 +1165,65 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                 ),
               ),
             ),
-            // League sections
-            ...sortedLeagueIds.map((lid) {
-              final leagueGames = leagueGroups[lid]!;
-              final leagueName = getLocalizedLeagueName(lid, context);
+            // Time-sorted games with league header only for first in block
+            ...List.generate(gamesForDate.length, (i) {
+              final game = gamesForDate[i];
+              final leagueName =
+                  getLocalizedLeagueName(game.league.id, context);
+              final showLeagueName =
+                  i == 0 || game.league.id != gamesForDate[i - 1].league.id;
+              if (_guessControllers[game.fixtureId] == null) {
+                _guessControllers[game.fixtureId] = {
+                  'home': TextEditingController(),
+                  'away': TextEditingController(),
+                };
+              }
+              final matchingGuesses = _guesses
+                  .where((g) => g.gameOriginalId == game.fixtureId)
+                  .toList();
+              final guess =
+                  matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                    child: Text(
-                      leagueName,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                  if (showLeagueName)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 6),
+                      child: Text(
+                        leagueName,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
-                  ),
-                  ...leagueGames.map((game) {
-                    if (_guessControllers[game.fixtureId] == null) {
-                      _guessControllers[game.fixtureId] = {
-                        'home': TextEditingController(),
-                        'away': TextEditingController(),
-                      };
-                    }
-                    final matchingGuesses = _guesses
-                        .where((g) => g.gameOriginalId == game.fixtureId)
-                        .toList();
-                    final guess = matchingGuesses.isNotEmpty
-                        ? matchingGuesses.first
-                        : null;
-                    return GameWidget(
-                      game: game,
-                      guess: guess,
-                      homeController: _guessControllers[game.fixtureId]
-                          ?['home'],
-                      awayController: _guessControllers[game.fixtureId]
-                          ?['away'],
-                      onTap: (context) async {
-                        if (game.status.long != "Not Started") {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => GameDetails(
-                                gameOriginalId: game.fixtureId,
-                                game: game,
-                                games: leagueGames,
-                                initialIndex: leagueGames.indexOf(game),
-                                userId: clientId,
-                              ),
+                  GameWidget(
+                    game: game,
+                    guess: guess,
+                    homeController: _guessControllers[game.fixtureId]?['home'],
+                    awayController: _guessControllers[game.fixtureId]?['away'],
+                    onTap: (context) async {
+                      if (game.status.long != "Not Started") {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => GameDetails(
+                              gameOriginalId: game.fixtureId,
+                              game: game,
+                              games: gamesForDate,
+                              initialIndex: i,
+                              userId: clientId,
                             ),
-                          );
-                        }
-                      },
-                    );
-                  }).toList(),
+                          ),
+                        );
+                      }
+                    },
+                  ),
                 ],
               );
-            }).toList(),
+            }),
           ],
         );
       },

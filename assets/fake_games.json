@@ -4,7 +4,7 @@
       "id": 1001,
       "referee": "John Doe",
       "timezone": "UTC",
-      "date": "2025-06-23T18:00:00Z",
+      "date": "2025-06-24T18:00:00Z",
       "timestamp": 1718128800,
       "periods": {
         "first": 1718128800,
@@ -12,6 +12,67 @@
       },
       "venue": {
         "id": 501,
+        "name": "Test Stadium",
+        "city": "Test City"
+      },
+      "status": {
+        "long": "Not Started",
+        "short": "NS",
+        "elapsed": null
+      }
+    },
+    "league": {
+      "id": 42,
+      "name": "Premier League",
+      "country": "England",
+      "logo": null,
+      "flag": null,
+      "season": 2024,
+      "round": "Regular Season - 1"
+    },
+    "teams": {
+      "home": {
+        "id": 1,
+        "name": "Home FC",
+        "logo": "https://cdn.prod.website-files.com/5ca5fe687e34be0992df1fbe/6235ea7fbaf601e8d3980228_boy-kicking-ball-on-football-field-2021-09-24-03-47-56-utc-min-min-p-1080.jpeg",
+        "winner": null
+      },
+      "away": {
+        "id": 2,
+        "name": "Away United",
+        "logo": "https://cdn.prod.website-files.com/5ca5fe687e34be0992df1fbe/6235ea7fbaf601e8d3980228_boy-kicking-ball-on-football-field-2021-09-24-03-47-56-utc-min-min-p-1080.jpeg",
+        "winner": null
+      }
+    },
+    "goals": {
+      "home": null,
+      "away": null
+    },
+    "score": {
+      "halftime": { "home": null, "away": null },
+      "fulltime": { "home": null, "away": null },
+      "extratime": { "home": null, "away": null },
+      "penalty": { "home": null, "away": null }
+    },
+    "odds": {
+      "Home": "2.5",
+      "Draw": "3.1",
+      "Away": "2.8"
+    }
+  },
+  {
+    "fixture": {
+      "id": 1005,
+      "referee": "John Doe",
+      "timezone": "UTC",
+      "date": "2025-06-24T22:45:00Z",
+      "timestamp": 1718128800,
+      "periods": {
+        "first": 1718128800,
+        "second": null
+      },
+      "venue": {
+        "id": 505,
         "name": "Test Stadium",
         "city": "Test City"
       },
@@ -65,7 +126,7 @@
       "id": 1002,
       "referee": "John Doe",
       "timezone": "UTC",
-      "date": "2025-06-23T23:00:00Z",
+      "date": "2025-06-24T23:00:00Z",
       "timestamp": 1718128800,
       "periods": {
         "first": 1718128800,
@@ -83,7 +144,7 @@
       }
     },
     "league": {
-      "id": 50,
+      "id": 39,
       "name": "Premier League",
       "country": "England",
       "logo": null,
@@ -126,7 +187,7 @@
       "id": 1003,
       "referee": "Jane Smith",
       "timezone": "UTC",
-      "date": "2025-06-23T22:30:00Z",
+      "date": "2025-06-24T22:30:00Z",
       "timestamp": 1718137800,
       "periods": {
         "first": 1718137800,
