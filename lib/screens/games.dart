@@ -1144,8 +1144,99 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         final date = sortedDates[index];
         var gamesForDate = groupedGames[date]!;
 
-        // Sort all games for this date by time
-        gamesForDate.sort((a, b) => a.date.compareTo(b.date));
+        // Sort games by time within the date
+        gamesForDate.sort((a, b) {
+          // Assuming your Game object has a time field or you can extract time from fixture
+          // Replace this with your actual time comparison logic
+          return a.date.compareTo(b.date);
+        });
+            // Group consecutive games by league while maintaining time order
+        List<Widget> gameWidgets = [];
+
+        for (int i = 0; i < gamesForDate.length; i++) {
+          final game = gamesForDate[i];
+          final currentLeagueId = game.league.id;
+
+          // Check if this is the first game or if league changed from previous game
+          final bool showLeagueHeader =
+              i == 0 || gamesForDate[i - 1].league.id != currentLeagueId;
+
+          // Add league header if needed
+          if (showLeagueHeader) {
+            final leagueName = getLocalizedLeagueName(currentLeagueId, context);
+            gameWidgets.add(
+              GestureDetector(
+                onTap: () => _toggleLeagueFilter(currentLeagueId),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                  child: Row(
+                    children: [
+                      Text(
+                        leagueName,
+                        style: TextStyle(
+                          color: _selectedLeagueFilter == currentLeagueId
+                              ? Colors.blue
+                              : Colors.grey[300],
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      if (_selectedLeagueFilter == currentLeagueId)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 6.0),
+                          child:
+                              Icon(Icons.close, size: 14, color: Colors.blue),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+
+          // Add game widget
+          if (_guessControllers[game.fixtureId] == null) {
+            _guessControllers[game.fixtureId] = {
+              'home': TextEditingController(),
+              'away': TextEditingController(),
+            };
+          }
+
+          final matchingGuesses = _guesses
+              .where((g) => g.gameOriginalId == game.fixtureId)
+              .toList();
+          final guess =
+              matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
+
+          gameWidgets.add(
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              child: GameWidget(
+                game: game,
+                guess: guess,
+                homeController: _guessControllers[game.fixtureId]?['home'],
+                awayController: _guessControllers[game.fixtureId]?['away'],
+                onTap: (context) async {
+                  if (game.status.long != "Not Started") {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => GameDetails(
+                          gameOriginalId: game.fixtureId,
+                          game: game,
+                          games: gamesForDate,
+                          initialIndex: gamesForDate.indexOf(game),
+                          userId: clientId,
+                        ),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ),
+          );
+        }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1165,65 +1256,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                 ),
               ),
             ),
-            // Time-sorted games with league header only for first in block
-            ...List.generate(gamesForDate.length, (i) {
-              final game = gamesForDate[i];
-              final leagueName =
-                  getLocalizedLeagueName(game.league.id, context);
-              final showLeagueName =
-                  i == 0 || game.league.id != gamesForDate[i - 1].league.id;
-              if (_guessControllers[game.fixtureId] == null) {
-                _guessControllers[game.fixtureId] = {
-                  'home': TextEditingController(),
-                  'away': TextEditingController(),
-                };
-              }
-              final matchingGuesses = _guesses
-                  .where((g) => g.gameOriginalId == game.fixtureId)
-                  .toList();
-              final guess =
-                  matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (showLeagueName)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 6),
-                      child: Text(
-                        leagueName,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  GameWidget(
-                    game: game,
-                    guess: guess,
-                    homeController: _guessControllers[game.fixtureId]?['home'],
-                    awayController: _guessControllers[game.fixtureId]?['away'],
-                    onTap: (context) async {
-                      if (game.status.long != "Not Started") {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => GameDetails(
-                              gameOriginalId: game.fixtureId,
-                              game: game,
-                              games: gamesForDate,
-                              initialIndex: i,
-                              userId: clientId,
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                  ),
-                ],
-              );
-            }),
+            // Games sorted by time, showing league name for each game
+       ...gameWidgets,
           ],
         );
       },
