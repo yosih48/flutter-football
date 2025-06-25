@@ -48,6 +48,7 @@ class _GameDetailsState extends State<GameDetails> {
   late int _currentIndex;
   late Game _currentGame;
 
+
     Color getStatusColor(String status) {
     switch (status) {
       case "First Half":
@@ -108,12 +109,57 @@ class _GameDetailsState extends State<GameDetails> {
               child: Column(
                 children: [
                   _buildGameCard(),
+               _buildEventsSection(),
                   _buildGuessesTable(),
                 ],
               ),
             ),
     );
   }
+
+  Widget _buildEventsSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.sports_soccer,
+                  color: Colors.orange,
+                  size: 20,
+                ),
+                SizedBox(width: 8),
+                Text(
+                  'Match Events',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Use your existing FixtureEventsWidget here
+          // FixtureEventsWidget(
+          //   fixtureId: widget.gameOriginalId,
+          //   eventsService: eventsService,
+          // ),
+        ],
+      ),
+    );
+  }
+
+
 
   Widget _buildGameCard() {
     return GestureDetector(
