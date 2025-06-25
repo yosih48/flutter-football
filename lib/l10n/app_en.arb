@@ -167,7 +167,13 @@
   "september_short": "Sep",
   "october_short": "Oct",
   "november_short": "Nov",
-  "december_short": "Dec"
+  "december_short": "Dec",
+      "delete": "Delete",
+    "deleteaccountconfirm": "Are you sure you want to delete your account? This action cannot be undone.",
+    "deleteaccount": "Delete Account",
+    "userdetails": "User Details",
+      "account": "Account",
+      "accountDeleted": "Account deleted successfully"
 
     
 

@@ -171,5 +171,11 @@
   "september_short": "ספט׳",
   "october_short": "אוק׳",
   "november_short": "נוב׳",
-  "december_short": "דצמ׳"
+  "december_short": "דצמ׳",
+      "delete": "מחק",
+    "deleteaccountconfirm": "האם אתה בטוח שברצונך למחוק את החשבון שלך? פעולה זו לא ניתנת לביטול.",
+    "deleteaccount": "מחק חשבון",
+    "userdetails": "פרטי משתמש",
+     "account": "חשבון",
+       "accountDeleted": "החשבון נמחק בהצלחה"
 }

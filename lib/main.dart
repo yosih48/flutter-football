@@ -121,6 +121,7 @@ class GameApp extends StatelessWidget {
         '/games': (context) => GamesScreen(),
         '/table': (context) => TableScreen(),
         '/profile': (context) => ProfileScreen(),
+        '/login': (context) => LoginScreen(),
       },
     );
   }

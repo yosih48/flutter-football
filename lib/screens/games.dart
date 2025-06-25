@@ -371,6 +371,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   }
 
   void _toggleLeagueFilter(int leagueId) async {
+  
     setState(() {
       if (_selectedLeagueFilter == leagueId) {
         _selectedLeagueFilter = null; // Clear filter
@@ -389,6 +390,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         isLoading = false;
       });
     } else {
+    
       // Restore games for all enabled leagues with the current date filter
       final userData = await UsersMethods().fetchUserById(clientId);
       final chosenLeagues =
@@ -938,34 +940,34 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               ],
             ),
           ),
-          IconButton(
-            icon: Icon(
-              useFakeGames ? Icons.bug_report : Icons.bug_report_outlined,
-              color: useFakeGames ? Colors.orange : Colors.white,
-            ),
-            tooltip: useFakeGames ? 'Using Fake Games' : 'Use Fake Games',
-            onPressed: () async {
-              setState(() {
-                useFakeGames = !useFakeGames;
-                isLoading = true;
-              });
-              final userData = await UsersMethods().fetchUserById(clientId);
-              final chosenLeagues =
-                  Map<String, bool>.from(userData['chosenLeagues'] ?? {});
-              final enabledLeagues = <int>[
-                if (chosenLeagues['2'] == true) 2,
-                if (chosenLeagues['383'] == true) 383,
-                if (chosenLeagues['140'] == true) 140,
-                if (chosenLeagues['3'] == true) 3,
-                if (chosenLeagues['39'] == true) 39,
-                if (chosenLeagues['78'] == true) 78,
-                if (chosenLeagues['848'] == true) 848,
-                if (chosenLeagues['15'] == true) 15,
-              ];
-              await _fetchAllUpcomingGames(enabledLeagues,
-                  filterDate: selectedDate);
-            },
-          ),
+          // IconButton(
+          //   icon: Icon(
+          //     useFakeGames ? Icons.bug_report : Icons.bug_report_outlined,
+          //     color: useFakeGames ? Colors.orange : Colors.white,
+          //   ),
+          //   tooltip: useFakeGames ? 'Using Fake Games' : 'Use Fake Games',
+          //   onPressed: () async {
+          //     setState(() {
+          //       useFakeGames = !useFakeGames;
+          //       isLoading = true;
+          //     });
+          //     final userData = await UsersMethods().fetchUserById(clientId);
+          //     final chosenLeagues =
+          //         Map<String, bool>.from(userData['chosenLeagues'] ?? {});
+          //     final enabledLeagues = <int>[
+          //       if (chosenLeagues['2'] == true) 2,
+          //       if (chosenLeagues['383'] == true) 383,
+          //       if (chosenLeagues['140'] == true) 140,
+          //       if (chosenLeagues['3'] == true) 3,
+          //       if (chosenLeagues['39'] == true) 39,
+          //       if (chosenLeagues['78'] == true) 78,
+          //       if (chosenLeagues['848'] == true) 848,
+          //       if (chosenLeagues['15'] == true) 15,
+          //     ];
+          //     await _fetchAllUpcomingGames(enabledLeagues,
+          //         filterDate: selectedDate);
+          //   },
+          // ),
         ],
       ),
       body: FutureBuilder<Map<String, dynamic>>(

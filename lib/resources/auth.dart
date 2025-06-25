@@ -305,7 +305,7 @@ class AuthProvider with ChangeNotifier {
   }
   static const _baseUrl = '$backendUrl/users';
   Future<void> signOut(userID) async {
-  
+            print('currentUser: ${currentUser?.id}');
     await _secureStorage.delete(key: 'auth_token');
     await _secureStorage.delete(key: 'user_id');
 
@@ -326,6 +326,7 @@ class AuthProvider with ChangeNotifier {
 
       if (response.statusCode == 200) {
         // Handle successful logout
+            
         print('Logout successful');
       } else {
         throw Exception('Failed to log out');
@@ -335,6 +336,39 @@ class AuthProvider with ChangeNotifier {
     }
     _currentUser = null;
     notifyListeners();
+  }
+  Future<bool> deleteAccount(String userId) async {
+    try {
+    
+    
+
+      final response = await http.delete(
+        Uri.parse('$_baseUrl/$userId'),
+         headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // Successfully deleted
+        final responseData = json.decode(response.body);
+        print('Account deleted successfully');
+        print('Deleted guesses count: ${responseData['deletedGuessesCount']}');
+        return true;
+      } else if (response.statusCode == 404) {
+        // User not found
+        print('User not found');
+        throw ('User not found');
+      } else {
+        // Other error
+        final errorData = json.decode(response.body);
+        print('Error deleting account: ${errorData['error']}');
+        throw('Failed to delete account: ${errorData['error']}');
+      }
+    } catch (e) {
+      print('Error in deleteAccount: $e');
+      throw ('Failed to delete account: $e');
+    }
   }
 
   Future<User?> ensureUserLoaded() async {

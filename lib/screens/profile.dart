@@ -15,6 +15,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:football/screens/account_screen.dart';
 
 // AppLocalizations.of(context)!.assigncall
 class ProfileScreen extends StatelessWidget {
@@ -401,58 +402,24 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
             margin: EdgeInsets.only(left: 16),
             child: TextButton.icon(
               style: TextButton.styleFrom(
-                backgroundColor: Colors.red.withOpacity(0.1),
+                backgroundColor: Colors.blue.withOpacity(0.1),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               ),
-              icon: Icon(Icons.exit_to_app, color: Colors.red),
+              icon: Icon(Icons.account_circle, color: Colors.blue),
               label: Text(
-                AppLocalizations.of(context)!.signout,
-                style: TextStyle(color: Colors.red),
+               AppLocalizations.of(context)?.account ?? 'Account',
+                style: TextStyle(color: Colors.blue),
               ),
-              onPressed: () async {
-                final authProvider =
-                    Provider.of<AuthProvider>(context, listen: false);
-                bool? confirmSignOut = await showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      backgroundColor: cards,
-                      title: Text(
-                        AppLocalizations.of(context)!.confirmsignout,
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                      content: Text(
-                        AppLocalizations.of(context)!.leaveapp,
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      actions: <Widget>[
-                        TextButton(
-                          child: Text(
-                            AppLocalizations.of(context)!.cancel,
-                            style: TextStyle(color: Colors.blue),
-                          ),
-                          onPressed: () => Navigator.of(context).pop(false),
-                        ),
-                        TextButton(
-                          child: Text(
-                            AppLocalizations.of(context)!.yes,
-                            style: TextStyle(color: Colors.red),
-                          ),
-                          onPressed: () => Navigator.of(context).pop(true),
-                        ),
-                      ],
-                    );
-                  },
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AccountScreen(),
+                  ),
                 );
-
-                if (confirmSignOut == true) {
-                  Provider.of<UserProvider>(context, listen: false)
-                      .setSelectedGroupName('public');
-                  await authProvider.signOut(currentUserId);
-                }
               },
             ),
           )
