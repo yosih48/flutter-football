@@ -9,7 +9,7 @@ class FixtureEventsService {
 
 
 
-  Future<FixtureEventsResponse?> getFixtureEvents(String fixtureId) async {
+  Future<FixtureEventsResponse?> getFixtureEvents(int fixtureId) async {
     try {
       final response = await http.get(
         Uri.parse('$_baseUrl/fixtures/$fixtureId/events'),

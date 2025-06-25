@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
+import 'package:football/resources/FixtureEventsService.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/guessesMethods.dart';
 import 'package:football/resources/usersMethods.dart';
@@ -9,6 +10,7 @@ import 'package:football/screens/login_screen.dart';
 import 'package:football/screens/profile.dart';
 import 'package:football/screens/table.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/widgets/FixtureEventsWidget.dart';
 import 'package:football/widgets/SharedPreferences.dart';
 import 'package:football/widgets/teamLinks.dart';
 import 'package:intl/intl.dart';
@@ -48,7 +50,7 @@ class _GameDetailsState extends State<GameDetails> {
   late int _currentIndex;
   late Game _currentGame;
 
-
+ 
     Color getStatusColor(String status) {
     switch (status) {
       case "First Half":
@@ -72,6 +74,7 @@ class _GameDetailsState extends State<GameDetails> {
   @override
   void initState() {
     super.initState();
+  
     _currentIndex = widget.initialIndex;
     print('widget.initialIndex:${widget.initialIndex}');
     _currentGame = widget.games[_currentIndex];
@@ -121,43 +124,16 @@ class _GameDetailsState extends State<GameDetails> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Colors.grey[850], // Match your existing card color
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.sports_soccer,
-                  color: Colors.orange,
-                  size: 20,
-                ),
-                SizedBox(width: 8),
-                Text(
-                  'Match Events',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Use your existing FixtureEventsWidget here
-          // FixtureEventsWidget(
-          //   fixtureId: widget.gameOriginalId,
-          //   eventsService: eventsService,
-          // ),
-        ],
+      child: FixtureEventsWidget(
+        fixtureId: widget.gameOriginalId,
+      
       ),
     );
   }
+
 
 
 
