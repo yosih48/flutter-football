@@ -17,7 +17,9 @@ class FixtureEventsService {
       );
 
       if (response.statusCode == 200) {
+              print('response.statusCode == 200');
         final Map<String, dynamic> data = json.decode(response.body);
+        print(data);
         return FixtureEventsResponse.fromJson(data);
       } else {
         print('Failed to load fixture events: ${response.statusCode}');

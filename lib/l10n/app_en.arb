@@ -173,7 +173,16 @@
     "deleteaccount": "Delete Account",
     "userdetails": "User Details",
       "account": "Account",
-      "accountDeleted": "Account deleted successfully"
+      "accountDeleted": "Account deleted successfully",
+        "matchEvents": "Match Events",
+  "loadingEvents": "Loading events...",
+  "failedToLoadEvents": "Failed to load events",
+  "retry": "Retry",
+  "noGoals": "No goals scored yet",
+  "eventsAppear": "Events will appear here when goals are scored",
+  "goals": "Goals",
+  "assist": "Assist:",
+  "noGuesses": "No guesses"
 
     
 

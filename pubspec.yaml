@@ -54,6 +54,7 @@ dependencies:
   async: ^2.8.2
   google_fonts: ^6.2.1
   flutter_launcher_icons: ^0.14.4
+  font_awesome_flutter: ^10.8.0
   
 flutter_launcher_icons:
   android: true

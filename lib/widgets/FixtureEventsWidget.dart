@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:football/models/FixtureEvent.dart';
 import 'package:football/resources/FixtureEventsService.dart';
 import 'package:football/theme/colors.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class FixtureEventsWidget extends StatefulWidget {
   final int fixtureId;
@@ -11,7 +14,6 @@ class FixtureEventsWidget extends StatefulWidget {
   const FixtureEventsWidget({
     Key? key,
     required this.fixtureId,
-
     this.isCompact = false,
   }) : super(key: key);
 
@@ -23,7 +25,7 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
   FixtureEventsResponse? _eventsResponse;
   bool _isLoading = false;
   String? _error;
-
+  bool _expanded = false;
   @override
   void initState() {
     super.initState();
@@ -37,8 +39,9 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
     });
 
     try {
-      final response = await FixtureEventsService().getFixtureEvents(widget.fixtureId);
-      
+      final response =
+          await FixtureEventsService().getFixtureEvents(widget.fixtureId);
+
       setState(() {
         _eventsResponse = response;
         _isLoading = false;
@@ -60,21 +63,31 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-       color: cards,
-      padding: const EdgeInsets.all(16.0),
+      color: cards,
+      padding: const EdgeInsets.all(8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!widget.isCompact) _buildHeader(),
-          
-          if (_isLoading)
-            _buildLoadingWidget()
-          else if (_error != null)
-            _buildErrorWidget()
-          else if (_eventsResponse != null && _eventsResponse!.events.isNotEmpty)
-            _buildEventsWidget()
-          else
-            _buildEmptyWidget(),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _expanded = !_expanded;
+              });
+            },
+            child: _buildHeader(),
+          ),
+          if (_expanded) ...[
+            SizedBox(height: 16),
+            if (_isLoading)
+              _buildLoadingWidget()
+            else if (_error != null)
+              _buildErrorWidget()
+            else if (_eventsResponse != null &&
+                _eventsResponse!.events.isNotEmpty)
+              _buildEventsWidget()
+            else
+              _buildEmptyWidget(),
+          ]
         ],
       ),
     );
@@ -86,14 +99,10 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
       children: [
         Row(
           children: [
-            Icon(
-              Icons.sports_soccer,
-              color: Colors.orange,
-              size: 20,
-            ),
+            Icon(Icons.sports_soccer, color: Colors.blue, size: 20),
             SizedBox(width: 8),
             Text(
-              'Match Events',
+              AppLocalizations.of(context)!.matchEvents,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 18,
@@ -102,12 +111,20 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
             ),
           ],
         ),
-        if (!_isLoading)
-          IconButton(
-            icon: Icon(Icons.refresh, color: Colors.grey[400]),
-            onPressed: _loadFixtureEvents,
-            iconSize: 20,
-          ),
+        Row(
+          children: [
+            if (!_isLoading)
+              IconButton(
+                icon: Icon(Icons.refresh, color: Colors.grey[400]),
+                onPressed: _loadFixtureEvents,
+                iconSize: 20,
+              ),
+            Icon(
+              _expanded ? Icons.expand_less : Icons.expand_more,
+              color: Colors.white,
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -128,7 +145,7 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
             ),
             SizedBox(height: 12),
             Text(
-              'Loading events...',
+              AppLocalizations.of(context)!.loadingEvents,
               style: TextStyle(
                 color: Colors.grey[400],
                 fontSize: 14,
@@ -157,7 +174,7 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Failed to load events',
+                  AppLocalizations.of(context)!.failedToLoadEvents,
                   style: TextStyle(
                     color: Colors.red,
                     fontWeight: FontWeight.w500,
@@ -177,7 +194,7 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
           TextButton(
             onPressed: _loadFixtureEvents,
             child: Text(
-              'Retry',
+              AppLocalizations.of(context)!.retry,
               style: TextStyle(color: Colors.red),
             ),
           ),
@@ -199,7 +216,7 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
             ),
             SizedBox(height: 16),
             Text(
-              'No goals scored yet',
+              AppLocalizations.of(context)!.noGoals,
               style: TextStyle(
                 color: Colors.grey[400],
                 fontSize: 16,
@@ -208,7 +225,7 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
             ),
             SizedBox(height: 8),
             Text(
-              'Events will appear here when goals are scored',
+              AppLocalizations.of(context)!.eventsAppear,
               style: TextStyle(
                 color: Colors.grey[500],
                 fontSize: 12,
@@ -223,23 +240,22 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
 
   Widget _buildEventsWidget() {
     final events = _eventsResponse!.events;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!widget.isCompact)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Text(
-              '${_eventsResponse!.count} Goals',
-              style: TextStyle(
-                color: Colors.green,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        
+        // if (!widget.isCompact)
+        //   Padding(
+        //     padding: const EdgeInsets.only(bottom: 16),
+        //     child: Text(
+        //       '${_eventsResponse!.count} ${AppLocalizations.of(context)!.goals}',
+        //       style: TextStyle(
+        //         color: Colors.green,
+        //         fontSize: 14,
+        //         fontWeight: FontWeight.bold,
+        //       ),
+        //     ),
+        //   ),
         ListView.separated(
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
@@ -264,8 +280,8 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
         children: [
           // Time indicator
           Container(
-            width: 40,
-            height: 40,
+            width: 30,
+            height: 30,
             decoration: BoxDecoration(
               color: Colors.green.withOpacity(0.2),
               borderRadius: BorderRadius.circular(20),
@@ -282,9 +298,9 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
               ),
             ),
           ),
-          
+
           SizedBox(width: 16),
-          
+
           // Event details
           Expanded(
             child: Column(
@@ -299,9 +315,9 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
                     fontSize: 16,
                   ),
                 ),
-                
+
                 SizedBox(height: 4),
-                
+
                 // Team name
                 Text(
                   event.team,
@@ -310,46 +326,46 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
                     fontSize: 14,
                   ),
                 ),
-                
+
                 // Assist (if available)
-                if (event.assist != null) ...[
-                  SizedBox(height: 2),
-                  Text(
-                    'Assist: ${event.assist}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[400],
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ],
-                
+                // if (event.assist != null) ...[
+                //   SizedBox(height: 2),
+                //   Text(
+                //     '${AppLocalizations.of(context)!.assist} ${event.assist}',
+                //     style: TextStyle(
+                //       fontSize: 12,
+                //       color: Colors.grey[400],
+                //       fontStyle: FontStyle.italic,
+                //     ),
+                //   ),
+                // ],
+
                 // Detail (if available)
-                if (event.detail != null) ...[
-                  SizedBox(height: 2),
-                  Text(
-                    event.detail!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[400],
-                    ),
-                  ),
-                ],
+                // if (event.detail != null) ...[
+                //   SizedBox(height: 2),
+                //   Text(
+                //     event.detail!,
+                //     style: TextStyle(
+                //       fontSize: 12,
+                //       color: Colors.grey[400],
+                //     ),
+                //   ),
+                // ],
               ],
             ),
           ),
-          
+
           // Goal icon
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
-            ),
+            // decoration: BoxDecoration(
+            //   color: Colors.orange.withOpacity(0.2),
+            //   borderRadius: BorderRadius.circular(8),
+            // ),
             child: Icon(
-              Icons.sports_soccer,
-              color: Colors.orange,
-              size: 20,
+              FontAwesomeIcons.futbol,
+              color: Colors.blue,
+              size: 18,
             ),
           ),
         ],

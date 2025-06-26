@@ -177,5 +177,14 @@
     "deleteaccount": "מחק חשבון",
     "userdetails": "פרטי משתמש",
      "account": "חשבון",
-       "accountDeleted": "החשבון נמחק בהצלחה"
+       "accountDeleted": "החשבון נמחק בהצלחה",
+        "matchEvents": "אירועי המשחק",
+  "loadingEvents": "טוען אירועים...",
+  "failedToLoadEvents": "נכשל בטעינת האירועים",
+  "retry": "נסה שוב",
+  "noGoals": "אין שערים עדיין",
+  "eventsAppear": "האירועים יופיעו כאן כאשר יובקעו שערים",
+  "goals": "שערים",
+  "assist": "בישול:",
+  "noGuesses": "אין ניחושים"
 }

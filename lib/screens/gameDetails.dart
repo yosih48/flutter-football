@@ -488,7 +488,7 @@ class _GameDetailsState extends State<GameDetails> {
             Padding(
               padding: const EdgeInsets.only(top: 10),
               child: Text(
-                'אין ניחושים',
+                AppLocalizations.of(context)!.noGuesses,
                 style: TextStyle(color: Colors.white),
               ),
             ),
