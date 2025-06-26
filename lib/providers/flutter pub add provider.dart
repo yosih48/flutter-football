@@ -11,7 +11,7 @@ class UserProvider extends ChangeNotifier {
   User? _currentUser;
    String _selectedGroupName = 'public';
    String? _currentUserId;
-   int _selectedLeageId = 2;
+   int _selectedLeageId = -1;
 
    String get selectedGroupName => _selectedGroupName;
    String? get currentUserId => _currentUserId;

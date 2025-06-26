@@ -64,7 +64,7 @@ class _GamesScreenContent extends StatefulWidget {
 class _GamesScreenContentState extends State<_GamesScreenContent> {
   List<Game> _games = [];
   List<Guess> _guesses = [];
-  int league = 2;
+  int league = -1;
   bool _hasInitialized = false;
   bool _showOnlyThisLeagueTodayGames = false;
   bool _showOnlyLiveGames = false;
@@ -247,9 +247,10 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     super.initState();
     clientId = widget.authProvider.currentUser?.id ?? 'Not logged in';
     email = widget.authProvider.currentUser?.email ?? 'Not logged in';
-    league = widget.userProvider.selectedLeageId ?? 2;
+    league = widget.userProvider.selectedLeageId ?? -1;
     selectedDate = DateTime.now();
     print('selectedDate: ${selectedDate}');
+    
     print('clientId in games: ${clientId}');
 
     print(email);
