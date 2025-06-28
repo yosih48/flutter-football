@@ -182,7 +182,9 @@
   "eventsAppear": "Events will appear here when goals are scored",
   "goals": "Goals",
   "assist": "Assist:",
-  "noGuesses": "No guesses"
+  "noGuesses": "No guesses",
+  "finishAfterExtraTime": "Finish After Extra Time"
+
 
     
 

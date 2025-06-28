@@ -74,7 +74,9 @@ class GameWidget extends StatelessWidget {
                    (game.status.long == "First Half" ||
                             game.status.long == "Second Half")
                         ? "${game.status.elapsed}'"
-                        : game.status.long,
+                        : 
+                        game.status.short == 'AET' ||  game.status.short == 'PEN' ?
+                        AppLocalizations.of(context)!.finishAfterExtraTime :game.status.long ,
                     style: TextStyle(
                 color: getStatusColor(game.status.long),
                       fontSize: 14.0,

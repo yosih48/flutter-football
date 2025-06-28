@@ -49,6 +49,7 @@ class _GameDetailsState extends State<GameDetails> {
   bool isLoading = true;
   late int _currentIndex;
   late Game _currentGame;
+  late int currentGameId;
 
  
     Color getStatusColor(String status) {
@@ -76,11 +77,15 @@ class _GameDetailsState extends State<GameDetails> {
     super.initState();
   
     _currentIndex = widget.initialIndex;
-    print('widget.initialIndex:${widget.initialIndex}');
+ 
     _currentGame = widget.games[_currentIndex];
     league = _currentGame.league.id;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     currentUserId = widget.userId;
+    currentGameId = widget.gameOriginalId;
+print(widget.game.fixtureId);
+print(widget.games);
+
     _fetchUserGroups();
     _fetchGuesses(selectedGroupName);
   }
@@ -91,7 +96,9 @@ class _GameDetailsState extends State<GameDetails> {
         _currentIndex = newIndex;
         _currentGame = widget.games[newIndex];
         isLoading = true;
+      currentGameId = widget.games[newIndex].fixtureId;
       });
+     
       _fetchGuesses(selectedGroupName);
     }
   }
@@ -121,6 +128,7 @@ class _GameDetailsState extends State<GameDetails> {
   }
 
   Widget _buildEventsSection() {
+   
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -128,7 +136,7 @@ class _GameDetailsState extends State<GameDetails> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: FixtureEventsWidget(
-        fixtureId: widget.gameOriginalId,
+        fixtureId: currentGameId,
       
       ),
     );

@@ -523,7 +523,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   }
 
   Future<void> _fetchGuesses(clientId) async {
-    print('clientId ${clientId}');
+    print('clientId:${clientId}');
     try {
       final guesses = await GuessesMethods().fetchThisUserGuesses(clientId);
 
