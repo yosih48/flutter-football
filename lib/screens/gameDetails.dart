@@ -51,8 +51,7 @@ class _GameDetailsState extends State<GameDetails> {
   late Game _currentGame;
   late int currentGameId;
 
- 
-    Color getStatusColor(String status) {
+  Color getStatusColor(String status) {
     switch (status) {
       case "First Half":
       case "Second Half":
@@ -75,16 +74,16 @@ class _GameDetailsState extends State<GameDetails> {
   @override
   void initState() {
     super.initState();
-  
+
     _currentIndex = widget.initialIndex;
- 
+
     _currentGame = widget.games[_currentIndex];
     league = _currentGame.league.id;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     currentUserId = widget.userId;
     currentGameId = widget.gameOriginalId;
-print(widget.game.fixtureId);
-print(widget.games);
+    print(widget.game.fixtureId);
+    print(widget.games);
 
     _fetchUserGroups();
     _fetchGuesses(selectedGroupName);
@@ -96,9 +95,9 @@ print(widget.games);
         _currentIndex = newIndex;
         _currentGame = widget.games[newIndex];
         isLoading = true;
-      currentGameId = widget.games[newIndex].fixtureId;
+        currentGameId = widget.games[newIndex].fixtureId;
       });
-     
+
       _fetchGuesses(selectedGroupName);
     }
   }
@@ -119,7 +118,7 @@ print(widget.games);
               child: Column(
                 children: [
                   _buildGameCard(),
-               _buildEventsSection(),
+                  _buildEventsSection(),
                   _buildGuessesTable(),
                 ],
               ),
@@ -128,7 +127,6 @@ print(widget.games);
   }
 
   Widget _buildEventsSection() {
-   
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -137,29 +135,25 @@ print(widget.games);
       ),
       child: FixtureEventsWidget(
         fixtureId: currentGameId,
-      
       ),
     );
   }
 
-
-
-
   Widget _buildGameCard() {
     return GestureDetector(
       onHorizontalDragEnd: (DragEndDetails details) {
-        if (details.primaryVelocity! < 0 ) {
-
+        if (details.primaryVelocity! < 0) {
           // Swipe right - go to previous game
-          if (_currentIndex > 0 && widget.games[_currentIndex - 1].status.long != "Not Started") {
+          if (_currentIndex > 0 &&
+              widget.games[_currentIndex - 1].status.long != "Not Started") {
             print(widget.games[_currentIndex - 1].home.name);
-        
+
             _navigateToGame(_currentIndex - 1);
           }
         } else if (details.primaryVelocity! > 0) {
-    
           // Swipe left - go to next game
-          if (_currentIndex < widget.games.length - 1 && widget.games[_currentIndex + 1].status.long != "Not Started") {
+          if (_currentIndex < widget.games.length - 1 &&
+              widget.games[_currentIndex + 1].status.long != "Not Started") {
             _navigateToGame(_currentIndex + 1);
           }
         }
@@ -185,10 +179,8 @@ print(widget.games);
           ),
           // Right arrow
 
-          if (_currentIndex > 0 
-          && widget.games[_currentIndex - 1].status.long != "Not Started"
-          )
-          
+          if (_currentIndex > 0 &&
+              widget.games[_currentIndex - 1].status.long != "Not Started")
             Positioned(
               right: 10,
               top: 10,
@@ -211,9 +203,8 @@ print(widget.games);
             ),
           // Left arrow
 
-          if (_currentIndex < widget.games.length - 1 
-          && widget.games[_currentIndex + 1].status.long != "Not Started"
-          )
+          if (_currentIndex < widget.games.length - 1 &&
+              widget.games[_currentIndex + 1].status.long != "Not Started")
             Positioned(
               left: 10,
               top: 10,
@@ -245,12 +236,12 @@ print(widget.games);
       children: [
         Text(
           // _currentGame.status.elapsed.toString(),
-                   (_currentGame.status.long == "First Half" ||
+          (_currentGame.status.long == "First Half" ||
                   _currentGame.status.long == "Second Half")
               ? "${_currentGame.status.elapsed}'"
               : _currentGame.status.long,
           style: TextStyle(
-           color: getStatusColor(_currentGame.status.long),
+            color: getStatusColor(_currentGame.status.long),
             fontSize: 14.0,
           ),
         ),
@@ -542,9 +533,9 @@ print(widget.games);
   Future<void> _fetchGuesses(groupName) async {
     try {
       final guesses =
-          await GuessesMethods().fetchAllUsersGuesses(_currentGame.fixtureId);
+          await GuessesMethods().fetchAllUsersGuesses(currentGameId);
       final callService = CallService();
-final guessesWithNames = <GuessWithNames>[];
+      final guessesWithNames = <GuessWithNames>[];
 
       for (var guess in guesses) {
         try {
@@ -556,7 +547,7 @@ final guessesWithNames = <GuessWithNames>[];
       }
 
       final filteredGuesses = guessesWithNames.where((guessWithName) {
-       return guessWithName.userGroups != null &&
+        return guessWithName.userGroups != null &&
             guessWithName.userGroups.values.contains(groupName);
       }).toList();
 
@@ -565,8 +556,14 @@ final guessesWithNames = <GuessWithNames>[];
         isLoading = false;
       });
     } catch (e, stackTrace) {
+      print('Failed to fetchhhhhhhhhhhhhhhhhh');
       print('Failed to fetch guesses: $e');
       print('Stack trace: $stackTrace');
+      setState(() {
+        isLoading = false;
+      });
+
+
     }
   }
 }

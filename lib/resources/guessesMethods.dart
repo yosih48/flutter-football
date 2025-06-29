@@ -34,8 +34,8 @@ class GuessesMethods {
     }
   }
 
-  Future<List<Guess>> fetchAllUsersGuesses(int gameId) async {
-    print('clientId ${gameId}');
+ Future<List<Guess>> fetchAllUsersGuesses(int gameId) async {
+    print('clientId: ${gameId}');
     final url = Uri.parse('$_baseUrl/guesses/gameOriginal/$gameId');
 
     try {
@@ -43,9 +43,23 @@ class GuessesMethods {
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        // final guessData = responseData
+      
 
-        if (responseData != null && responseData is List) {
+        // Handle null or empty response
+        if (responseData == null) {
+          print('No guesses found - returning empty list');
+          return <Guess>[];
+        }
+
+        if (responseData is List) {
+      
+
+          // Handle empty list
+          if (responseData.isEmpty) {
+            print('Empty guesses list - returning empty list');
+            return <Guess>[];
+          }
+
           final guess = (responseData as List)
               .map((item) => Guess.fromJson(item))
               .toList();
@@ -53,12 +67,15 @@ class GuessesMethods {
           print('fetchAllUsersGuesses: ${guess.first.userId}');
           return guess;
         } else {
-          throw Exception('Guess data is null or not a list');
+          print('Guess data is not a list - returning empty list');
+          return <Guess>[];
         }
       } else {
+        print('Failed to load guesses');
         throw Exception('Failed to load guesses');
       }
     } catch (e) {
+      print('Error fetching guesses');
       throw Exception('Error fetching guesses: $e');
     }
   }
