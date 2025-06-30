@@ -556,7 +556,7 @@ class _GameDetailsState extends State<GameDetails> {
         isLoading = false;
       });
     } catch (e, stackTrace) {
-      print('Failed to fetchhhhhhhhhhhhhhhhhh');
+   
       print('Failed to fetch guesses: $e');
       print('Stack trace: $stackTrace');
       setState(() {

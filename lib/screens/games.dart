@@ -370,6 +370,30 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         return '';
     }
   }
+  String getLocalizedLeaguerRound(String round, BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
+
+    switch (round) {
+      case '8th Finals':
+        return 'שמינית גמר';
+      case 383:
+        return localizations.ligathaal;
+      case 140:
+        return localizations.laliga;
+      case 3:
+        return localizations.europaleague;
+      case 39:
+        return localizations.premierleague;
+      case 78:
+        return localizations.bundesleague;
+      case 848:
+        return localizations.conferenceleague;
+      case 15:
+        return localizations.clubworldcup;
+      default:
+        return '';
+    }
+  }
 
   void _toggleLeagueFilter(int leagueId) async {
   
@@ -1176,7 +1200,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                   child: Row(
                     children: [
                       Text(
-                        leagueName,
+                        '$leagueName - ${getLocalizedLeaguerRound(game.league.round, context)}',
+                   
                         style: TextStyle(
                           color: _selectedLeagueFilter == currentLeagueId
                               ? Colors.blue
