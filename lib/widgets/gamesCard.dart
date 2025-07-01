@@ -49,6 +49,33 @@ class GameWidget extends StatelessWidget {
         return Color(0xFF9BA4B5).withOpacity(0.9);
     }
   }
+  Map<String, dynamic> getStatusInfo(String status, context) {
+    switch (status) {
+      case "First Half":
+        return {"color": Colors.red, "text": "First Half"};
+      case "Second Half":
+        return {"color": Colors.red, "text": "Second Half"};
+      case "Extra Time":
+        return {"color": Colors.red, "text": "Extra Time"};
+      case "Halftime":
+        return {"color": Colors.orange, "text": "Halftime"};
+      case "Not Started":
+        return {"color": Colors.grey, "text": "Not Started"};
+      case "FT":
+        return {"color": Colors.green, "text": "Finished"};
+      case "Postponed":
+        return {"color": Colors.yellow, "text": "Postponed"};
+      case "AET":
+        return {"color": Colors.yellow, "text": "after Extra Time"};
+      case "BT":
+        return {"color": Colors.green, "text": AppLocalizations.of(context)!.finishAfterExtraTime
+        };
+      case "TBD":
+        return {"color": Colors.yellow, "text": "To Be Decided"};
+      default:
+        return {"color": Color(0xFF9BA4B5).withOpacity(0.9), "text": "Unknown"};
+    }
+  }
 
 
   @override
@@ -56,7 +83,7 @@ class GameWidget extends StatelessWidget {
     print(homeController);
     bool isValid = homeController!.text.isNotEmpty;
     print(isValid);
-
+final info = getStatusInfo(game.status.short, context);
     return Card(
       color: cards, // Dark background color for the card
       elevation: 0,
@@ -75,10 +102,11 @@ class GameWidget extends StatelessWidget {
                             game.status.long == "Second Half")
                         ? "${game.status.elapsed}'"
                         : 
-                        game.status.short == 'AET' ||  game.status.short == 'PEN' ?
-                        AppLocalizations.of(context)!.finishAfterExtraTime :game.status.long ,
+                        game.status.short == 'AET' ||  game.status.short == 'PEN'
+                   ?
+                        AppLocalizations.of(context)!.finishAfterExtraTime :  game.status.long ,
                     style: TextStyle(
-                color: getStatusColor(game.status.long),
+                color:  info['color'],
                       fontSize: 14.0,
                     ),
                   ),

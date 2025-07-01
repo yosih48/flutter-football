@@ -187,5 +187,6 @@
   "goals": "שערים",
   "assist": "בישול:",
   "noGuesses": "אין ניחושים",
-  "finishAfterExtraTime": "סיום לאחר הארכה"
+  "finishAfterExtraTime": "סיום לאחר הארכה",
+   "extraTime": "הארכה"
 }

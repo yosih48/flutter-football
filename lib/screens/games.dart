@@ -1039,7 +1039,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           // Apply live games filter if needed
           if (_showOnlyLiveGames) {
             filteredGames = filteredGames.where((game) {
-              return ['1H', '2H', 'HT', 'ET', 'BT', 'P', 'INT']
+              // return ['1H', '2H', 'HT', 'ET', 'BT', 'P', 'INT']
+              return ['1H', '2H', 'HT']
                   .contains(game.status.short);
             }).toList();
           }
