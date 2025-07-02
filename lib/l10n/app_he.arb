@@ -188,5 +188,12 @@
   "assist": "בישול:",
   "noGuesses": "אין ניחושים",
   "finishAfterExtraTime": "סיום לאחר הארכה",
-   "extraTime": "הארכה"
+   "extraTime": "הארכה",
+     "firstHalf": "מחצית ראשונה",
+  "secondHalf": "מחצית שנייה",
+ "halftime": "מחצית",
+  "notStarted": "טרם החל",
+  "finished": "הסתיים",
+  "postponed": "נדחה"
+  
 }

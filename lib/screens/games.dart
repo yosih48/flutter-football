@@ -1201,7 +1201,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                   child: Row(
                     children: [
                       Text(
-                        '$leagueName - ${getLocalizedLeaguerRound(game.league.round, context)}',
+                        '$leagueName',
                    
                         style: TextStyle(
                           color: _selectedLeagueFilter == currentLeagueId

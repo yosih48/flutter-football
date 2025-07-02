@@ -51,22 +51,30 @@ class GameWidget extends StatelessWidget {
   }
   Map<String, dynamic> getStatusInfo(String status, context) {
     switch (status) {
-      case "First Half":
-        return {"color": Colors.red, "text": "First Half"};
-      case "Second Half":
-        return {"color": Colors.red, "text": "Second Half"};
-      case "Extra Time":
-        return {"color": Colors.red, "text": "Extra Time"};
-      case "Halftime":
-        return {"color": Colors.orange, "text": "Halftime"};
-      case "Not Started":
-        return {"color": Colors.grey, "text": "Not Started"};
+      case "H1":
+        return {"color": Colors.red, "text": AppLocalizations.of(context)!.firstHalf
+        };
+      case "H2":
+        return {"color": Colors.red, "text":  AppLocalizations.of(context)!.secondHalf
+        };
+      case "ET":
+        return {"color": Colors.red, "text":  AppLocalizations.of(context)!.extraTime
+        };
+      case "HT":
+        return {"color": Colors.orange, "text":  AppLocalizations.of(context)!.halftime
+        };
+      case "NS":
+        return {"color": Colors.grey, "text":  AppLocalizations.of(context)!.notStarted
+        };
       case "FT":
-        return {"color": Colors.green, "text": "Finished"};
+        return {"color": Colors.green, "text":  AppLocalizations.of(context)!.finished
+        };
       case "Postponed":
-        return {"color": Colors.yellow, "text": "Postponed"};
+        return {"color": Colors.yellow, "text":  AppLocalizations.of(context)!.postponed
+        };
       case "AET":
-        return {"color": Colors.yellow, "text": "after Extra Time"};
+        return {"color": Colors.green, "text": AppLocalizations.of(context)!.finishAfterExtraTime
+        };
       case "BT":
         return {"color": Colors.green, "text": AppLocalizations.of(context)!.finishAfterExtraTime
         };
@@ -102,9 +110,7 @@ final info = getStatusInfo(game.status.short, context);
                             game.status.long == "Second Half")
                         ? "${game.status.elapsed}'"
                         : 
-                        game.status.short == 'AET' ||  game.status.short == 'PEN'
-                   ?
-                        AppLocalizations.of(context)!.finishAfterExtraTime :  game.status.long ,
+              info['text'] ,
                     style: TextStyle(
                 color:  info['color'],
                       fontSize: 14.0,

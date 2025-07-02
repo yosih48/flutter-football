@@ -63,22 +63,22 @@ class AccountScreen extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // 🔁 Sign Out button as ElevatedButton
                         Container(
+                          width: double.infinity,
                           margin: EdgeInsets.only(left: 16),
-                          child: TextButton.icon(
-                            style: TextButton.styleFrom(
-                              // backgroundColor: Colors.red.withOpacity(0.1),
-                              // shape: RoundedRectangleBorder(
-                              //   borderRadius: BorderRadius.circular(12),
-                              // ),
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
                               padding: EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                            icon: Icon(Icons.exit_to_app, color: Colors.red),
-                            label: Text(
-                              AppLocalizations.of(context)!.signout,
-                              style: TextStyle(color: Colors.red),
-                            ),
+                            icon: Icon(Icons.exit_to_app),
+                            label: Text(AppLocalizations.of(context)!.signout),
                             onPressed: () async {
                               final authProvider = Provider.of<AuthProvider>(
                                   context,
@@ -132,56 +132,58 @@ class AccountScreen extends StatelessWidget {
                             },
                           ),
                         ),
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            foregroundColor: Colors.white,
+
+                        // 🔁 Delete button as TextButton
+                        TextButton.icon(
+                          style: TextButton.styleFrom(
                             padding: EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                                horizontal: 16, vertical: 8),
                           ),
-                          icon: Icon(Icons.delete),
+                          icon: Icon(Icons.delete, color: Colors.red),
                           label: Text(
-                              AppLocalizations.of(context)?.deleteaccount ??
-                                  'Delete Account'),
+                            AppLocalizations.of(context)?.deleteaccount ??
+                                'Delete Account',
+                            style: TextStyle(color: Colors.red),
+                          ),
                           onPressed: () async {
                             final confirm = await showDialog<bool>(
                               context: context,
                               builder: (context) => AlertDialog(
                                 backgroundColor: cards,
                                 title: Text(
-                                    AppLocalizations.of(context)
-                                            ?.deleteaccount ??
-                                        'Delete Account',
-                                    style: TextStyle(color: Colors.white)),
+                                  AppLocalizations.of(context)?.deleteaccount ??
+                                      'Delete Account',
+                                  style: TextStyle(color: Colors.white),
+                                ),
                                 content: Text(
-                                    AppLocalizations.of(context)
-                                            ?.deleteaccountconfirm ??
-                                        'Are you sure you want to delete your account? This cannot be undone.',
-                                    style: TextStyle(color: Colors.white)),
+                                  AppLocalizations.of(context)
+                                          ?.deleteaccountconfirm ??
+                                      'Are you sure you want to delete your account? This cannot be undone.',
+                                  style: TextStyle(color: Colors.white),
+                                ),
                                 actions: [
                                   TextButton(
                                     child: Text(
-                                        AppLocalizations.of(context)?.cancel ??
-                                            'Cancel',
-                                        style: TextStyle(color: Colors.blue)),
+                                      AppLocalizations.of(context)?.cancel ??
+                                          'Cancel',
+                                      style: TextStyle(color: Colors.blue),
+                                    ),
                                     onPressed: () =>
                                         Navigator.of(context).pop(false),
                                   ),
                                   TextButton(
                                     child: Text(
-                                        AppLocalizations.of(context)?.delete ??
-                                            'Delete',
-                                        style: TextStyle(color: Colors.red)),
+                                      AppLocalizations.of(context)?.delete ??
+                                          'Delete',
+                                      style: TextStyle(color: Colors.red),
+                                    ),
                                     onPressed: () =>
                                         Navigator.of(context).pop(true),
                                   ),
                                 ],
                               ),
                             );
-                        if (confirm == true) {
+                            if (confirm == true) {
                               try {
                                 // Show loading indicator
                                 showDialog(
@@ -199,33 +201,24 @@ class AccountScreen extends StatelessWidget {
                                     await authProvider.deleteAccount(user.id);
 
                                 if (deleteSuccess) {
-                                  // Close loading dialog
-                                  Navigator.of(context).pop();
-
-                                  // Sign out and clear user data
+                                  Navigator.of(context)
+                                      .pop(); // Close loading dialog
                                   await authProvider.signOut(user.id);
-
-                                  // Navigate back to login/home screen
                                   Navigator.of(context)
                                       .popUntil((route) => route.isFirst);
 
-                                  // Show success message
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content:
-                                          Text(
+                                      content: Text(
                                         AppLocalizations.of(context)!
                                             .accountDeleted,
                                       ),
-                                     
                                     ),
                                   );
                                 }
                               } catch (e) {
-                                // Close loading dialog if open
-                                Navigator.of(context).pop();
-
-                                // Show error message
+                                Navigator.of(context)
+                                    .pop(); // Close loading dialog
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content:

@@ -183,8 +183,15 @@
   "goals": "Goals",
   "assist": "Assist:",
   "noGuesses": "No guesses",
-  "finishAfterExtraTime": "Finish After Extra Time",
-  "extraTime": "Extra Time"
+  "finishAfterExtraTime": "Finished After ET",
+  "extraTime": "Extra Time",
+   "firstHalf": "First Half",
+  "secondHalf": "Second Half",
+ "halftime": "Halftime",
+  "notStarted": "Not Started",
+  "finished": "Finished",
+  "postponed": "Postponed"
+ 
 
 
     
