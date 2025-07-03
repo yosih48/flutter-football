@@ -1080,6 +1080,37 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                 SizedBox(
                   height: 8,
                 ),
+
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TeamSelectionButton(
+                          // games: _games,
+                          clientId: clientId,
+                          email: email,
+                          league: league,
+                          onTeamSelected: (selectedTeam) {
+                            print('Selected team: $selectedTeam');
+                          },
+                        ),
+                      ),
+                      Expanded(
+                        child: PlayerSelectionButton(
+                          // games: _games,
+                          clientId: clientId,
+                          email: email,
+                          league: league,
+                          onPlayerSelected: (selectedPlayer) {
+                            print('Selected player: $selectedPlayer');
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
                 Expanded(
                   child:
                       _buildGamesList(filteredGames, sortedDates, groupedGames),
