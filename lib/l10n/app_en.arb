@@ -190,7 +190,31 @@
  "halftime": "Halftime",
   "notStarted": "Not Started",
   "finished": "Finished",
-  "postponed": "Postponed"
+  "postponed": "Postponed",
+    "welcomeTitle": "Welcome to the SCORE LEAGUE app!",
+  "welcomeContent": "An innovative sports prediction app that lets you guess game results, compete with friends, and earn points. Start your journey toward an exciting competition!",
+  
+  "guessTitle": "Guess Results",
+  "guessContent": "Pick an outcome for each match from your chosen tournaments. You can guess the general direction (win/draw) or the exact score.",
+
+  "scoringTitle": "Scoring System",
+  "scoringContent": "Correct direction = Points based on betting odds.\nExact score = Bonus of 4 points.",
+
+  "groupsTitle": "Groups & Competitions",
+  "groupsContent": "Create or join a group via invite link. Compete with friends by collecting points.",
+
+  "winnerTitle": "Select Winning Team",
+  "winnerContent": "Choose one team to win the tournament. If you’re right, you’ll earn a 20-point bonus.",
+
+  "topScorerTitle": "Top Scorer",
+  "topScorerContent": "Pick one player for the tournament. You’ll earn 2 bonus points for every goal they score.",
+
+  "guessDeadlineTitle": "Guess Deadline",
+  "guessDeadlineContent": "You can submit a guess up to the game’s start. After that, it’s locked.",
+
+  "importantNoteTitle": "Important Note",
+  "importantNoteContent": "Guesses cannot be changed after the game starts. Make sure to review them beforehand."
+
  
 
 

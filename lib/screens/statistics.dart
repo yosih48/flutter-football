@@ -120,8 +120,9 @@ class _StatisticsState extends State<Statistics> {
 
 Widget _buildStatCard(String title, String value, IconData icon, Color color) {
   return Container(
+   
     decoration: BoxDecoration(
-      color: Colors.white.withOpacity(0.1),
+      color: cards,
       borderRadius: BorderRadius.circular(15),
       boxShadow: [
         BoxShadow(

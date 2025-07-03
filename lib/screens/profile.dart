@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/groupsMethods.dart';
+
+
 import 'package:football/screens/login_screen.dart';
 import 'package:football/screens/table.dart';
 import 'package:football/theme/colors.dart';
@@ -16,6 +18,9 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:football/screens/account_screen.dart';
+
+import 'instructionsb.dart';
+
 
 // AppLocalizations.of(context)!.assigncall
 class ProfileScreen extends StatelessWidget {
@@ -398,8 +403,13 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: Icon(Icons.help_outline, color: Colors.blue),
+            tooltip: 'How to Play',
+            onPressed: () => showInstructionsBottomSheet(context),
+          ),
           Container(
-            margin: EdgeInsets.only(left: 16),
+            margin: EdgeInsets.only(left: 8),
             child: TextButton.icon(
               style: TextButton.styleFrom(
                 backgroundColor: Colors.blue.withOpacity(0.1),
@@ -410,7 +420,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
               ),
               icon: Icon(Icons.account_circle, color: Colors.blue),
               label: Text(
-               AppLocalizations.of(context)?.account ?? 'Account',
+                AppLocalizations.of(context)?.account ?? 'Account',
                 style: TextStyle(color: Colors.blue),
               ),
               onPressed: () {
