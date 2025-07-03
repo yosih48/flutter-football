@@ -134,13 +134,13 @@ class AccountScreen extends StatelessWidget {
                         ),
 
                         // 🔁 Delete button as TextButton
-                        TextButton.icon(
+                        TextButton(
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 8),
                           ),
-                          icon: Icon(Icons.delete, color: Colors.red),
-                          label: Text(
+                          // icon: Icon(Icons.delete, color: Colors.red),
+                         child: Text(
                             AppLocalizations.of(context)?.deleteaccount ??
                                 'Delete Account',
                             style: TextStyle(color: Colors.red),
