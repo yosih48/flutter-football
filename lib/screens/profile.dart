@@ -18,6 +18,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:football/screens/account_screen.dart';
+import 'package:football/providers/theme_provider.dart';
 
 import 'instructionsb.dart';
 
@@ -404,7 +405,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(Icons.help_outline, color: Colors.blue),
+            icon: Icon(Icons.help_center_outlined, color: Colors.blue),
             tooltip: 'How to Play',
             onPressed: () => showInstructionsBottomSheet(context),
           ),
@@ -456,22 +457,40 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      AppLocalizations.of(context)!.mygroups,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)!.mygroups,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                 Consumer<ThemeProvider>(
+  builder: (context, themeProvider, _) {
+    return Row(
+      children: [
+        Icon(
+          themeProvider.isDarkMode
+              ? Icons.dark_mode
+              : Icons.light_mode,
+          color: Colors.blue,
+        ),
+        Switch(
+          value: themeProvider.isDarkMode,
+          onChanged: (value) {
+            themeProvider.toggleTheme(); // Remove the parameter
+          },
+          activeColor: Colors.blue,
+        ),
+      ],
+    );
+  },
+)
+                      ],
                     ),
-                    // SizedBox(height: 8),
-                    // Text(
-                    //   AppLocalizations.of(context)!.managegroups,
-                    //   style: TextStyle(
-                    //     color: Colors.grey[400],
-                    //     fontSize: 14,
-                    //   ),
-                    // ),
                   ],
                 ),
               ),

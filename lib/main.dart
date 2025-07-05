@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:football/models/games.dart';
 import 'package:football/models/users.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
+import 'package:football/providers/theme_provider.dart';
 import 'package:football/resources/appUpdates.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/firebase_messaging_service.dart';
@@ -31,6 +32,7 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 
 
+
 void main() async {
   // Ensure that plugin services are initialized
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,6 +53,7 @@ void main() async {
           value: authProvider,
         ),
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: GameApp(),
     ),
@@ -61,37 +64,11 @@ class GameApp extends StatelessWidget {
   const GameApp({super.key});
   @override
   Widget build(BuildContext context) {
+        return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
     return MaterialApp(
       navigatorKey: navigatorKey,
-      theme: ThemeData(
-           textSelectionTheme: TextSelectionThemeData(
-          cursorColor: Colors.blue, // Cursor (blinking line)
-          selectionColor: Colors.blue.shade100, // Text selection background
-          selectionHandleColor: Colors.blue, // ← The "pin"/handle color
-        ),
-            snackBarTheme: SnackBarThemeData(
-          backgroundColor: cards, // Set background color
-          contentTextStyle:
-              TextStyle(color: Colors.white), // Optional: text color
-          actionTextColor: Colors.blue, // Optional: action button color
-        ),
-        primarySwatch: Colors.blue, // Sets the primary color to blue
-        brightness: Brightness.dark, // Set dark theme
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.transparent,
-          foregroundColor: Colors.white, // This sets the back button and text color to white
-          iconTheme: IconThemeData(color: Colors.white), // Ensures all icons are white
-          elevation: 0,
-        ),
-        textTheme: TextTheme(
-            // bodyText1: TextStyle(color: Colors.blue), // Default text color
-            // bodyText2: TextStyle(color: Colors.blue), // Another text style
-
-            ),
-        progressIndicatorTheme: ProgressIndicatorThemeData(
-          color: Colors.blue, // Default color for CircularProgressIndicator
-        ),
-      ),
+     theme: themeProvider.isDarkMode ? _buildDarkTheme() : _buildLightTheme(),
       debugShowCheckedModeBanner: false,
       title: 'Localizations Sample App',
       localizationsDelegates: [
@@ -124,5 +101,65 @@ class GameApp extends StatelessWidget {
         '/login': (context) => LoginScreen(),
       },
     );
+      });
   }
 }
+  ThemeData _buildDarkTheme() {
+    return ThemeData(
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: Colors.blue, // Cursor (blinking line)
+        selectionColor: Colors.blue.shade100, // Text selection background
+        selectionHandleColor: Colors.blue, // ← The "pin"/handle color
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: cards, // Set background color
+        contentTextStyle: TextStyle(color: Colors.white), // Optional: text color
+        actionTextColor: Colors.blue, // Optional: action button color
+      ),
+      primarySwatch: Colors.blue, // Sets the primary color to blue
+      brightness: Brightness.dark, // Set dark theme
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white, // This sets the back button and text color to white
+        iconTheme: IconThemeData(color: Colors.white), // Ensures all icons are white
+        elevation: 0,
+      ),
+      textTheme: TextTheme(
+        // bodyText1: TextStyle(color: Colors.blue), // Default text color
+        // bodyText2: TextStyle(color: Colors.blue), // Another text style
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: Colors.blue, // Default color for CircularProgressIndicator
+      ),
+    );
+  }
+
+  ThemeData _buildLightTheme() {
+    return ThemeData(
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: Colors.blue, // Cursor (blinking line)
+        selectionColor: Colors.blue.shade100, // Text selection background
+        selectionHandleColor: Colors.blue, // ← The "pin"/handle color
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: Colors.grey[800], // Set background color for light theme
+        contentTextStyle: TextStyle(color: Colors.white), // Optional: text color
+        actionTextColor: Colors.blue, // Optional: action button color
+      ),
+      primarySwatch: Colors.blue, // Sets the primary color to blue
+      brightness: Brightness.light, // Set light theme
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.black, // This sets the back button and text color to black for light theme
+        iconTheme: IconThemeData(color: Colors.black), // Ensures all icons are black for light theme
+        elevation: 0,
+      ),
+      textTheme: TextTheme(
+        // bodyText1: TextStyle(color: Colors.black), // Default text color for light theme
+        // bodyText2: TextStyle(color: Colors.black), // Another text style for light theme
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: Colors.blue, // Default color for CircularProgressIndicator
+      ),
+    );
+  }

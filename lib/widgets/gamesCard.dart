@@ -92,6 +92,8 @@ class GameWidget extends StatelessWidget {
     bool isValid = homeController!.text.isNotEmpty;
     print(isValid);
 final info = getStatusInfo(game.status.short, context);
+print(game.date.toLocal());
+print(DateTime.now());
     return Card(
       color: cards, // Dark background color for the card
       elevation: 0,
@@ -105,17 +107,28 @@ final info = getStatusInfo(game.status.short, context);
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                   (game.status.long == "First Half" ||
-                            game.status.long == "Second Half")
-                        ? "${game.status.elapsed}'"
-                        : 
-              info['text'] ,
-                    style: TextStyle(
-                color:  info['color'],
-                      fontSize: 14.0,
-                    ),
-                  ),
+          Text.rich(
+  TextSpan(
+    children: [
+      if (game.status.long == "First Half" || game.status.long == "Second Half")
+        TextSpan(
+          text: "${game.status.elapsed}'",
+          style: TextStyle(
+            color: Colors.red, // Your custom color for elapsed
+            fontSize: 14.0,
+          ),
+        )
+      else
+        TextSpan(
+          text: info['text'],
+          style: TextStyle(
+            color: info['color'],
+            fontSize: 14.0,
+          ),
+        ),
+    ],
+  ),
+),
                   if (game.status.long == 'Not Started')
                     Text(
                       DateFormat('HH:mm  ')
@@ -170,7 +183,8 @@ final info = getStatusInfo(game.status.short, context);
                     ),
                   ),
                   SizedBox(width: 18.0),
-                  if (game.status.long == "Not Started")
+                 if (DateTime.now().isBefore(game.date.toLocal())||game.status.long == "Not Started" )
+                 
                     Row(
                       children: [
                         SizedBox(
