@@ -12,6 +12,12 @@ class ThemeProvider with ChangeNotifier {
   // Your custom dark theme (from GameApp)
   static final ThemeData darkTheme = ThemeData(
       scaffoldBackgroundColor: background,
+      cardTheme: CardTheme(
+        color: cards, // Set the card background color
+        // shape: RoundedRectangleBorder(
+        //   borderRadius: BorderRadius.circular(10), // Optional: rounded corners
+        // ),
+      ),
     textSelectionTheme: TextSelectionThemeData(
       cursorColor: Colors.blue, // Cursor (blinking line)
       selectionColor: Colors.blue.shade100, // Text selection background
@@ -33,8 +39,8 @@ class ThemeProvider with ChangeNotifier {
       elevation: 0,
     ),
     textTheme: TextTheme(
-        // bodyText1: TextStyle(color: Colors.blue), // Default text color
-        // bodyText2: TextStyle(color: Colors.blue), // Another text style
+        bodyText1: TextStyle(color: Colors.blue), // Default text color
+        bodyText2: TextStyle(color: Colors.white), // Another text style
         ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
       color: Colors.blue, // Default color for CircularProgressIndicator
@@ -44,6 +50,12 @@ class ThemeProvider with ChangeNotifier {
   // Your custom light theme (from GameApp)
   static final ThemeData lightTheme = ThemeData(
        scaffoldBackgroundColor: white,
+             cardTheme: CardTheme(
+      color: Colors.lightBlue, // Set the card background color
+      // shape: RoundedRectangleBorder(
+      //   borderRadius: BorderRadius.circular(10), // Optional: rounded corners
+      // ),
+    ),
     textSelectionTheme: TextSelectionThemeData(
       cursorColor: Colors.blue, // Cursor (blinking line)
       selectionColor: Colors.blue.shade100, // Text selection background
@@ -57,16 +69,31 @@ class ThemeProvider with ChangeNotifier {
     primarySwatch: Colors.blue, // Sets the primary color to blue
     brightness: Brightness.light, // Set light theme
     appBarTheme: AppBarTheme(
-      backgroundColor: Colors.transparent,
+      backgroundColor: const Color.fromARGB(0, 10, 10, 10),
       foregroundColor: Colors
           .black, // This sets the back button and text color to black for light theme
-      iconTheme: IconThemeData(
-          color: Colors.black), // Ensures all icons are black for light theme
       elevation: 0,
     ),
+   iconTheme: IconThemeData(color: Colors.white),
+switchTheme: SwitchThemeData(
+      thumbColor: MaterialStateProperty.resolveWith<Color>((states) {
+        if (states.contains(MaterialState.selected)) {
+          return Colors.blue; // Active thumb = primary color
+        }
+        return Colors.white; // Inactive thumb = white (from iconTheme)
+      }),
+      trackColor: MaterialStateProperty.resolveWith<Color>((states) {
+        if (states.contains(MaterialState.selected)) {
+          return Colors.blue
+              .withOpacity(0.5); // Active track = primary with opacity
+        }
+        return Colors.grey
+            .withOpacity(0.5); // Inactive track = disabled color with opacity
+      }),
+    ), // Ensures all icons are black for light theme
     textTheme: TextTheme(
-        // bodyText1: TextStyle(color: Colors.black), // Default text color for light theme
-        // bodyText2: TextStyle(color: Colors.black), // Another text style for light theme
+        bodyText1: TextStyle(color: Colors.black), // Default text color for light theme
+        bodyText2: TextStyle(color: Colors.black), // Another text style for light theme
         ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
       color: Colors.blue, // Default color for CircularProgressIndicator
