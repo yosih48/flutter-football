@@ -45,7 +45,19 @@ class ThemeProvider with ChangeNotifier {
     progressIndicatorTheme: ProgressIndicatorThemeData(
       color: Colors.blue, // Default color for CircularProgressIndicator
     ),
-  );
+      elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.blue.withOpacity(0.1),
+      foregroundColor: Colors.blue,
+      elevation: 0,
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(6),
+      ),
+    ),
+  ),
+);
+
 
   // Your custom light theme (from GameApp)
   static final ThemeData lightTheme = ThemeData(

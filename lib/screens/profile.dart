@@ -406,36 +406,36 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: Icon(Icons.help_center_outlined, color: Colors.blue),
-            tooltip: 'How to Play',
-            onPressed: () => showInstructionsBottomSheet(context),
-          ),
-          Container(
-            margin: EdgeInsets.only(left: 8),
-            child: TextButton.icon(
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.blue.withOpacity(0.1),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              ),
-              icon: Icon(Icons.account_circle, color: Colors.blue),
-              label: Text(
-                AppLocalizations.of(context)?.account ?? 'Account',
-                style: TextStyle(color: Colors.blue),
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AccountScreen(),
-                  ),
-                );
-              },
-            ),
-          )
+          // IconButton(
+          //   icon: Icon(Icons.help_center_outlined, color: Colors.blue),
+          //   tooltip: 'How to Play',
+          //   onPressed: () => showInstructionsBottomSheet(context),
+          // ),
+          // Container(
+          //   margin: EdgeInsets.only(left: 8),
+          //   child: TextButton.icon(
+          //     style: TextButton.styleFrom(
+          //       backgroundColor: Colors.blue.withOpacity(0.1),
+          //       shape: RoundedRectangleBorder(
+          //         borderRadius: BorderRadius.circular(12),
+          //       ),
+          //       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          //     ),
+          //     icon: Icon(Icons.account_circle, color: Colors.blue),
+          //     label: Text(
+          //       AppLocalizations.of(context)?.account ?? 'Account',
+          //       style: TextStyle(color: Colors.blue),
+          //     ),
+          //     onPressed: () {
+          //       Navigator.push(
+          //         context,
+          //         MaterialPageRoute(
+          //           builder: (context) => AccountScreen(),
+          //         ),
+          //       );
+          //     },
+          //   ),
+          // )
         ],
       ),
       extendBodyBehindAppBar: true,
@@ -473,27 +473,27 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                           ),
                         ),
                        
-                 Consumer<ThemeProvider>(
-  builder: (context, themeProvider, _) {
-    return Row(
-      children: [
-        Icon(
-          themeProvider.isDarkMode
-              ? Icons.dark_mode
-              : Icons.light_mode,
-          color: Colors.blue,
-        ),
-        Switch(
-          value: themeProvider.isDarkMode,
-          onChanged: (value) {
-            themeProvider.toggleTheme(); // Remove the parameter
-          },
-          activeColor: Colors.blue,
-        ),
-      ],
-    );
-  },
-)
+//                  Consumer<ThemeProvider>(
+//   builder: (context, themeProvider, _) {
+//     return Row(
+//       children: [
+//         Icon(
+//           themeProvider.isDarkMode
+//               ? Icons.dark_mode
+//               : Icons.light_mode,
+//           color: Colors.blue,
+//         ),
+//         Switch(
+//           value: themeProvider.isDarkMode,
+//           onChanged: (value) {
+//             themeProvider.toggleTheme(); // Remove the parameter
+//           },
+//           activeColor: Colors.blue,
+//         ),
+//       ],
+//     );
+//   },
+// )
                       ],
                     ),
                   ],

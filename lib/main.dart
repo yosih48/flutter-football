@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:football/models/games.dart';
 import 'package:football/models/users.dart';
+import 'package:football/providers/LocaleProvider.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/providers/theme_provider.dart';
 import 'package:football/resources/appUpdates.dart';
@@ -54,6 +55,7 @@ void main() async {
         ),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => LocaleProvider()),
       ],
       child: GameApp(),
     ),
@@ -62,46 +64,49 @@ void main() async {
 
 class GameApp extends StatelessWidget {
   const GameApp({super.key});
-  @override
+ @override
   Widget build(BuildContext context) {
-        return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-    return MaterialApp(
-      navigatorKey: navigatorKey,
-        theme: themeProvider.themeData,
-      debugShowCheckedModeBanner: false,
-      title: 'Localizations Sample App',
-      localizationsDelegates: [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: [
-        Locale('en'), // English
-        Locale('he'), // hebrew refreshUser
-      ],
-      home: Consumer<AuthProvider>(
-        builder: (context, authProvider, _) {
-          if (authProvider.isInitializing) {
-            print('main isInitializing');
-            print(authProvider.isInitializing);
-            return Scaffold(body: Center(child: CircularProgressIndicator()));
-          }
-          return authProvider.currentUser != null
-              ? MobileScreenLayout()
-              : LoginScreen();
-        },
-      ),
-      routes: {
-        '/game_details': (context) => GamesScreen(),
-        '/games': (context) => GamesScreen(),
-        '/table': (context) => TableScreen(),
-        '/profile': (context) => ProfileScreen(),
-        '/login': (context) => LoginScreen(),
+    return Consumer2<ThemeProvider, LocaleProvider>(
+      builder: (context, themeProvider, localeProvider, child) {
+        return MaterialApp(
+          navigatorKey: navigatorKey,
+          theme: themeProvider.themeData,
+          locale: localeProvider.locale, // Add this line to use the locale from provider
+          debugShowCheckedModeBanner: false,
+          title: 'Localizations Sample App',
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: [
+            Locale('en'), // English
+            Locale('he'), // Hebrew
+          ],
+          home: Consumer<AuthProvider>(
+            builder: (context, authProvider, _) {
+              if (authProvider.isInitializing) {
+                print('main isInitializing');
+                print(authProvider.isInitializing);
+                return Scaffold(body: Center(child: CircularProgressIndicator()));
+              }
+              return authProvider.currentUser != null
+                  ? MobileScreenLayout()
+                  : LoginScreen();
+            },
+          ),
+          routes: {
+            '/game_details': (context) => GamesScreen(),
+            '/games': (context) => GamesScreen(),
+            '/table': (context) => TableScreen(),
+            '/profile': (context) => ProfileScreen(),
+            '/login': (context) => LoginScreen(),
+          },
+        );
       },
     );
-      });
   }
 }
+
  

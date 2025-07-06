@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:football/providers/LocaleProvider.dart';
 import 'package:football/screens/account_screen.dart';
 import 'package:football/screens/instructionsb.dart';
 import 'package:provider/provider.dart';
@@ -89,7 +90,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           builder: (context) => AccountScreen(),
                         ),
                       );
-
                     },
                   ),
                   // _settingsTile(
@@ -118,12 +118,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   //   text: 'מדיניות פרטיות',
                   //   onTap: () {},
                   // ),
-                  // _settingsTile(
-                  //   context,
-                  //   icon: Icons.logout,
-                  //   text: 'התנתקות',
-                  //   onTap: () {},
-                  // ),
+  _languageSettingsTile(context),
                 ],
               ),
             ),
@@ -153,4 +148,85 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
+}
+
+// Language settings tile with toggle buttons
+Widget _languageSettingsTile(BuildContext context) {
+  final theme = Theme.of(context);
+
+  return Consumer<LocaleProvider>(
+    builder: (context, localeProvider, child) {
+      return ListTile(
+        leading: Icon(Icons.language, color: theme.colorScheme.secondary),
+        title: Text(
+          'שפה',
+          style: theme.textTheme.bodyText1,
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // English button
+            ElevatedButton(
+              onPressed: () {
+                context.read<LocaleProvider>().setLocale(Locale('en'));
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: localeProvider.locale.languageCode == 'en'
+                    ? theme.colorScheme.primary
+                    : Colors.blue.withOpacity(0.1),
+                foregroundColor: localeProvider.locale.languageCode == 'en'
+                    ? Colors.white
+                    : Colors.blue,
+                elevation: 0,
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                minimumSize: Size(0, 0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              child: Text(
+                'ENG',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            SizedBox(width: 8),
+            // Hebrew button
+            ElevatedButton(
+              onPressed: () {
+                context.read<LocaleProvider>().setLocale(Locale('he'));
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: localeProvider.locale.languageCode == 'he'
+                    ? theme.colorScheme.primary
+                    : Colors.blue.withOpacity(0.1),
+                foregroundColor: localeProvider.locale.languageCode == 'he'
+                    ? Colors.white
+                    : Colors.blue,
+                elevation: 0,
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                minimumSize: Size(0, 0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              child: Text(
+                'עבר',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+        shape: Border(
+          bottom: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+        ),
+      );
+    },
+  );
 }
