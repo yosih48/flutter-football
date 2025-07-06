@@ -3,7 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void showInstructionsBottomSheet(BuildContext context) {
-final instructions = [
+  final instructions = [
     _Instruction(
       icon: Icons.waving_hand,
       title: AppLocalizations.of(context)!.welcomeTitle,
@@ -238,7 +238,7 @@ class _InstructionsBottomSheetState extends State<_InstructionsBottomSheet>
               Expanded(
                 child: Text(
                   instruction.title,
-                      textAlign: TextAlign.center, // ⬅️ Center the text
+                  textAlign: TextAlign.center, // ⬅️ Center the text
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -248,10 +248,10 @@ class _InstructionsBottomSheetState extends State<_InstructionsBottomSheet>
               ),
             ],
           ),
-          SizedBox(height:40),
+          SizedBox(height: 40),
           Text(
             instruction.content,
-              textAlign: TextAlign.center, // ⬅️ Center the text
+            textAlign: TextAlign.center, // ⬅️ Center the text
             style: TextStyle(
               fontSize: 16,
               height: 1.6,
@@ -297,6 +297,8 @@ class _InstructionsBottomSheetState extends State<_InstructionsBottomSheet>
   }
 
   Widget _buildIndicators(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final lightBlue = Color(0xFF28c2ff);
     return Container(
       padding: EdgeInsets.symmetric(vertical: 16),
       child: Row(
@@ -311,8 +313,8 @@ class _InstructionsBottomSheetState extends State<_InstructionsBottomSheet>
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(4),
               color: i == _currentPage
-                  ? Theme.of(context).primaryColor
-                  : Colors.grey[300],
+                  ? (isDark ? lightBlue : Theme.of(context).primaryColor)
+                  : (isDark ? lightBlue.withOpacity(0.3) : Colors.grey[300]),
             ),
           ),
         ),
@@ -368,16 +370,23 @@ class _InstructionsBottomSheetState extends State<_InstructionsBottomSheet>
     required VoidCallback? onPressed,
     required bool isEnabled,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final lightBlue =  Colors.blue;
+    ;
     return Container(
       decoration: BoxDecoration(
-        color: isEnabled ? Theme.of(context).primaryColor : Colors.grey[200],
+        color: isEnabled
+            ? (isDark ? lightBlue : Theme.of(context).primaryColor)
+            : Colors.grey[200],
         borderRadius: BorderRadius.circular(12),
       ),
       child: IconButton(
         onPressed: onPressed,
         icon: Icon(
           icon,
-          color: isEnabled ? Colors.white : Colors.grey[400],
+          color: isEnabled
+              ? (isDark ? Colors.white : Colors.white)
+              : Colors.grey[400],
           size: 20,
         ),
       ),
