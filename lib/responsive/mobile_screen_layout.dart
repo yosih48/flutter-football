@@ -147,16 +147,29 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
             ),
             BottomNavigationBarItem(
               icon: Icon(
-                Icons.settings_outlined,
+                Icons.star,
                 size: 26,
                 color: (_page == 3) ? Colors.blue : Colors.grey,
+              ),
+              activeIcon: Icon(
+                Icons.star,
+                size: 26,
+                color: Colors.blue,
+              ),
+              label: AppLocalizations.of(context)!.preferences,
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.settings_outlined,
+                size: 26,
+                color: (_page == 4) ? Colors.blue : Colors.grey,
               ),
               activeIcon: Icon(
                 Icons.settings,
                 size: 26,
                 color: Colors.blue,
               ),
-              label: AppLocalizations.of(context)!.preferences,
+              label: AppLocalizations.of(context)!.settings,
             ),
           ],
           onTap: navigationTapped,

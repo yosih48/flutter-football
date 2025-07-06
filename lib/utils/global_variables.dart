@@ -6,6 +6,7 @@ import 'package:football/screens/groups.dart';
 
 import 'package:football/screens/login_screen.dart';
 import 'package:football/screens/profile.dart';
+import 'package:football/screens/settings_screen.dart';
 import 'package:football/screens/signup_screen.dart';
 import 'package:football/screens/table.dart';
 
@@ -21,6 +22,8 @@ List<Widget> homeScreenItems = [
  GamesScreen(),
  TableScreen(),
  FavoritsScreen(),
+ SettingsScreen(),
+
 
 //  GroupList(),
   // SignupScreen(),

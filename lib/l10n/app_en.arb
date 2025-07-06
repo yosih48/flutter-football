@@ -213,7 +213,8 @@
   "guessDeadlineContent": "You can submit a guess up to the game’s start. After that, it’s locked.",
 
   "importantNoteTitle": "Important Note",
-  "importantNoteContent": "Guesses cannot be changed after the game starts. Make sure to review them beforehand."
+  "importantNoteContent": "Guesses cannot be changed after the game starts. Make sure to review them beforehand.",
+  "settings": "settings"
 
  
 
