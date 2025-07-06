@@ -5,6 +5,8 @@ import 'package:football/screens/instructionsb.dart';
 import 'package:provider/provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 class SettingsScreen extends StatefulWidget {
   @override
@@ -82,7 +84,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _settingsTile(
                     context,
                     icon: Icons.person,
-                    text: 'חשבון',
+                    text: AppLocalizations.of(context)!.settings_account,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -101,7 +103,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _settingsTile(
                     context,
                     icon: Icons.info_outline,
-                    text: 'חוקי המשחק',
+                   text: AppLocalizations.of(context)!.settings_rules,
                     onTap: () {
                       showInstructionsBottomSheet(context);
                     },
@@ -159,7 +161,7 @@ Widget _languageSettingsTile(BuildContext context) {
       return ListTile(
         leading: Icon(Icons.language, color: theme.colorScheme.secondary),
         title: Text(
-          'שפה',
+        AppLocalizations.of(context)!.settings_language,
           style: theme.textTheme.bodyText1,
         ),
         trailing: Row(
@@ -185,7 +187,7 @@ Widget _languageSettingsTile(BuildContext context) {
                 ),
               ),
               child: Text(
-                'ENG',
+               AppLocalizations.of(context)!.settings_eng,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -213,7 +215,7 @@ Widget _languageSettingsTile(BuildContext context) {
                 ),
               ),
               child: Text(
-                'עבר',
+             AppLocalizations.of(context)!.settings_heb,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,

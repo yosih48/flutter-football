@@ -218,6 +218,12 @@
 
   "importantNoteTitle": "חשוב לזכור! ⚠️",
   "importantNoteContent": "אין דרך חזרה - לאחר תחילת המשחק לא ניתן לשנות ניחושים. בדקו היטב את הבחירות שלכם לפני שהזמן אוזל!",
-  "settings": "הגדרות"
+  "settings": "הגדרות",
+    "@@locale": "he",
+  "settings_account": "חשבון",
+  "settings_rules": "חוקי המשחק",
+  "settings_language": "שפה",
+  "settings_eng": "ENG",
+  "settings_heb": "עבר"
   
 }

@@ -214,7 +214,13 @@
 
   "importantNoteTitle": "Important Note",
   "importantNoteContent": "Guesses cannot be changed after the game starts. Make sure to review them beforehand.",
-  "settings": "settings"
+  "settings": "settings",
+    "@@locale": "en",
+  "settings_account": "Account",
+  "settings_rules": "Game Rules",
+  "settings_language": "Language",
+  "settings_eng": "ENG",
+  "settings_heb": "HEB"
 
  
 
