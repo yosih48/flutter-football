@@ -152,6 +152,12 @@ class GamesMethods {
 
     // Otherwise fetch fresh data
     print('🔄 Fetching fresh data for league $leagueId');
+if(leagueId == -1){
+      print('⚠️ Invalid league ID: $leagueId');
+      return [];
+
+}
+
     final games = await _fetchGamesForLeague(
       leagueId,
       onlyTodayGames: onlyTodayGames,

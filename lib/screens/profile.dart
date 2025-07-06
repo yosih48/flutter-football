@@ -399,7 +399,9 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     final selectedGroup = Provider.of<UserProvider>(context);
 
     return Scaffold(
-      backgroundColor: background,
+    backgroundColor:  background,
+      //  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -450,7 +452,9 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: kToolbarHeight + 20),
-
+              SizedBox(
+                height: 25,
+              ),
               // Profile Header
               Container(
                 margin: EdgeInsets.symmetric(horizontal: 16),
@@ -468,6 +472,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                       
                  Consumer<ThemeProvider>(
   builder: (context, themeProvider, _) {
     return Row(

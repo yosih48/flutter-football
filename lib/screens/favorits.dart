@@ -223,7 +223,8 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
     final email = userProvider.currentUser!.email;
 
     return Scaffold(
-      backgroundColor: background,
+backgroundColor: background,
+    //  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,

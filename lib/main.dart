@@ -68,7 +68,7 @@ class GameApp extends StatelessWidget {
       builder: (context, themeProvider, child) {
     return MaterialApp(
       navigatorKey: navigatorKey,
-     theme: themeProvider.isDarkMode ? _buildDarkTheme() : _buildLightTheme(),
+        theme: themeProvider.themeData,
       debugShowCheckedModeBanner: false,
       title: 'Localizations Sample App',
       localizationsDelegates: [
@@ -104,62 +104,4 @@ class GameApp extends StatelessWidget {
       });
   }
 }
-  ThemeData _buildDarkTheme() {
-    return ThemeData(
-      textSelectionTheme: TextSelectionThemeData(
-        cursorColor: Colors.blue, // Cursor (blinking line)
-        selectionColor: Colors.blue.shade100, // Text selection background
-        selectionHandleColor: Colors.blue, // ← The "pin"/handle color
-      ),
-      snackBarTheme: SnackBarThemeData(
-        backgroundColor: cards, // Set background color
-        contentTextStyle: TextStyle(color: Colors.white), // Optional: text color
-        actionTextColor: Colors.blue, // Optional: action button color
-      ),
-      primarySwatch: Colors.blue, // Sets the primary color to blue
-      brightness: Brightness.dark, // Set dark theme
-      appBarTheme: AppBarTheme(
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white, // This sets the back button and text color to white
-        iconTheme: IconThemeData(color: Colors.white), // Ensures all icons are white
-        elevation: 0,
-      ),
-      textTheme: TextTheme(
-        // bodyText1: TextStyle(color: Colors.blue), // Default text color
-        // bodyText2: TextStyle(color: Colors.blue), // Another text style
-      ),
-      progressIndicatorTheme: ProgressIndicatorThemeData(
-        color: Colors.blue, // Default color for CircularProgressIndicator
-      ),
-    );
-  }
-
-  ThemeData _buildLightTheme() {
-    return ThemeData(
-      textSelectionTheme: TextSelectionThemeData(
-        cursorColor: Colors.blue, // Cursor (blinking line)
-        selectionColor: Colors.blue.shade100, // Text selection background
-        selectionHandleColor: Colors.blue, // ← The "pin"/handle color
-      ),
-      snackBarTheme: SnackBarThemeData(
-        backgroundColor: Colors.grey[800], // Set background color for light theme
-        contentTextStyle: TextStyle(color: Colors.white), // Optional: text color
-        actionTextColor: Colors.blue, // Optional: action button color
-      ),
-      primarySwatch: Colors.blue, // Sets the primary color to blue
-      brightness: Brightness.light, // Set light theme
-      appBarTheme: AppBarTheme(
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.black, // This sets the back button and text color to black for light theme
-        iconTheme: IconThemeData(color: Colors.black), // Ensures all icons are black for light theme
-        elevation: 0,
-      ),
-      textTheme: TextTheme(
-        // bodyText1: TextStyle(color: Colors.black), // Default text color for light theme
-        // bodyText2: TextStyle(color: Colors.black), // Another text style for light theme
-      ),
-      progressIndicatorTheme: ProgressIndicatorThemeData(
-        color: Colors.blue, // Default color for CircularProgressIndicator
-      ),
-    );
-  }
+ 
