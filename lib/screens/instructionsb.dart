@@ -323,13 +323,10 @@ class _InstructionsBottomSheetState extends State<_InstructionsBottomSheet>
   }
 
   Widget _buildNavigationBar(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final lightBlue = Colors.blue;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      // decoration: BoxDecoration(
-      //   border: Border(
-      //     top: BorderSide(color: Colors.grey[200]!, width: 1),
-      //   ),
-      // ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -341,13 +338,15 @@ class _InstructionsBottomSheetState extends State<_InstructionsBottomSheet>
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              color: isDark
+                  ? lightBlue.withOpacity(0.15)
+                  : Theme.of(context).primaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               '${_currentPage + 1} מתוך ${widget.instructions.length}',
               style: TextStyle(
-                color: Theme.of(context).primaryColor,
+                color: isDark ? lightBlue : Theme.of(context).primaryColor,
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
               ),
@@ -371,7 +370,7 @@ class _InstructionsBottomSheetState extends State<_InstructionsBottomSheet>
     required bool isEnabled,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final lightBlue =  Colors.blue;
+    final lightBlue = Colors.blue;
     ;
     return Container(
       decoration: BoxDecoration(
