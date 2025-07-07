@@ -344,7 +344,7 @@ class _InstructionsBottomSheetState extends State<_InstructionsBottomSheet>
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              '${_currentPage + 1} מתוך ${widget.instructions.length}',
+              '${_currentPage + 1} ${AppLocalizations.of(context)!.from} ${widget.instructions.length}',
               style: TextStyle(
                 color: isDark ? lightBlue : Theme.of(context).primaryColor,
                 fontWeight: FontWeight.bold,

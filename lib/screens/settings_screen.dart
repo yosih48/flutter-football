@@ -43,6 +43,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           CircleAvatar(
             radius: 48,
             backgroundColor: theme.colorScheme.primary.withOpacity(0.7),
+        
             child: Text(
               userName.isNotEmpty ? userName[0] : '',
               style: TextStyle(
@@ -68,7 +69,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: theme.cardColor,
+                color: theme.cardTheme.color,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
                 boxShadow: [
                   BoxShadow(
