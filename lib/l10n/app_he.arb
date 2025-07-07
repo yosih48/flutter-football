@@ -225,6 +225,7 @@
   "settings_language": "שפה",
   "settings_eng": "ENG",
   "settings_heb": "עבר",
-  "from": "מתוך"
+  "from": "מתוך",
+  "settings_theme": "ערכת נושא"
   
 }

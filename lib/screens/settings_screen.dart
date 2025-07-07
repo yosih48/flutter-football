@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:football/providers/LocaleProvider.dart';
+import 'package:football/providers/theme_provider.dart';
 import 'package:football/screens/account_screen.dart';
 import 'package:football/screens/instructionsb.dart';
 import 'package:provider/provider.dart';
@@ -43,7 +44,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           CircleAvatar(
             radius: 48,
             backgroundColor: theme.colorScheme.primary.withOpacity(0.7),
-        
             child: Text(
               userName.isNotEmpty ? userName[0] : '',
               style: TextStyle(
@@ -104,7 +104,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _settingsTile(
                     context,
                     icon: Icons.info_outline,
-                   text: AppLocalizations.of(context)!.settings_rules,
+                    text: AppLocalizations.of(context)!.settings_rules,
                     onTap: () {
                       showInstructionsBottomSheet(context);
                     },
@@ -121,7 +121,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   //   text: 'מדיניות פרטיות',
                   //   onTap: () {},
                   // ),
-  _languageSettingsTile(context),
+                  _languageSettingsTile(context),
+                  _ThemeSettingsTile(context),
                 ],
               ),
             ),
@@ -153,6 +154,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
+Widget _ThemeSettingsTile(BuildContext context) {
+    final theme = Theme.of(context);
+  return Consumer<ThemeProvider>(
+    builder: (context, themeProvider, _) {
+      return ListTile(
+          leading: Icon(
+          themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+          color: Colors.blue,
+        ),
+        title: Text(
+          AppLocalizations.of(context)!.settings_theme,
+          style: theme.textTheme.bodyText1,
+        ),
+
+   trailing:  Row(
+             mainAxisSize: MainAxisSize.min,
+            children: [
+              Switch(
+                value: themeProvider.isDarkMode,
+                onChanged: (value) {
+                  themeProvider.toggleTheme(); // Remove the parameter
+                },
+                activeColor: Colors.blue,
+              ),
+            ],
+          ),
+        contentPadding:
+            EdgeInsets.symmetric(horizontal: 24, vertical: 4), 
+        shape: Border(
+          bottom: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+        ),
+      );
+    },
+  );
+}
+
 // Language settings tile with toggle buttons
 Widget _languageSettingsTile(BuildContext context) {
   final theme = Theme.of(context);
@@ -162,7 +199,7 @@ Widget _languageSettingsTile(BuildContext context) {
       return ListTile(
         leading: Icon(Icons.language, color: theme.colorScheme.secondary),
         title: Text(
-        AppLocalizations.of(context)!.settings_language,
+          AppLocalizations.of(context)!.settings_language,
           style: theme.textTheme.bodyText1,
         ),
         trailing: Row(
@@ -188,7 +225,7 @@ Widget _languageSettingsTile(BuildContext context) {
                 ),
               ),
               child: Text(
-               AppLocalizations.of(context)!.settings_eng,
+                AppLocalizations.of(context)!.settings_eng,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -216,7 +253,7 @@ Widget _languageSettingsTile(BuildContext context) {
                 ),
               ),
               child: Text(
-             AppLocalizations.of(context)!.settings_heb,
+                AppLocalizations.of(context)!.settings_heb,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
