@@ -258,6 +258,44 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   }
 
   @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+
+  //   if (!_hasInitialized) {
+  //     final args =
+  //         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+
+  //     if (args != null) {
+  //       final String? leagueString = args['league'];
+  //       final String? tournamentId = args['tournamentId'];
+  //       final String? action = args['action'];
+
+  //       if (leagueString != null) {
+  //         league = int.tryParse(leagueString) ?? 2;
+  //       }
+  //     }
+
+  //     // Fetch initial games for all enabled leagues
+  //     UsersMethods().fetchUserById(clientId).then((userData) {
+  //       final chosenLeagues =
+  //           Map<String, bool>.from(userData['chosenLeagues'] ?? {});
+  //       final enabledLeagues = <int>[
+  //         if (chosenLeagues['2'] == true) 2,
+  //         if (chosenLeagues['383'] == true) 383,
+  //         if (chosenLeagues['140'] == true) 140,
+  //         if (chosenLeagues['3'] == true) 3,
+  //         if (chosenLeagues['39'] == true) 39,
+  //         if (chosenLeagues['78'] == true) 78,
+  //         if (chosenLeagues['848'] == true) 848,
+  //         if (chosenLeagues['15'] == true) 15,
+  //       ];
+  //       _fetchAllUpcomingGames(enabledLeagues);
+  //     });
+
+  //     _hasInitialized = true;
+  //   }
+  // }
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
@@ -275,23 +313,6 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         }
       }
 
-      // Fetch initial games for all enabled leagues
-      UsersMethods().fetchUserById(clientId).then((userData) {
-        final chosenLeagues =
-            Map<String, bool>.from(userData['chosenLeagues'] ?? {});
-        final enabledLeagues = <int>[
-          if (chosenLeagues['2'] == true) 2,
-          if (chosenLeagues['383'] == true) 383,
-          if (chosenLeagues['140'] == true) 140,
-          if (chosenLeagues['3'] == true) 3,
-          if (chosenLeagues['39'] == true) 39,
-          if (chosenLeagues['78'] == true) 78,
-          if (chosenLeagues['848'] == true) 848,
-          if (chosenLeagues['15'] == true) 15,
-        ];
-        _fetchAllUpcomingGames(enabledLeagues);
-      });
-
       _hasInitialized = true;
     }
   }
@@ -304,12 +325,12 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     super.dispose();
   }
 
-  void toggleshowOnlyThisLeagueTodayGames() {
-    setState(() {
-      _showOnlyThisLeagueTodayGames = !_showOnlyThisLeagueTodayGames;
-    });
-    _fetchGames(league);
-  }
+  // void toggleshowOnlyThisLeagueTodayGames() {
+  //   setState(() {
+  //     _showOnlyThisLeagueTodayGames = !_showOnlyThisLeagueTodayGames;
+  //   });
+  //   _fetchGames(league);
+  // }
 
   void toggleShowOnlyLiveGames() async {
     // Toggle the today filter (show only today's games)
@@ -485,66 +506,66 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   //   }
   // }
 
-  Future<void> _fetchGames(league) async {
-    print(
-        ' _fetchGames _showOnlyThisLeagueTodayGames: $_showOnlyThisLeagueTodayGames');
+  // Future<void> _fetchGames(league) async {
+  //   print(
+  //       ' _fetchGames _showOnlyThisLeagueTodayGames: $_showOnlyThisLeagueTodayGames');
 
-    isLoading = true;
-    try {
-      List<Game> fetchedGames;
+  //   isLoading = true;
+  //   try {
+  //     List<Game> fetchedGames;
 
-      if (selectedDate != null) {
-        print(
-            '📅 Loading games for league $league on ${selectedDate!.day}/${selectedDate!.month}');
+  //     if (selectedDate != null) {
+  //       print(
+  //           '📅 Loading games for league $league on ${selectedDate!.day}/${selectedDate!.month}');
 
-        fetchedGames = await GamesMethods().fetchAllGames(
-          league,
-          _showOnlyThisLeagueTodayGames,
-          selectedDate: selectedDate,
-        );
-      } else {
-        print('📅 Loading games for league $league (no date filter)');
-        fetchedGames = await GamesMethods().fetchGamesForLeague(
-          league,
-          selectedDate: selectedDate,
-        );
-      }
+  //       fetchedGames = await GamesMethods().fetchAllGames(
+  //         league,
+  //         _showOnlyThisLeagueTodayGames,
+  //         selectedDate: selectedDate,
+  //       );
+  //     } else {
+  //       print('📅 Loading games for league $league (no date filter)');
+  //       fetchedGames = await GamesMethods().fetchGamesForLeague(
+  //         league,
+  //         selectedDate: selectedDate,
+  //       );
+  //     }
 
-      setState(() {
-        _games = fetchedGames;
-        for (var game in _games) {
-          if (_guessControllers[game.fixtureId] == null) {
-            _guessControllers[game.fixtureId] = {
-              'home': TextEditingController(),
-              'away': TextEditingController(),
-            };
-          }
-          print(game.league.id);
-        }
-        isLoading = false;
-      });
+  //     setState(() {
+  //       _games = fetchedGames;
+  //       for (var game in _games) {
+  //         if (_guessControllers[game.fixtureId] == null) {
+  //           _guessControllers[game.fixtureId] = {
+  //             'home': TextEditingController(),
+  //             'away': TextEditingController(),
+  //           };
+  //         }
+  //         print(game.league.id);
+  //       }
+  //       isLoading = false;
+  //     });
 
-      // Print info about any live games
-      final liveGames = fetchedGames
-          .where((game) =>
-              game.status.short == '1H' ||
-              game.status.short == '2H' ||
-              game.status.short == 'HT' ||
-              game.status.short == 'ET' ||
-              game.status.short == 'BT' ||
-              game.status.short == 'P' ||
-              game.status.short == 'INT')
-          .toList();
+  //     // Print info about any live games
+  //     final liveGames = fetchedGames
+  //         .where((game) =>
+  //             game.status.short == '1H' ||
+  //             game.status.short == '2H' ||
+  //             game.status.short == 'HT' ||
+  //             game.status.short == 'ET' ||
+  //             game.status.short == 'BT' ||
+  //             game.status.short == 'P' ||
+  //             game.status.short == 'INT')
+  //         .toList();
 
-      if (liveGames.isNotEmpty) {
-        print('⚽ Loaded ${liveGames.length} live games');
-      } else {
-        print('📊 No live games currently in progress');
-      }
-    } catch (e) {
-      print('Failed to fetch games: $e');
-    }
-  }
+  //     if (liveGames.isNotEmpty) {
+  //       print('⚽ Loaded ${liveGames.length} live games');
+  //     } else {
+  //       print('📊 No live games currently in progress');
+  //     }
+  //   } catch (e) {
+  //     print('Failed to fetch games: $e');
+  //   }
+  // }
 
   Future<void> _fetchGuesses(clientId) async {
     print('clientId:${clientId}');
