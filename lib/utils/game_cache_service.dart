@@ -6,6 +6,7 @@ class GameCacheService {
   static const String _cacheKeyPrefix = 'games_cache_';
   static const String _cacheTimestampPrefix = 'games_timestamp_';
   static const String _masterCacheKey = 'leagues_with_games_';
+  static const String _lastDailyResetKey = 'games_last_daily_reset';
 
   // Cache expiration durations in milliseconds
   static const int _finishedGamesCacheDuration =
@@ -16,6 +17,8 @@ class GameCacheService {
   // Store games in cache by league and date
   Future<void> cacheGames(
       List<Game> games, int leagueId, DateTime? date) async {
+    await _performDailyResetIfNeeded(); // ✅ Daily reset check
+
     if (games.isEmpty) return;
 
     final prefs = await SharedPreferences.getInstance();
@@ -63,6 +66,8 @@ class GameCacheService {
 
   // Get a list of leagues that have games on a specific date
   Future<List<int>> getLeaguesWithGames(DateTime date) async {
+    await _performDailyResetIfNeeded(); // ✅ Daily reset check
+
     final prefs = await SharedPreferences.getInstance();
     final masterKey = '$_masterCacheKey${date.year}_${date.month}_${date.day}';
 
@@ -96,6 +101,8 @@ class GameCacheService {
 
   // Get cached games if available and valid
   Future<List<Game>?> getCachedGames(int leagueId, DateTime? date) async {
+    await _performDailyResetIfNeeded(); // ✅ Daily reset check
+
     final prefs = await SharedPreferences.getInstance();
     final cacheKey = _generateCacheKey(leagueId, date);
 
@@ -209,6 +216,25 @@ class GameCacheService {
           key.startsWith(_masterCacheKey)) {
         await prefs.remove(key);
       }
+    }
+  }
+
+  // ✅ Daily reset checker — clears cache once after 12:00 PM each day
+  Future<void> _performDailyResetIfNeeded() async {
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+
+    final todayAtNoon = DateTime(now.year, now.month, now.day, 12, 0);
+
+    final lastResetMillis = prefs.getInt(_lastDailyResetKey);
+    final lastReset = lastResetMillis != null
+        ? DateTime.fromMillisecondsSinceEpoch(lastResetMillis)
+        : null;
+
+    if (lastReset == null || lastReset.isBefore(todayAtNoon)) {
+      print('🔁 Daily cache reset triggered');
+      await clearCache();
+      await prefs.setInt(_lastDailyResetKey, now.millisecondsSinceEpoch);
     }
   }
 }
