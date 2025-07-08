@@ -70,6 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Container(
               decoration: BoxDecoration(
                 color: theme.cardTheme.color,
+                // color: theme.cardColor,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
                 boxShadow: [
                   BoxShadow(
@@ -212,7 +213,7 @@ Widget _languageSettingsTile(BuildContext context) {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: localeProvider.locale.languageCode == 'en'
-                    ? theme.colorScheme.primary
+                    ? Colors.blue
                     : Colors.blue.withOpacity(0.1),
                 foregroundColor: localeProvider.locale.languageCode == 'en'
                     ? Colors.white
@@ -240,7 +241,7 @@ Widget _languageSettingsTile(BuildContext context) {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: localeProvider.locale.languageCode == 'he'
-                    ? theme.colorScheme.primary
+                    ? Colors.blue
                     : Colors.blue.withOpacity(0.1),
                 foregroundColor: localeProvider.locale.languageCode == 'he'
                     ? Colors.white

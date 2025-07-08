@@ -14,6 +14,7 @@ class ThemeProvider with ChangeNotifier {
       scaffoldBackgroundColor: background,
       cardTheme: CardTheme(
         color: cards, // Set the card background color
+        shadowColor: Colors.blue.withOpacity(0.1)
         // shape: RoundedRectangleBorder(
         //   borderRadius: BorderRadius.circular(10), // Optional: rounded corners
         // ),

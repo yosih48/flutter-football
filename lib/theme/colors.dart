@@ -10,3 +10,4 @@ const Color green = Color(0xFF43aa8b);
 const Color blue = Color(0xFF28c2ff);
 const Color background = Color(0xFF16181b);
 const Color cards = Color(0xFF21282d);
+

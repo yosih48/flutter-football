@@ -258,39 +258,39 @@ class _InstructionsBottomSheetState extends State<_InstructionsBottomSheet>
               color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
             ),
           ),
-          if (instruction.isWelcome) ...[
-            SizedBox(height: 24),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: theme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: theme.primaryColor.withOpacity(0.3),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 20,
-                    color: theme.primaryColor,
-                  ),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'החלק שמאלה כדי לקרוא את ההוראות',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: theme.primaryColor,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          // if (instruction.isWelcome) ...[
+          //   SizedBox(height: 24),
+          //   Container(
+          //     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          //     decoration: BoxDecoration(
+          //       color: theme.primaryColor.withOpacity(0.1),
+          //       borderRadius: BorderRadius.circular(12),
+          //       border: Border.all(
+          //         color: theme.primaryColor.withOpacity(0.3),
+          //       ),
+          //     ),
+          //     child: Row(
+          //       children: [
+          //         Icon(
+          //           Icons.info_outline,
+          //           size: 20,
+          //           color: theme.primaryColor,
+          //         ),
+          //         SizedBox(width: 8),
+          //         Expanded(
+          //           child: Text(
+          //             'החלק שמאלה כדי לקרוא את ההוראות',
+          //             style: TextStyle(
+          //               fontSize: 14,
+          //               color: theme.primaryColor,
+          //               fontWeight: FontWeight.w500,
+          //             ),
+          //           ),
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // ],
         ],
       ),
     );
