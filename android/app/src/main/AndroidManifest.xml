@@ -28,7 +28,7 @@ xmlns:tools="http://schemas.android.com/tools">
 
     <application
         android:enableOnBackInvokedCallback="true"
-        android:label="ScoreLeague"
+        android:label="ScoreCast"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"
