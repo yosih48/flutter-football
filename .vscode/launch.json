@@ -21,7 +21,7 @@
             "name": "football home",
             "request": "launch",
             "type": "dart",
-            "deviceId": "sdk gphone x86 64",
+            "deviceId": "emulator-5554",
         },
         {
             "name": "football (profile mode)",

@@ -60,7 +60,7 @@ flutter_launcher_icons:
   android: true
   ios: true
   # image_path: "assets/icons/playstore.png" 
-  image_path: "assets/icons/iconc.png" 
+  image_path: "assets/icons/icone.png" 
   background_color: "#000000"  # Black background
   adaptive_icon_background: "#000000"  # For Android adaptive ico
 

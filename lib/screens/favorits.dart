@@ -5,6 +5,7 @@ import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/providers/theme_provider.dart';
 import 'package:football/utils/config.dart';
 import 'package:football/widgets/toggleButton.dart';
 import 'package:http/http.dart' as http;
@@ -223,7 +224,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
     final email = userProvider.currentUser!.email;
 
     return Scaffold(
-backgroundColor: background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
     //  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
@@ -233,7 +234,7 @@ backgroundColor: background,
               ? AppLocalizations.of(context)!.chooseleagues
               : AppLocalizations.of(context)!.notifications,
           style: TextStyle(
-            color: Colors.white,
+            color: Theme.of(context).extension<CustomColors>()?.secondText,
             fontSize: 20,
             fontWeight: FontWeight.w600,
           ),
@@ -243,7 +244,7 @@ backgroundColor: background,
       body: isLoading
           ? Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
               ),
             )
           : Column(
@@ -318,7 +319,7 @@ backgroundColor: background,
                   title: Text(
                     AppLocalizations.of(context)!.chooseallcompetitions,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Theme.of(context).extension<CustomColors>()?.secondText,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -338,9 +339,12 @@ backgroundColor: background,
                     });
                     updateDatabase(name, email);
                   },
-                  activeColor: Colors.blue,
-                  inactiveThumbColor: Colors.white,
-                  inactiveTrackColor: Colors.grey.withOpacity(0.5),
+                  activeColor: Theme.of(context).colorScheme.primary,
+                  inactiveThumbColor: Theme.of(context).extension<CustomColors>()?.secondText,
+                  inactiveTrackColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                  thumbColor: MaterialStateProperty.resolveWith<Color?>((states) {
+                    return Theme.of(context).extension<CustomColors>()?.secondText;
+                  }),
                 ),
               ),
               ...filteredNotificationStates.entries.map((entry) {
@@ -354,7 +358,7 @@ backgroundColor: background,
                     title: Text(
                       _getLocalizedLeagueName(leagueName),
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Theme.of(context).extension<CustomColors>()?.secondText,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -364,7 +368,7 @@ backgroundColor: background,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: entry.value
-                            ? Colors.blue.withOpacity(0.1)
+                            ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
                             : Colors.transparent,
                       ),
                       child: Padding(
@@ -375,7 +379,7 @@ backgroundColor: background,
                           height: 24,
                           errorBuilder: (context, error, stackTrace) {
                             return Icon(Icons.sports_soccer,
-                                color: Colors.blue);
+                                color: Theme.of(context).extension<CustomColors>()?.secondText);
                           },
                         ),
                       ),
@@ -387,9 +391,12 @@ backgroundColor: background,
                       });
                       updateDatabase(name, email);
                     },
-                    activeColor: Colors.blue,
-                    inactiveThumbColor: Colors.white,
-                    inactiveTrackColor: Colors.grey.withOpacity(0.5),
+                    activeColor: Theme.of(context).colorScheme.primary,
+                    inactiveThumbColor: Theme.of(context).extension<CustomColors>()?.secondText,
+                    inactiveTrackColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                    thumbColor: MaterialStateProperty.resolveWith<Color?>((states) {
+                      return Theme.of(context).extension<CustomColors>()?.secondText;
+                    }),
                   ),
                 );
               }).toList(),
@@ -402,14 +409,14 @@ backgroundColor: background,
                 Icon(
                   Icons.sports_soccer_outlined,
                   size: 64,
-                  color: Colors.grey,
+                  color: Theme.of(context).extension<CustomColors>()?.secondText,
                 ),
                 SizedBox(height: 16),
                 Text(
                   AppLocalizations.of(context)?.noEnabledLeagues ??
                       'No leagues available for notifications',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Theme.of(context).extension<CustomColors>()?.secondText,
                     fontSize: 18,
                     fontWeight: FontWeight.w500,
                   ),
@@ -420,7 +427,7 @@ backgroundColor: background,
                   AppLocalizations.of(context)?.enableLeaguesFirst ??
                       'Please enable leagues in the Chosen Leagues tab first',
                   style: TextStyle(
-                    color: Colors.grey[400],
+                    color: Theme.of(context).extension<CustomColors>()?.secondText?.withOpacity(0.7),
                     fontSize: 14,
                   ),
                   textAlign: TextAlign.center,
@@ -516,7 +523,7 @@ backgroundColor: background,
                 ? TextAlign.right
                 : TextAlign.left,
             style: TextStyle(
-              color: Colors.white,
+              color: Theme.of(context).extension<CustomColors>()?.secondText,
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
@@ -557,10 +564,10 @@ backgroundColor: background,
                   },
                   child: Container(
                     decoration: BoxDecoration(
-                      color: cards,
+                      color: Theme.of(context).extension<CustomColors>()?.cards ?? Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isSelected ? Colors.blue : Colors.transparent,
+                        color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
                         width: 2,
                       ),
                     ),
@@ -573,7 +580,7 @@ backgroundColor: background,
                           right: 8,
                           child: Icon(
                             isSelected ? Icons.star : Icons.star_border,
-                            color: isSelected ? Colors.blue : Colors.grey[400],
+                            color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).extension<CustomColors>()?.secondText?.withOpacity(0.4),
                             size: 18,
                           ),
                         ),
@@ -591,7 +598,7 @@ backgroundColor: background,
                                 height: 55,
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: Theme.of(context).extension<CustomColors>()?.secondText,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 padding: EdgeInsets.all(10),
@@ -601,7 +608,7 @@ backgroundColor: background,
                                   errorBuilder: (context, error, stackTrace) {
                                     return Icon(
                                       Icons.sports_soccer,
-                                      color: Colors.blue,
+                                      color: Theme.of(context).extension<CustomColors>()?.secondText,
                                       size: 32,
                                     );
                                   },
@@ -614,7 +621,7 @@ backgroundColor: background,
                               Text(
                                 leagueNames[leagueId] ?? '',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: Theme.of(context).extension<CustomColors>()?.secondText,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
                                 ),
