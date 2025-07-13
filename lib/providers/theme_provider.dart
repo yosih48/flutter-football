@@ -3,6 +3,8 @@ import 'package:football/theme/colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider with ChangeNotifier {
+
+  
   ThemeData _themeData = ThemeData.light();
 
   ThemeData get themeData => _themeData;
@@ -11,9 +13,10 @@ class ThemeProvider with ChangeNotifier {
 
   // Your custom dark theme (from GameApp)
   static final ThemeData darkTheme = ThemeData.from(
+    
     colorScheme: ColorScheme.fromSeed(
       seedColor: Colors.blue,
-      brightness: Brightness.dark,
+      // brightness: Brightness.dark,
      
     ),
   ).copyWith(
@@ -59,6 +62,7 @@ class ThemeProvider with ChangeNotifier {
     extensions: <ThemeExtension<dynamic>>[
       const CustomColors(cards: cards, secondText: Colors.white),
     ],
+    
   );
 
   // Your custom light theme (from GameApp)

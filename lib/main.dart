@@ -4,8 +4,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:football/models/games.dart';
 import 'package:football/models/users.dart';
 import 'package:football/providers/LocaleProvider.dart';
+import 'package:football/providers/custom_theme_provider.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
-import 'package:football/providers/theme_provider.dart';
+
 import 'package:football/resources/appUpdates.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/firebase_messaging_service.dart';
@@ -54,7 +55,8 @@ void main() async {
           value: authProvider,
         ),
         ChangeNotifierProvider(create: (_) => UserProvider()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        // ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => CustomThemeProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
       ],
       child: GameApp(),
@@ -66,7 +68,7 @@ class GameApp extends StatelessWidget {
   const GameApp({super.key});
  @override
   Widget build(BuildContext context) {
-    return Consumer2<ThemeProvider, LocaleProvider>(
+    return Consumer2<CustomThemeProvider, LocaleProvider>(
       builder: (context, themeProvider, localeProvider, child) {
         return MaterialApp(
           navigatorKey: navigatorKey,

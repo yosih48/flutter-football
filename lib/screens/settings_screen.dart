@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:football/providers/LocaleProvider.dart';
-import 'package:football/providers/theme_provider.dart';
+import 'package:football/providers/custom_theme_provider.dart';
+
 import 'package:football/screens/account_screen.dart';
 import 'package:football/screens/instructionsb.dart';
 import 'package:football/theme/colors.dart';
@@ -33,23 +34,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+  
+       final themeProvider = Provider.of<CustomThemeProvider>(context);
     final user = Provider.of<AuthProvider>(context).currentUser;
     final userName = user?.name ?? 'User Name';
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: themeProvider.themeData.colorScheme.background,
       body: Column(
         children: [
           SizedBox(height: 40),
           CircleAvatar(
             radius: 48,
-            backgroundColor: theme.colorScheme.primary.withOpacity(0.7),
+            backgroundColor: themeProvider.themeData.primaryColor.withOpacity(0.1),
             child: Text(
               userName.isNotEmpty ? userName[0] : '',
               style: TextStyle(
                 fontSize: 48,
-                color: theme.colorScheme.onPrimary,
+                // color: themeProvider.colors.text?.color ?? Colors.white,
+                color: blue,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -57,24 +60,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SizedBox(height: 16),
           Text(
             userName,
-            style: theme.textTheme.headline6
+            style: themeProvider.colors.text
                 ?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 8),
           Text(
             'v$appVersion',
-            style: theme.textTheme.caption,
+            style: themeProvider.colors.text,
           ),
           SizedBox(height: 24),
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: theme.cardColor,
+                color: themeProvider.colors.surface,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
                 boxShadow: [
                   BoxShadow(
-                    color: theme.shadowColor.withOpacity(0.05),
+                    color: themeProvider.colors.primary.withOpacity(0.05),
                     blurRadius: 10,
                     offset: Offset(0, -2),
                   ),
@@ -157,7 +160,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
 Widget _ThemeSettingsTile(BuildContext context) {
   final theme = Theme.of(context);
-  return Consumer<ThemeProvider>(
+  return Consumer<CustomThemeProvider>(
     builder: (context, themeProvider, _) {
       return ListTile(
         leading: Icon(
