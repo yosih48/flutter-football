@@ -3,6 +3,7 @@ import 'package:football/providers/LocaleProvider.dart';
 import 'package:football/providers/theme_provider.dart';
 import 'package:football/screens/account_screen.dart';
 import 'package:football/screens/instructionsb.dart';
+import 'package:football/theme/colors.dart';
 import 'package:provider/provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -43,7 +44,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SizedBox(height: 40),
           CircleAvatar(
             radius: 48,
-            backgroundColor: theme.colorScheme.primary.withOpacity(0.7),
+            backgroundColor: blue.withOpacity(0.9),
             child: Text(
               userName.isNotEmpty ? userName[0] : '',
               style: TextStyle(
@@ -69,7 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: theme.cardTheme.color,
+                color: background,
                 // color: theme.cardColor,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
                 boxShadow: [
@@ -123,7 +124,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   //   onTap: () {},
                   // ),
                   _languageSettingsTile(context),
-                  _ThemeSettingsTile(context),
+                  // _ThemeSettingsTile(context),
                 ],
               ),
             ),
@@ -156,11 +157,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 }
 
 Widget _ThemeSettingsTile(BuildContext context) {
-    final theme = Theme.of(context);
+  final theme = Theme.of(context);
   return Consumer<ThemeProvider>(
     builder: (context, themeProvider, _) {
       return ListTile(
-          leading: Icon(
+        leading: Icon(
           themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
           color: Colors.blue,
         ),
@@ -168,21 +169,19 @@ Widget _ThemeSettingsTile(BuildContext context) {
           AppLocalizations.of(context)!.settings_theme,
           style: theme.textTheme.bodyText1,
         ),
-
-   trailing:  Row(
-             mainAxisSize: MainAxisSize.min,
-            children: [
-              Switch(
-                value: themeProvider.isDarkMode,
-                onChanged: (value) {
-                  themeProvider.toggleTheme(); // Remove the parameter
-                },
-                activeColor: Colors.blue,
-              ),
-            ],
-          ),
-        contentPadding:
-            EdgeInsets.symmetric(horizontal: 24, vertical: 4), 
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Switch(
+              value: themeProvider.isDarkMode,
+              onChanged: (value) {
+                themeProvider.toggleTheme(); // Remove the parameter
+              },
+              activeColor: Colors.blue,
+            ),
+          ],
+        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 24, vertical: 4),
         shape: Border(
           bottom: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
         ),
