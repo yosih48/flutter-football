@@ -235,11 +235,13 @@ class TableScreenContentState extends State<TableScreenContent> {
     final groupName = await SharedPreferencesUtil.getSelectedGroupName();
     print('groupName: ${groupName}');
     setState(() {
-      selectedGroupName = (widget.selectedGroupName != null
-          ? widget.selectedGroupName
-          : groupName != null
-              ? groupName!
-              : 'public')!;
+     selectedGroupName = (widget.selectedGroupName != null
+      ? widget.selectedGroupName
+      : groupName != null
+          ? groupName!
+          : _userGroups.values.isNotEmpty 
+              ? _userGroups.values.first 
+              : '')!;
       print('widget.selectedGroupName');
       print(widget.selectedGroupName);
     });
@@ -430,7 +432,10 @@ class TableScreenContentState extends State<TableScreenContent> {
                       ),
                       icon: Icon(Icons.arrow_drop_down, color: Colors.blue),
                       isExpanded: true,
-                      items: _userGroups.entries.map((entry) {
+                    items: _userGroups.entries
+                          .where((entry) =>
+                              entry.value != 'public') // Add this filter
+                          .map((entry) {
                         return DropdownMenuItem<String>(
                           value: entry.value,
                           child: Text(
