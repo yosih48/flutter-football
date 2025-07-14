@@ -126,8 +126,11 @@ class AccountScreen extends StatelessWidget {
                                         listen: false)
                                     .setSelectedGroupName('public');
                                 await authProvider.signOut(user.id);
-                                Navigator.of(context)
-                                    .popUntil((route) => route.isFirst);
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                                  '/login',
+                                  (route) =>
+                                      false, // This removes all previous routes
+                                );
                               }
                             },
                           ),
