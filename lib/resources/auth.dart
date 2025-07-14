@@ -306,6 +306,7 @@ class AuthProvider with ChangeNotifier {
   static const _baseUrl = '$backendUrl/users';
   Future<void> signOut(userID) async {
             print('currentUser: ${currentUser?.id}');
+            
     await _secureStorage.delete(key: 'auth_token');
     await _secureStorage.delete(key: 'user_id');
 

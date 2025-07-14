@@ -9,7 +9,7 @@
             "name": "football",
             "request": "launch",
             "type": "dart",
-            "deviceId": "emulator-5556",
+            "deviceId": "emulator-5554",
         },
         {
             "name": "football phone",

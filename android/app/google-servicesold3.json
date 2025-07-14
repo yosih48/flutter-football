@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "280544304912",
+    "project_id": "yosi-footb",
+    "storage_bucket": "yosi-footb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:280544304912:android:ddf208028850acbbfacf95",
+        "android_client_info": {
+          "package_name": "com.yosi.football"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "280544304912-etus7476ul73p5lpm7d7dfel32g5ld1a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYVc4CH6l416fuxHm95wenSFabh7WhojE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "280544304912-etus7476ul73p5lpm7d7dfel32g5ld1a.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
