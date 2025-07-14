@@ -1,27 +1,36 @@
 {
   "project_info": {
-    "project_number": "1006618818475",
-    "firebase_url": "https://football-d9a61-default-rtdb.europe-west1.firebasedatabase.app",
-    "project_id": "football-d9a61",
-    "storage_bucket": "football-d9a61.appspot.com"
+    "project_number": "280544304912",
+    "project_id": "yosi-footb",
+    "storage_bucket": "yosi-footb.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1006618818475:android:9997ad058a1222e4a5c4ee",
+        "mobilesdk_app_id": "1:280544304912:android:ddf208028850acbbfacf95",
         "android_client_info": {
-          "package_name": "com.example.football"
+          "package_name": "com.yosi.football"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "280544304912-etus7476ul73p5lpm7d7dfel32g5ld1a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyDVlQngoNLZ9ONHNfUmtXVi1ISHrher1eA"
+          "current_key": "AIzaSyDYVc4CH6l416fuxHm95wenSFabh7WhojE"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "280544304912-etus7476ul73p5lpm7d7dfel32g5ld1a.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
