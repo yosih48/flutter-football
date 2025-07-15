@@ -1,20 +1,50 @@
 {
   "project_info": {
-    "project_number": "319642473794",
-    "project_id": "football-sign-in",
-    "storage_bucket": "football-sign-in.firebasestorage.app"
+    "project_number": "1006618818475",
+    "firebase_url": "https://football-d9a61-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "football-d9a61",
+    "storage_bucket": "football-d9a61.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:319642473794:android:cea19e97f5ec5233faa4db",
+        "mobilesdk_app_id": "1:1006618818475:android:9997ad058a1222e4a5c4ee",
+        "android_client_info": {
+          "package_name": "com.example.football"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1006618818475-dvksk2rll1pjmksckd3ibi3sc596oi5p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVlQngoNLZ9ONHNfUmtXVi1ISHrher1eA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1006618818475-dvksk2rll1pjmksckd3ibi3sc596oi5p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1006618818475:android:26b9f493e23639b0a5c4ee",
         "android_client_info": {
           "package_name": "com.yosi.football"
         }
       },
       "oauth_client": [
         {
-          "client_id": "319642473794-ka8qllifpa80b7mbta6mcojiq3n4f5v6.apps.googleusercontent.com",
+          "client_id": "1006618818475-7s7p2vb7qa7vkqg368fht39k3a4e1g1m.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.yosi.football",
@@ -22,20 +52,20 @@
           }
         },
         {
-          "client_id": "319642473794-70iupecbtvkdbd2ddfblt3birveva8rv.apps.googleusercontent.com",
+          "client_id": "1006618818475-dvksk2rll1pjmksckd3ibi3sc596oi5p.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBLScoEJezC1suUN2-d_P2o3x6PE4Ir8gc"
+          "current_key": "AIzaSyDVlQngoNLZ9ONHNfUmtXVi1ISHrher1eA"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "319642473794-269lu0hmmfsig13b52p9a127mjbdbrpb.apps.googleusercontent.com",
+              "client_id": "1006618818475-dvksk2rll1pjmksckd3ibi3sc596oi5p.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
