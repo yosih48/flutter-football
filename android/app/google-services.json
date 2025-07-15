@@ -44,6 +44,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1006618818475-hc25bb6ipsh5fm9gj6g37unmqu7agopv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.yosi.football",
+            "certificate_hash": "66647d7879b650f2a1152067cf34e09e8105fb8f"
+          }
+        },
+        {
           "client_id": "1006618818475-dvksk2rll1pjmksckd3ibi3sc596oi5p.apps.googleusercontent.com",
           "client_type": 3
         }
