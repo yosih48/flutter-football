@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "1006618818475",
+    "firebase_url": "https://football-d9a61-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "football-d9a61",
+    "storage_bucket": "football-d9a61.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1006618818475:android:9997ad058a1222e4a5c4ee",
+        "android_client_info": {
+          "package_name": "com.example.football"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1006618818475-dvksk2rll1pjmksckd3ibi3sc596oi5p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVlQngoNLZ9ONHNfUmtXVi1ISHrher1eA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1006618818475-dvksk2rll1pjmksckd3ibi3sc596oi5p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1006618818475:android:832bc8363a2d1e10a5c4ee",
+        "android_client_info": {
+          "package_name": "com.scorecast.football"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1006618818475-dvksk2rll1pjmksckd3ibi3sc596oi5p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVlQngoNLZ9ONHNfUmtXVi1ISHrher1eA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1006618818475-dvksk2rll1pjmksckd3ibi3sc596oi5p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1006618818475:android:26b9f493e23639b0a5c4ee",
+        "android_client_info": {
+          "package_name": "com.yosi.football"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1006618818475-dvksk2rll1pjmksckd3ibi3sc596oi5p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVlQngoNLZ9ONHNfUmtXVi1ISHrher1eA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1006618818475-dvksk2rll1pjmksckd3ibi3sc596oi5p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
