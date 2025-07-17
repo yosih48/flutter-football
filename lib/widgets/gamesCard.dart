@@ -174,12 +174,27 @@ print(DateTime.now());
                     ),
                   ),
                   SizedBox(width: 6.0),
-                  GestureDetector(
+           GestureDetector(
                     onTap: () => TeamLinkHandler.linkToTeam(game.home.name),
                     child: Image.network(
                       game.home.logo,
                       width: 24.0,
                       height: 24.0,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 24.0,
+                          height: 24.0,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(4.0),
+                          ),
+                          child: Icon(
+                            Icons.image_not_supported,
+                            size: 16.0,
+                            color: Colors.grey[600],
+                          ),
+                        );
+                      },
                     ),
                   ),
                   SizedBox(width: 18.0),
@@ -289,12 +304,27 @@ print(DateTime.now());
                       ),
                     ),
                   SizedBox(width: 18.0),
-                  GestureDetector(
-                    onTap: () => TeamLinkHandler.linkToTeam(game.away.name),
+            GestureDetector(
+                    onTap: () => TeamLinkHandler.linkToTeam(game.home.name),
                     child: Image.network(
                       game.away.logo,
                       width: 24.0,
                       height: 24.0,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 24.0,
+                          height: 24.0,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(4.0),
+                          ),
+                          child: Icon(
+                            Icons.image_not_supported,
+                            size: 16.0,
+                            color: Colors.grey[600],
+                          ),
+                        );
+                      },
                     ),
                   ),
                   SizedBox(width: 6.0),
