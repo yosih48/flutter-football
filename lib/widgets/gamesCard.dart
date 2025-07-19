@@ -7,7 +7,7 @@ import 'package:football/widgets/teamLInks.dart';
 
 import 'package:intl/intl.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:football/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class GameWidget extends StatelessWidget {

@@ -14,7 +14,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:football/screens/account_screen.dart';

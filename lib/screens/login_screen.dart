@@ -26,7 +26,7 @@ import '../responsive/mobile_screen_layout.dart';
 import '../responsive/rsponsive_layout_screen.dart';
 import '../responsive/web_screen_layout.dart';
 import '../utils/colors.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

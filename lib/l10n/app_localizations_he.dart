@@ -1,0 +1,643 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Hebrew (`he`).
+class AppLocalizationsHe extends AppLocalizations {
+  AppLocalizationsHe([String locale = 'he']) : super(locale);
+
+  @override
+  String get helloWorld => 'שלום עולם';
+
+  @override
+  String get add => 'הוסף';
+
+  @override
+  String get searchcustomer => 'חיפוש לקוח';
+
+  @override
+  String get customers => 'לקוחות';
+
+  @override
+  String get enteryourusername => 'הכנס שם משתמש';
+
+  @override
+  String get enteryourpassword => 'הזן סיסמה';
+
+  @override
+  String get login => 'היכנס';
+
+  @override
+  String get donthaveanaccount => 'עדיין אין לך חשבון?';
+
+  @override
+  String get allreadyhaveanaccount => 'כבר יש לך חשבון?';
+
+  @override
+  String get signup => 'הירשם';
+
+  @override
+  String get managment => 'ניהול';
+
+  @override
+  String get employees => 'עובדות';
+
+  @override
+  String get calls => 'קריאות';
+
+  @override
+  String get stuff => 'צוות';
+
+  @override
+  String get findcustomer => 'איתור לקוח';
+
+  @override
+  String get logout => 'התנתק';
+
+  @override
+  String get addemployee => 'הוסף עובד';
+
+  @override
+  String get addcustomer => 'הוסף לקוח';
+
+  @override
+  String get name => ' שם';
+
+  @override
+  String get email => 'כתובת אימייל';
+
+  @override
+  String get admin => 'מנהל';
+
+  @override
+  String get choosPlayer => 'בחר שחקן';
+
+  @override
+  String get department => 'מחלקה';
+
+  @override
+  String get address => 'כתובת';
+
+  @override
+  String get password => 'סיסמה';
+
+  @override
+  String get cancel => 'ביטול';
+
+  @override
+  String get phonenumber => 'טלפון';
+
+  @override
+  String get calldetails => 'פרטי קריאה';
+
+  @override
+  String get entercalldetails => 'הזן פרטי קריאה';
+
+  @override
+  String get emergencycall => 'קריאת חירום';
+
+  @override
+  String get savenewcall => 'פתח קריאה חדשה';
+
+  @override
+  String get saveeditcall => 'שמור';
+
+  @override
+  String get newcall => ' קריאה חדשה ל';
+
+  @override
+  String get opens => 'פתוחות';
+
+  @override
+  String get history => 'היסטוריה';
+
+  @override
+  String get editcall => 'ערוך קריאה';
+
+  @override
+  String get newcalls => 'חדשות';
+
+  @override
+  String get waiting => 'ממתינות';
+
+  @override
+  String get managecalls => 'ניהול קריאות';
+
+  @override
+  String get employeename => 'שם עובד';
+
+  @override
+  String get closecall => 'סגור קריאה';
+
+  @override
+  String get adddetails => 'ערוך קריאה';
+
+  @override
+  String get assigncall => 'שיבוץ קריאה';
+
+  @override
+  String get callhistory => 'היסטוריית קריאה';
+
+  @override
+  String get enter => 'כניסה';
+
+  @override
+  String get exit => 'יציאה';
+
+  @override
+  String get attendance => 'נוכחות';
+
+  @override
+  String get day => 'יום';
+
+  @override
+  String get hours => 'שעות';
+
+  @override
+  String get yourguess => 'הניחוש שלך';
+
+  @override
+  String get leavegroup => 'אתה בטוח שאתה רוצה לעזוב את הקבוצה?';
+
+  @override
+  String get leavethegroup => 'יציאה מהקבוצה';
+
+  @override
+  String get leave => 'צא';
+
+  @override
+  String get createnewgroup => 'צור קבוצה חדשה';
+
+  @override
+  String get entergroupname => 'הזן שם קבוצה';
+
+  @override
+  String get create => 'צור';
+
+  @override
+  String get mygroups => 'הקבוצות שלי';
+
+  @override
+  String get confirmsignout => 'יציאה מהאפליקציה';
+
+  @override
+  String get leaveapp => 'אתה בטוח שאתה רוצה לצאת?';
+
+  @override
+  String get yes => 'כן';
+
+  @override
+  String get signout => 'התנתק';
+
+  @override
+  String get notifications => 'התראות';
+
+  @override
+  String get chooseallcompetitions => 'בחירת כל הליגות';
+
+  @override
+  String get joingrouptoseefreinds => 'הצטרף לקבוצה כדי לראות ניחושים של חברים';
+
+  @override
+  String get username => 'שם משתמש';
+
+  @override
+  String get guess => 'ניחוש';
+
+  @override
+  String get sumpoints => 'ניקוד';
+
+  @override
+  String get noguessesfound => 'לא נמצאו ניחושים';
+
+  @override
+  String get savedsuccessfully => 'נשמר בהצלחה';
+
+  @override
+  String get thisleague => 'ליגה זו';
+
+  @override
+  String get todayonly => 'משחקי היום';
+
+  @override
+  String get championsleague => 'ליגת אלופות';
+
+  @override
+  String get ligathaal => 'ליגת העל';
+
+  @override
+  String get europaleague => 'ליגה אירופית';
+
+  @override
+  String get clubworldcup => 'אליפות העולם לקבוצות';
+
+  @override
+  String get laliga => 'ליגה ספרדית';
+
+  @override
+  String get bundesleague => 'ליגה גרמנית';
+
+  @override
+  String get premierleague => 'ליגה אנגלית';
+
+  @override
+  String get conferenceleague => 'קונפרנס ליג';
+
+  @override
+  String get nogames => 'אין משחקים';
+
+  @override
+  String get invitefriend => 'הזמן חברים';
+
+  @override
+  String get invitecodecopy => 'קוד הזמנה הועתק ללוח:';
+
+  @override
+  String get shareinvitecode => 'שתף את הקוד עם חברים כדי להזמין אותם לקבוצה.';
+
+  @override
+  String get joingroup => 'הצטרף לקבוצה';
+
+  @override
+  String get enterinvitecode => 'הזן קוד הזמנה';
+
+  @override
+  String get join => 'הצטרף';
+
+  @override
+  String get table => 'טבלה';
+
+  @override
+  String get daypoints => 'ניקוד יומי';
+
+  @override
+  String get createpassword => 'צור סיסמה';
+
+  @override
+  String get loginfailed => 'שגיאת תחברות';
+
+  @override
+  String get registrationfailed => 'שגיאת רישום';
+
+  @override
+  String get registrationsuccessful => 'נרשמת בהצלחה';
+
+  @override
+  String get forgotpassword => 'שכחתי סיסמה';
+
+  @override
+  String get emailsent => 'נשלח אימייל';
+
+  @override
+  String get emailsentlink => 'נשלח אליך אימייל עם קישור לאיפוס סיסמה. קישור זה תקף ל3 דקות בלבד.';
+
+  @override
+  String get choosewinner => 'בחר זוכה';
+
+  @override
+  String get teamcannotbechanged => 'שים לב לא ניתן לשנות את הבחירה';
+
+  @override
+  String get saveteam => 'שמור קבוצה';
+
+  @override
+  String get savePlayer => 'שמור בחירה';
+
+  @override
+  String get topScorers => 'מלכי השערים';
+
+  @override
+  String get chooseteam => 'בחר קבוצה';
+
+  @override
+  String get yourwinner => 'הזוכה שלך';
+
+  @override
+  String get chooseTopScorer => 'בחר מלך שערים';
+
+  @override
+  String get yourwinners => 'הזוכות שלי';
+
+  @override
+  String get or => 'או';
+
+  @override
+  String get signinwithgoogle => 'היכנס עם חשבון גוגל';
+
+  @override
+  String get results => 'תוצאות';
+
+  @override
+  String get profile => 'פרופיל';
+
+  @override
+  String get preferences => 'הבחירות שלי';
+
+  @override
+  String get updateavailable => 'עדכון זמין';
+
+  @override
+  String get askforupdate => 'גרסה חדשה של האפליקציה זמינה, תרצה לעדכן?';
+
+  @override
+  String get later => 'מאוחר יותר';
+
+  @override
+  String get update => 'עדכן';
+
+  @override
+  String get allleagus => 'כל הליגות';
+
+  @override
+  String get cleardate => 'נקה סינון';
+
+  @override
+  String get statistics => 'סטטיסטיקות';
+
+  @override
+  String get totalGuesses => 'סה\"כ ניחושים';
+
+  @override
+  String get directGuesses => 'ניחושים מדוייקים';
+
+  @override
+  String get directionGuesses => 'ניחושי כיוון';
+
+  @override
+  String get send => 'שלח';
+
+  @override
+  String get chooseleagues => 'הליגות שלי';
+
+  @override
+  String get managegroups => 'ניהול הקבוצות והתחרויות שלך';
+
+  @override
+  String get winningpredictions => 'ניחושי הזוכות שלך';
+
+  @override
+  String get yourprediction => 'הזוכה שלך';
+
+  @override
+  String get noEnabledLeagues => 'אין ליגות זמינות להתראות';
+
+  @override
+  String get enableLeaguesFirst => 'אנא הפעל תחילה ליגות בלשונית \'הליגות שלי\'';
+
+  @override
+  String get goToChosenLeagues => 'עבור לליגות נבחרות';
+
+  @override
+  String get nolivegames => 'אין משחקים חיים כרגע';
+
+  @override
+  String get cleardatefilter => 'נקה סינון';
+
+  @override
+  String get nogroupsyet => 'אינך חבר בקבוצות עדיין';
+
+  @override
+  String get points => 'נקודות';
+
+  @override
+  String get pst => 'נק\'';
+
+  @override
+  String get topScorerPoints => 'ניקוד על שערים:';
+
+  @override
+  String get noTopScorersYet => 'לא נבחרו מלכי שערים';
+
+  @override
+  String get noWinnersYet => 'לא נבחרו זוכות';
+
+  @override
+  String get allCompetitions => 'כל התחרויות';
+
+  @override
+  String get provideEmail => 'אנא הזן כתובת אימייל לאיפוס';
+
+  @override
+  String get teamSavedsuccessfully => 'הקבוצה נשמרה בהצלחה';
+
+  @override
+  String get failedtoSaveTeam => 'שמירת הקבוצה נכשלה';
+
+  @override
+  String get errorsavingteam => 'אירעה שגיאה בעת שמירת הקבוצה';
+
+  @override
+  String get pleaseSelectTeamFirst => 'אנא בחר קבוצה תחילה';
+
+  @override
+  String get playerSavedsuccessfully => 'השחקן נשמר בהצלחה';
+
+  @override
+  String get failedtoSaveplayer => 'שמירת השחקן נכשלה';
+
+  @override
+  String get errorsavingplayer => 'אירעה שגיאה בעת שמירת השחקן';
+
+  @override
+  String get pleaseSelectplayerFirst => 'אנא בחר שחקן תחילה';
+
+  @override
+  String get monday => 'יום שני';
+
+  @override
+  String get tuesday => 'יום שלישי';
+
+  @override
+  String get wednesday => 'יום רביעי';
+
+  @override
+  String get thursday => 'יום חמישי';
+
+  @override
+  String get friday => 'יום שישי';
+
+  @override
+  String get saturday => 'יום שבת';
+
+  @override
+  String get sunday => 'יום ראשון';
+
+  @override
+  String get january_short => 'ינו׳';
+
+  @override
+  String get february_short => 'פבר׳';
+
+  @override
+  String get march_short => 'מרץ';
+
+  @override
+  String get april_short => 'אפר׳';
+
+  @override
+  String get may_short => 'מאי';
+
+  @override
+  String get june_short => 'יוני';
+
+  @override
+  String get july_short => 'יולי';
+
+  @override
+  String get august_short => 'אוג׳';
+
+  @override
+  String get september_short => 'ספט׳';
+
+  @override
+  String get october_short => 'אוק׳';
+
+  @override
+  String get november_short => 'נוב׳';
+
+  @override
+  String get december_short => 'דצמ׳';
+
+  @override
+  String get delete => 'מחק';
+
+  @override
+  String get deleteaccountconfirm => 'האם אתה בטוח שברצונך למחוק את החשבון שלך? פעולה זו לא ניתנת לביטול.';
+
+  @override
+  String get deleteaccount => 'מחק חשבון';
+
+  @override
+  String get userdetails => 'פרטי משתמש';
+
+  @override
+  String get account => 'חשבון';
+
+  @override
+  String get accountDeleted => 'החשבון נמחק בהצלחה';
+
+  @override
+  String get matchEvents => 'אירועי המשחק';
+
+  @override
+  String get loadingEvents => 'טוען אירועים...';
+
+  @override
+  String get failedToLoadEvents => 'נכשל בטעינת האירועים';
+
+  @override
+  String get retry => 'נסה שוב';
+
+  @override
+  String get noGoals => 'אין שערים עדיין';
+
+  @override
+  String get eventsAppear => 'האירועים יופיעו כאן כאשר יובקעו שערים';
+
+  @override
+  String get goals => 'שערים';
+
+  @override
+  String get assist => 'בישול:';
+
+  @override
+  String get noGuesses => 'אין ניחושים';
+
+  @override
+  String get finishAfterExtraTime => 'סיום לאחר הארכה';
+
+  @override
+  String get extraTime => 'הארכה';
+
+  @override
+  String get firstHalf => 'מחצית ראשונה';
+
+  @override
+  String get secondHalf => 'מחצית שנייה';
+
+  @override
+  String get halftime => 'מחצית';
+
+  @override
+  String get notStarted => 'טרם החל';
+
+  @override
+  String get finished => 'הסתיים';
+
+  @override
+  String get postponed => 'נדחה';
+
+  @override
+  String get welcomeTitle => 'ברוכים הבאים ל-SCORE LEAGUE! ⚽';
+
+  @override
+  String get welcomeContent => 'הפלטפורמה המובילה לניחושי ספורט! כאן תוכלו לנחש תוצאות משחקים, להתחרות עם חברים ולצבור נקודות. הצטרפו לליגה הפרטית שלכם והתחילו את המסע המרגש לקראת התחרות האולטימטיבית!';
+
+  @override
+  String get guessTitle => 'איך מנחשים? 🎯';
+
+  @override
+  String get guessContent => 'בחרו תוצאה לכל משחק מהטורנירים הפעילים. לפני תחילת כל טורניר תוכלו לבחור את הקבוצה הזוכה ואת מלך השערים - החלטות אסטרטגיות שיכולות להזניק אתכם לפסגה!';
+
+  @override
+  String get scoringTitle => 'מערכת ניקוד מתקדמת 📊';
+
+  @override
+  String get scoringContent => 'הניקוד מחושב לפי רמת הדיוק שלכם:\n• ניחוש כיוון נכון = נקודות לפי יחס ההימור\n• פגיעה מדויקת = 4 נקודות בונוס!\n• קבוצה זוכה נכונה = 20 נקודות זהב\n• כל גול של מלך השערים = 2 נקודות נוספות';
+
+  @override
+  String get groupsTitle => 'קבוצות פרטיות וליגות 👥';
+
+  @override
+  String get groupsContent => 'צרו את הליגה הפרטית שלכם והזמינו חברים עם קוד ההצטרפות הייחודי. התחרו בטורנירים השונים, עקבו אחר הדירוג הפרטי שלכם וגלו מי האלוף האמיתי בחבורה!';
+
+  @override
+  String get winnerTitle => 'בחירת הזוכה הגדולה 🏆';
+
+  @override
+  String get winnerContent => 'בחרו בחוכמה את הקבוצה שתזכה בטורניר כולו. זהו הימור הפרס הגדול - ניחוש נכון יזכה אתכם ב-20 נקודות יקרות ויכול לשנות את כל המאזן!';
+
+  @override
+  String get topScorerTitle => 'מלך השערים שלכם ⚽';
+
+  @override
+  String get topScorerContent => 'בחרו את השחקן שלדעתכם יהיה מלך השערים של הטורניר. כל גול שהוא יכבוש יזכה אתכם ב-2 נקודות בונוס - בחרו בחוכמה!';
+
+  @override
+  String get guessDeadlineTitle => 'זמן הניחוש ⏰';
+
+  @override
+  String get guessDeadlineContent => 'ניתן לבחור את תוצאות המשחקים עד לרגע שריקת הפתיחה של כל משחק. בחירת הקבוצה הזוכה ומלך השערים - עד תחילת משחק הפתיחה של הליגה! ברגע שהמשחק מתחיל, הבחירות נחתמות ולא ניתנות לשינוי';
+
+  @override
+  String get importantNoteTitle => 'חשוב לזכור! ⚠️';
+
+  @override
+  String get importantNoteContent => 'אין דרך חזרה - לאחר תחילת המשחק לא ניתן לשנות ניחושים. בדקו היטב את הבחירות שלכם לפני שהזמן אוזל!';
+
+  @override
+  String get settings => 'הגדרות';
+
+  @override
+  String get settings_account => 'חשבון';
+
+  @override
+  String get settings_rules => 'חוקי המשחק';
+
+  @override
+  String get settings_language => 'שפה';
+
+  @override
+  String get settings_eng => 'ENG';
+
+  @override
+  String get settings_heb => 'עבר';
+
+  @override
+  String get from => 'מתוך';
+
+  @override
+  String get settings_theme => 'ערכת נושא';
+}

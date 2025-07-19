@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:football/theme/colors.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import '../utils/colors.dart';
 import '../utils/global_variables.dart';

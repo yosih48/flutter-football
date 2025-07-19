@@ -7,7 +7,8 @@ import 'package:football/theme/colors.dart';
 import 'package:provider/provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:football/l10n/app_localizations.dart';
+import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -57,14 +58,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SizedBox(height: 16),
           Text(
             userName,
-            style: theme.textTheme.headline6
+            style: theme.textTheme.titleLarge
                 ?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 8),
           Text(
             'v$appVersion',
-            style: theme.textTheme.caption,
+            style: theme.textTheme.bodySmall,
           ),
           SizedBox(height: 24),
           Expanded(
@@ -144,7 +145,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       leading: Icon(icon, color: theme.colorScheme.secondary),
       title: Text(
         text,
-        style: theme.textTheme.bodyText1,
+        style: theme.textTheme.bodyLarge,
       ),
       trailing: Icon(Icons.chevron_left, color: theme.colorScheme.secondary),
       onTap: onTap,
@@ -167,7 +168,7 @@ Widget _ThemeSettingsTile(BuildContext context) {
         ),
         title: Text(
           AppLocalizations.of(context)!.settings_theme,
-          style: theme.textTheme.bodyText1,
+          style: theme.textTheme.bodyLarge,
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -200,7 +201,7 @@ Widget _languageSettingsTile(BuildContext context) {
         leading: Icon(Icons.language, color: theme.colorScheme.secondary),
         title: Text(
           AppLocalizations.of(context)!.settings_language,
-          style: theme.textTheme.bodyText1,
+          style: theme.textTheme.bodyLarge,
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,

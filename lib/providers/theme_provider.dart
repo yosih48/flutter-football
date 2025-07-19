@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:football/theme/colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider with ChangeNotifier {
@@ -8,110 +7,6 @@ class ThemeProvider with ChangeNotifier {
   ThemeData get themeData => _themeData;
 
   bool get isDarkMode => _themeData.brightness == Brightness.dark;
-
-  // Your custom dark theme (from GameApp)
-  static final ThemeData darkTheme = ThemeData(
-      scaffoldBackgroundColor: background,
-      cardTheme: CardTheme(
-        color: cards, // Set the card background color
-        shadowColor: Colors.blue.withOpacity(0.1)
-        // shape: RoundedRectangleBorder(
-        //   borderRadius: BorderRadius.circular(10), // Optional: rounded corners
-        // ),
-      ),
-    textSelectionTheme: TextSelectionThemeData(
-      cursorColor: Colors.blue, // Cursor (blinking line)
-      selectionColor: Colors.blue.shade100, // Text selection background
-      selectionHandleColor: Colors.blue, // ← The "pin"/handle color
-    ),
-    snackBarTheme: SnackBarThemeData(
-      backgroundColor: cards, // Set background color
-      contentTextStyle: TextStyle(color: Colors.white), // Optional: text color
-      actionTextColor: Colors.blue, // Optional: action button color
-    ),
-    primarySwatch: Colors.blue, // Sets the primary color to blue
-    brightness: Brightness.dark, // Set dark theme
-    appBarTheme: AppBarTheme(
-      backgroundColor: Colors.transparent,
-      foregroundColor:
-          Colors.white, // This sets the back button and text color to white
-      iconTheme:
-          IconThemeData(color: Colors.white), // Ensures all icons are white
-      elevation: 0,
-    ),
-    textTheme: TextTheme(
-        bodyText1: TextStyle(color: Colors.blue), // Default text color
-        bodyText2: TextStyle(color: Colors.white), // Another text style
-        ),
-    progressIndicatorTheme: ProgressIndicatorThemeData(
-      color: Colors.blue, // Default color for CircularProgressIndicator
-    ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-    style: ElevatedButton.styleFrom(
-      backgroundColor: Colors.blue.withOpacity(0.1),
-      foregroundColor: Colors.blue,
-      elevation: 0,
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(6),
-      ),
-    ),
-  ),
-);
-
-
-  // Your custom light theme (from GameApp)
-  static final ThemeData lightTheme = ThemeData(
-       scaffoldBackgroundColor: white,
-             cardTheme: CardTheme(
-      color: Colors.lightBlue, // Set the card background color
-      // shape: RoundedRectangleBorder(
-      //   borderRadius: BorderRadius.circular(10), // Optional: rounded corners
-      // ),
-    ),
-    textSelectionTheme: TextSelectionThemeData(
-      cursorColor: Colors.blue, // Cursor (blinking line)
-      selectionColor: Colors.blue.shade100, // Text selection background
-      selectionHandleColor: Colors.blue, // ← The "pin"/handle color
-    ),
-    snackBarTheme: SnackBarThemeData(
-      backgroundColor: Colors.grey[800], // Set background color for light theme
-      contentTextStyle: TextStyle(color: Colors.white), // Optional: text color
-      actionTextColor: Colors.blue, // Optional: action button color
-    ),
-    primarySwatch: Colors.blue, // Sets the primary color to blue
-    brightness: Brightness.light, // Set light theme
-    appBarTheme: AppBarTheme(
-      backgroundColor: const Color.fromARGB(0, 10, 10, 10),
-      foregroundColor: Colors
-          .black, // This sets the back button and text color to black for light theme
-      elevation: 0,
-    ),
-   iconTheme: IconThemeData(color: Colors.white),
-switchTheme: SwitchThemeData(
-      thumbColor: MaterialStateProperty.resolveWith<Color>((states) {
-        if (states.contains(MaterialState.selected)) {
-          return Colors.blue; // Active thumb = primary color
-        }
-        return Colors.white; // Inactive thumb = white (from iconTheme)
-      }),
-      trackColor: MaterialStateProperty.resolveWith<Color>((states) {
-        if (states.contains(MaterialState.selected)) {
-          return Colors.blue
-              .withOpacity(0.5); // Active track = primary with opacity
-        }
-        return Colors.grey
-            .withOpacity(0.5); // Inactive track = disabled color with opacity
-      }),
-    ), // Ensures all icons are black for light theme
-    textTheme: TextTheme(
-        bodyText1: TextStyle(color: Colors.black), // Default text color for light theme
-        bodyText2: TextStyle(color: Colors.black), // Another text style for light theme
-        ),
-    progressIndicatorTheme: ProgressIndicatorThemeData(
-      color: Colors.blue, // Default color for CircularProgressIndicator
-    ),
-  );
 
   ThemeProvider() {
     _loadTheme();
@@ -147,4 +42,99 @@ switchTheme: SwitchThemeData(
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool('isDarkMode', isDarkMode);
   }
+  static const Color background = Color(0xFF121212);
+  static const Color cards = Color(0xFF1E1E1E);
+  static const Color white = Colors.white; // Add this if not defined elsewhere
+
+  // Your custom dark theme (from GameApp)
+  static final ThemeData darkTheme = ThemeData(
+    scaffoldBackgroundColor: background,
+    cardTheme: const CardThemeData(
+      color: cards,
+      elevation: 4.0,
+    ),
+    textSelectionTheme: TextSelectionThemeData(
+      cursorColor: Colors.blue,
+      selectionColor: Colors.blue.shade100,
+      selectionHandleColor: Colors.blue,
+    ),
+    snackBarTheme: const SnackBarThemeData(
+      backgroundColor: cards,
+      contentTextStyle: TextStyle(color: Colors.white),
+      actionTextColor: Colors.blue,
+    ),
+    primarySwatch: Colors.blue,
+    brightness: Brightness.dark,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.transparent,
+      foregroundColor: Colors.white,
+      iconTheme: IconThemeData(color: Colors.white),
+      elevation: 0,
+    ),
+    textTheme: const TextTheme(
+      bodyLarge: TextStyle(color: Colors.blue), // Fixed: bodyText1 → bodyLarge
+      bodyMedium: TextStyle(color: Colors.white), // Fixed: bodyText2 → bodyMedium
+    ),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: Colors.blue,
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blue.withOpacity(0.1),
+        foregroundColor: Colors.blue,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(6),
+        ),
+      ),
+    ),
+  );
+
+  // Your custom light theme (from GameApp)
+  static final ThemeData lightTheme = ThemeData(
+    scaffoldBackgroundColor: white,
+    cardTheme: const CardThemeData(
+      color: Colors.lightBlue,
+    ),
+    textSelectionTheme: TextSelectionThemeData(
+      cursorColor: Colors.blue,
+      selectionColor: Colors.blue.shade100,
+      selectionHandleColor: Colors.blue,
+    ),
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: Colors.grey[800],
+      contentTextStyle: const TextStyle(color: Colors.white),
+      actionTextColor: Colors.blue,
+    ),
+    primarySwatch: Colors.blue,
+    brightness: Brightness.light,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color.fromARGB(0, 10, 10, 10),
+      foregroundColor: Colors.black,
+      elevation: 0,
+    ),
+    iconTheme: const IconThemeData(color: Colors.white),
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith<Color>((states) { // Fixed: MaterialStateProperty → WidgetStateProperty
+        if (states.contains(WidgetState.selected)) { // Fixed: MaterialState → WidgetState
+          return Colors.blue;
+        }
+        return Colors.white;
+      }),
+      trackColor: WidgetStateProperty.resolveWith<Color>((states) { // Fixed: MaterialStateProperty → WidgetStateProperty
+        if (states.contains(WidgetState.selected)) { // Fixed: MaterialState → WidgetState
+          return Colors.blue.withOpacity(0.5);
+        }
+        return Colors.grey.withOpacity(0.5);
+      }),
+    ),
+    textTheme: const TextTheme(
+      bodyLarge: TextStyle(color: Colors.black), // Fixed: bodyText1 → bodyLarge
+      bodyMedium: TextStyle(color: Colors.black), // Fixed: bodyText2 → bodyMedium
+    ),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: Colors.blue,
+    ),
+  );
 }

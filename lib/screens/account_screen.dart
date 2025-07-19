@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:football/providers/flutter pub add provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/theme/colors.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:football/l10n/app_localizations.dart';
 
 class AccountScreen extends StatelessWidget {
   @override

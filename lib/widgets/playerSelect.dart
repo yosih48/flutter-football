@@ -9,7 +9,7 @@ import 'package:football/resources/playersMethods.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/utils/config.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 class PlayerSelectionButton extends StatefulWidget {

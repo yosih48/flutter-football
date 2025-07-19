@@ -3,7 +3,7 @@ import 'package:football/models/FixtureEvent.dart';
 import 'package:football/resources/FixtureEventsService.dart';
 import 'package:football/theme/colors.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:football/l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class FixtureEventsWidget extends StatefulWidget {

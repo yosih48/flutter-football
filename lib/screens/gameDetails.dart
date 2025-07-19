@@ -15,7 +15,7 @@ import 'package:football/widgets/SharedPreferences.dart';
 import 'package:football/widgets/teamLinks.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 class GameDetails extends StatefulWidget {

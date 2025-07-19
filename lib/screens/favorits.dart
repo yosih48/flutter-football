@@ -9,7 +9,7 @@ import 'package:football/utils/config.dart';
 import 'package:football/widgets/toggleButton.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 class FavoritsScreen extends StatefulWidget {
