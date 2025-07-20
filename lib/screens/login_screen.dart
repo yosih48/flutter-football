@@ -119,6 +119,14 @@ Future<void> sendResetEmail() async {
       await authProvider.login(
           _usernameController.text, _passwordController.text, fcmToken);
   
+      // Navigate to GamesScreen after successful login
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => MobileScreenLayout()),
+      );
+     
 // String? fcmToken = await FirebaseMessaging.instance.getToken();
 // print('fcmToken: ${fcmToken}');
 //  await sendFCMTokenToServer(fcmToken);
