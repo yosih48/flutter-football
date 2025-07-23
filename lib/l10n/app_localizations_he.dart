@@ -640,4 +640,16 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get settings_theme => 'ערכת נושא';
+
+  @override
+  String get privategroups => 'ליגות פרטיות';
+
+  @override
+  String get publicgroups => 'ליגות ציבוריות';
+
+  @override
+  String get groupnamealreadyexists => 'שם כבר קיים במערכת';
+
+  @override
+  String get groupcreatedsuccessfully => 'קבוצה נוצרה בהצלחה';
 }

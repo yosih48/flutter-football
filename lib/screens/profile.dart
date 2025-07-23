@@ -248,6 +248,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
         body: jsonEncode({
           'name': groupName,
           'createdBy': currentUserId,
+          'type': 'private',
           'code': DateTime.now().millisecondsSinceEpoch,
         }),
         headers: {
@@ -255,17 +256,42 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
           // 'Authorization': 'Bearer ${userToken}', // Uncomment if needed
         },
       );
+      final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
         // Group created successfully
-        // _fetchUserGroups(); // Refresh the groups list
+          ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.groupcreatedsuccessfully),
+            // backgroundColor: Colors.grey[800],
+            duration: Duration(seconds: 3),
+          ),
+        );
         await _addGroupToUser(groupName);
-      } else {
-        throw Exception('Failed to create group');
-      }
+       } else {
+        // Handle error from server
+        String errorMessage = responseData['msg'] ?? 'Unknown error occurred';
+ 
+ if(errorMessage == 'group name is already exist'){
+  errorMessage = AppLocalizations.of(context)!.groupnamealreadyexists;
+ }       // Display error message to user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      } 
     } catch (e) {
       print('Error creating group: $e');
-      // Show error message to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error creating group: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
     }
   }
 

@@ -640,4 +640,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_theme => 'Theme';
+
+  @override
+  String get privategroups => 'Private Group';
+
+  @override
+  String get publicgroups => 'Public Groups';
+
+  @override
+  String get groupnamealreadyexists => 'Group name already exists';
+
+  @override
+  String get groupcreatedsuccessfully => 'Group created successfully';
 }

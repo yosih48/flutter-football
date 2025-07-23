@@ -222,7 +222,12 @@
   "settings_eng": "ENG",
   "settings_heb": "HEB",
   "from": "from",
-  "settings_theme": "Theme"
+  "settings_theme": "Theme",
+  "privategroups": "Private Group",
+  "publicgroups": "Public Groups",
+  "groupnamealreadyexists": "Group name already exists",
+   "groupcreatedsuccessfully": "Group created successfully"
+
 
  
 

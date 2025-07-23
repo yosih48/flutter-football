@@ -161,7 +161,7 @@ class AuthService {
       },
       'isAdmin': false,
       'groupID': {
-        '1': "public" // Changed 2 to '2'
+        '1': "Public" // Changed 2 to '2'
       },
     });
 

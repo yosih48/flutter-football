@@ -1360,6 +1360,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Theme'**
   String get settings_theme;
+
+  /// No description provided for @privategroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Private Group'**
+  String get privategroups;
+
+  /// No description provided for @publicgroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Public Groups'**
+  String get publicgroups;
+
+  /// No description provided for @groupnamealreadyexists.
+  ///
+  /// In en, this message translates to:
+  /// **'Group name already exists'**
+  String get groupnamealreadyexists;
+
+  /// No description provided for @groupcreatedsuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Group created successfully'**
+  String get groupcreatedsuccessfully;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

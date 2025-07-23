@@ -226,6 +226,10 @@
   "settings_eng": "ENG",
   "settings_heb": "עבר",
   "from": "מתוך",
-  "settings_theme": "ערכת נושא"
+  "settings_theme": "ערכת נושא",
+   "privategroups": "ליגות פרטיות",
+  "publicgroups": "ליגות ציבוריות",
+   "groupnamealreadyexists": "שם כבר קיים במערכת",
+   "groupcreatedsuccessfully": "קבוצה נוצרה בהצלחה"
   
 }
