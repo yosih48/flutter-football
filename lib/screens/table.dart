@@ -234,122 +234,129 @@ class TableScreenContentState extends State<TableScreenContent> {
   }
 
 Future<void> _loadSelectedGroupName() async {
-    final groupName = await SharedPreferencesUtil.getSelectedGroupName();
-    print('groupName: ${groupName}');
+  final groupName = await SharedPreferencesUtil.getSelectedGroupName();
+  print('groupName: ${groupName}');
+  setState(() {
+    selectedGroupName = (widget.selectedGroupName != null
+        ? widget.selectedGroupName!
+        : groupName != null
+            ? groupName!
+            : ""); // Use empty string instead of null
+    print('widget.selectedGroupName');
+    print(widget.selectedGroupName);
+  });
+  print('selectedGroupName shared: ${selectedGroupName}');
+}
+
+Future<void> _fetchUserGroups() async {
+  final groupName = await SharedPreferencesUtil.getSelectedGroupName();
+
+  try {
+    Map<String, dynamic> userData = await UsersMethods().fetchUserById(currentUserId);
+    final allGroups = await GroupsMethods().fetchGroups();
+
+    print('All groups fetched: ${allGroups.length}');
+    print('User group IDs: ${userData['groupID']}');
+
     setState(() {
-      selectedGroupName = (widget.selectedGroupName != null
-          ? widget.selectedGroupName
-          : groupName != null
-              ? groupName!
-              : '')!; // Don't default to 'public', use null
-      print('widget.selectedGroupName');
-      print(widget.selectedGroupName);
-    });
-    print('selectedGroupName shared: ${selectedGroupName}');
-  }
+      final userGroupIds = Map<String, String>.from(userData['groupID'] ?? {});
 
-  Future<void> _fetchUserGroups() async {
-    final groupName = await SharedPreferencesUtil.getSelectedGroupName();
+      // Separate private and public groups
+      _privateGroups = {};
+      _publicGroups = {};
 
-    try {
-      Map<String, dynamic> userData =
-          await UsersMethods().fetchUserById(currentUserId);
+      for (var group in allGroups) {
+        final groupId = group['_id'];
+        final groupName = group['name'];
+        final groupType = group['type'];
 
-      // Fetch all groups to get their types
-      final allGroups = await GroupsMethods().fetchGroups();
+        print('Group: $groupName, ID: $groupId, Type: $groupType');
 
-      print('All groups fetched: ${allGroups.length}');
-      print('User group IDs: ${userData['groupID']}');
-
-      setState(() {
-        final userGroupIds =
-            Map<String, String>.from(userData['groupID'] ?? {});
-
-        // Separate private and public groups
-        _privateGroups = {};
-        _publicGroups = {};
-
-        for (var group in allGroups) {
-          final groupId = group['_id'];
-          final groupName = group['name'];
-          final groupType = group['type']; // Check if this field exists
-
-          print('Group: $groupName, ID: $groupId, Type: $groupType');
-
-          // If type field doesn't exist, you might need to use a different logic
-          // For now, let's add some fallback logic
-          if (groupType == 'private' && userGroupIds.containsValue(groupName)) {
+        if (groupType == 'private' && userGroupIds.containsValue(groupName)) {
+          _privateGroups[groupId] = groupName;
+          print('Added to private: $groupName');
+        } else if (groupType == 'public') {
+          _publicGroups[groupId] = groupName;
+          print('Added to public: $groupName');
+        } else if (groupType == null) {
+          if (userGroupIds.containsValue(groupName)) {
             _privateGroups[groupId] = groupName;
-            print('Added to private: $groupName');
-          } else if (groupType == 'public') {
+            print('Added to private (fallback): $groupName');
+          } else {
             _publicGroups[groupId] = groupName;
-            print('Added to public: $groupName');
-          } else if (groupType == null) {
-            // Fallback: if no type field, assume user groups are private and others are public
-            if (userGroupIds.containsValue(groupName)) {
-              _privateGroups[groupId] = groupName;
-              print('Added to private (fallback): $groupName');
-            } else {
-              _publicGroups[groupId] = groupName;
-              print('Added to public (fallback): $groupName');
-            }
+            print('Added to public (fallback): $groupName');
           }
         }
+      }
 
-        print('Private groups: $_privateGroups');
-        print('Public groups: $_publicGroups');
+      print('Private groups: $_privateGroups');
+      print('Public groups: $_publicGroups');
 
-        final selectedGroup = Provider.of<UserProvider>(context, listen: false);
-           // Only fetch users if there are private groups
+      // Set initial selectedGroupName if it's empty or not in private groups
+      if (selectedGroupName.isEmpty || !_privateGroups.containsValue(selectedGroupName)) {
         if (_privateGroups.isNotEmpty) {
-          _fetchUsersForGroup(selectedGroupName);
+          selectedGroupName = _privateGroups.values.first;
+          // Update SharedPreferences with the new selection
+          SharedPreferencesUtil.setSelectedGroupName(selectedGroupName);
         } else {
-          // Clear users list and show empty state
-          _users = [];
-          isLoading = false;
+          selectedGroupName = ""; // Keep empty if no private groups
         }
-      });
-    } catch (e) {
-      print('Failed to fetch user groups: $e');
-    }
-  }
+      }
 
-Future<void> _fetchUsersForGroup(String? groupName) async {
-    if (groupName == null || _privateGroups.isEmpty) {
-      setState(() {
+      final selectedGroup = Provider.of<UserProvider>(context, listen: false);
+      
+      // Only fetch users if there are private groups and selectedGroupName is not empty
+      if (_privateGroups.isNotEmpty && selectedGroupName.isNotEmpty) {
+        _fetchUsersForGroup(selectedGroupName);
+      } else {
+        // Clear users list and show empty state
         _users = [];
         isLoading = false;
-      });
-      return;
-    }
+      }
+    });
+  } catch (e) {
+    print('Failed to fetch user groups: $e');
+    setState(() {
+      _users = [];
+      isLoading = false;
+    });
+  }
+}
 
-    try {
-      List<Map<String, dynamic>> allUsers =
-          await UsersMethods().fetchAllUsers();
-      setState(() {
-        _users = allUsers.where((user) {
-          Map<String, dynamic>? groupID = user['groupID'];
-          return groupID != null && groupID.containsValue(groupName);
-        }).toList()
-          ..sort((a, b) {
-            num pointsA = a['points']?[league.toString()] ?? 0;
-            num pointsB = b['points']?[league.toString()] ?? 0;
-            return pointsB.compareTo(pointsA);
-          });
-        isLoading = false;
-      });
-    } catch (e) {
-      print('Failed to fetch users for group: $e');
-      setState(() {
-        _users = [];
-        isLoading = false;
-      });
-    }
+Future<void> _fetchUsersForGroup(String groupName) async {
+  if (groupName.isEmpty || _privateGroups.isEmpty) {
+    setState(() {
+      _users = [];
+      isLoading = false;
+    });
+    return;
   }
 
+  try {
+    List<Map<String, dynamic>> allUsers = await UsersMethods().fetchAllUsers();
+    setState(() {
+      _users = allUsers.where((user) {
+        Map<String, dynamic>? groupID = user['groupID'];
+        return groupID != null && groupID.containsValue(groupName);
+      }).toList()
+        ..sort((a, b) {
+          num pointsA = a['points']?[league.toString()] ?? 0;
+          num pointsB = b['points']?[league.toString()] ?? 0;
+          return pointsB.compareTo(pointsA);
+        });
+      isLoading = false;
+    });
+  } catch (e) {
+    print('Failed to fetch users for group: $e');
+    setState(() {
+      _users = [];
+      isLoading = false;
+    });
+  }
+}
   @override
   Widget build(BuildContext context) {
-    print('selectedGroupName: ${selectedGroupName}');
+
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
@@ -357,7 +364,7 @@ Future<void> _fetchUsersForGroup(String? groupName) async {
         backgroundColor: Colors.transparent,
        
         title: Text(
-          selectedGroupName != 'public'?selectedGroupName: '' ,
+          selectedGroupName != 'Public'?selectedGroupName: '' ,
           style: TextStyle(
             color: Colors.white,
             fontSize: 20,
@@ -542,13 +549,9 @@ Future<void> _fetchUsersForGroup(String? groupName) async {
                             )
                           : DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
-                       value: _privateGroups.isNotEmpty &&
-                                          _privateGroups
-                                              .containsValue(selectedGroupName)
-                                      ? selectedGroupName
-                                      : (_privateGroups.isNotEmpty
-                                          ? _privateGroups.values.first
-                                          : null),
+                   value: _privateGroups.isNotEmpty && selectedGroupName.isNotEmpty && _privateGroups.containsValue(selectedGroupName)
+    ? selectedGroupName
+    : (_privateGroups.isNotEmpty ? _privateGroups.values.first : null),
                                 dropdownColor: cards,
                                 style: TextStyle(
                                   color: Colors.white,
@@ -714,6 +717,8 @@ Future<void> _fetchUsersForGroup(String? groupName) async {
                                   rows: _users.asMap().entries.map((entry) {
                                     final index = entry.key;
                                     final user = entry.value;
+                                    print('entry${entry}');
+                                    print('user${user}');
                                     return DataRow(
                                       color: MaterialStateProperty.resolveWith<
                                           Color?>(
@@ -818,7 +823,7 @@ Future<void> _fetchUsersForGroup(String? groupName) async {
                     ),
                   ),
                 ),
-                selectedGroupName != 'Public'
+                  (_privateGroups.isNotEmpty)
                     ? Container(
                         margin: EdgeInsets.all(16),
                         child: TextButton.icon(
