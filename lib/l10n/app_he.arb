@@ -230,6 +230,9 @@
    "privategroups": "ליגות פרטיות",
   "publicgroups": "ליגות ציבוריות",
    "groupnamealreadyexists": "שם כבר קיים במערכת",
-   "groupcreatedsuccessfully": "קבוצה נוצרה בהצלחה"
+   "groupcreatedsuccessfully": "קבוצה נוצרה בהצלחה",
+    "nogroupsfound": "לא נמצאו קבוצות",
+  "nogroupsmessage": "אתה עדיין לא חבר באף קבוצה פרטית. הצטרף או צור קבוצה כדי להתחיל להתחרות!",
+  "notmemberanygroup": "אתה לא חבר באף קבוצה"
   
 }

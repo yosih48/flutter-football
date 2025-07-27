@@ -652,4 +652,13 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get groupcreatedsuccessfully => 'קבוצה נוצרה בהצלחה';
+
+  @override
+  String get nogroupsfound => 'לא נמצאו קבוצות';
+
+  @override
+  String get nogroupsmessage => 'אתה עדיין לא חבר באף קבוצה פרטית. הצטרף או צור קבוצה כדי להתחיל להתחרות!';
+
+  @override
+  String get notmemberanygroup => 'אתה לא חבר באף קבוצה';
 }

@@ -219,7 +219,7 @@ Future<void> sendResetEmail() async {
                     controller: fieldTextEditingController,
                     focusNode: fieldFocusNode,
                     decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)!.username,
+                      labelText:  AppLocalizations.of(context)!.email,
                       labelStyle: TextStyle(
                         color: Colors.blue, // Change this to your desired color
                       ),

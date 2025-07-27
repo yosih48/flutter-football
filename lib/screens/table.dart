@@ -233,7 +233,7 @@ class TableScreenContentState extends State<TableScreenContent> {
     _fetchUserGroups();
   }
 
-  Future<void> _loadSelectedGroupName() async {
+Future<void> _loadSelectedGroupName() async {
     final groupName = await SharedPreferencesUtil.getSelectedGroupName();
     print('groupName: ${groupName}');
     setState(() {
@@ -241,7 +241,7 @@ class TableScreenContentState extends State<TableScreenContent> {
           ? widget.selectedGroupName
           : groupName != null
               ? groupName!
-              : 'public')!;
+              : null)!; // Don't default to 'public', use null
       print('widget.selectedGroupName');
       print(widget.selectedGroupName);
     });
@@ -300,14 +300,29 @@ class TableScreenContentState extends State<TableScreenContent> {
         print('Public groups: $_publicGroups');
 
         final selectedGroup = Provider.of<UserProvider>(context, listen: false);
-        _fetchUsersForGroup(selectedGroupName);
+           // Only fetch users if there are private groups
+        if (_privateGroups.isNotEmpty) {
+          _fetchUsersForGroup(selectedGroupName);
+        } else {
+          // Clear users list and show empty state
+          _users = [];
+          isLoading = false;
+        }
       });
     } catch (e) {
       print('Failed to fetch user groups: $e');
     }
   }
 
-  Future<void> _fetchUsersForGroup(String groupName) async {
+Future<void> _fetchUsersForGroup(String? groupName) async {
+    if (groupName == null || _privateGroups.isEmpty) {
+      setState(() {
+        _users = [];
+        isLoading = false;
+      });
+      return;
+    }
+
     try {
       List<Map<String, dynamic>> allUsers =
           await UsersMethods().fetchAllUsers();
@@ -319,25 +334,30 @@ class TableScreenContentState extends State<TableScreenContent> {
           ..sort((a, b) {
             num pointsA = a['points']?[league.toString()] ?? 0;
             num pointsB = b['points']?[league.toString()] ?? 0;
-            return pointsB.compareTo(pointsA); // Sort in descending order
+            return pointsB.compareTo(pointsA);
           });
         isLoading = false;
-        //  print('users: ${_users}');
       });
     } catch (e) {
       print('Failed to fetch users for group: $e');
+      setState(() {
+        _users = [];
+        isLoading = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    print('selectedGroupName: ${selectedGroupName}');
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
+       
         title: Text(
-          selectedGroupName,
+          selectedGroupName != 'public'?selectedGroupName: '' ,
           style: TextStyle(
             color: Colors.white,
             fontSize: 20,
@@ -462,56 +482,110 @@ class TableScreenContentState extends State<TableScreenContent> {
                     //     ),
                     //   ),
                     // ),
-                    Container(
-                      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
+                    if (_privateGroups.isEmpty)
+  Center(
+    child: Padding(
+      padding: EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.group_off, size: 64, color: Colors.grey),
+          SizedBox(height: 16),
+          Text(
+          AppLocalizations.of(context)!.nogroupsfound,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            AppLocalizations.of(context)!.nogroupsmessage,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    ),
+  )
+  else
+       Container(
+                             margin:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
                       ),
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                  
-                                   value: _privateGroups.isNotEmpty
-                              ? _privateGroups.values.first
-                              : null,
-                          dropdownColor: cards,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          icon: Icon(Icons.arrow_drop_down, color: Colors.blue),
-                          isExpanded: true,
-                     
-                          items: _privateGroups.entries.map((entry) {
-                            return DropdownMenuItem<String>(
-                              value: entry.value,
-                              child: Row(
-                                children: [
-                                  Icon(Icons.lock,
-                                      color: Colors.blue, size: 16),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    entry.value,
+                     padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: _privateGroups.isEmpty
+                          ? Row(
+                              children: [
+                                Icon(Icons.info_outline,
+                                    color: Colors.blue, size: 20),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                              AppLocalizations.of(context)!
+                                          .notmemberanygroup,
                                     style: TextStyle(
-                                      color: Colors.white,
+                                      color: Colors.blue,
+                                      fontSize: 16.0,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                ],
+                                ),
+                              ],
+                            )
+                          : DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                       value: _privateGroups.isNotEmpty &&
+                                          _privateGroups
+                                              .containsValue(selectedGroupName)
+                                      ? selectedGroupName
+                                      : (_privateGroups.isNotEmpty
+                                          ? _privateGroups.values.first
+                                          : null),
+                                dropdownColor: cards,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16.0,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                icon: Icon(Icons.arrow_drop_down,
+                                    color: Colors.blue),
+                                isExpanded: true,
+                                items: _privateGroups.entries.map((entry) {
+                                  return DropdownMenuItem<String>(
+                                    value: entry.value,
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.lock,
+                                            color: Colors.blue, size: 16),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          entry.value,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (String? newValue) {
+                                  if (newValue != null) {
+                                    setState(() {
+                                      selectedGroupName = newValue;
+                                    });
+                                    _fetchUsersForGroup(newValue);
+                                  }
+                                },
                               ),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            if (newValue != null) {
-                              setState(() {
-                                selectedGroupName = newValue;
-                              });
-                              _fetchUsersForGroup(newValue);
-                            }
-                          },
-                        ),
-                      ),
+                            ),
                     ),
                     // Public Groups Dropdown
                     // Container(
@@ -579,6 +653,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                   //       ))
                   ],
                 ),
+                   if (_privateGroups.isNotEmpty)
                 Expanded(
                   child: Container(
                     margin: EdgeInsets.symmetric(horizontal: 16),

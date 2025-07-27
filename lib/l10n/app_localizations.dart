@@ -1384,6 +1384,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Group created successfully'**
   String get groupcreatedsuccessfully;
+
+  /// No description provided for @nogroupsfound.
+  ///
+  /// In en, this message translates to:
+  /// **'No Groups Found'**
+  String get nogroupsfound;
+
+  /// No description provided for @nogroupsmessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You are not a member of any private groups yet. Join or create a group to start competing!'**
+  String get nogroupsmessage;
+
+  /// No description provided for @notmemberanygroup.
+  ///
+  /// In en, this message translates to:
+  /// **'You are not a member of any group'**
+  String get notmemberanygroup;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

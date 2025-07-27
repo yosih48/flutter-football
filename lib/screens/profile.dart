@@ -75,18 +75,28 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     currentUserId = widget.authProvider.currentUser?.id ?? 'Not logged in';
     currentUserEmail =
         widget.authProvider.currentUser?.email ?? 'Not logged in';
-    _loadSelectedGroupName();
+   
     _fetchUserData();
-    _fetchUserGroups();
+    _initializeGroupSelection(); 
   }
 
-  Future<void> _loadSelectedGroupName() async {
-    final defaultGroup = 'public';
+Future<void> _initializeGroupSelection() async {
+    await _fetchUserGroups(); // Fetch groups first
+    await _loadSelectedGroupName(); // Then load/set the selected group
+  }
+
+Future<void> _loadSelectedGroupName() async {
     final sharedGroupName = await SharedPreferencesUtil.getSelectedGroupName();
-    String groupName = defaultGroup;
+    String groupName;
+
     if (sharedGroupName == null) {
-      await SharedPreferencesUtil.setSelectedGroupName(defaultGroup);
-      groupName = defaultGroup; // Assign defaultGroup manually
+      // Use first group from user's groups as default, fallback to 'public'
+      if (_userGroups.isNotEmpty) {
+        groupName = _userGroups.values.first;
+      } else {
+        groupName = 'public'; // Fallback if no groups exist
+      }
+      await SharedPreferencesUtil.setSelectedGroupName(groupName);
     } else {
       groupName = sharedGroupName;
     }
@@ -97,44 +107,24 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     print('selectedGroupName shared: ${selectedGroupName}');
   }
 
-  Future<void> _fetchUserGroups() async {
+ Future<void> _fetchUserGroups() async {
     try {
       Map<String, dynamic> userData =
           await UsersMethods().fetchUserById(currentUserId);
       List<Map<String, dynamic>> groupsInfo =
           await GroupsMethods().fetchGroups();
+
       setState(() {
-        final userProvider = Provider.of<UserProvider>(context, listen: false);
-        print(userProvider.selectedGroupName);
         _userGroups = Map<String, String>.from(userData['groupID'] ?? {});
         _userWinners = Map<String, String>.from(userData['winner'] ?? {});
         _userTopScorer = Map<String, String>.from(userData['topScorer'] ?? {});
         _userTopScorerPoints =
             Map<String, int>.from(userData['topScorerPoints'] ?? {});
         _groupsInfo = groupsInfo;
-        print(_userGroups);
-        print(_userWinners);
-        print(_userTopScorer);
-        if (userProvider.selectedGroupName == 'public') {
-          String selectedGroup;
 
-          if (_userGroups.isNotEmpty) {
-            var groupValues = _userGroups.values.toList();
+        // Remove the complex default group selection logic from here
+        // It's now handled in _loadSelectedGroupName()
 
-            if (groupValues.first.toLowerCase() == 'public' &&
-                groupValues.length > 1) {
-              selectedGroup = groupValues[1];
-            } else {
-              selectedGroup = groupValues.first;
-            }
-          } else {
-            // Handle the case when _userGroups is empty
-            selectedGroup = 'public'; // or any other default value you prefer
-          }
-
-          Provider.of<UserProvider>(context, listen: false)
-              .setSelectedGroupName(_userGroups.values.first);
-        }
         Provider.of<UserProvider>(context, listen: false)
             .setCurrentUser(currentUserId);
         _isLoadingGroups = false;
@@ -738,7 +728,8 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                   Icon(Icons.group_outlined, size: 48, color: Colors.grey),
                   SizedBox(height: 16),
                   Text(
-                    AppLocalizations.of(context)!.nogroupsyet,
+                    // AppLocalizations.of(context)!.nogroupsyet,
+                     AppLocalizations.of(context)!.notmemberanygroup,
                     style: TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                 ],

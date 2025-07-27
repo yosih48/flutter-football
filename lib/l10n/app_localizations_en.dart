@@ -652,4 +652,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupcreatedsuccessfully => 'Group created successfully';
+
+  @override
+  String get nogroupsfound => 'No Groups Found';
+
+  @override
+  String get nogroupsmessage => 'You are not a member of any private groups yet. Join or create a group to start competing!';
+
+  @override
+  String get notmemberanygroup => 'You are not a member of any group';
 }
