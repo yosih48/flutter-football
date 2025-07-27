@@ -241,7 +241,7 @@ Future<void> _loadSelectedGroupName() async {
           ? widget.selectedGroupName
           : groupName != null
               ? groupName!
-              : null)!; // Don't default to 'public', use null
+              : '')!; // Don't default to 'public', use null
       print('widget.selectedGroupName');
       print(widget.selectedGroupName);
     });
