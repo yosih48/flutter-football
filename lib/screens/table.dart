@@ -6,6 +6,7 @@ import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
 import 'package:football/models/users.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
+import 'package:football/providers/league_data_provider.dart';
 import 'package:football/resources/appUpdates.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/groupsMethods.dart';
@@ -96,7 +97,7 @@ class TableScreenContentState extends State<TableScreenContent> {
       Provider.of<UserProvider>(context, listen: false)
           .setselectedLeageId(league);
     });
-    _fetchUsersForGroup(selectedGroupName);
+   _fetchUsersForSelectedGroup();
   }
 
   void _showInviteDialog(String inviteCode) {
@@ -212,7 +213,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                 if (_inviteCodeController.text.isNotEmpty) {
                   await GroupsMethods().addGroupToUser(
                       _inviteCodeController.text, currentUserId, context);
-                  _fetchUserGroups();
+                  _initializeData();
                   Navigator.of(context).pop();
                 }
               },
@@ -229,131 +230,133 @@ class TableScreenContentState extends State<TableScreenContent> {
     currentUserId = widget.authProvider.currentUser?.id ?? 'Not logged in';
     league = widget.userProvider.selectedLeageId ?? 2;
     print('currentUserId table: ${currentUserId}');
-    _loadSelectedGroupName();
-    _fetchUserGroups();
+    _initializeData();
   }
 
-Future<void> _loadSelectedGroupName() async {
-  final groupName = await SharedPreferencesUtil.getSelectedGroupName();
-  print('groupName: ${groupName}');
-  setState(() {
-    selectedGroupName = (widget.selectedGroupName != null
-        ? widget.selectedGroupName!
-        : groupName != null
-            ? groupName!
-            : ""); // Use empty string instead of null
-    print('widget.selectedGroupName');
-    print(widget.selectedGroupName);
-  });
-  print('selectedGroupName shared: ${selectedGroupName}');
-}
+  // Single initialization method that loads everything efficiently
+  Future<void> _initializeData() async {
+    setState(() => isLoading = true);
 
-Future<void> _fetchUserGroups() async {
-  final groupName = await SharedPreferencesUtil.getSelectedGroupName();
+    try {
+      // Get cached group name first
+      final cachedGroupName =
+          await SharedPreferencesUtil.getSelectedGroupName();
 
-  try {
-    Map<String, dynamic> userData = await UsersMethods().fetchUserById(currentUserId);
-    final allGroups = await GroupsMethods().fetchGroups();
+      // Single API call to get dashboard data
+      final dashboardData =
+          await GroupsMethods.fetchDashboardData(currentUserId);
 
-    print('All groups fetched: ${allGroups.length}');
-    print('User group IDs: ${userData['groupID']}');
+      setState(() {
+        // Set groups from API response
+        _privateGroups =
+            Map<String, String>.from(dashboardData['privateGroups'] ?? {});
+        _publicGroups =
+            Map<String, String>.from(dashboardData['publicGroups'] ?? {});
 
-    setState(() {
-      final userGroupIds = Map<String, String>.from(userData['groupID'] ?? {});
+        print('Private groups: $_privateGroups');
+        print('Public groups: $_publicGroups');
 
-      // Separate private and public groups
-      _privateGroups = {};
-      _publicGroups = {};
+        // Determine selected group name
+        selectedGroupName = _determineSelectedGroupName(cachedGroupName);
+      });
 
-      for (var group in allGroups) {
-        final groupId = group['_id'];
-        final groupName = group['name'];
-        final groupType = group['type'];
-
-        print('Group: $groupName, ID: $groupId, Type: $groupType');
-
-        if (groupType == 'private' && userGroupIds.containsValue(groupName)) {
-          _privateGroups[groupId] = groupName;
-          print('Added to private: $groupName');
-        } else if (groupType == 'public') {
-          _publicGroups[groupId] = groupName;
-          print('Added to public: $groupName');
-        } else if (groupType == null) {
-          if (userGroupIds.containsValue(groupName)) {
-            _privateGroups[groupId] = groupName;
-            print('Added to private (fallback): $groupName');
-          } else {
-            _publicGroups[groupId] = groupName;
-            print('Added to public (fallback): $groupName');
-          }
-        }
-      }
-
-      print('Private groups: $_privateGroups');
-      print('Public groups: $_publicGroups');
-
-      // Set initial selectedGroupName if it's empty or not in private groups
-      if (selectedGroupName.isEmpty || !_privateGroups.containsValue(selectedGroupName)) {
-        if (_privateGroups.isNotEmpty) {
-          selectedGroupName = _privateGroups.values.first;
-          // Update SharedPreferences with the new selection
-          SharedPreferencesUtil.setSelectedGroupName(selectedGroupName);
-        } else {
-          selectedGroupName = ""; // Keep empty if no private groups
-        }
-      }
-
-      final selectedGroup = Provider.of<UserProvider>(context, listen: false);
-      
-      // Only fetch users if there are private groups and selectedGroupName is not empty
-      if (_privateGroups.isNotEmpty && selectedGroupName.isNotEmpty) {
-        _fetchUsersForGroup(selectedGroupName);
+      // Only fetch users if we have a valid group selection
+      if (selectedGroupName.isNotEmpty && _privateGroups.isNotEmpty) {
+        await _fetchUsersForSelectedGroup();
       } else {
-        // Clear users list and show empty state
+        setState(() {
+          _users = [];
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Failed to initialize data: $e');
+      setState(() {
         _users = [];
         isLoading = false;
-      }
-    });
-  } catch (e) {
-    print('Failed to fetch user groups: $e');
-    setState(() {
-      _users = [];
-      isLoading = false;
-    });
-  }
-}
-
-Future<void> _fetchUsersForGroup(String groupName) async {
-  if (groupName.isEmpty || _privateGroups.isEmpty) {
-    setState(() {
-      _users = [];
-      isLoading = false;
-    });
-    return;
+      });
+    }
   }
 
-  try {
-    List<Map<String, dynamic>> allUsers = await UsersMethods().fetchAllUsers();
-    setState(() {
-      _users = allUsers.where((user) {
-        Map<String, dynamic>? groupID = user['groupID'];
-        return groupID != null && groupID.containsValue(groupName);
-      }).toList()
-        ..sort((a, b) {
-          num pointsA = a['points']?[league.toString()] ?? 0;
-          num pointsB = b['points']?[league.toString()] ?? 0;
-          return pointsB.compareTo(pointsA);
-        });
-      isLoading = false;
-    });
-  } catch (e) {
-    print('Failed to fetch users for group: $e');
-    setState(() {
-      _users = [];
-      isLoading = false;
-    });
+  String _determineSelectedGroupName(String? cachedGroupName) {
+    // Use widget's selected group name if provided
+    if (widget.selectedGroupName != null &&
+        widget.selectedGroupName!.isNotEmpty) {
+      return widget.selectedGroupName!;
+    }
+
+    // Use cached group name if it exists in private groups
+    if (cachedGroupName != null &&
+        cachedGroupName.isNotEmpty &&
+        _privateGroups.containsValue(cachedGroupName)) {
+      return cachedGroupName;
+    }
+
+    // Default to first private group if available
+    if (_privateGroups.isNotEmpty) {
+      final firstGroupName = _privateGroups.values.first;
+      // Update cache with new selection
+      SharedPreferencesUtil.setSelectedGroupName(firstGroupName);
+      return firstGroupName;
+    }
+
+    return ""; // No valid group found
   }
-}
+  Future<void> _fetchUsersForSelectedGroup() async {
+    if (selectedGroupName.isEmpty) {
+      setState(() {
+        _users = [];
+        isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      // Single API call to get users for the specific group and league
+      final users =
+          await GroupsMethods.fetchGroupUsers(selectedGroupName, league);
+
+      setState(() {
+        _users = users;
+        isLoading = false;
+      });
+
+      print('Fetched ${users.length} users for group: $selectedGroupName');
+    } catch (e) {
+      print('Failed to fetch users for group: $e');
+      setState(() {
+        _users = [];
+        isLoading = false;
+      });
+    }
+  }
+    // Method to change selected group (call this when user selects different group)
+  Future<void> changeSelectedGroup(String newGroupName) async {
+    if (newGroupName == selectedGroupName) return;
+
+    setState(() {
+      selectedGroupName = newGroupName;
+      isLoading = true;
+    });
+
+    // Update cache
+    await SharedPreferencesUtil.setSelectedGroupName(newGroupName);
+
+    // Fetch users for new group
+    await _fetchUsersForSelectedGroup();
+  }
+
+  // Refresh method for pull-to-refresh or manual refresh
+  Future<void> refreshData() async {
+    await _initializeData();
+  }
+
+  // Method to refresh only users (lighter refresh)
+  Future<void> refreshUsers() async {
+    await _fetchUsersForSelectedGroup();
+  }
+
+
   @override
   Widget build(BuildContext context) {
 
@@ -408,68 +411,13 @@ Future<void> _fetchUsersForGroup(String groupName) async {
           : Column(
               children: [
                 Container(
-                  margin: EdgeInsets.symmetric(vertical: 8),
-                  child: FutureBuilder<Map<String, dynamic>>(
-                    future: UsersMethods().fetchUserById(currentUserId),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        final userData = snapshot.data!;
-                        final chosenLeagues = Map<String, bool>.from(
-                            userData['chosenLeagues'] ?? {});
-
-                        // Create filtered lists based on chosen leagues
-                        final enabledLeagues = <int>[
-                          if (chosenLeagues['2'] == true) 2,
-                          if (chosenLeagues['383'] == true) 383,
-                          if (chosenLeagues['140'] == true) 140,
-                          if (chosenLeagues['3'] == true) 3,
-                          if (chosenLeagues['39'] == true) 39,
-                          if (chosenLeagues['78'] == true) 78,
-                          if (chosenLeagues['848'] == true) 848,
-                          if (chosenLeagues['15'] == true) 15,
-                        ];
-
-                        final options = enabledLeagues.map((id) {
-                          switch (id) {
-                            case 2:
-                              return AppLocalizations.of(context)!
-                                  .championsleague;
-                            case 383:
-                              return AppLocalizations.of(context)!.ligathaal;
-                            case 140:
-                              return AppLocalizations.of(context)!.laliga;
-                            case 3:
-                              return AppLocalizations.of(context)!.europaleague;
-                            case 39:
-                              return AppLocalizations.of(context)!
-                                  .premierleague;
-                            case 78:
-                              return AppLocalizations.of(context)!.bundesleague;
-                            case 848:
-                              return AppLocalizations.of(context)!
-                                  .conferenceleague;
-                            case 15:
-                              return AppLocalizations.of(context)!.clubworldcup;
-                            default:
-                              return '';
-                          }
-                        }).toList();
-
-                        final imageUrls = enabledLeagues.map((id) {
-                          return 'https://media.api-sports.io/football/leagues/$id.png';
-                        }).toList();
-
-                        return ToggleButtonsSample(
-                          options: options,
-                          imageUrls: imageUrls,
-                          onSelectionChanged: (index) {
-                            final selectedLeagueId = enabledLeagues[index];
-                            updateSelectedIndex(selectedLeagueId);
-                          },
-                          initialSelection: enabledLeagues.indexOf(league),
-                        );
-                      }
-                      return CircularProgressIndicator();
+               margin: EdgeInsets.symmetric(vertical: 8),
+                  child: LeagueSelector(
+                    userId: currentUserId,
+                    currentLeague: league,
+                    useToggleButtons: true, // Use ToggleButtonsSample
+                    onSelectionChanged: (leagueId, index) {
+                      updateSelectedIndex(leagueId);
                     },
                   ),
                 ),
@@ -584,7 +532,7 @@ Future<void> _fetchUsersForGroup(String groupName) async {
                                     setState(() {
                                       selectedGroupName = newValue;
                                     });
-                                    _fetchUsersForGroup(newValue);
+                                   _fetchUsersForSelectedGroup();
                                   }
                                 },
                               ),
@@ -717,8 +665,7 @@ Future<void> _fetchUsersForGroup(String groupName) async {
                                   rows: _users.asMap().entries.map((entry) {
                                     final index = entry.key;
                                     final user = entry.value;
-                                    print('entry${entry}');
-                                    print('user${user}');
+                               
                                     return DataRow(
                                       color: MaterialStateProperty.resolveWith<
                                           Color?>(

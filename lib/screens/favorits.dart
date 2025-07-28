@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
+import 'package:football/providers/league_data_provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/theme/colors.dart';
@@ -185,6 +186,8 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
 
       if (response.statusCode == 200) {
         print('Database updated successfully');
+          // Clear LeagueDataProvider cache after successful update
+        LeagueDataProvider().clearCache();
       } else {
         print('Failed to update database: ${response.statusCode}');
       }

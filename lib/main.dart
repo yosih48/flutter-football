@@ -5,6 +5,7 @@ import 'package:football/models/games.dart';
 import 'package:football/models/users.dart';
 import 'package:football/providers/LocaleProvider.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
+import 'package:football/providers/league_data_provider.dart';
 import 'package:football/providers/theme_provider.dart';
 import 'package:football/resources/appUpdates.dart';
 import 'package:football/resources/auth.dart';
@@ -56,6 +57,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
+        ChangeNotifierProvider(create: (_) => LeagueDataProvider()),
       ],
       child: GameApp(),
     ),
