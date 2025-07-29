@@ -345,11 +345,17 @@ class _GameDetailsState extends State<GameDetails> {
                 items: _userGroups.entries.map((entry) {
                   return DropdownMenuItem<String>(
                     value: entry.value,
-                    child: Text(
-                      entry.value,
-                      style: TextStyle(
-                        color: Colors.white,
-                      ),
+                    child: Row(
+                      children: [
+                                Icon(Icons.lock, color: Colors.blue, size: 16),
+                        SizedBox(width: 8),
+                        Text(
+                          entry.value,
+                          style: TextStyle(
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 }).toList(),
