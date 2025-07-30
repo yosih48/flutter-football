@@ -250,7 +250,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     league = widget.userProvider.selectedLeageId ?? -1;
     selectedDate = DateTime.now();
     print('selectedDate: ${selectedDate}');
-    
+
     print('clientId in games: ${clientId}');
 
     print(email);
@@ -391,6 +391,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         return '';
     }
   }
+
   String getLocalizedLeaguerRound(String round, BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
 
@@ -417,7 +418,6 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   }
 
   void _toggleLeagueFilter(int leagueId) async {
-  
     setState(() {
       if (_selectedLeagueFilter == leagueId) {
         _selectedLeagueFilter = null; // Clear filter
@@ -436,7 +436,6 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         isLoading = false;
       });
     } else {
-    
       // Restore games for all enabled leagues with the current date filter
       final userData = await UsersMethods().fetchUserById(clientId);
       final chosenLeagues =
@@ -1061,8 +1060,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           if (_showOnlyLiveGames) {
             filteredGames = filteredGames.where((game) {
               // return ['1H', '2H', 'HT', 'ET', 'BT', 'P', 'INT']
-              return ['1H', '2H', 'HT']
-                  .contains(game.status.short);
+              return ['1H', '2H', 'HT'].contains(game.status.short);
             }).toList();
           }
 
@@ -1223,14 +1221,14 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       itemBuilder: (context, index) {
         final date = sortedDates[index];
         var gamesForDate = groupedGames[date]!;
-
+        print('gamesForDate: ${gamesForDate.length}');
         // Sort games by time within the date
         gamesForDate.sort((a, b) {
           // Assuming your Game object has a time field or you can extract time from fixture
           // Replace this with your actual time comparison logic
           return a.date.compareTo(b.date);
         });
-            // Group consecutive games by league while maintaining time order
+        // Group consecutive games by league while maintaining time order
         List<Widget> gameWidgets = [];
 
         for (int i = 0; i < gamesForDate.length; i++) {
@@ -1254,7 +1252,6 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                     children: [
                       Text(
                         '$leagueName',
-                   
                         style: TextStyle(
                           color: _selectedLeagueFilter == currentLeagueId
                               ? Colors.blue
@@ -1327,18 +1324,30 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               child: Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Text(
-                  formatDateInHebrew(date, context),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: Column(
+                  children: [
+                    Text(
+                      formatDateInHebrew(date, context),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      '${gamesForDate.length} ${AppLocalizations.of(context)!.numberOfGames}',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
             // Games sorted by time, showing league name for each game
-       ...gameWidgets,
+            ...gameWidgets,
           ],
         );
       },

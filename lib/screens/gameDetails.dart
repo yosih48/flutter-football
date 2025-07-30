@@ -10,6 +10,7 @@ import 'package:football/screens/login_screen.dart';
 import 'package:football/screens/profile.dart';
 import 'package:football/screens/table.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/utils/status_utils.dart';
 import 'package:football/widgets/FixtureEventsWidget.dart';
 import 'package:football/widgets/SharedPreferences.dart';
 import 'package:football/widgets/teamLinks.dart';
@@ -231,18 +232,33 @@ class _GameDetailsState extends State<GameDetails> {
   }
 
   Widget _buildGameHeader() {
+    final info = StatusUtils.getStatusInfo(_currentGame.status.short as String, context);
+    final statusColor = info['color'];
+    final statusText = info['text'];
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          // _currentGame.status.elapsed.toString(),
-          (_currentGame.status.long == "First Half" ||
+           Text.rich(
+          TextSpan(
+            children: [
+              if (_currentGame.status.long == "First Half" ||
                   _currentGame.status.long == "Second Half")
-              ? "${_currentGame.status.elapsed}'"
-              : _currentGame.status.long,
-          style: TextStyle(
-            color: getStatusColor(_currentGame.status.long),
-            fontSize: 14.0,
+                TextSpan(
+                  text: "${_currentGame.status.elapsed}'",
+                  style: TextStyle(
+                    color: Colors.red, // Your custom color for elapsed
+                    fontSize: 14.0,
+                  ),
+                )
+              else
+                TextSpan(
+                  text: info['text'],
+                  style: TextStyle(
+                    color: info['color'],
+                    fontSize: 14.0,
+                  ),
+                ),
+            ],
           ),
         ),
         Text(

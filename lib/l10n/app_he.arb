@@ -195,7 +195,7 @@
   "notStarted": "טרם החל",
   "finished": "הסתיים",
   "postponed": "נדחה",
-"welcomeTitle": "ברוכים הבאים ל-SCORE LEAGUE! ⚽",
+"welcomeTitle": "ברוכים הבאים לאפליקציית-ScoreCast! ",
   "welcomeContent": "הפלטפורמה המובילה לניחושי ספורט! כאן תוכלו לנחש תוצאות משחקים, להתחרות עם חברים ולצבור נקודות. הצטרפו לליגה הפרטית שלכם והתחילו את המסע המרגש לקראת התחרות האולטימטיבית!",
 
   "guessTitle": "איך מנחשים? 🎯",
@@ -233,6 +233,7 @@
    "groupcreatedsuccessfully": "קבוצה נוצרה בהצלחה",
     "nogroupsfound": "לא נמצאו קבוצות",
   "nogroupsmessage": "אתה עדיין לא חבר באף קבוצה פרטית. הצטרף או צור קבוצה כדי להתחיל להתחרות!",
-  "notmemberanygroup": "אתה לא חבר באף קבוצה"
+  "notmemberanygroup": "אתה לא חבר באף קבוצה",
+  "numberOfGames": "משחקים"
   
 }

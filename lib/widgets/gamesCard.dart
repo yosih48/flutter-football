@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/utils/status_utils.dart';
 import 'package:football/widgets/teamLInks.dart';
 
 import 'package:intl/intl.dart';
@@ -30,60 +31,7 @@ class GameWidget extends StatelessWidget {
       awayController!.text = guess!.awayTeamGoals.toString();
     }
   }
-  Color getStatusColor(String status) {
-    switch (status) {
-      case "First Half":
-      case "Second Half":
-      case "Extra Time":
-        return Colors.red;
-      case "Halftime":
-        return Colors.orange;
-      case "Not Started":
-        return Colors.grey;
-      case "Match Finished":
-        return Colors.green;
-      case "Postponed":
-      case "TBD":
-        return Colors.yellow;
-      default:
-        return Color(0xFF9BA4B5).withOpacity(0.9);
-    }
-  }
-  Map<String, dynamic> getStatusInfo(String status, context) {
-    switch (status) {
-      case "H1":
-        return {"color": Colors.red, "text": AppLocalizations.of(context)!.firstHalf
-        };
-      case "H2":
-        return {"color": Colors.red, "text":  AppLocalizations.of(context)!.secondHalf
-        };
-      case "ET":
-        return {"color": Colors.red, "text":  AppLocalizations.of(context)!.extraTime
-        };
-      case "HT":
-        return {"color": Colors.orange, "text":  AppLocalizations.of(context)!.halftime
-        };
-      case "NS":
-        return {"color": Colors.grey, "text":  AppLocalizations.of(context)!.notStarted
-        };
-      case "FT":
-        return {"color": Colors.green, "text":  AppLocalizations.of(context)!.finished
-        };
-      case "Postponed":
-        return {"color": Colors.yellow, "text":  AppLocalizations.of(context)!.postponed
-        };
-      case "AET":
-        return {"color": Colors.green, "text": AppLocalizations.of(context)!.finishAfterExtraTime
-        };
-      case "BT":
-        return {"color": Colors.green, "text": AppLocalizations.of(context)!.finishAfterExtraTime
-        };
-      case "TBD":
-        return {"color": Colors.yellow, "text": "To Be Decided"};
-      default:
-        return {"color": Color(0xFF9BA4B5).withOpacity(0.9), "text": "Unknown"};
-    }
-  }
+  
 
 
   @override
@@ -91,7 +39,7 @@ class GameWidget extends StatelessWidget {
     print(homeController);
     bool isValid = homeController!.text.isNotEmpty;
     print(isValid);
-final info = getStatusInfo(game.status.short, context);
+final info = StatusUtils.getStatusInfo(game.status.short, context);
 print(game.date.toLocal());
 print(DateTime.now());
     return Card(

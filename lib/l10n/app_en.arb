@@ -191,7 +191,7 @@
   "notStarted": "Not Started",
   "finished": "Finished",
   "postponed": "Postponed",
-    "welcomeTitle": "Welcome to the SCORE LEAGUE app!",
+    "welcomeTitle": "Welcome to the ScoreCast App!",
   "welcomeContent": "An innovative sports prediction app that lets you guess game results, compete with friends, and earn points. Start your journey toward an exciting competition!",
   
   "guessTitle": "Guess Results",
@@ -229,7 +229,8 @@
    "groupcreatedsuccessfully": "Group created successfully",
      "nogroupsfound": "No Groups Found",
   "nogroupsmessage": "You are not a member of any private groups yet. Join or create a group to start competing!",
-  "notmemberanygroup": "You are not a member of any group"
+  "notmemberanygroup": "You are not a member of any group",
+  "numberOfGames": "games"
 
 
  

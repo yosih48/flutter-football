@@ -1220,7 +1220,7 @@ abstract class AppLocalizations {
   /// No description provided for @welcomeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to the SCORE LEAGUE app!'**
+  /// **'Welcome to the ScoreCast App!'**
   String get welcomeTitle;
 
   /// No description provided for @welcomeContent.
@@ -1402,6 +1402,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You are not a member of any group'**
   String get notmemberanygroup;
+
+  /// No description provided for @numberOfGames.
+  ///
+  /// In en, this message translates to:
+  /// **'games'**
+  String get numberOfGames;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -570,7 +570,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get postponed => 'נדחה';
 
   @override
-  String get welcomeTitle => 'ברוכים הבאים ל-SCORE LEAGUE! ⚽';
+  String get welcomeTitle => 'ברוכים הבאים לאפליקציית-ScoreCast! ';
 
   @override
   String get welcomeContent => 'הפלטפורמה המובילה לניחושי ספורט! כאן תוכלו לנחש תוצאות משחקים, להתחרות עם חברים ולצבור נקודות. הצטרפו לליגה הפרטית שלכם והתחילו את המסע המרגש לקראת התחרות האולטימטיבית!';
@@ -661,4 +661,7 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get notmemberanygroup => 'אתה לא חבר באף קבוצה';
+
+  @override
+  String get numberOfGames => 'משחקים';
 }
