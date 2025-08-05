@@ -664,4 +664,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get numberOfGames => 'games';
+
+  @override
+  String get chooseCompetitions => 'Choose your competitions';
 }

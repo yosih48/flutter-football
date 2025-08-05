@@ -43,33 +43,7 @@ class GoogleSignInButton extends StatelessWidget {
 
           String? fcmToken = await FirebaseMessaging.instance.getToken();
           print('fcmToken: $fcmToken');
-          // Send the ID token to your backend
-
-          // final response = await http.post(
-          //   Uri.parse('https://leagues.onrender.com/users/verify-google-user'),
-          //   headers: <String, String>{
-          //     'Content-Type': 'application/json; charset=UTF-8',
-          //   },
-          //   body: jsonEncode(<String, String>{
-          //     'token': idToken,
-          //   }),
-          // );
-
-          // if (response.statusCode == 200) {
-          //            print(response);
-          //   print(response.statusCode);
-          //   print(response.body);
-          //   // Successfully authenticated with the backend
-          //   final Map<String, dynamic> data = json.decode(response.body);
-          //   final String jwtToken = data['newToken'];
-          //   onSignInSuccess(jwtToken);
-          // } else {
-          //   print('Authentication failed');
-          //   print(response);
-          //   print(response.statusCode);
-          //   // Handle authentication error
-          //   onSignInError('Authentication failed');
-          // }
+    
 
           await authProvider.googleLogin(idToken, fcmToken, context);
 

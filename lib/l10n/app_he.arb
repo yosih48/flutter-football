@@ -234,6 +234,7 @@
     "nogroupsfound": "לא נמצאו קבוצות",
   "nogroupsmessage": "אתה עדיין לא חבר באף קבוצה פרטית. הצטרף או צור קבוצה כדי להתחיל להתחרות!",
   "notmemberanygroup": "אתה לא חבר באף קבוצה",
-  "numberOfGames": "משחקים"
+  "numberOfGames": "משחקים",
+   "chooseCompetitions": "תבחר את התחרויות שלך"
   
 }

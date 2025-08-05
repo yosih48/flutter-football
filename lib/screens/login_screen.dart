@@ -10,6 +10,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:football/models/memoryToken.dart';
 import 'package:football/resources/appUpdates.dart';
 import 'package:football/resources/usersMethods.dart';
+import 'package:football/screens/competitions.dart';
 import 'package:football/screens/games.dart';
 import 'package:football/screens/signup_screen.dart';
 import 'package:football/theme/colors.dart';
@@ -122,10 +123,26 @@ Future<void> sendResetEmail() async {
       // Navigate to GamesScreen after successful login
       if (!mounted) return;
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => MobileScreenLayout()),
-      );
+      // Check if it's first login
+      if (authProvider.currentUser?.isFirstLogin == true) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Competitions(
+              userEmail: authProvider.currentUser!.email,
+              userName: authProvider.currentUser!.name, // or displayName
+            ),
+            
+          ),
+          (route) => false, // This removes ALL previous routes
+        );
+      } else {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => MobileScreenLayout()),
+          (route) => false, // This removes ALL previous routes
+        );
+      }
      
 // String? fcmToken = await FirebaseMessaging.instance.getToken();
 // print('fcmToken: ${fcmToken}');
@@ -365,12 +382,28 @@ Future<void> sendResetEmail() async {
               GoogleSignInButton(
                 
                 onSignInSuccess: (String token) {
+                   final authProvider =
+                      Provider.of<AuthProvider>(context, listen: false);
                   // Handle successful sign-in
                   print('Successfully signed in with Google. JWT: ');
-                  // TODO: Store the token securely and navigate to the home screen
-               Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (context) => GamesScreen()),
-                  );
+            // Check if it's first login
+                  if (authProvider.currentUser?.isFirstLogin == true) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (context) => Competitions(
+                          userEmail: authProvider.currentUser!.email,
+                          userName:
+                              authProvider.currentUser!.name, // or displayName
+                        ),
+                      ),
+                         (route) => false,
+                    );
+                  } else {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => GamesScreen()),
+                         (route) => false,
+                    );
+                  }
                 },
                 onSignInError: (String error) {
                   // Handle sign-in error

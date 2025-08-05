@@ -1408,6 +1408,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'games'**
   String get numberOfGames;
+
+  /// No description provided for @chooseCompetitions.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your competitions'**
+  String get chooseCompetitions;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

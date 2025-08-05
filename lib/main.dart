@@ -14,6 +14,7 @@ import 'package:football/resources/gamesMethods.dart';
 import 'package:football/responsive/mobile_screen_layout.dart';
 import 'package:football/responsive/rsponsive_layout_screen.dart';
 import 'package:football/responsive/web_screen_layout.dart';
+import 'package:football/screens/competitions.dart';
 import 'package:football/screens/gameDetails.dart';
 import 'package:football/screens/games.dart';
 import 'package:football/screens/login_screen.dart';
@@ -93,10 +94,20 @@ class GameApp extends StatelessWidget {
                 print(authProvider.isInitializing);
                 return Scaffold(body: Center(child: CircularProgressIndicator()));
               }
-              return authProvider.currentUser != null
-                  ? MobileScreenLayout()
-                  : LoginScreen();
-            },
+    if (authProvider.currentUser != null) {
+      // User is logged in, check if it's first login
+      if (authProvider.currentUser!.isFirstLogin) {
+        return Competitions(
+          userEmail: authProvider.currentUser!.email,
+          userName: authProvider.currentUser!.name,
+        );
+      }
+      return MobileScreenLayout();
+    }
+    
+    return LoginScreen();
+  },
+            
           ),
           routes: {
             '/game_details': (context) => GamesScreen(),

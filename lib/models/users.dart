@@ -5,6 +5,7 @@ class User {
   final String email;
   final String? newToken;
   final String? fcmToken;
+   final bool isFirstLogin;
   final Map<String, dynamic>? groups;
   final Map<String, dynamic>? groupID;
 
@@ -13,6 +14,7 @@ class User {
     required this.name,
     required this.admin,
     required this.email,
+    required this.isFirstLogin,
     this.newToken,
     this.fcmToken,
     this.groups,
@@ -22,6 +24,7 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'] ?? '',
+      isFirstLogin: json['isFirstLogin'] ?? false,
       name: json['name'] ?? '',
       admin: json['admin'] ?? false,
       email: json['email'] ?? '',
@@ -31,4 +34,7 @@ class User {
       groupID: json['groupID'] != null ? Map<String, dynamic>.from(json['groupID']) : null,
     );
   }
+
+
+  
 }

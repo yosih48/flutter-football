@@ -956,6 +956,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             ),
           ),
         ),
+     
         actions: [
           Container(
             margin: EdgeInsets.only(right: 8),
