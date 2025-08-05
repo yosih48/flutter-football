@@ -208,6 +208,12 @@ class AuthProvider with ChangeNotifier {
           key: 'auth_token', value: _currentUser!.newToken);
       await _secureStorage.write(key: 'user_id', value: _currentUser!.id);
       print('Google Login successful: ${_currentUser?.email}');
+
+
+
+
+
+      
       // Navigator.of(context).pushReplacement(
       //   MaterialPageRoute(
       //     builder: (context) => const ResponsiveLayout(

@@ -400,7 +400,7 @@ Future<void> sendResetEmail() async {
                     );
                   } else {
                     Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (context) => GamesScreen()),
+                      MaterialPageRoute(builder: (context) =>MobileScreenLayout()),
                          (route) => false,
                     );
                   }

@@ -46,6 +46,8 @@ class GoogleSignInButton extends StatelessWidget {
     
 
           await authProvider.googleLogin(idToken, fcmToken, context);
+// print('googleLogin idToken: ${idToken}, fcmToken: ${fcmToken} ');
+              onSignInSuccess(idToken);
 
         } else {
           throw ('Failed to obtain ID token from Google Sign-In');
