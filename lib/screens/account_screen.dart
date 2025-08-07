@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:football/screens/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:football/providers/flutter pub add provider.dart';
 import 'package:football/resources/auth.dart';
@@ -207,8 +208,15 @@ class AccountScreen extends StatelessWidget {
                                   Navigator.of(context)
                                       .pop(); // Close loading dialog
                                   await authProvider.signOut(user.id);
-                                  Navigator.of(context)
-                                      .popUntil((route) => route.isFirst);
+
+                            Navigator.of(context).pushAndRemoveUntil(
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            LoginScreen()), // Replace with your login screen
+                                    (route) =>
+                                        false, // This removes all previous routes
+                                  );
+
 
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
