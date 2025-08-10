@@ -1101,15 +1101,15 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                   height: 8,
                 ),
 
-                // Always show team and player selection area
-                Container(
-                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: selectedIndex != -1 && league != -1
-                      ? FutureBuilder<Map<String, dynamic>>(
-                          future: _getSelectionAvailability(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return Row(
+                // Show team and player selection area only when appropriate
+                selectedIndex != -1 && league != -1
+                    ? FutureBuilder<Map<String, dynamic>>(
+                        future: _getSelectionAvailability(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return Container(
+                              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              child: Row(
                                 children: [
                                   Expanded(
                                     child: _buildUnifiedButton(
@@ -1129,14 +1129,23 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                                     ),
                                   ),
                                 ],
-                              );
-                            }
+                              ),
+                            );
+                          }
 
-                            final availability = snapshot.data ?? {'available': false, 'message': 'Error'};
-                            final isAvailable = availability['available'] as bool;
-                            final message = availability['message'] as String?;
+                          final availability = snapshot.data ?? {'showButtons': false, 'available': false, 'message': 'Error'};
+                          final showButtons = availability['showButtons'] as bool;
+                          final isAvailable = availability['available'] as bool;
+                          final message = availability['message'] as String?;
 
-                            return Row(
+                          // Don't show buttons at all if league has started or time expired
+                          if (!showButtons) {
+                            return SizedBox.shrink();
+                          }
+
+                          return Container(
+                            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            child: Row(
                               children: [
                                 // Team Selection
                                 Expanded(
@@ -1166,10 +1175,13 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                                   ),
                                 ),
                               ],
-                            );
-                          },
-                        )
-                      : Row(
+                            ),
+                          );
+                        },
+                      )
+                    : Container(
+                        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Row(
                           children: [
                             // Team Selection - No league selected
                             Expanded(
@@ -1192,7 +1204,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                             ),
                           ],
                         ),
-                ),
+                      ),
 
                 Expanded(
                   child:
@@ -1275,27 +1287,45 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       
       if (games.isEmpty) {
         return {
+          'showButtons': true,
           'available': false,
           'reason': 'no_games',
           'message': AppLocalizations.of(context)!.selectionnotavailableyet
         };
       }
 
-      // Sort games by date to find the first game
-      games.sort((a, b) => a.date.compareTo(b.date));
+      // Sort games by date to find the first game (same logic as original widgets)
+      games.sort((a, b) => a.timestamp.compareTo(b.timestamp));
       final firstGame = games.first;
-      final currentTime = DateTime.now();
-      final cutoffTime = firstGame.date.subtract(Duration(hours: 1));
+      final currentTime = DateTime.now().toUtc();
+      final firstGameDate = firstGame.date.toUtc();
 
+      // Use the same logic as original widgets: check if current time is before first game
+      bool isBeforeFirstGame = currentTime.isBefore(firstGameDate);
+
+      if (!isBeforeFirstGame) {
+        // League has started - don't show buttons at all
+        return {
+          'showButtons': false,
+          'available': false,
+          'reason': 'league_started',
+          'message': null
+        };
+      }
+
+      // Check if we're within 1 hour of first game (additional restriction)
+      final cutoffTime = firstGameDate.subtract(Duration(hours: 1));
       if (currentTime.isAfter(cutoffTime)) {
         return {
+          'showButtons': false,
           'available': false,
           'reason': 'time_expired',
-          'message': AppLocalizations.of(context)!.selectiontimeexpired
+          'message': null
         };
       }
 
       return {
+        'showButtons': true,
         'available': true,
         'reason': 'available',
         'message': null
@@ -1303,6 +1333,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     } catch (e) {
       print('Error checking selection availability: $e');
       return {
+        'showButtons': true,
         'available': false,
         'reason': 'error',
         'message': AppLocalizations.of(context)!.selectionnotavailable

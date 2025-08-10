@@ -297,7 +297,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get choosewinner => 'Choose Winner';
 
   @override
-  String get teamcannotbechanged => 'choosen team can not be change';
+  String get teamcannotbechanged => 'Note: You can change your selection up to one hour before the first match';
 
   @override
   String get saveteam => 'Save Team';
@@ -627,7 +627,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guessDeadlineTitle => 'Guess Deadline';
 
   @override
-  String get guessDeadlineContent => 'You can submit a guess up to the game’s start. After that, it’s locked.';
+  String get guessDeadlineContent => 'You can choose match results until the moment each match kicks off. The tournament winner and top scorer selections can be made up to one hour before the league\'s opening match! Once a match starts, the selections are locked and cannot be changed';
 
   @override
   String get importantNoteTitle => 'Important Note';

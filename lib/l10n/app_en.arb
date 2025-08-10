@@ -98,7 +98,7 @@
     "emailsent": "Email Sent",
     "emailsentlink": "A link has been sent to your email account. This link will be valid for 3 minutes only.",
     "choosewinner": "Choose Winner",
-    "teamcannotbechanged": "choosen team can not be change",
+    "teamcannotbechanged": "Note: You can change your selection up to one hour before the first match",
     "saveteam": "Save Team",
     "savePlayer": "Save  Player",
      "topScorers": "Top Scorers",
@@ -216,7 +216,7 @@
   "topScorerContent": "Pick one player for the tournament. You’ll earn 2 bonus points for every goal they score.",
 
   "guessDeadlineTitle": "Guess Deadline",
-  "guessDeadlineContent": "You can submit a guess up to the game’s start. After that, it’s locked.",
+  "guessDeadlineContent": "You can choose match results until the moment each match kicks off. The tournament winner and top scorer selections can be made up to one hour before the league's opening match! Once a match starts, the selections are locked and cannot be changed",
 
   "importantNoteTitle": "Important Note",
   "importantNoteContent": "Guesses cannot be changed after the game starts. Make sure to review them beforehand.",

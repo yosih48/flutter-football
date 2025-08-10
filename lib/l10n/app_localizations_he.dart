@@ -297,7 +297,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get choosewinner => 'בחר זוכה';
 
   @override
-  String get teamcannotbechanged => 'שים לב לא ניתן לשנות את הבחירה';
+  String get teamcannotbechanged => 'שים לב ניתן לשנות את הבחירה עד שעה לפני המשחק הראשון';
 
   @override
   String get saveteam => 'שמור קבוצה';
@@ -627,7 +627,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get guessDeadlineTitle => 'זמן הניחוש ⏰';
 
   @override
-  String get guessDeadlineContent => 'ניתן לבחור את תוצאות המשחקים עד לרגע שריקת הפתיחה של כל משחק. בחירת הקבוצה הזוכה ומלך השערים - עד תחילת משחק הפתיחה של הליגה! ברגע שהמשחק מתחיל, הבחירות נחתמות ולא ניתנות לשינוי';
+  String get guessDeadlineContent => 'ניתן לבחור את תוצאות המשחקים עד לרגע שריקת הפתיחה של כל משחק. בחירת הקבוצה הזוכה ומלך השערים - עד שעה לפני משחק הפתיחה של הליגה! ברגע שהמשחק מתחיל, הבחירות נחתמות ולא ניתנות לשינוי';
 
   @override
   String get importantNoteTitle => 'חשוב לזכור! ⚠️';

@@ -188,10 +188,11 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
             builder: (BuildContext context, StateSetter setState) {
           return AlertDialog(
             backgroundColor: cards,
-            title: Text(
-              AppLocalizations.of(context)!.teamcannotbechanged,
-              style: TextStyle(color: Colors.red, fontSize: 16),
-            ),
+   title: Text(
+    AppLocalizations.of(context)!.teamcannotbechanged,
+    style: TextStyle(color: Colors.red, fontSize: 16),
+    textAlign: TextAlign.center, // Centers each line relative to the text block
+  ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

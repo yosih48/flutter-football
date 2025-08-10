@@ -674,7 +674,7 @@ abstract class AppLocalizations {
   /// No description provided for @teamcannotbechanged.
   ///
   /// In en, this message translates to:
-  /// **'choosen team can not be change'**
+  /// **'Note: You can change your selection up to one hour before the first match'**
   String get teamcannotbechanged;
 
   /// No description provided for @saveteam.
@@ -1334,7 +1334,7 @@ abstract class AppLocalizations {
   /// No description provided for @guessDeadlineContent.
   ///
   /// In en, this message translates to:
-  /// **'You can submit a guess up to the game’s start. After that, it’s locked.'**
+  /// **'You can choose match results until the moment each match kicks off. The tournament winner and top scorer selections can be made up to one hour before the league\'s opening match! Once a match starts, the selections are locked and cannot be changed'**
   String get guessDeadlineContent;
 
   /// No description provided for @importantNoteTitle.
