@@ -55,6 +55,7 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
   }
 
   Future<void> _fetchAllLeagueGames() async {
+   
     try {
       final games = await GamesMethods().fetchGamesForLeague(widget.league);
       setState(() {
@@ -95,6 +96,7 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
 
 
   Future<List<String>> _fetchAllPlayers() async {
+     print('_fetchAllPlayers: league: ${widget.league}');
     try {
       // Create data to send - you might need to adjust this based on your backend requirements
       final dataToSend = {

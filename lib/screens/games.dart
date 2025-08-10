@@ -11,6 +11,7 @@ import 'package:football/resources/auth.dart';
 import 'package:football/resources/gamesMethods.dart';
 import 'package:football/resources/guessesMethods.dart';
 import 'package:football/resources/usersMethods.dart';
+import 'package:football/resources/playersMethods.dart';
 import 'package:football/screens/gameDetails.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/theme/colors.dart';
@@ -18,8 +19,7 @@ import 'package:football/utils/config.dart';
 import 'package:football/widgets/LeagueSelectorChips.dart';
 
 import 'package:football/widgets/gamesCard.dart';
-import 'package:football/widgets/teamSelect.dart';
-import 'package:football/widgets/playerSelect.dart';
+
 import 'package:football/widgets/toggleButton.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -1101,35 +1101,47 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                   height: 8,
                 ),
 
-                // Container(
-                //   margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                //   child: Row(
-                //     children: [
-                //       Expanded(
-                //         child: TeamSelectionButton(
-                //           // games: _games,
-                //           clientId: clientId,
-                //           email: email,
-                //           league: league,
-                //           onTeamSelected: (selectedTeam) {
-                //             print('Selected team: $selectedTeam');
-                //           },
-                //         ),
-                //       ),
-                //       Expanded(
-                //         child: PlayerSelectionButton(
-                //           // games: _games,
-                //           clientId: clientId,
-                //           email: email,
-                //           league: league,
-                //           onPlayerSelected: (selectedPlayer) {
-                //             print('Selected player: $selectedPlayer');
-                //           },
-                //         ),
-                //       ),
-                //     ],
-                //   ),
-                // ),
+                // Always show team and player selection area
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      // Team Selection
+                      Expanded(
+                        child: selectedIndex != -1 && league != -1
+                            ? _buildUnifiedButton(
+                                icon: Icons.emoji_events,
+                                text: AppLocalizations.of(context)!.choosewinner,
+                                subtitle: _getTeamSelectionSubtitle(),
+                                onTap: () => _showTeamSelectionDialog(),
+                              )
+                            : _buildUnifiedButton(
+                                icon: Icons.emoji_events,
+                                text: AppLocalizations.of(context)!.choosewinner,
+                                subtitle: AppLocalizations.of(context)!.selectleaguefirst,
+                                onTap: () => _showLeagueSelectionHint(),
+                              ),
+                      ),
+                      SizedBox(width: 8),
+                      // Player Selection  
+                      Expanded(
+                        child: selectedIndex != -1 && league != -1
+                            ? _buildUnifiedButton(
+                                icon: Icons.sports_soccer,
+                                text: AppLocalizations.of(context)!.chooseTopScorer,
+                                subtitle: _getPlayerSelectionSubtitle(),
+                                onTap: () => _showPlayerSelectionDialog(),
+                              )
+                            : _buildUnifiedButton(
+                                icon: Icons.sports_soccer,
+                                text: AppLocalizations.of(context)!.chooseTopScorer,
+                                subtitle: AppLocalizations.of(context)!.selectleaguefirst,
+                                onTap: () => _showLeagueSelectionHint(),
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
 
                 Expanded(
                   child:
@@ -1152,6 +1164,315 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             fontWeight: FontWeight.w600,
           ),
         ),
+      ),
+    );
+  }
+
+  // Helper method to build unified card-style buttons
+  Widget _buildUnifiedButton({
+    required IconData icon,
+    required String text,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.grey[800]?.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[600]!, width: 1),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: Colors.grey[400],
+              size: 24,
+            ),
+            SizedBox(height: 6),
+            Text(
+              text,
+              style: TextStyle(
+                color: Colors.grey[400],
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: TextStyle(
+                color: Colors.grey[500],
+                fontSize: 11,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Get subtitle text for team selection based on current state
+  String _getTeamSelectionSubtitle() {
+    // You can customize this based on whether team is already selected
+    return AppLocalizations.of(context)!.taptoselectwinner;
+  }
+
+  // Get subtitle text for player selection based on current state  
+  String _getPlayerSelectionSubtitle() {
+    // You can customize this based on whether player is already selected
+    return AppLocalizations.of(context)!.taptoselecttopscorer;
+  }
+
+  // Show team selection dialog
+  void _showTeamSelectionDialog() async {
+    try {
+      // Fetch teams for current league
+      final games = await GamesMethods().fetchGamesForLeague(league);
+      final filteredGames = games.where((game) {
+        if (game.league.id == 2 || game.league.id == 848 || game.league.id == 3) {
+          return !game.league.round.contains("Qualifying") &&
+              !game.league.round.contains("Play-offs");
+        }
+        return true;
+      }).toList();
+      
+      final teams = filteredGames
+          .expand((game) => [game.home.name, game.away.name])
+          .toSet()
+          .toList();
+
+      String? selectedTeam;
+      
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return StatefulBuilder(
+            builder: (BuildContext context, StateSetter setDialogState) {
+              return AlertDialog(
+                backgroundColor: cards,
+                title: Text(
+                  AppLocalizations.of(context)!.teamcannotbechanged,
+                  style: TextStyle(color: Colors.red, fontSize: 16),
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButton<String>(
+                      hint: Text(AppLocalizations.of(context)!.chooseteam,
+                          style: TextStyle(color: Colors.blue)),
+                      isExpanded: true,
+                      items: teams.map((String team) {
+                        return DropdownMenuItem<String>(
+                          value: team,
+                          child: Text(team),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setDialogState(() {
+                          selectedTeam = newValue;
+                        });
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    if (selectedTeam != null) ...[
+                      Text(
+                        '$selectedTeam',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                      ),
+                      onPressed: selectedTeam != null ? () {
+                        _saveTeamSelection(selectedTeam!);
+                        Navigator.of(context).pop();
+                      } : null,
+                      child: Text(AppLocalizations.of(context)!.saveteam,
+                          style: TextStyle(color: Colors.blue)),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      );
+    } catch (e) {
+      print('Error showing team selection dialog: $e');
+    }
+  }
+
+  // Show player selection dialog  
+  void _showPlayerSelectionDialog() async {
+    try {
+      // Fetch players for current league using PlayersMethods
+      final dataToSend = {'league': league};
+      final players = await PlayersMethods().fetchPlayersList(dataToSend);
+
+      String? selectedPlayer;
+      
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return StatefulBuilder(
+            builder: (BuildContext context, StateSetter setDialogState) {
+              return AlertDialog(
+                backgroundColor: cards,
+                title: Text(
+                  AppLocalizations.of(context)!.teamcannotbechanged,
+                  style: TextStyle(color: Colors.red, fontSize: 16),
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButton<String>(
+                      hint: Text(AppLocalizations.of(context)!.choosPlayer,
+                          style: TextStyle(color: Colors.blue)),
+                      isExpanded: true,
+                      items: players.map((String player) {
+                        return DropdownMenuItem<String>(
+                          value: player,
+                          child: Text(player),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setDialogState(() {
+                          selectedPlayer = newValue;
+                        });
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    if (selectedPlayer != null) ...[
+                      Text(
+                        '$selectedPlayer',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                      ),
+                      onPressed: selectedPlayer != null ? () {
+                        _savePlayerSelection(selectedPlayer!);
+                        Navigator.of(context).pop();
+                      } : null,
+                      child: Text(AppLocalizations.of(context)!.savePlayer,
+                          style: TextStyle(color: Colors.blue)),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      );
+    } catch (e) {
+      print('Error showing player selection dialog: $e');
+    }
+  }
+
+  // Save team selection
+  Future<void> _saveTeamSelection(String selectedTeam) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$_baseUrl/users/winner'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, dynamic>{
+          '_id': clientId,
+          'email': email,
+          'winner': {
+            'winner.$league': selectedTeam,
+          },
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.teamSavedsuccessfully)),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedtoSaveTeam)),
+        );
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.errorsavingteam)),
+      );
+    }
+  }
+
+  // Save player selection
+  Future<void> _savePlayerSelection(String selectedPlayer) async {
+    final cleanedPlayerName = selectedPlayer.split(' (')[0];
+    try {
+      final response = await http.put(
+        Uri.parse('$_baseUrl/users/top-scorer'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, dynamic>{
+          '_id': clientId,
+          'email': email,
+          'topScorer': {
+            'topScorer.$league': cleanedPlayerName,
+          },
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.playerSavedsuccessfully)),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedtoSaveplayer)),
+        );
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.errorsavingplayer)),
+      );
+    }
+  }
+
+  // Show hint to user about selecting a league
+  void _showLeagueSelectionHint() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.white),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                AppLocalizations.of(context)!.selectleaguefirst + " 👆",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.blue[700],
+        duration: Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.only(bottom: 80, left: 16, right: 16),
       ),
     );
   }

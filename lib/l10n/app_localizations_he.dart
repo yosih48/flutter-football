@@ -318,6 +318,15 @@ class AppLocalizationsHe extends AppLocalizations {
   String get chooseTopScorer => 'בחר מלך שערים';
 
   @override
+  String get selectleaguefirst => 'בחר ליגה תחילה';
+
+  @override
+  String get taptoselectwinner => 'לחץ לבחירת זוכה';
+
+  @override
+  String get taptoselecttopscorer => 'לחץ לבחירת מלך שערים';
+
+  @override
   String get yourwinners => 'הזוכות שלי';
 
   @override

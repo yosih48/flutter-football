@@ -713,6 +713,24 @@ abstract class AppLocalizations {
   /// **'choose Top scorer '**
   String get chooseTopScorer;
 
+  /// No description provided for @selectleaguefirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Select league first'**
+  String get selectleaguefirst;
+
+  /// No description provided for @taptoselectwinner.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to select winner'**
+  String get taptoselectwinner;
+
+  /// No description provided for @taptoselecttopscorer.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to select top scorer'**
+  String get taptoselecttopscorer;
+
   /// No description provided for @yourwinners.
   ///
   /// In en, this message translates to:
