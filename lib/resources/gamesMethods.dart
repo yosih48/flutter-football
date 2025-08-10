@@ -221,19 +221,19 @@ if(leagueId == -1){
           }
 
           // Additional filter logic for specific league IDs
-          // if (leagueId == 2 || leagueId == 848 || leagueId == 3) {
-          //   return isNotPostponedOrTBD &&
-          //       ((hasOdds &&
-          //               !game.league.round.contains("Qualifying") &&
-          //               game.league.round != "Play-offs" &&
-          //               // (!onlyTodayGames || isToday)) ||
-          //               (isSelectedDate)) ||
-          //           (isFinished &&
-          //               !game.league.round.contains("Qualifying") &&
-          //               game.league.round != "Play-offs" &&
-          //               // (!onlyTodayGames || isToday)));
-          //               (isSelectedDate)));
-          // }
+          if (leagueId == 2 || leagueId == 848 || leagueId == 3) {
+            return isNotPostponedOrTBD &&
+                ((hasOdds &&
+                        !game.league.round.contains("Qualifying") &&
+                        game.league.round != "Play-offs" &&
+                        // (!onlyTodayGames || isToday)) ||
+                        (isSelectedDate)) ||
+                    (isFinished &&
+                        !game.league.round.contains("Qualifying") &&
+                        game.league.round != "Play-offs" &&
+                        // (!onlyTodayGames || isToday)));
+                        (isSelectedDate)));
+          }
           // return hasOdds || isFinished;
           return isNotPostponedOrTBD &&
               (hasOdds || isFinished) &&
