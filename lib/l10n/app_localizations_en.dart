@@ -327,6 +327,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get taptoselecttopscorer => 'Tap to select top scorer';
 
   @override
+  String get selectionnotavailableyet => 'Selection not available yet';
+
+  @override
+  String get selectiontimeexpired => 'Selection time expired';
+
+  @override
+  String get selectionnotavailable => 'Selection not available';
+
+  @override
   String get yourwinners => 'your winners';
 
   @override

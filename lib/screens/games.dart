@@ -1104,43 +1104,94 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                 // Always show team and player selection area
                 Container(
                   margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(
-                    children: [
-                      // Team Selection
-                      Expanded(
-                        child: selectedIndex != -1 && league != -1
-                            ? _buildUnifiedButton(
-                                icon: Icons.emoji_events,
-                                text: AppLocalizations.of(context)!.choosewinner,
-                                subtitle: _getTeamSelectionSubtitle(),
-                                onTap: () => _showTeamSelectionDialog(),
-                              )
-                            : _buildUnifiedButton(
+                  child: selectedIndex != -1 && league != -1
+                      ? FutureBuilder<Map<String, dynamic>>(
+                          future: _getSelectionAvailability(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildUnifiedButton(
+                                      icon: Icons.emoji_events,
+                                      text: AppLocalizations.of(context)!.choosewinner,
+                                      subtitle: "Loading...",
+                                      onTap: () {},
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: _buildUnifiedButton(
+                                      icon: Icons.sports_soccer,
+                                      text: AppLocalizations.of(context)!.chooseTopScorer,
+                                      subtitle: "Loading...",
+                                      onTap: () {},
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }
+
+                            final availability = snapshot.data ?? {'available': false, 'message': 'Error'};
+                            final isAvailable = availability['available'] as bool;
+                            final message = availability['message'] as String?;
+
+                            return Row(
+                              children: [
+                                // Team Selection
+                                Expanded(
+                                  child: _buildUnifiedButton(
+                                    icon: Icons.emoji_events,
+                                    text: AppLocalizations.of(context)!.choosewinner,
+                                    subtitle: isAvailable 
+                                        ? _getTeamSelectionSubtitle()
+                                        : message ?? AppLocalizations.of(context)!.selectionnotavailable,
+                                    onTap: isAvailable 
+                                        ? () => _showTeamSelectionDialog()
+                                        : () => _showAvailabilityMessage(message ?? AppLocalizations.of(context)!.selectionnotavailable),
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                // Player Selection  
+                                Expanded(
+                                  child: _buildUnifiedButton(
+                                    icon: Icons.sports_soccer,
+                                    text: AppLocalizations.of(context)!.chooseTopScorer,
+                                    subtitle: isAvailable 
+                                        ? _getPlayerSelectionSubtitle()
+                                        : message ?? AppLocalizations.of(context)!.selectionnotavailable,
+                                    onTap: isAvailable 
+                                        ? () => _showPlayerSelectionDialog()
+                                        : () => _showAvailabilityMessage(message ?? AppLocalizations.of(context)!.selectionnotavailable),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        )
+                      : Row(
+                          children: [
+                            // Team Selection - No league selected
+                            Expanded(
+                              child: _buildUnifiedButton(
                                 icon: Icons.emoji_events,
                                 text: AppLocalizations.of(context)!.choosewinner,
                                 subtitle: AppLocalizations.of(context)!.selectleaguefirst,
                                 onTap: () => _showLeagueSelectionHint(),
                               ),
-                      ),
-                      SizedBox(width: 8),
-                      // Player Selection  
-                      Expanded(
-                        child: selectedIndex != -1 && league != -1
-                            ? _buildUnifiedButton(
-                                icon: Icons.sports_soccer,
-                                text: AppLocalizations.of(context)!.chooseTopScorer,
-                                subtitle: _getPlayerSelectionSubtitle(),
-                                onTap: () => _showPlayerSelectionDialog(),
-                              )
-                            : _buildUnifiedButton(
+                            ),
+                            SizedBox(width: 8),
+                            // Player Selection - No league selected
+                            Expanded(
+                              child: _buildUnifiedButton(
                                 icon: Icons.sports_soccer,
                                 text: AppLocalizations.of(context)!.chooseTopScorer,
                                 subtitle: AppLocalizations.of(context)!.selectleaguefirst,
                                 onTap: () => _showLeagueSelectionHint(),
                               ),
-                      ),
-                    ],
-                  ),
+                            ),
+                          ],
+                        ),
                 ),
 
                 Expanded(
@@ -1217,20 +1268,67 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     );
   }
 
+  // Check if selection is still available for current league
+  Future<Map<String, dynamic>> _getSelectionAvailability() async {
+    try {
+      final games = await GamesMethods().fetchGamesForLeague(league);
+      
+      if (games.isEmpty) {
+        return {
+          'available': false,
+          'reason': 'no_games',
+          'message': AppLocalizations.of(context)!.selectionnotavailableyet
+        };
+      }
+
+      // Sort games by date to find the first game
+      games.sort((a, b) => a.date.compareTo(b.date));
+      final firstGame = games.first;
+      final currentTime = DateTime.now();
+      final cutoffTime = firstGame.date.subtract(Duration(hours: 1));
+
+      if (currentTime.isAfter(cutoffTime)) {
+        return {
+          'available': false,
+          'reason': 'time_expired',
+          'message': AppLocalizations.of(context)!.selectiontimeexpired
+        };
+      }
+
+      return {
+        'available': true,
+        'reason': 'available',
+        'message': null
+      };
+    } catch (e) {
+      print('Error checking selection availability: $e');
+      return {
+        'available': false,
+        'reason': 'error',
+        'message': AppLocalizations.of(context)!.selectionnotavailable
+      };
+    }
+  }
+
   // Get subtitle text for team selection based on current state
   String _getTeamSelectionSubtitle() {
-    // You can customize this based on whether team is already selected
     return AppLocalizations.of(context)!.taptoselectwinner;
   }
 
   // Get subtitle text for player selection based on current state  
   String _getPlayerSelectionSubtitle() {
-    // You can customize this based on whether player is already selected
     return AppLocalizations.of(context)!.taptoselecttopscorer;
   }
 
   // Show team selection dialog
   void _showTeamSelectionDialog() async {
+    // First check if selection is available
+    final availability = await _getSelectionAvailability();
+    if (!availability['available']) {
+      _showAvailabilityMessage(availability['message']);
+      return;
+    }
+
     try {
       // Fetch teams for current league
       final games = await GamesMethods().fetchGamesForLeague(league);
@@ -1315,6 +1413,13 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
   // Show player selection dialog  
   void _showPlayerSelectionDialog() async {
+    // First check if selection is available
+    final availability = await _getSelectionAvailability();
+    if (!availability['available']) {
+      _showAvailabilityMessage(availability['message']);
+      return;
+    }
+
     try {
       // Fetch players for current league using PlayersMethods
       final dataToSend = {'league': league};
@@ -1451,6 +1556,30 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         SnackBar(content: Text(AppLocalizations.of(context)!.errorsavingplayer)),
       );
     }
+  }
+
+  // Show availability message
+  void _showAvailabilityMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.white),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.orange[700],
+        duration: Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.only(bottom: 80, left: 16, right: 16),
+      ),
+    );
   }
 
   // Show hint to user about selecting a league

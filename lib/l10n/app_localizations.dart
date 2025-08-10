@@ -731,6 +731,24 @@ abstract class AppLocalizations {
   /// **'Tap to select top scorer'**
   String get taptoselecttopscorer;
 
+  /// No description provided for @selectionnotavailableyet.
+  ///
+  /// In en, this message translates to:
+  /// **'Selection not available yet'**
+  String get selectionnotavailableyet;
+
+  /// No description provided for @selectiontimeexpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Selection time expired'**
+  String get selectiontimeexpired;
+
+  /// No description provided for @selectionnotavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Selection not available'**
+  String get selectionnotavailable;
+
   /// No description provided for @yourwinners.
   ///
   /// In en, this message translates to:

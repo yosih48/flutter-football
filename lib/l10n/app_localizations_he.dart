@@ -327,6 +327,15 @@ class AppLocalizationsHe extends AppLocalizations {
   String get taptoselecttopscorer => 'לחץ לבחירת מלך שערים';
 
   @override
+  String get selectionnotavailableyet => 'הבחירה עדיין לא זמינה';
+
+  @override
+  String get selectiontimeexpired => 'זמן הבחירה פג';
+
+  @override
+  String get selectionnotavailable => 'הבחירה לא זמינה';
+
+  @override
   String get yourwinners => 'הזוכות שלי';
 
   @override
