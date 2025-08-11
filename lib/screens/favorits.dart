@@ -45,7 +45,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
     3: true, // Europa League
     39: true, // Premier League
     848: true, // conference league
-    15: true, // conference league
+    // 15: true, // conference league
     // 78: true, // Bundesliga
   };
 
@@ -92,7 +92,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         notificationStates['ליגת העל'] = snetEmail['383'] ?? false;
         notificationStates['ליגה אנגלית'] = snetEmail['39'] ?? false;
         notificationStates['קונפרנס ליג'] = snetEmail['848'] ?? false;
-        notificationStates['גביע מועדונים'] = snetEmail['15'] ?? false;
+        // notificationStates['גביע מועדונים'] = snetEmail['15'] ?? false;
         // notificationStates['ליגה גרמנית'] = snetEmail['78'] ?? false;
 
         // Load chosen leagues
@@ -102,7 +102,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         chosenLeagues[383] = chosenLeaguesData['383'] ?? true;
         chosenLeagues[39] = chosenLeaguesData['39'] ?? true;
         chosenLeagues[848] = chosenLeaguesData['848'] ?? true;
-        chosenLeagues[15] = chosenLeaguesData['15'] ?? true;
+        // chosenLeagues[15] = chosenLeaguesData['15'] ?? true;
         // chosenLeagues[78] = chosenLeaguesData['78'] ?? true;
 
         isLoading = false;
@@ -150,10 +150,10 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
           chosenLeagues[848] == false) {
         notificationStates['קונפרנס ליג'] = false;
       }
-      if (notificationStates['גביע מועדונים'] == true &&
-          chosenLeagues[15] == false) {
-        notificationStates['גביע מועדונים'] = false;
-      }
+      // if (notificationStates['גביע מועדונים'] == true &&
+      //     chosenLeagues[15] == false) {
+      //   notificationStates['גביע מועדונים'] = false;
+      // }
       // if (notificationStates['ליגה גרמנית'] == true && chosenLeagues[78] == false) {
       //   notificationStates['ליגה גרמנית'] = false;
       // }
@@ -164,7 +164,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         'europeLeague': notificationStates['ליגה אירופית'],
         'premierLeague': notificationStates['ליגה אנגלית'],
         'conferenceLeague': notificationStates['קונפרנס ליג'],
-        'clubworldcup': notificationStates['גביע מועדונים'],
+        // 'clubworldcup': notificationStates['גביע מועדונים'],
         // 'bundesLeague': notificationStates['ליגה גרמנית'],
         'africaLeague': false,
         // 'conferenceLeague': false,
@@ -287,7 +287,7 @@ backgroundColor: background,
       'ליגה אירופית': {'subtitle': 'אירופה', 'id': '3'},
       'ליגה אנגלית': {'subtitle': 'אנגליה', 'id': '39'},
       'קונפרנס ליג': {'subtitle': 'אירופה', 'id': '848'},
-      'גביע מועדונים': {'subtitle': 'עולם', 'id': '15'},
+      // 'גביע מועדונים': {'subtitle': 'עולם', 'id': '15'},
       // 'בונדסליגה': {'subtitle': 'גרמניה', 'id': '78'},
     };
     // Mapping between notification state keys and league IDs
@@ -298,7 +298,7 @@ backgroundColor: background,
       'ליגה אירופית': 3,
       'ליגה אנגלית': 39,
       'קונפרנס ליג': 848,
-      'גביע מועדונים': 15,
+      // 'גביע מועדונים': 15,
       // 'ליגה גרמנית': 78,
     };
     // Filter notificationStates to only include enabled leagues from chosenLeagues
@@ -461,7 +461,7 @@ backgroundColor: background,
       39: AppLocalizations.of(context)!.premierleague,
       78: AppLocalizations.of(context)!.bundesleague,
       848: AppLocalizations.of(context)!.conferenceleague,
-      15: AppLocalizations.of(context)!.clubworldcup,
+      // 15: AppLocalizations.of(context)!.clubworldcup,
     };
 
     final leagueIcons = {
@@ -472,7 +472,7 @@ backgroundColor: background,
       39: 'https://media.api-sports.io/football/leagues/39.png',
       78: 'https://media.api-sports.io/football/leagues/78.png',
       848: 'https://media.api-sports.io/football/leagues/848.png',
-      15: 'https://media.api-sports.io/football/leagues/15.png',
+      // 15: 'https://media.api-sports.io/football/leagues/15.png',
     };
 
     // Map to translate league IDs to notification state keys
@@ -483,7 +483,7 @@ backgroundColor: background,
       3: 'ליגה אירופית',
       39: 'ליגה אנגלית',
       848: 'קונפרנס ליג',
-      15: 'גביע מועדונים',
+      // 15: 'גביע מועדונים',
       // 78: 'ליגה גרמנית',
     };
 

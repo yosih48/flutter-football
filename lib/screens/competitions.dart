@@ -133,7 +133,7 @@ Future<void> markFirstLoginComplete() async {
     3: false, // Europa League
     39: false, // Premier League
     848: false, // conference league
-    15: false, // conference league
+    // 15: false, // conference league
     // 78: true, // Bundesliga
   };
   final leagueIcons = {
@@ -144,7 +144,7 @@ Future<void> markFirstLoginComplete() async {
     39: 'https://media.api-sports.io/football/leagues/39.png',
     78: 'https://media.api-sports.io/football/leagues/78.png',
     848: 'https://media.api-sports.io/football/leagues/848.png',
-    15: 'https://media.api-sports.io/football/leagues/15.png',
+    // 15: 'https://media.api-sports.io/football/leagues/15.png',
   };
 
   
@@ -158,7 +158,7 @@ Future<void> markFirstLoginComplete() async {
       39: AppLocalizations.of(context)!.premierleague,
       78: AppLocalizations.of(context)!.bundesleague,
       848: AppLocalizations.of(context)!.conferenceleague,
-      15: AppLocalizations.of(context)!.clubworldcup,
+      // 15: AppLocalizations.of(context)!.clubworldcup,
     };
 
  return Scaffold(

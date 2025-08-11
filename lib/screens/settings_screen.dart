@@ -63,10 +63,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 8),
-          Text(
-            'v$appVersion',
-            style: theme.textTheme.bodySmall,
-          ),
+          // Text(
+          //   'v$appVersion',
+          //   style: theme.textTheme.bodySmall,
+          // ),
           SizedBox(height: 24),
           Expanded(
             child: Container(

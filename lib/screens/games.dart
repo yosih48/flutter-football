@@ -188,7 +188,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     39: "Premier League",
     78: "Bundesliga",
     848: "Conference League",
-    15: "Club World Cup",
+    // 15: "Club World Cup",
   };
   final Map<String, int> leagueNameToId = {
     "Champions League": 2,
@@ -198,7 +198,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     "Premier League": 39,
     "Bundesliga": 78,
     "Conference League": 848,
-    "Club World Cup": 15,
+    // "Club World Cup": 15,
   };
 
   void updateSelectedIndex(int index, enabledLeagues, int chipIndex) {
@@ -351,7 +351,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
       if (chosenLeagues['39'] == true) 39,
       if (chosenLeagues['78'] == true) 78,
       if (chosenLeagues['848'] == true) 848,
-      if (chosenLeagues['15'] == true) 15,
+      // if (chosenLeagues['15'] == true) 15,
     ];
 
     if (_showOnlyLiveGames && selectedIndex != -1) {
@@ -386,8 +386,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         return localizations.bundesleague;
       case 848:
         return localizations.conferenceleague;
-      case 15:
-        return localizations.clubworldcup;
+      // case 15:
+      //   return localizations.clubworldcup;
       default:
         return '';
     }
@@ -411,8 +411,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         return localizations.bundesleague;
       case 848:
         return localizations.conferenceleague;
-      case 15:
-        return localizations.clubworldcup;
+      // case 15:
+      //   return localizations.clubworldcup;
       default:
         return '';
     }
@@ -449,7 +449,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         if (chosenLeagues['39'] == true) 39,
         if (chosenLeagues['78'] == true) 78,
         if (chosenLeagues['848'] == true) 848,
-        if (chosenLeagues['15'] == true) 15,
+        // if (chosenLeagues['15'] == true) 15,
       ];
       await _fetchAllUpcomingGames(enabledLeagues, filterDate: selectedDate);
     }
@@ -728,7 +728,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           refreshedGames = [];
           final gamesMethods = GamesMethods();
           // Force refresh all visible leagues
-          final leagueIds = [2, 3, 383, 140, 39, 848, 15, 78];
+          final leagueIds = [2, 3, 383, 140, 39, 848, 78];
           for (int id in leagueIds) {
             final games = await gamesMethods.forceRefreshGames(
               id,
@@ -890,7 +890,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               if (chosenLeagues['39'] == true) 39,
               if (chosenLeagues['78'] == true) 78,
               if (chosenLeagues['848'] == true) 848,
-              if (chosenLeagues['15'] == true) 15,
+              // if (chosenLeagues['15'] == true) 15,
             ];
             final picked = await showDatePicker(
               context: context,
@@ -1033,7 +1033,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             if (chosenLeagues['39'] == true) 39,
             if (chosenLeagues['78'] == true) 78,
             if (chosenLeagues['848'] == true) 848,
-            if (chosenLeagues['15'] == true) 15,
+            // if (chosenLeagues['15'] == true) 15,
           ];
           final options = enabledLeagues
               .map((id) => getLocalizedLeagueName(id, context))
