@@ -17,10 +17,10 @@ import 'package:football/screens/login_screen.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/utils/config.dart';
 import 'package:football/widgets/LeagueSelectorChips.dart';
-
 import 'package:football/widgets/gamesCard.dart';
-
 import 'package:football/widgets/toggleButton.dart';
+import 'package:football/widgets/teamSelect.dart';
+import 'package:football/widgets/playerSelect.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -1103,104 +1103,38 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
                 // Show team and player selection area only when appropriate
                 selectedIndex != -1 && league != -1
-                    ? FutureBuilder<Map<String, dynamic>>(
-                        future: _getSelectionAvailability(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return Container(
-                              margin: EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildUnifiedButton(
-                                      icon: Icons.emoji_events,
-                                      text: AppLocalizations.of(context)!
-                                          .choosewinner,
-                                      subtitle: "Loading...",
-                                      onTap: () {},
-                                    ),
-                                  ),
-                                  SizedBox(width: 8),
-                                  Expanded(
-                                    child: _buildUnifiedButton(
-                                      icon: Icons.sports_soccer,
-                                      text: AppLocalizations.of(context)!
-                                          .chooseTopScorer,
-                                      subtitle: "Loading...",
-                                      onTap: () {},
-                                    ),
-                                  ),
-                                ],
+                    ? Container(
+                        margin:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Row(
+                          children: [
+                            // Team Selection
+                            Expanded(
+                              child: TeamSelectionButton(
+                                clientId: clientId,
+                                email: email,
+                                league: league,
+                                onTeamSelected: (selectedTeam) {
+                                  // Optional callback if you need to handle team selection
+                                  print('Team selected: $selectedTeam');
+                                },
                               ),
-                            );
-                          }
-
-                          final availability = snapshot.data ??
-                              {
-                                'showButtons': false,
-                                'available': false,
-                                'message': 'Error'
-                              };
-                          final showButtons =
-                              availability['showButtons'] as bool;
-                          final isAvailable = availability['available'] as bool;
-                          final message = availability['message'] as String?;
-
-                          // Don't show buttons at all if league has started or time expired
-                          if (!showButtons) {
-                            return SizedBox.shrink();
-                          }
-
-                          return Container(
-                            margin: EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            child: Row(
-                              children: [
-                                // Team Selection
-                                Expanded(
-                                  child: _buildUnifiedButton(
-                                    icon: Icons.emoji_events,
-                                    text: AppLocalizations.of(context)!
-                                        .choosewinner,
-                                    subtitle: isAvailable
-                                        ? _getTeamSelectionSubtitle()
-                                        : message ??
-                                            AppLocalizations.of(context)!
-                                                .selectionnotavailable,
-                                    onTap: isAvailable
-                                        ? () => _showTeamSelectionDialog()
-                                        : () => _showAvailabilityMessage(
-                                            message ??
-                                                AppLocalizations.of(context)!
-                                                    .selectionnotavailable),
-                                  ),
-                                ),
-                                SizedBox(width: 8),
-                                // Player Selection
-                                Expanded(
-                                  child: _buildUnifiedButton(
-                                    icon: Icons.sports_soccer,
-                                    text: AppLocalizations.of(context)!
-                                        .chooseTopScorer,
-                                    subtitle: isAvailable
-                                        ? _getPlayerSelectionSubtitle()
-                                        : message ??
-                                            AppLocalizations.of(context)!
-                                                .selectionnotavailable,
-                                    onTap: isAvailable
-                                        ? () => _showPlayerSelectionDialog()
-                                        : () => _showAvailabilityMessage(
-                                            message ??
-                                                AppLocalizations.of(context)!
-                                                    .selectionnotavailable),
-                                  ),
-                                ),
-                              ],
                             ),
-                          );
-                        },
+                            SizedBox(width: 8),
+                            // Player Selection
+                            Expanded(
+                              child: PlayerSelectionButton(
+                                clientId: clientId,
+                                email: email,
+                                league: league,
+                                onPlayerSelected: (selectedPlayer) {
+                                  // Optional callback if you need to handle player selection
+                                  print('Player selected: $selectedPlayer');
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                       )
                     : Container(
                         margin:
@@ -1209,25 +1143,19 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                           children: [
                             // Team Selection - No league selected
                             Expanded(
-                              child: _buildUnifiedButton(
-                                icon: Icons.emoji_events,
-                                text:
-                                    AppLocalizations.of(context)!.choosewinner,
-                                subtitle: AppLocalizations.of(context)!
-                                    .selectleaguefirst,
-                                onTap: () => _showLeagueSelectionHint(),
+                              child: TeamSelectionButton(
+                                clientId: clientId,
+                                email: email,
+                                league: -1, // No league selected
                               ),
                             ),
                             SizedBox(width: 8),
                             // Player Selection - No league selected
                             Expanded(
-                              child: _buildUnifiedButton(
-                                icon: Icons.sports_soccer,
-                                text: AppLocalizations.of(context)!
-                                    .chooseTopScorer,
-                                subtitle: AppLocalizations.of(context)!
-                                    .selectleaguefirst,
-                                onTap: () => _showLeagueSelectionHint(),
+                              child: PlayerSelectionButton(
+                                clientId: clientId,
+                                email: email,
+                                league: -1, // No league selected
                               ),
                             ),
                           ],
@@ -1259,490 +1187,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     );
   }
 
-  // Helper method to build unified card-style buttons
-  Widget _buildUnifiedButton({
-    required IconData icon,
-    required String text,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        decoration: BoxDecoration(
-          color: Colors.grey[800]?.withOpacity(0.3),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[600]!, width: 1),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: Colors.grey[400],
-              size: 24,
-            ),
-            SizedBox(height: 6),
-            Text(
-              text,
-              style: TextStyle(
-                color: Colors.grey[400],
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 11,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  // Check if selection is still available for current league
-  Future<Map<String, dynamic>> _getSelectionAvailability() async {
-    print('_getSelectionAvailability called for league: $league');
-
-    try {
-      final games = await GamesMethods().fetchGamesForLeague(league);
-      print('Retrieved ${games.length} games for availability check');
-
-      if (games.isEmpty) {
-        print('No games found - returning not available');
-        return {
-          'showButtons': true,
-          'available': false,
-          'reason': 'no_games',
-          'message': AppLocalizations.of(context)!.selectionnotavailableyet
-        };
-      }
-
-      // Sort games by date to find the first game (same logic as original widgets)
-      games.sort((a, b) => a.timestamp.compareTo(b.timestamp));
-      final firstGame = games.first;
-      final currentTime = DateTime.now().toUtc();
-      final firstGameDate = firstGame.date.toUtc();
-
-      print('Current time: $currentTime');
-      print('First game date: $firstGameDate');
-
-      // Use the same logic as original widgets: check if current time is before first game
-      bool isBeforeFirstGame = currentTime.isBefore(firstGameDate);
-      print('Is before first game: $isBeforeFirstGame');
-
-      if (!isBeforeFirstGame) {
-        // League has started - don't show buttons at all
-        print('League has started - returning not available');
-        return {
-          'showButtons': false,
-          'available': false,
-          'reason': 'league_started',
-          'message': null
-        };
-      }
-
-      // Check if we're within 1 hour of first game (additional restriction)
-      final cutoffTime = firstGameDate.subtract(Duration(hours: 1));
-      print('Cutoff time (1 hour before first game): $cutoffTime');
-
-      if (currentTime.isAfter(cutoffTime)) {
-        print('Past cutoff time - returning not available');
-        return {
-          'showButtons': false,
-          'available': false,
-          'reason': 'time_expired',
-          'message': null
-        };
-      }
-
-      print('Selection is available!');
-      return {
-        'showButtons': true,
-        'available': true,
-        'reason': 'available',
-        'message': null
-      };
-    } catch (e) {
-      print('Error checking selection availability: $e');
-      return {
-        'showButtons': true,
-        'available': false,
-        'reason': 'error',
-        'message': AppLocalizations.of(context)!.selectionnotavailable
-      };
-    }
-  }
-
-  // _realApi method (copied from teamSelect.dart)
- Future<List<dynamic>> _realApi(dynamic leagueId) async {
-   
-    print('_realApi called with dataToSend: $leagueId');
-    print('Making request to: ${_baseUrl}/getTeams');
-
-    // Replace with your actual host URL
-
-    final response = await http.post(
-      Uri.parse('${_baseUrl}/getTeams'),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({'data': leagueId}),
-    );
-
-    if (response.statusCode == 200) {
-      final responseData = jsonDecode(response.body);
-   return responseData['games']
-          as List<dynamic>; // This will be the teams data from data.response
-    } else {
-      throw Exception('Failed to load teams: ${response.statusCode}');
-    }
-  }
-
-  // _fetchAllTeams method (copied exactly from teamSelect.dart)
-  Future<List<String>> _fetchAllTeams() async {
-    print('_fetchAllTeams called');
-
-    try {
-      final teams = await _realApi(league.toString());
-      // Extract team names from the teams data structure
-      // Based on your data: [{team: {name: "Manchester United", ...}}, ...]
-      return teams
-          .map((teamData) => teamData['team']['name']?.toString() ?? '')
-          .where((teamName) => teamName.isNotEmpty)
-          .toList();
-    } catch (e) {
-      print('Error in _fetchAllTeams: $e');
-      return [];
-    }
-  }
-
-  // Get subtitle text for team selection based on current state
-  String _getTeamSelectionSubtitle() {
-    return AppLocalizations.of(context)!.taptoselectwinner;
-  }
-
-  // Get subtitle text for player selection based on current state
-  String _getPlayerSelectionSubtitle() {
-    return AppLocalizations.of(context)!.taptoselecttopscorer;
-  }
-
-  // Show team selection dialog
-  void _showTeamSelectionDialog() async {
-    print('_showTeamSelectionDialog called in games.dart');
-
-    // First check if selection is available
-    final availability = await _getSelectionAvailability();
-    print('Availability check result: $availability');
-
-    if (!availability['available']) {
-      print('Selection not available, showing message and returning early');
-      _showAvailabilityMessage(availability['message']);
-      return;
-    }
-
-    print('Selection is available, proceeding to fetch teams');
-    try {
-      // Use the existing _fetchAllTeams function instead of manual team extraction
-      final teams = await _fetchAllTeams();
-      print('Teams from _fetchAllTeams: $teams');
-      print('Teams count: ${teams.length}');
-
-      if (teams.isEmpty) {
-        print('No teams found, showing error message');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No teams found for this league')),
-        );
-        return;
-      }
-
-      String? selectedTeam;
-
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return StatefulBuilder(
-            builder: (BuildContext context, StateSetter setDialogState) {
-              print('Dialog builder called with teams: $teams');
-              return AlertDialog(
-                backgroundColor: cards,
-                title: Text(
-                  AppLocalizations.of(context)!.teamcannotbechanged,
-                  style: TextStyle(color: Colors.red, fontSize: 16),
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Text('Available teams: ${teams.length}',
-                    //     style: TextStyle(color: Colors.white)),
-                    SizedBox(height: 10),
-                    DropdownButton<String>(
-                      hint: Text(AppLocalizations.of(context)!.chooseteam,
-                          style: TextStyle(color: Colors.blue)),
-                      isExpanded: true,
-                      value: selectedTeam,
-                      items: teams.map((String team) {
-                        print('Creating dropdown item for team: $team');
-                        return DropdownMenuItem<String>(
-                          value: team,
-                          child:
-                              Text(team, style: TextStyle(color: Colors.white)),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        print('Dropdown selection changed to: $newValue');
-                        setDialogState(() {
-                          selectedTeam = newValue;
-                        });
-                      },
-                    ),
-                    SizedBox(height: 20),
-                    if (selectedTeam != null) ...[
-                      Text(
-                        '$selectedTeam',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
-                        ),
-                      ),
-                    ],
-                    SizedBox(height: 20),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                      ),
-                      onPressed: selectedTeam != null
-                          ? () {
-                              _saveTeamSelection(selectedTeam!);
-                              Navigator.of(context).pop();
-                            }
-                          : null,
-                      child: Text(AppLocalizations.of(context)!.saveteam,
-                          style: TextStyle(color: Colors.blue)),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
-      );
-    } catch (e) {
-      print('Error showing team selection dialog: $e');
-    }
-  }
-
-  // Show player selection dialog
-  void _showPlayerSelectionDialog() async {
-    // First check if selection is available
-    final availability = await _getSelectionAvailability();
-    if (!availability['available']) {
-      _showAvailabilityMessage(availability['message']);
-      return;
-    }
-
-    try {
-      // Fetch players for current league using PlayersMethods
-      final dataToSend = {'league': league};
-      final players = await PlayersMethods().fetchPlayersList(dataToSend);
-
-      String? selectedPlayer;
-
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return StatefulBuilder(
-            builder: (BuildContext context, StateSetter setDialogState) {
-              return AlertDialog(
-                backgroundColor: cards,
-                title: Text(
-                  AppLocalizations.of(context)!.teamcannotbechanged,
-                  style: TextStyle(color: Colors.red, fontSize: 16),
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DropdownButton<String>(
-                      hint: Text(AppLocalizations.of(context)!.choosPlayer,
-                          style: TextStyle(color: Colors.blue)),
-                      isExpanded: true,
-                      items: players.map((String player) {
-                        return DropdownMenuItem<String>(
-                          value: player,
-                          child: Text(player),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setDialogState(() {
-                          selectedPlayer = newValue;
-                        });
-                      },
-                    ),
-                    SizedBox(height: 20),
-                    if (selectedPlayer != null) ...[
-                      Text(
-                        '$selectedPlayer',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
-                        ),
-                      ),
-                    ],
-                    SizedBox(height: 20),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                      ),
-                      onPressed: selectedPlayer != null
-                          ? () {
-                              _savePlayerSelection(selectedPlayer!);
-                              Navigator.of(context).pop();
-                            }
-                          : null,
-                      child: Text(AppLocalizations.of(context)!.savePlayer,
-                          style: TextStyle(color: Colors.blue)),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
-      );
-    } catch (e) {
-      print('Error showing player selection dialog: $e');
-    }
-  }
-
-  // Save team selection
-  Future<void> _saveTeamSelection(String selectedTeam) async {
-    try {
-      final response = await http.put(
-        Uri.parse('$_baseUrl/users/winner'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, dynamic>{
-          '_id': clientId,
-          'email': email,
-          'winner': {
-            'winner.$league': selectedTeam,
-          },
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content:
-                  Text(AppLocalizations.of(context)!.teamSavedsuccessfully)),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(AppLocalizations.of(context)!.failedtoSaveTeam)),
-        );
-      }
-    } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.errorsavingteam)),
-      );
-    }
-  }
-
-  // Save player selection
-  Future<void> _savePlayerSelection(String selectedPlayer) async {
-    final cleanedPlayerName = selectedPlayer.split(' (')[0];
-    try {
-      final response = await http.put(
-        Uri.parse('$_baseUrl/users/top-scorer'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, dynamic>{
-          '_id': clientId,
-          'email': email,
-          'topScorer': {
-            'topScorer.$league': cleanedPlayerName,
-          },
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content:
-                  Text(AppLocalizations.of(context)!.playerSavedsuccessfully)),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(AppLocalizations.of(context)!.failedtoSaveplayer)),
-        );
-      }
-    } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(AppLocalizations.of(context)!.errorsavingplayer)),
-      );
-    }
-  }
-
-  // Show availability message
-  void _showAvailabilityMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.info_outline, color: Colors.white),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                message,
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.orange[700],
-        duration: Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.only(bottom: 80, left: 16, right: 16),
-      ),
-    );
-  }
-
-  // Show hint to user about selecting a league
-  void _showLeagueSelectionHint() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.info_outline, color: Colors.white),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                AppLocalizations.of(context)!.selectleaguefirst + " 👆",
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.blue[700],
-        duration: Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.only(bottom: 80, left: 16, right: 16),
-      ),
-    );
-  }
 
 // Rename and simplify this method - it now only handles the games list display
   Widget _buildGamesList(List<Game> filteredGames, List<DateTime> sortedDates,
