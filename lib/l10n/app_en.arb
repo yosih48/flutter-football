@@ -237,16 +237,7 @@
   "nogroupsmessage": "You are not a member of any private groups yet. Join or create a group to start competing!",
   "notmemberanygroup": "You are not a member of any group",
   "numberOfGames": "games",
-  "chooseCompetitions": "Choose your competitions"
-
-
- 
-
-
-    
-
-
-    
-
-             
+  "chooseCompetitions": "Choose your competitions",
+    "continueButton": "Continue"
+   
 }

@@ -10,6 +10,7 @@ import 'package:football/utils/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TeamSelectionButton extends StatefulWidget {
   // final List<Game> games;
@@ -94,20 +95,58 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
     }
   }
 
-  List<String> _fetchAllTeams() {
+  Future<List<dynamic>> _realApi(Map<String, dynamic> dataToSend) async {
+    // Replace with your actual host URL
+    const String hostUrl = 'YOUR_HOST_URL_HERE'; // e.g., 'https://yourapi.com/'
 
-    final filteredGames = _allLeagueGames.where((game) {
+    final response = await http.post(
+      Uri.parse('${hostUrl}api/realApiData'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'data': dataToSend}),
+    );
+
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+      return responseData['games'] as List<dynamic>;
+    } else {
+      throw Exception('Failed to load games: ${response.statusCode}');
+    }
+  }
+
+// Add this method to your class
+Future<List<String>> _fetchAllTeams() async {
+    // Get the league data from SharedPreferences (Flutter equivalent of localStorage)
+    final prefs = await SharedPreferences.getInstance();
+    final leagueData = prefs.getString('setLeague') ?? '{}';
+    final parsedLeagueData = jsonDecode(leagueData);
+
+    // Fetch games from API
+    final games = await _realApi(parsedLeagueData);
+    print('_fetchAllTeams called with games: $games');
+    print(games);
+
+    // Apply the same filtering logic as Node.js
+    final filteredGames = games.where((game) {
       if (game.league.id == 2 || game.league.id == 848 || game.league.id == 3) {
         return !game.league.round.contains("Qualifying") &&
-            !game.league.round.contains("Play-offs");
+            game.league.round != "Play-offs";
       }
-      return true;
+      return true; // Keep games that don't match the league IDs
     }).toList();
 
+    // Extract team names and return unique list
     return filteredGames
-        .expand((game) => [game.home.name, game.away.name])
+        .expand((game) => [
+              game.home?.name?.toString() ?? '',
+              game.away?.name?.toString() ?? ''
+            ])
+        .where((teamName) => teamName.isNotEmpty)
         .toSet()
         .toList();
+
+        
   }
 
   Future<void> saveTeam() async {
@@ -167,6 +206,7 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
   }
 
   void _showTeamSelectionDialog() async {
+    print('_showTeamSelectionDialog called');
     final teams = await _fetchAllTeams();
     print('teams: ${teams}');
     if (selectedTeam != null && !teams.contains(selectedTeam)) {
@@ -300,7 +340,7 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
             ),
             onPressed: _showTeamSelectionDialog,
           ),
-        ],
+        ]
       );
 
     return SizedBox();

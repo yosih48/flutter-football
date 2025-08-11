@@ -318,7 +318,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get chooseTopScorer => 'בחר מלך שערים';
 
   @override
-  String get selectleaguefirst => 'בחר ליגה תחילה';
+  String get selectleaguefirst => 'נא לבחור ליגה';
 
   @override
   String get taptoselectwinner => 'לחץ לבחירת זוכה';
@@ -684,5 +684,8 @@ class AppLocalizationsHe extends AppLocalizations {
   String get numberOfGames => 'משחקים';
 
   @override
-  String get chooseCompetitions => 'תבחר את התחרויות שלך';
+  String get chooseCompetitions => 'בחר ליגות מועדפות';
+
+  @override
+  String get continueButton => 'המשך';
 }

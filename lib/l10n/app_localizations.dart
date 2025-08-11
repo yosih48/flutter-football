@@ -1450,6 +1450,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose your competitions'**
   String get chooseCompetitions;
+
+  /// No description provided for @continueButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueButton;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

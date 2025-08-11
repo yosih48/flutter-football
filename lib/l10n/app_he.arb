@@ -97,7 +97,7 @@
     "emailsentlink": "נשלח אליך אימייל עם קישור לאיפוס סיסמה. קישור זה תקף ל3 דקות בלבד.",
      "choosewinner": "בחר זוכה",
      "chooseTopScorer": "בחר מלך שערים",
-    "selectleaguefirst": "בחר ליגה תחילה",
+    "selectleaguefirst": "נא לבחור ליגה",
     "taptoselectwinner": "לחץ לבחירת זוכה",
     "taptoselecttopscorer": "לחץ לבחירת מלך שערים",
     "selectionnotavailableyet": "הבחירה עדיין לא זמינה",
@@ -241,6 +241,9 @@
   "nogroupsmessage": "אתה עדיין לא חבר באף קבוצה פרטית. הצטרף או צור קבוצה כדי להתחיל להתחרות!",
   "notmemberanygroup": "אתה לא חבר באף קבוצה",
   "numberOfGames": "משחקים",
-   "chooseCompetitions": "תבחר את התחרויות שלך"
+  "chooseCompetitions": "בחר ליגות מועדפות",
+   "continueButton": "המשך"
+
+  
   
 }

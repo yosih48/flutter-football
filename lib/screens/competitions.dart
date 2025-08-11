@@ -310,7 +310,7 @@ Future<void> markFirstLoginComplete() async {
               disabledBackgroundColor: Colors.grey[600],
             ),
             child: Text(
-             'continu',
+             AppLocalizations.of(context)!.continueButton,
               style: TextStyle(fontSize: 16, color: Colors.white),
             ),
           ),
