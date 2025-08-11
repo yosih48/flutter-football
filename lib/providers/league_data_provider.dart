@@ -25,7 +25,7 @@ class LeagueDataProvider extends ChangeNotifier {
     39: '39',
     78: '78',
     848: '848',
-    15: '15',
+    // 15: '15',
   };
 
   // Check if cache is valid
@@ -58,8 +58,8 @@ class LeagueDataProvider extends ChangeNotifier {
           return AppLocalizations.of(context)!.bundesleague;
         case 848:
           return AppLocalizations.of(context)!.conferenceleague;
-        case 15:
-          return AppLocalizations.of(context)!.clubworldcup;
+        // case 15:
+        //   return AppLocalizations.of(context)!.clubworldcup;
         default:
           return _getFallbackLeagueName(id, context);
       }
@@ -86,8 +86,8 @@ class LeagueDataProvider extends ChangeNotifier {
         return AppLocalizations.of(context)!.bundesleague;
       case 848:
         return AppLocalizations.of(context)!.conferenceleague;
-      case 15:
-        return AppLocalizations.of(context)!.clubworldcup;
+      // case 15:
+      //   return AppLocalizations.of(context)!.clubworldcup;
       default:
         return 'League $id';
     }

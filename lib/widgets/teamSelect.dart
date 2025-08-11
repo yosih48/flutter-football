@@ -244,25 +244,62 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(height: 10),
-                    DropdownButton<String>(
-                      hint: Text(AppLocalizations.of(context)!.chooseteam,
-                          style: TextStyle(color: Colors.blue)),
-                      isExpanded: true,
-                      value: selectedTeamLocal,
-                      items: teams.map((String team) {
-                        print('Creating dropdown item for team: $team');
-                        return DropdownMenuItem<String>(
-                          value: team,
-                          child:
-                              Text(team, style: TextStyle(color: Colors.white)),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        print('Dropdown selection changed to: $newValue');
-                        setDialogState(() {
-                          selectedTeamLocal = newValue;
-                        });
-                      },
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[800]?.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey[600]!, width: 1),
+                      ),
+                      child: DropdownButton<String>(
+                        hint: Text(AppLocalizations.of(context)!.chooseteam,
+                            style: TextStyle(color: Colors.grey[400])),
+                        isExpanded: true,
+                        value: selectedTeamLocal,
+                        underline: SizedBox(), // Remove default underline
+                        dropdownColor:
+                            Colors.grey[850], // Dark background for dropdown
+                        icon: Icon(Icons.keyboard_arrow_down,
+                            color: Colors.grey[400]),
+                        items: teams.map((String team) {
+                          print('Creating dropdown item for team: $team');
+                          return DropdownMenuItem<String>(
+                            value: team,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 8, horizontal: 4),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.sports_soccer,
+                                    color: Colors.blue[400],
+                                    size: 18,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      team,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          print('Dropdown selection changed to: $newValue');
+                          setDialogState(() {
+                            selectedTeamLocal = newValue;
+                          });
+                        },
+                      ),
                     ),
                     SizedBox(height: 20),
                     if (selectedTeamLocal != null) ...[

@@ -196,23 +196,60 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(height: 10),
-                    DropdownButton<String>(
-                      hint: Text(AppLocalizations.of(context)!.choosPlayer,
-                          style: TextStyle(color: Colors.blue)),
-                      isExpanded: true,
-                      value: selectedPlayerLocal,
-                      items: players.map((String player) {
-                        return DropdownMenuItem<String>(
-                          value: player,
-                          child: Text(player,
-                              style: TextStyle(color: Colors.white)),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setDialogState(() {
-                          selectedPlayerLocal = newValue;
-                        });
-                      },
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[800]?.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey[600]!, width: 1),
+                      ),
+                      child: DropdownButton<String>(
+                        hint: Text(AppLocalizations.of(context)!.choosPlayer,
+                            style: TextStyle(color: Colors.grey[400])),
+                        isExpanded: true,
+                        value: selectedPlayerLocal,
+                        underline: SizedBox(), // Remove default underline
+                        dropdownColor:
+                            Colors.grey[850], // Dark background for dropdown
+                        icon: Icon(Icons.keyboard_arrow_down,
+                            color: Colors.grey[400]),
+                        items: players.map((String player) {
+                          return DropdownMenuItem<String>(
+                            value: player,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 8, horizontal: 4),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.person,
+                                    color: Colors.green[400],
+                                    size: 18,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      player,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setDialogState(() {
+                            selectedPlayerLocal = newValue;
+                          });
+                        },
+                      ),
                     ),
                     SizedBox(height: 20),
                     if (selectedPlayerLocal != null) ...[
