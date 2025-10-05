@@ -1098,69 +1098,69 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                   },
                 ),
                 SizedBox(
-                  height: 8,
+                  height: 16,
                 ),
 
-                // Show team and player selection area only when appropriate
-                selectedIndex != -1 && league != -1
-                    ? Container(
-                        margin:
-                            EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Row(
-                          children: [
-                            // Team Selection
-                            Expanded(
-                              child: TeamSelectionButton(
-                                clientId: clientId,
-                                email: email,
-                                league: league,
-                                onTeamSelected: (selectedTeam) {
-                                  // Optional callback if you need to handle team selection
-                                  print('Team selected: $selectedTeam');
-                                },
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            // Player Selection
-                            Expanded(
-                              child: PlayerSelectionButton(
-                                clientId: clientId,
-                                email: email,
-                                league: league,
-                                onPlayerSelected: (selectedPlayer) {
-                                  // Optional callback if you need to handle player selection
-                                  print('Player selected: $selectedPlayer');
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : Container(
-                        margin:
-                            EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Row(
-                          children: [
-                            // Team Selection - No league selected
-                            Expanded(
-                              child: TeamSelectionButton(
-                                clientId: clientId,
-                                email: email,
-                                league: -1, // No league selected
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            // Player Selection - No league selected
-                            Expanded(
-                              child: PlayerSelectionButton(
-                                clientId: clientId,
-                                email: email,
-                                league: -1, // No league selected
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                // // Show team and player selection area only when appropriate
+                // selectedIndex != -1 && league != -1
+                //     ? Container(
+                //         margin:
+                //             EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                //         child: Row(
+                //           children: [
+                //             // Team Selection
+                //             Expanded(
+                //               child: TeamSelectionButton(
+                //                 clientId: clientId,
+                //                 email: email,
+                //                 league: league,
+                //                 onTeamSelected: (selectedTeam) {
+                //                   // Optional callback if you need to handle team selection
+                //                   print('Team selected: $selectedTeam');
+                //                 },
+                //               ),
+                //             ),
+                //             SizedBox(width: 8),
+                //             // Player Selection
+                //             Expanded(
+                //               child: PlayerSelectionButton(
+                //                 clientId: clientId,
+                //                 email: email,
+                //                 league: league,
+                //                 onPlayerSelected: (selectedPlayer) {
+                //                   // Optional callback if you need to handle player selection
+                //                   print('Player selected: $selectedPlayer');
+                //                 },
+                //               ),
+                //             ),
+                //           ],
+                //         ),
+                //       )
+                //     : Container(
+                //         margin:
+                //             EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                //         child: Row(
+                //           children: [
+                //             // Team Selection - No league selected
+                //             Expanded(
+                //               child: TeamSelectionButton(
+                //                 clientId: clientId,
+                //                 email: email,
+                //                 league: -1, // No league selected
+                //               ),
+                //             ),
+                //             SizedBox(width: 8),
+                //             // Player Selection - No league selected
+                //             Expanded(
+                //               child: PlayerSelectionButton(
+                //                 clientId: clientId,
+                //                 email: email,
+                //                 league: -1, // No league selected
+                //               ),
+                //             ),
+                //           ],
+                //         ),
+                //       ),
 
                 Expanded(
                   child:
