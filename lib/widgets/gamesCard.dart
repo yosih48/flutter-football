@@ -31,381 +31,316 @@ class GameWidget extends StatelessWidget {
       awayController!.text = guess!.awayTeamGoals.toString();
     }
   }
-  
-
 
   @override
   Widget build(BuildContext context) {
-    print(homeController);
-    bool isValid = homeController!.text.isNotEmpty;
-    print(isValid);
-final info = StatusUtils.getStatusInfo(game.status.short, context);
-print(game.date.toLocal());
-print(DateTime.now());
-    return Card(
-      color: cards, // Dark background color for the card
-      elevation: 0,
-      child: Padding(
-        padding: EdgeInsets.all(8.0),
+    bool isValid = homeController?.text.isNotEmpty ?? false;
+    final info = StatusUtils.getStatusInfo(game.status.short, context);
+    
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      decoration: BoxDecoration(
+        color: cards,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: Colors.white.withOpacity(0.05),
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
         child: InkWell(
           onTap: () => onTap(context),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-          Text.rich(
-  TextSpan(
-    children: [
-      if (game.status.long == "First Half" || game.status.long == "Second Half")
-        TextSpan(
-          text: "${game.status.elapsed}'",
-          style: TextStyle(
-            color: Colors.red, // Your custom color for elapsed
-            fontSize: 14.0,
-          ),
-        )
-      else
-        TextSpan(
-          text: info['text'],
-          style: TextStyle(
-            color: info['color'],
-            fontSize: 14.0,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                _buildHeader(context, info),
+                SizedBox(height: 20),
+                _buildTeamsRow(context, isValid),
+                if (game.status.long == "Not Started") ...[
+                   SizedBox(height: 16),
+                   _buildOdds(),
+                ],
+                SizedBox(height: 16),
+                 _buildFooter(context),
+              ],
+            ),
           ),
         ),
-    ],
-  ),
-),
-                  if (game.status.long == 'Not Started')
-                    Text(
-                      DateFormat('HH:mm  ')
-                          .format(game.date.toLocal()), // Format the time
-                      style: TextStyle(
-                        color: Color(0xFF9BA4B5).withOpacity(0.9),
-                        fontSize: 14.0,
-                      ),
-                    ),
-                  Text(
-                    DateFormat('dd/MM/yy').format(game.date),
-                    style: TextStyle(
-                      color: Color(0xFF9BA4B5).withOpacity(0.9),
-                      fontSize: 14.0,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(
-                height: 14.0,
-              ),
-              Row(
-                children: [
-                  // SizedBox(width: 8.0),
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: GestureDetector(
-                        onTap: () => TeamLinkHandler.linkToTeam(game.home.name),
-                        child: Text(
-                          game.home.name,
-                          style: TextStyle(
-                            color:
-                                Colors.white, // White color for the team names
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13.0,
-                          ),
-                          overflow: TextOverflow.visible,
-                          maxLines: 2,
-                          textAlign: TextAlign.left,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 6.0),
-           GestureDetector(
-                    onTap: () => TeamLinkHandler.linkToTeam(game.home.name),
-                    child: Image.network(
-                      game.home.logo,
-                      width: 24.0,
-                      height: 24.0,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 24.0,
-                          height: 24.0,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[300],
-                            borderRadius: BorderRadius.circular(4.0),
-                          ),
-                          child: Icon(
-                            Icons.image_not_supported,
-                            size: 16.0,
-                            color: Colors.grey[600],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  SizedBox(width: 18.0),
-                 if (DateTime.now().isBefore(game.date.toLocal())||game.status.long == "Not Started" )
-                 
-                    Row(
-                      children: [
-                        SizedBox(
-                          width: 40,
-                          height: 50,
-                          child: TextField(
-                            controller: homeController,
-                            keyboardType: TextInputType.number,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors
-                                  .white, // White color for the input text
-                              fontSize: 16.0,
-                            ),
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color:
-                                      isValid ? Color(0xFF9BA4B5) : Colors.red,
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color:
-                                      isValid ? Color(0xFF9BA4B5) : Colors.red,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color:
-                                      isValid ? Color(0xFF9BA4B5) : Colors.red,
-                                ),
-                              ),
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 12.0, horizontal: 8.0),
-                            ),
-                            inputFormatters: [
-                              LengthLimitingTextInputFormatter(
-                                  1), // Limit input to 1 character
-                              FilteringTextInputFormatter
-                                  .digitsOnly, // Allow only digits
-                            ],
-                          ),
-                        ),
-                        Text(
-                          '  :  ',
-                          style: TextStyle(
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(
-                          width: 40,
-                          height: 50,
-                          child: TextField(
-                            controller: awayController,
-                            keyboardType: TextInputType.number,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors
-                                  .white, // White color for the input text
-                              fontSize: 16.0,
-                            ),
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color:
-                                      isValid ? Color(0xFF9BA4B5) : Colors.red,
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color:
-                                      isValid ? Color(0xFF9BA4B5) : Colors.red,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color:
-                                      isValid ? Color(0xFF9BA4B5) : Colors.red,
-                                ),
-                              ),
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 12.0, horizontal: 8.0),
-                            ),
-                            inputFormatters: [
-                              LengthLimitingTextInputFormatter(
-                                  1), // Limit input to 1 character
-                              FilteringTextInputFormatter
-                                  .digitsOnly, // Allow only digits
-                            ],
-                          ),
-                        ),
-                      ],
-                    )
-                  else
-                    Text(
-                      '${game.goals.home} - ${game.goals.away}',
-                      style: TextStyle(
-                        color: Colors.white, // White color for the team names
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18.0,
-                      ),
-                    ),
-                  SizedBox(width: 18.0),
-            GestureDetector(
-                    onTap: () => TeamLinkHandler.linkToTeam(game.home.name),
-                    child: Image.network(
-                      game.away.logo,
-                      width: 24.0,
-                      height: 24.0,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 24.0,
-                          height: 24.0,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[300],
-                            borderRadius: BorderRadius.circular(4.0),
-                          ),
-                          child: Icon(
-                            Icons.image_not_supported,
-                            size: 16.0,
-                            color: Colors.grey[600],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  SizedBox(width: 6.0),
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: GestureDetector(
-                        onTap: () => TeamLinkHandler.linkToTeam(game.away.name),
-                        child: Text(
-                          game.away.name,
-                          style: TextStyle(
-                            color:
-                                Colors.white, // White color for the team names
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13.0,
-                          ),
-                          overflow: TextOverflow
-                              .visible, // Allow the text to wrap to the next line
-                          maxLines: 2, // Set the maximum number of lines
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 12.0),
-              if (game.status.long == "Not Started")
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    // SizedBox(
-                    //   width: 1,
-                    // ),
-                    Text(
-                      '${game.odds.home}',
-                      style: TextStyle(
-                        color: Colors.white, // Light gray color for the odds
-                        fontSize: 16.0,
-                      ),
-                    ),
-                    SizedBox(
-                      width: 1.0,
-                    ),
-                    Text(
-                      '${game.odds.draw}',
-                      style: TextStyle(
-                        color: Colors.white, // Light gray color for the odds
-                        fontSize: 16.0,
-                      ),
-                    ),
-                    SizedBox(
-                      width: 1.0,
-                    ),
-                    Text(
-                      '${game.odds.away}',
-                      style: TextStyle(
-                        color: Colors.white, // Light gray color for the odds
-                        // Color(0xFF9BA4B5), // Light gray color for the odds
-                        fontSize: 16.0,
-                      ),
-                    ),
+      ),
+    );
+  }
 
-                    // SizedBox(
-                    //   width: 1,
-                    // ),
-                  ],
+  Widget _buildHeader(BuildContext context, Map<String, dynamic> info) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // Status/Time
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: (game.status.long == "First Half" || 
+                   game.status.long == "Second Half" || 
+                   info['text'] == 'LIVE') 
+                   ? Colors.red.withOpacity(0.2) 
+                   : Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              if (game.status.long == "First Half" || 
+                  game.status.long == "Second Half" ||
+                   info['text'] == 'LIVE')
+                Container(
+                  width: 6,
+                  height: 6,
+                  margin: EdgeInsets.only(right: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
                 ),
-              SizedBox(height: 8.0),
-              Row(
-                // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (guess == null && game.status.long != 'Not Started')
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.center,
-                        child: Text(
-                          '${'--'} : ${'--'}',
-                          style: TextStyle(
-                            color: Color(
-                                0xFF9BA4B5), // Light gray color for the "Your guess" and score
-                            fontSize: 14.0,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  if (guess != null && game.status.long != 'Not Started')
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          AppLocalizations.of(context)!.yourguess,
-                          style: TextStyle(
-                            color: Color(
-                                0xFF9BA4B5), // Light gray color for the "Your guess" and score
-                            fontSize: 14.0,
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (guess != null && game.status.long != 'Not Started')
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.center,
-                        child: Text(
-                          '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
-                          style: TextStyle(
-                            color: Color(
-                                0xFF9BA4B5), // Light gray color for the "Your guess" and score
-                            fontSize: 14.0,
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (guess != null && game.status.long != 'Not Started')
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          '${guess!.sumPoints % 1 == 0 ? guess!.sumPoints.toInt() : guess!.sumPoints} ${AppLocalizations.of(context)!.points}',
-                          style: TextStyle(
-                            color: Color(0xFF9BA4B5).withOpacity(0.6),
-                            fontSize: 14.0,
-                          ),
-                        ),
-                      ),
-                    ),
-                  // SizedBox(width: 170),
-                ],
+              Text(
+                 (game.status.long == "First Half" || game.status.long == "Second Half")
+                  ? "${game.status.elapsed}'"
+                  : info['text'],
+                style: TextStyle(
+                  color: (game.status.long == "First Half" || 
+                          game.status.long == "Second Half" ||
+                          info['text'] == 'LIVE')
+                      ? Colors.red
+                      : Colors.white70,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
         ),
+        
+        // Date/Time if not live
+        if (game.status.long == 'Not Started')
+        Row(
+          children: [
+             Icon(Icons.access_time, size: 14, color: Colors.white54),
+            SizedBox(width: 4),
+            Text(
+              DateFormat('HH:mm').format(game.date.toLocal()),
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTeamsRow(BuildContext context, bool isValid) {
+    final bool isUpcoming = DateTime.now().isBefore(game.date.toLocal()) || 
+                          game.status.long == "Not Started";
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // Home Team
+        Expanded(child: _buildTeamItem(game.home.name, game.home.logo, CrossAxisAlignment.start)),
+        
+        // Score or Input
+        Container(
+          width: 80,
+          margin: EdgeInsets.symmetric(horizontal: 8),
+          child: isUpcoming 
+              ? _buildScoreInputs(isValid)
+              : _buildFinalScore(),
+        ),
+
+        // Away Team
+        Expanded(child: _buildTeamItem(game.away.name, game.away.logo, CrossAxisAlignment.end)),
+      ],
+    );
+  }
+
+  Widget _buildTeamItem(String name, String logoUrl, CrossAxisAlignment alignment) {
+    return GestureDetector(
+       onTap: () => TeamLinkHandler.linkToTeam(name),
+      child: Column(
+        crossAxisAlignment: alignment,
+        children: [
+          Image.network(
+            logoUrl,
+            width: 40,
+            height: 40,
+            errorBuilder: (context, error, stackTrace) => 
+               Container(
+                  width: 40,
+                  height: 40,
+                   decoration: BoxDecoration(
+                    color: Colors.grey[800],
+                    borderRadius: BorderRadius.circular(8),
+                   ),
+                  child: Icon(Icons.shield, color: Colors.white30, size: 20),
+               ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            name,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+             textAlign: alignment == CrossAxisAlignment.start ? TextAlign.left : TextAlign.right,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScoreInputs(bool isValid) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildInputBox(homeController, isValid),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4),
+          child: Text(":", style: TextStyle(color: Colors.white30, fontSize: 20, fontWeight: FontWeight.bold)),
+        ),
+        _buildInputBox(awayController, isValid),
+      ],
+    );
+  }
+
+  Widget _buildInputBox(TextEditingController? controller, bool isValid) {
+    return Container(
+      width: 32,
+      height: 40,
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A3238),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isValid ? Colors.transparent : Colors.red.withOpacity(0.5),
+        ),
+      ),
+      child: TextField(
+        controller: controller,
+        textAlign: TextAlign.center,
+        keyboardType: TextInputType.number,
+        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.zero,
+        ),
+          inputFormatters: [
+            LengthLimitingTextInputFormatter(1),
+            FilteringTextInputFormatter.digitsOnly,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFinalScore() {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+       decoration: BoxDecoration(
+        color: const Color(0xFF2A3238),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        '${game.goals.home} - ${game.goals.away}',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 2,
+        ),
+         textAlign: TextAlign.center,
+      ),
+    );
+  }
+    Widget _buildOdds() {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+      decoration: BoxDecoration(
+         color: Colors.white.withOpacity(0.03),
+         borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+            _buildOddItem("1", game.odds.home.toString()),
+            _buildOddItem("X", game.odds.draw.toString()),
+            _buildOddItem("2", game.odds.away.toString()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOddItem(String label, String value) {
+     return Row(
+       children: [
+         Text(
+           label,
+           style: TextStyle(color: Colors.white38, fontSize: 12),
+         ),
+          SizedBox(width: 4),
+          Text(
+           value,
+           style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold),
+         ),
+       ],
+     );
+  }
+
+
+  Widget _buildFooter(BuildContext context) {
+      if (guess == null && game.status.long != 'Not Started') return SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      decoration: BoxDecoration(
+        color: primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: primary.withOpacity(0.2), width: 1),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          if (guess != null) ...[
+             Text(
+            AppLocalizations.of(context)!.yourguess,
+            style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+          Text(
+            '${guess!.homeTeamGoals} - ${guess!.awayTeamGoals}',
+            style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+          ),
+           Text(
+             '${guess!.sumPoints % 1 == 0 ? guess!.sumPoints.toInt() : guess!.sumPoints} pts',
+             style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.w600),
+           ),
+          ] else ...[
+             Text(
+                "Prediction missing",
+                style: TextStyle(color: Colors.white54, fontSize: 12),
+             ),
+             Text('-- : --', style: TextStyle(color: Colors.white54)),
+          ]
+        ],
       ),
     );
   }

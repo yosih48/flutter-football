@@ -1252,54 +1252,54 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     // Show games list
     return ListView.builder(
       itemCount: sortedDates.length,
+      padding: EdgeInsets.only(bottom: 80), // Space for FAB
       itemBuilder: (context, index) {
         final date = sortedDates[index];
         var gamesForDate = groupedGames[date]!;
-        print('gamesForDate: ${gamesForDate.length}');
-        // Sort games by time within the date
+        
         gamesForDate.sort((a, b) {
-          // Assuming your Game object has a time field or you can extract time from fixture
-          // Replace this with your actual time comparison logic
           return a.date.compareTo(b.date);
         });
-        // Group consecutive games by league while maintaining time order
+        
         List<Widget> gameWidgets = [];
 
         for (int i = 0; i < gamesForDate.length; i++) {
           final game = gamesForDate[i];
           final currentLeagueId = game.league.id;
 
-          // Check if this is the first game or if league changed from previous game
           final bool showLeagueHeader =
               i == 0 || gamesForDate[i - 1].league.id != currentLeagueId;
 
-          // Add league header if needed
           if (showLeagueHeader) {
             final leagueName = getLocalizedLeagueName(currentLeagueId, context);
             gameWidgets.add(
               GestureDetector(
                 onTap: () => _toggleLeagueFilter(currentLeagueId),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                child: Container(
+                  width: double.infinity,
+                  margin: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                     color: Colors.white.withOpacity(0.03),
+                     borderRadius: BorderRadius.circular(8),
+                     border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  ),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '$leagueName',
+                        leagueName.toUpperCase(),
                         style: TextStyle(
                           color: _selectedLeagueFilter == currentLeagueId
-                              ? Colors.blue
-                              : Colors.grey[300],
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                              ? primary
+                              : Colors.white70,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
                         ),
                       ),
                       if (_selectedLeagueFilter == currentLeagueId)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 6.0),
-                          child:
-                              Icon(Icons.close, size: 14, color: Colors.blue),
-                        ),
+                         Icon(Icons.close, size: 16, color: primary),
                     ],
                   ),
                 ),
@@ -1307,7 +1307,6 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             );
           }
 
-          // Add game widget
           if (_guessControllers[game.fixtureId] == null) {
             _guessControllers[game.fixtureId] = {
               'home': TextEditingController(),
@@ -1322,9 +1321,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
               matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
 
           gameWidgets.add(
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-              child: GameWidget(
+              GameWidget(
                 game: game,
                 guess: guess,
                 homeController: _guessControllers[game.fixtureId]?['home'],
@@ -1346,41 +1343,36 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                   }
                 },
               ),
-            ),
           );
         }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Date header
-            Center(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Column(
-                  children: [
-                    Text(
-                      formatDateInHebrew(date, context),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+            // Sticky-like Date Header
+            Container(
+              margin: EdgeInsets.only(top: 16, bottom: 8, left: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    formatDateInHebrew(date, context),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      '${gamesForDate.length} ${AppLocalizations.of(context)!.numberOfGames}',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
+                  ),
+                  Text(
+                    '${gamesForDate.length} ${AppLocalizations.of(context)!.numberOfGames}',
+                    style: TextStyle(
+                      color: Colors.grey[500],
+                      fontSize: 13,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-            // Games sorted by time, showing league name for each game
             ...gameWidgets,
           ],
         );

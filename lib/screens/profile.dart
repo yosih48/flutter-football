@@ -155,26 +155,32 @@ Future<void> _loadSelectedGroupName() async {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: cards,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Text(
             AppLocalizations.of(context)!.leavethegroup,
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
           ),
           content: Text(
             AppLocalizations.of(context)!.leavegroup,
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: Colors.white70),
           ),
           actions: <Widget>[
             TextButton(
               child: Text(
                 AppLocalizations.of(context)!.cancel,
-                style: TextStyle(color: Colors.blue),
+                style: TextStyle(color: Colors.grey),
               ),
               onPressed: () => Navigator.of(context).pop(false),
             ),
-            TextButton(
+            ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                   backgroundColor: Colors.red.withOpacity(0.2),
+                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                   elevation: 0,
+                ),
                 child: Text(
                   AppLocalizations.of(context)!.leave,
-                  style: TextStyle(color: Colors.blue),
+                  style: TextStyle(color: Colors.red),
                 ),
                 onPressed: () async {
                   final sharedGroupName =
@@ -253,7 +259,7 @@ Future<void> _loadSelectedGroupName() async {
           ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context)!.groupcreatedsuccessfully),
-            // backgroundColor: Colors.grey[800],
+            backgroundColor: primary,
             duration: Duration(seconds: 3),
           ),
         );
@@ -351,45 +357,47 @@ Future<void> _loadSelectedGroupName() async {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: cards,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Text(
             AppLocalizations.of(context)!.createnewgroup,
-            style: TextStyle(color: Colors.white, fontSize: 14),
+            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
           ),
           content: TextField(
             controller: _groupNameController,
             decoration: InputDecoration(
               labelText: AppLocalizations.of(context)!.entergroupname,
               labelStyle: TextStyle(
-                color: Colors.blue, // Change this to your desired color
+                color: primary, 
               ),
               enabledBorder: UnderlineInputBorder(
                 borderSide: BorderSide(
-                    color: Colors.blue), // Bottom border color when enabled
+                    color: Colors.white24),
               ),
               focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.blue, width: 2.0),
-                // Bottom border color when focused, with thicker border
+                borderSide: BorderSide(color: primary, width: 2.0),
               ),
             ),
             style: TextStyle(
-              color: Colors.white, // Change the input text color to blue
+              color: Colors.white, 
             ),
-            cursorColor: Colors.blue,
+            cursorColor: primary,
           ),
           actions: <Widget>[
             TextButton(
               child: Text(AppLocalizations.of(context)!.cancel,
-                  style: TextStyle(color: Colors.blue)),
+                  style: TextStyle(color: Colors.grey)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white, // Set button background to white
+                backgroundColor: primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               child: Text(AppLocalizations.of(context)!.create,
-                  style: TextStyle(color: Colors.blue)),
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               onPressed: () {
                 if (_groupNameController.text.isNotEmpty) {
                   _createNewGroup(_groupNameController.text);
@@ -416,64 +424,24 @@ Future<void> _loadSelectedGroupName() async {
 
     return Scaffold(
     backgroundColor:  background,
-      //  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-    
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [
-          // IconButton(
-          //   icon: Icon(Icons.help_center_outlined, color: Colors.blue),
-          //   tooltip: 'How to Play',
-          //   onPressed: () => showInstructionsBottomSheet(context),
-          // ),
-          // Container(
-          //   margin: EdgeInsets.only(left: 8),
-          //   child: TextButton.icon(
-          //     style: TextButton.styleFrom(
-          //       backgroundColor: Colors.blue.withOpacity(0.1),
-          //       shape: RoundedRectangleBorder(
-          //         borderRadius: BorderRadius.circular(12),
-          //       ),
-          //       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          //     ),
-          //     icon: Icon(Icons.account_circle, color: Colors.blue),
-          //     label: Text(
-          //       AppLocalizations.of(context)?.account ?? 'Account',
-          //       style: TextStyle(color: Colors.blue),
-          //     ),
-          //     onPressed: () {
-          //       Navigator.push(
-          //         context,
-          //         MaterialPageRoute(
-          //           builder: (context) => AccountScreen(),
-          //         ),
-          //       );
-          //     },
-          //   ),
-          // )
-        ],
       ),
       extendBodyBehindAppBar: true,
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF16181b), Color(0xFF16181b)],
-          ),
+          color: background,
         ),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: kToolbarHeight + 20),
-              SizedBox(
-                height: 25,
-              ),
+              SizedBox(height: kToolbarHeight + 40),
+             
               // Profile Header
               Container(
-                margin: EdgeInsets.symmetric(horizontal: 16),
+                margin: EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -484,78 +452,81 @@ Future<void> _loadSelectedGroupName() async {
                           AppLocalizations.of(context)!.mygroups,
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 22,
+                            fontSize: 28,
                             fontWeight: FontWeight.bold,
+                            letterSpacing: -0.5,
                           ),
                         ),
-                       
-//                  Consumer<ThemeProvider>(
-//   builder: (context, themeProvider, _) {
-//     return Row(
-//       children: [
-//         Icon(
-//           themeProvider.isDarkMode
-//               ? Icons.dark_mode
-//               : Icons.light_mode,
-//           color: Colors.blue,
-//         ),
-//         Switch(
-//           value: themeProvider.isDarkMode,
-//           onChanged: (value) {
-//             themeProvider.toggleTheme(); // Remove the parameter
-//           },
-//           activeColor: Colors.blue,
-//         ),
-//       ],
-//     );
-//   },
-// )
                       ],
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                       "Manage your groups and predictions",
+                       style: TextStyle(color: Colors.grey, fontSize: 14),
                     ),
                   ],
                 ),
               ),
 
-              SizedBox(height: 16),
+              SizedBox(height: 24),
 
               // Create Group Button
               Container(
-                margin: EdgeInsets.symmetric(horizontal: 16),
+                margin: EdgeInsets.symmetric(horizontal: 20),
+                width: double.infinity,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.withOpacity(0.1),
+                    backgroundColor: primary,
                     foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    elevation: 0,
+                    elevation: 4,
+                    shadowColor: primary.withOpacity(0.4),
                   ),
                   icon: Icon(
                     Icons.add_circle_outline,
-                    color: Colors.blue,
-                    size: 20,
+                    color: Colors.white,
+                    size: 24,
                   ),
                   label: Text(
-                    AppLocalizations.of(context)!.createnewgroup,
+                    AppLocalizations.of(context)!.createnewgroup.toUpperCase(),
                     style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.blue,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
                     ),
                   ),
                   onPressed: _showCreateGroupDialog,
                 ),
               ),
 
-              SizedBox(height: 24),
+              SizedBox(height: 32),
 
               // Groups List
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  "YOUR GROUPS",
+                  style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1),
+                ),
+              ),
+              SizedBox(height: 12),
               Container(
                 margin: EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: cards.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(16),
+                  color: cards,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.white.withOpacity(0.05)),
+                   boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
                 ),
                 child: _isLoadingGroups
                     ? Container(
@@ -563,19 +534,36 @@ Future<void> _loadSelectedGroupName() async {
                         child: Center(
                           child: CircularProgressIndicator(
                             valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.blue),
+                                AlwaysStoppedAnimation<Color>(primary),
                           ),
                         ),
                       )
-                    : usersGroups(selectedGroup),
+                    : ClipRRect(
+                       borderRadius: BorderRadius.circular(24),
+                       child: usersGroups(selectedGroup),
+                      ),
               ),
 
-              SizedBox(height: 24),
+              SizedBox(height: 32),
 
               // Winners/Top Scorers Toggle Section
               if (_userWinners.isNotEmpty || _userTopScorer.isNotEmpty) ...[
+                 Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    "STATISTICS",
+                    style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1),
+                  ),
+                ),
+                SizedBox(height: 12),
                 Container(
+                  padding: EdgeInsets.all(4),
                   margin: EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: cards,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  ),
                   child: Row(
                     children: [
                       Expanded(
@@ -586,33 +574,26 @@ Future<void> _loadSelectedGroupName() async {
                                 vertical: 12, horizontal: 16),
                             decoration: BoxDecoration(
                               color: _showWinners
-                                  ? Colors.blue.withOpacity(0.2)
+                                  ? primary
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: _showWinners
-                                    ? Colors.blue
-                                    : Colors.grey.withOpacity(0.3),
-                                width: 1,
-                              ),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
                                   Icons.emoji_events,
-                                  color:
-                                      _showWinners ? Colors.blue : Colors.grey,
-                                  size: 20,
+                                  color: _showWinners ? Colors.white : Colors.grey,
+                                  size: 18,
                                 ),
                                 SizedBox(width: 8),
                                 Text(
                                   AppLocalizations.of(context)!.yourwinners,
                                   style: TextStyle(
                                     color: _showWinners
-                                        ? Colors.blue
+                                        ? Colors.white
                                         : Colors.grey,
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     fontWeight: _showWinners
                                         ? FontWeight.bold
                                         : FontWeight.normal,
@@ -623,7 +604,7 @@ Future<void> _loadSelectedGroupName() async {
                           ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: 4),
                       Expanded(
                         child: GestureDetector(
                           onTap: () => setState(() => _showWinners = false),
@@ -632,24 +613,17 @@ Future<void> _loadSelectedGroupName() async {
                                 vertical: 12, horizontal: 16),
                             decoration: BoxDecoration(
                               color: !_showWinners
-                                  ? Colors.blue.withOpacity(0.2)
+                                  ? primary
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: !_showWinners
-                                    ? Colors.blue
-                                    : Colors.grey.withOpacity(0.3),
-                                width: 1,
-                              ),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
                                   Icons.sports_soccer,
-                                  color:
-                                      !_showWinners ? Colors.blue : Colors.grey,
-                                  size: 20,
+                                  color: !_showWinners ? Colors.white : Colors.grey,
+                                  size: 18,
                                 ),
                                 SizedBox(width: 8),
                                 Text(
@@ -657,9 +631,9 @@ Future<void> _loadSelectedGroupName() async {
                                       "Top Scorers",
                                   style: TextStyle(
                                     color: !_showWinners
-                                        ? Colors.blue
+                                        ? Colors.white
                                         : Colors.grey,
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     fontWeight: !_showWinners
                                         ? FontWeight.bold
                                         : FontWeight.normal,
@@ -676,35 +650,46 @@ Future<void> _loadSelectedGroupName() async {
                 SizedBox(height: 16),
                 Container(
                   margin: EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: cards.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(16),
+                   decoration: BoxDecoration(
+                    color: cards,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: Colors.white.withOpacity(0.05)),
+                     boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: AnimatedSwitcher(
-                    duration: Duration(milliseconds: 300),
-                    child: _showWinners
-                        ? usersWinners(
-                            key: ValueKey('winners'),
-                            userWinners: _userWinners,
-                            filteredWinners: filteredWinners,
-                          )
-                        : usersTopScorers(
-                            key: ValueKey('topScorers'),
-                            userTopScorers: _userTopScorer,
-                            userTopScorerPoints: _userTopScorerPoints,
-                            filteredTopScorers: _userTopScorer.entries
-                                .where((entry) =>
-                                    allowedGroupIds.contains(entry.key))
-                                .fold<Map<String, String>>({}, (map, entry) {
-                              map[entry.key] = entry.value;
-                              return map;
-                            }),
-                          ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: AnimatedSwitcher(
+                      duration: Duration(milliseconds: 300),
+                      child: _showWinners
+                          ? usersWinners(
+                              key: ValueKey('winners'),
+                              userWinners: _userWinners,
+                              filteredWinners: filteredWinners,
+                            )
+                          : usersTopScorers(
+                              key: ValueKey('topScorers'),
+                              userTopScorers: _userTopScorer,
+                              userTopScorerPoints: _userTopScorerPoints,
+                              filteredTopScorers: _userTopScorer.entries
+                                  .where((entry) =>
+                                      allowedGroupIds.contains(entry.key))
+                                  .fold<Map<String, String>>({}, (map, entry) {
+                                map[entry.key] = entry.value;
+                                return map;
+                              }),
+                            ),
+                    ),
                   ),
                 ),
               ],
 
-              SizedBox(height: 24),
+              SizedBox(height: 40),
             ],
           ),
         ),
@@ -721,15 +706,20 @@ Future<void> _loadSelectedGroupName() async {
     return filteredGroups.isEmpty
         ? Center(
             child: Padding(
-              padding: EdgeInsets.all(24),
+              padding: EdgeInsets.all(32),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.group_outlined, size: 48, color: Colors.grey),
+                  Container(
+                     padding: EdgeInsets.all(16),
+                     decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), shape: BoxShape.circle),
+                     child: Icon(Icons.group_off_outlined, size: 32, color: Colors.grey),
+                  ),
                   SizedBox(height: 16),
                   Text(
                     // AppLocalizations.of(context)!.nogroupsyet,
                      AppLocalizations.of(context)!.notmemberanygroup,
+                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                 ],
@@ -739,11 +729,12 @@ Future<void> _loadSelectedGroupName() async {
         : ListView.separated(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
-            padding: EdgeInsets.all(4),
+            padding: EdgeInsets.symmetric(vertical: 8),
             itemCount: filteredGroups.length,
             separatorBuilder: (context, index) => Divider(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withOpacity(0.05),
               height: 1,
+              indent: 70,
             ),
             itemBuilder: (context, index) {
               final groupEntry = filteredGroups[index];
@@ -754,7 +745,7 @@ Future<void> _loadSelectedGroupName() async {
                   (group['name'] == groupName &&
                       group['createdBy'] == currentUserId));
 
-              return ListTile(
+              return InkWell(
                 onTap: () {
                   Navigator.push(
                     context,
@@ -764,50 +755,76 @@ Future<void> _loadSelectedGroupName() async {
                     ),
                   );
                 },
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                leading: CircleAvatar(
-                  backgroundColor: Colors.blue.withOpacity(0.1),
-                  child: Text(
-                    groupName[0].toUpperCase(),
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                title: Text(
-                  groupName,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (!isCreator)
+                child: Padding(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                       Container(
+                         width: 50,
+                         height: 50,
+                        decoration: BoxDecoration(
+                          color: primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          groupName[0].toUpperCase(),
+                          style: TextStyle(
+                            color: primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                             Text(
+                                groupName,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                             SizedBox(height: 4),
+                             Text(
+                                isCreator ? "Creator" : "Member",
+                                style: TextStyle(
+                                  color: isCreator ? primary : Colors.grey,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      if (!isCreator)
+                        IconButton(
+                          icon: Icon(Icons.exit_to_app,
+                              color: Colors.red.withOpacity(0.7), size: 20),
+                          onPressed: () => leaveGroup(groupName),
+                        ),
                       IconButton(
-                        icon: Icon(Icons.exit_to_app,
-                            color: Colors.red.withOpacity(0.7)),
-                        onPressed: () => leaveGroup(groupName),
+                        icon: Icon(
+                          Icons.star,
+                          size: 20,
+                          color: selectedGroupName == groupName
+                              ? Colors.amber
+                              : Colors.white10,
+                        ),
+                        onPressed: () async {
+                          selectedGroup.setSelectedGroupName(groupName);
+                          final prefs = await SharedPreferences.getInstance();
+                          prefs.setString('selectedGroupName', groupName);
+                          _loadSelectedGroupName();
+                        },
                       ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.star,
-                        color: selectedGroupName == groupName
-                            ? Colors.amber
-                            : Colors.grey.withOpacity(0.5),
-                      ),
-                      onPressed: () async {
-                        selectedGroup.setSelectedGroupName(groupName);
-                        final prefs = await SharedPreferences.getInstance();
-                        prefs.setString('selectedGroupName', groupName);
-                        _loadSelectedGroupName();
-                      },
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
@@ -830,12 +847,16 @@ class usersWinners extends StatelessWidget {
     return _userWinners.isEmpty
         ? Center(
             child: Padding(
-              padding: EdgeInsets.all(24),
+              padding: EdgeInsets.all(32),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.emoji_events_outlined,
-                      size: 48, color: Colors.grey),
+                   Container(
+                     padding: EdgeInsets.all(16),
+                     decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), shape: BoxShape.circle),
+                     child: Icon(Icons.emoji_events_outlined,
+                      size: 32, color: Colors.grey),
+                   ),
                   SizedBox(height: 16),
                   Text(
                     AppLocalizations.of(context)!.noWinnersYet,
@@ -848,11 +869,12 @@ class usersWinners extends StatelessWidget {
         : ListView.separated(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
-            padding: EdgeInsets.all(8),
+            padding: EdgeInsets.symmetric(vertical: 8),
             itemCount: filteredWinners.length,
             separatorBuilder: (context, index) => Divider(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withOpacity(0.05),
               height: 1,
+              indent: 72,
             ),
             itemBuilder: (context, index) {
               String groupId = filteredWinners.keys.elementAt(index);
@@ -880,69 +902,78 @@ class usersWinners extends StatelessWidget {
                   break;
                 case '39':
                   leagueName = AppLocalizations.of(context)!.premierleague;
-                  leagueColor = Colors.purple;
+                  leagueColor = Colors.pinkAccent;
                   break;
                 case '848':
                   leagueName = AppLocalizations.of(context)!.conferenceleague;
-                  leagueColor = Colors.purple;
+                  leagueColor = Colors.teal;
                   break;
-                // case '15':
-                //   leagueName = AppLocalizations.of(context)!.clubworldcup;
-                //   leagueColor = Colors.purple;
-                //   break;
               }
 
-              return ListTile(
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 2, vertical: 8),
-                leading: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: leagueColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Center(
-                    child: Image.network(
-                      'https://media.api-sports.io/football/leagues/$groupId.png',
-                      width: 24,
-                      height: 24,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(Icons.emoji_events, color: leagueColor);
-                      },
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                     Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: leagueColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Center(
+                        child: Image.network(
+                          'https://media.api-sports.io/football/leagues/$groupId.png',
+                          width: 24,
+                          height: 24,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(Icons.emoji_events, color: leagueColor);
+                          },
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                title: Text(
-                  leagueName,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                subtitle: Text(
-                  AppLocalizations.of(context)!.yourprediction ??
-                      "Your prediction",
-                  style: TextStyle(
-                    color: Colors.grey[400],
-                    fontSize: 12,
-                  ),
-                ),
-                trailing: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: leagueColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    groupName,
-                    style: TextStyle(
-                      color: leagueColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                           Text(
+                            leagueName,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            AppLocalizations.of(context)!.yourprediction ??
+                                "Your prediction",
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: leagueColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: leagueColor.withOpacity(0.2)),
+                      ),
+                      child: Text(
+                        groupName,
+                        style: TextStyle(
+                          color: leagueColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               );
             },
@@ -967,12 +998,16 @@ class usersTopScorers extends StatelessWidget {
     return filteredTopScorers.isEmpty
         ? Center(
             child: Padding(
-              padding: EdgeInsets.all(24),
+              padding: EdgeInsets.all(32),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.sports_soccer_outlined,
-                      size: 48, color: Colors.grey),
+                   Container(
+                     padding: EdgeInsets.all(16),
+                     decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), shape: BoxShape.circle),
+                     child: Icon(Icons.sports_soccer_outlined,
+                      size: 32, color: Colors.grey),
+                   ),
                   SizedBox(height: 16),
                   Text(
                     AppLocalizations.of(context)!.noTopScorersYet,
@@ -985,11 +1020,12 @@ class usersTopScorers extends StatelessWidget {
         : ListView.separated(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
-            padding: EdgeInsets.all(8),
+            padding: EdgeInsets.symmetric(vertical: 8),
             itemCount: filteredTopScorers.length,
             separatorBuilder: (context, index) => Divider(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withOpacity(0.05),
               height: 1,
+              indent: 72,
             ),
             itemBuilder: (context, index) {
               String groupId = filteredTopScorers.keys.elementAt(index);
@@ -1017,107 +1053,75 @@ class usersTopScorers extends StatelessWidget {
                   break;
                 case '39':
                   leagueName = AppLocalizations.of(context)!.premierleague;
-                  leagueColor = Colors.purple;
+                  leagueColor = Colors.pinkAccent;
                   break;
                 case '848':
                   leagueName = AppLocalizations.of(context)!.conferenceleague;
-                  leagueColor = Colors.purple;
+                  leagueColor = Colors.teal;
                   break;
-                // case '15':
-                //   leagueName = AppLocalizations.of(context)!.clubworldcup;
-                //   leagueColor = Colors.purple;
-                //   break;
               }
 
-              return ListTile(
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 2, vertical: 8),
-                leading: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: leagueColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Center(
-                    child: Image.network(
-                      'https://media.api-sports.io/football/leagues/$groupId.png',
-                      width: 24,
-                      height: 24,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(Icons.sports_soccer, color: leagueColor);
-                      },
-                    ),
-                  ),
-                ),
-                title: Text(
-                  leagueName,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                subtitle: Row(
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
                   children: [
-                    Text(
-                      AppLocalizations.of(context)!.topScorerPoints ??
-                          "Goals Points",
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 14,
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: leagueColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                    ),
-                    SizedBox(
-                      width: 5,
-                    ),
-                    if (userTopScorerPoints[groupId] != null)
-                      Text(
-                        '${userTopScorerPoints[groupId]}'
-                        ' ${AppLocalizations.of(context)!.pst}',
-                        style: TextStyle(
-                          color: Colors.grey[400],
-                          fontSize: 14,
+                      child: Center(
+                        child: Image.network(
+                          'https://media.api-sports.io/football/leagues/$groupId.png',
+                          width: 24,
+                          height: 24,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(Icons.sports_soccer, color: leagueColor);
+                          },
                         ),
                       ),
-                    if (userTopScorerPoints[groupId] == null)
-                      Text(
-                        '0' ' ${AppLocalizations.of(context)!.pst}',
-                        style: TextStyle(
-                          color: Colors.grey[400],
-                          fontSize: 14,
-                        ),
+                    ),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                         crossAxisAlignment: CrossAxisAlignment.start,
+                         children: [
+                            Text(
+                              leagueName,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Text(
+                                  AppLocalizations.of(context)!.topScorerPoints ??
+                                      "Points:",
+                                  style: TextStyle(
+                                    color: Colors.grey[500],
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  '${userTopScorerPoints[groupId] ?? 0}'
+                                  ' ${AppLocalizations.of(context)!.pst}',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                         ],
                       ),
-                  ],
-                ),
-                trailing: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    // Points display
-                    // if (userTopScorerPoints[groupId] != null) ...[
-                    //   Container(
-                    //     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    //     decoration: BoxDecoration(
-                    //       color: Colors.green.withOpacity(0.1),
-                    //       borderRadius: BorderRadius.circular(12),
-                    //       border: Border.all(
-                    //         color: Colors.green.withOpacity(0.3),
-                    //         width: 1,
-                    //       ),
-                    //     ),
-                    //     child: Text(
-                    //       '${userTopScorerPoints[groupId]}' ' ${AppLocalizations.of(context)!.pst}',
-                    //       style: TextStyle(
-                    //         color: Colors.green,
-                    //         fontWeight: FontWeight.bold,
-                    //         fontSize: 12,
-                    //       ),
-                    //     ),
-                    //   ),
-                    //   SizedBox(height: 6),
-                    // ],
-                    // Player name display
+                    ),
                     Container(
                       padding:
                           EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -1135,17 +1139,17 @@ class usersTopScorers extends StatelessWidget {
                           Icon(
                             Icons.sports_soccer,
                             color: leagueColor,
-                            size: 16,
+                            size: 14,
                           ),
                           SizedBox(width: 6),
                           ConstrainedBox(
-                            constraints: BoxConstraints(maxWidth: 100),
+                            constraints: BoxConstraints(maxWidth: 80),
                             child: Text(
                               topScorerName,
                               style: TextStyle(
                                 color: leagueColor,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                                fontSize: 12,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),

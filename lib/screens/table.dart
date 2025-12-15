@@ -31,9 +31,8 @@ class TableScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer2<AuthProvider, UserProvider>(
       builder: (context, authProvider, userProvider, child) {
-        // Check if user is authenticated
         if (authProvider.currentUser == null) {
-          return LoginScreen(); // Or some other widget for unauthenticated users
+          return LoginScreen();
         }
         return TableScreenContent(
           authProvider: authProvider,
@@ -70,34 +69,16 @@ class TableScreenContentState extends State<TableScreenContent> {
   bool isLoading = true;
   Map<String, String> _privateGroups = {};
   Map<String, String> _publicGroups = {};
-  //  Map<String, dynamic> user = {};
   TextEditingController _inviteCodeController = TextEditingController();
+
   void updateSelectedIndex(int index) {
-    print(index);
     setState(() {
-      // league = index == 0
-      //     ? 2 // Champions League
-      //     : index == 1
-      //         ? 383 // Ligat Ha'al
-      //         : index == 2
-      //             ? 140 // La Liga
-      //             : index == 3
-      //                 ? 3 // Europa League
-      //                 : index == 4
-      //                     ? 39 // Premier League
-      //                          : index == 5
-      //                         ? 848 // conferenceleague
-      //                         : index == 6
-      //                             ? 15 // Club World Cup
-      //                             : index == 7
-      //                                 ? 78 //Bundesliga
-      //                         : 2; // Default to Champions League
       selectedIndex = index;
       league = index;
       Provider.of<UserProvider>(context, listen: false)
           .setselectedLeageId(league);
     });
-   _fetchUsersForSelectedGroup();
+    _fetchUsersForSelectedGroup();
   }
 
   void _showInviteDialog(String inviteCode) {
@@ -106,25 +87,35 @@ class TableScreenContentState extends State<TableScreenContent> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: cards,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Text(
             AppLocalizations.of(context)!.invitefriend,
-            style: TextStyle(color: Colors.white, fontSize: 14),
+            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 AppLocalizations.of(context)!.invitecodecopy,
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: Colors.white70),
+                textAlign: TextAlign.center,
               ),
-              SizedBox(height: 10),
-              Text(inviteCode,
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold, color: Colors.white)),
+              SizedBox(height: 16),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(inviteCode,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: primary, fontSize: 18, letterSpacing: 1)),
+              ),
               SizedBox(height: 20),
               Text(
                 AppLocalizations.of(context)!.shareinvitecode,
-                style: TextStyle(color: Colors.white),
+                 style: TextStyle(color: Colors.white70, fontSize: 12),
+                 textAlign: TextAlign.center,
               ),
             ],
           ),
@@ -132,7 +123,7 @@ class TableScreenContentState extends State<TableScreenContent> {
             TextButton(
               child: Text(
                 'OK',
-                style: TextStyle(color: Colors.blue),
+                style: TextStyle(color: primary, fontWeight: FontWeight.bold),
               ),
               onPressed: () {
                 Navigator.of(context).pop();
@@ -146,20 +137,12 @@ class TableScreenContentState extends State<TableScreenContent> {
 
   Future<void> _inviteFriend(String groupName) async {
     try {
-      // Fetch the list of groups
       final groups = await GroupsMethods().fetchGroups();
-
-      // Find the group with the specified name
       final group = groups.firstWhere(
         (g) => g['name'] == groupName,
       );
-
-      // Copy the group's code to the clipboard
       final groupCode = group['_id'];
       await FlutterClipboard.copy(groupCode);
-      print('Group code copied: $groupCode');
-
-      // Show the invite dialog
       _showInviteDialog(groupCode);
     } catch (e) {
       print('Error inviting friend: $e');
@@ -172,43 +155,44 @@ class TableScreenContentState extends State<TableScreenContent> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: cards,
+           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Text(AppLocalizations.of(context)!.joingroup,
-              style: TextStyle(color: Colors.white, fontSize: 14)),
+              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
           content: TextField(
             controller: _inviteCodeController,
             decoration: InputDecoration(
               labelText: AppLocalizations.of(context)!.enterinvitecode,
               labelStyle: TextStyle(
-                color: Colors.blue, // Change this to your desired color
+                color: Colors.blue,
               ),
               enabledBorder: UnderlineInputBorder(
                 borderSide: BorderSide(
-                    color: Colors.blue), // Bottom border color when enabled
+                    color: Colors.blue),
               ),
               focusedBorder: UnderlineInputBorder(
                 borderSide: BorderSide(color: Colors.blue, width: 2.0),
-                // Bottom border color when focused, with thicker border
               ),
             ),
             style: TextStyle(
-              color: Colors.white, // Change the input text color to blue
+              color: Colors.white,
             ),
             cursorColor: Colors.blue,
           ),
           actions: <Widget>[
             TextButton(
               child: Text(AppLocalizations.of(context)!.cancel,
-                  style: TextStyle(color: Colors.blue)),
+                  style: TextStyle(color: Colors.grey)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white, // Set button background to white
+                backgroundColor: primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               child: Text(AppLocalizations.of(context)!.join,
-                  style: TextStyle(color: Colors.blue)),
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               onPressed: () async {
                 if (_inviteCodeController.text.isNotEmpty) {
                   await GroupsMethods().addGroupToUser(
@@ -229,38 +213,25 @@ class TableScreenContentState extends State<TableScreenContent> {
     super.initState();
     currentUserId = widget.authProvider.currentUser?.id ?? 'Not logged in';
     league = widget.userProvider.selectedLeageId ?? 2;
-    print('currentUserId table: ${currentUserId}');
     _initializeData();
   }
 
-  // Single initialization method that loads everything efficiently
   Future<void> _initializeData() async {
     setState(() => isLoading = true);
-
     try {
-      // Get cached group name first
       final cachedGroupName =
           await SharedPreferencesUtil.getSelectedGroupName();
-
-      // Single API call to get dashboard data
       final dashboardData =
           await GroupsMethods.fetchDashboardData(currentUserId);
 
       setState(() {
-        // Set groups from API response
         _privateGroups =
             Map<String, String>.from(dashboardData['privateGroups'] ?? {});
         _publicGroups =
             Map<String, String>.from(dashboardData['publicGroups'] ?? {});
-
-        print('Private groups: $_privateGroups');
-        print('Public groups: $_publicGroups');
-
-        // Determine selected group name
         selectedGroupName = _determineSelectedGroupName(cachedGroupName);
       });
 
-      // Only fetch users if we have a valid group selection
       if (selectedGroupName.isNotEmpty && _privateGroups.isNotEmpty) {
         await _fetchUsersForSelectedGroup();
       } else {
@@ -279,29 +250,23 @@ class TableScreenContentState extends State<TableScreenContent> {
   }
 
   String _determineSelectedGroupName(String? cachedGroupName) {
-    // Use widget's selected group name if provided
     if (widget.selectedGroupName != null &&
         widget.selectedGroupName!.isNotEmpty) {
       return widget.selectedGroupName!;
     }
-
-    // Use cached group name if it exists in private groups
     if (cachedGroupName != null &&
         cachedGroupName.isNotEmpty &&
         _privateGroups.containsValue(cachedGroupName)) {
       return cachedGroupName;
     }
-
-    // Default to first private group if available
     if (_privateGroups.isNotEmpty) {
       final firstGroupName = _privateGroups.values.first;
-      // Update cache with new selection
       SharedPreferencesUtil.setSelectedGroupName(firstGroupName);
       return firstGroupName;
     }
-
-    return ""; // No valid group found
+    return "";
   }
+  
   Future<void> _fetchUsersForSelectedGroup() async {
     if (selectedGroupName.isEmpty) {
       setState(() {
@@ -312,16 +277,12 @@ class TableScreenContentState extends State<TableScreenContent> {
     }
 
     try {
-      // Single API call to get users for the specific group and league
       final users =
           await GroupsMethods.fetchGroupUsers(selectedGroupName, league);
-
       setState(() {
         _users = users;
         isLoading = false;
       });
-
-      print('Fetched ${users.length} users for group: $selectedGroupName');
     } catch (e) {
       print('Failed to fetch users for group: $e');
       setState(() {
@@ -330,478 +291,299 @@ class TableScreenContentState extends State<TableScreenContent> {
       });
     }
   }
-    // Method to change selected group (call this when user selects different group)
+  
   Future<void> changeSelectedGroup(String newGroupName) async {
     if (newGroupName == selectedGroupName) return;
-
     setState(() {
       selectedGroupName = newGroupName;
       isLoading = true;
     });
-
-    // Update cache
     await SharedPreferencesUtil.setSelectedGroupName(newGroupName);
-
-    // Fetch users for new group
     await _fetchUsersForSelectedGroup();
   }
 
-  // Refresh method for pull-to-refresh or manual refresh
   Future<void> refreshData() async {
     await _initializeData();
-  }
-
-  // Method to refresh only users (lighter refresh)
-  Future<void> refreshUsers() async {
-    await _fetchUsersForSelectedGroup();
   }
 
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-       
         title: Text(
           selectedGroupName != 'Public'?selectedGroupName: '' ,
           style: TextStyle(
             color: Colors.white,
             fontSize: 20,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.bold,
           ),
         ),
         actions: [
-          Container(
-            margin: EdgeInsets.only(right: 16),
-            child: TextButton.icon(
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.blue.withOpacity(0.1),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+           GestureDetector(
+             onTap: _showJoinGroupDialog,
+             child: Container(
+                margin: EdgeInsets.only(right: 16),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              ),
-              icon: Icon(
-                Icons.group_add,
-                color: Colors.blue,
-                size: 20,
-              ),
-              label: Text(
-                AppLocalizations.of(context)!.joingroup,
-                style: TextStyle(
-                  color: Colors.blue,
-                  fontWeight: FontWeight.w500,
+                child: Row(
+                  children: [
+                    Icon(Icons.group_add, color: primary, size: 18),
+                    SizedBox(width: 4),
+                    Text(
+                      AppLocalizations.of(context)!.joingroup,
+                       style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ),
-              ),
-              onPressed: _showJoinGroupDialog,
-            ),
-          ),
+             ),
+           ),
         ],
       ),
       body: isLoading
           ? Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                valueColor: AlwaysStoppedAnimation<Color>(primary),
               ),
             )
           : Column(
               children: [
-                Container(
-               margin: EdgeInsets.symmetric(vertical: 8),
-                  child: LeagueSelector(
-                    userId: currentUserId,
-                    currentLeague: league,
-                    useToggleButtons: true, // Use ToggleButtonsSample
-                    onSelectionChanged: (leagueId, index) {
-                      updateSelectedIndex(leagueId);
-                    },
-                  ),
+                SizedBox(height: 8),
+                LeagueSelector(
+                  userId: currentUserId,
+                  currentLeague: league,
+                  // Use standardized chips instead of toggle buttons for consistency
+                  useToggleButtons: false, 
+                  onSelectionChanged: (leagueId, index) {
+                    updateSelectedIndex(leagueId);
+                  },
                 ),
-                Column(
-                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Private Groups Dropdown
-                    // Container(
-                    //   margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    //   child: Text(
-                    //     AppLocalizations.of(context)!.privategroups ??
-                    //         'Private Groups',
-                    //     style: TextStyle(
-                    //       color: Colors.white,
-                    //       fontSize: 16,
-                    //       fontWeight: FontWeight.w600,
-                    //     ),
-                    //   ),
-                    // ),
-                    if (_privateGroups.isEmpty)
-  Center(
-    child: Padding(
-      padding: EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.group_off, size: 64, color: Colors.grey),
-          SizedBox(height: 16),
-          Text(
-          AppLocalizations.of(context)!.nogroupsfound,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            AppLocalizations.of(context)!.nogroupsmessage,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 16,
-            ),
-          ),
-        ],
-      ),
-    ),
-  )
-  else
-       Container(
-                             margin:
-                            EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                      ),
-                     padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: _privateGroups.isEmpty
-                          ? Row(
-                              children: [
-                                Icon(Icons.info_outline,
-                                    color: Colors.blue, size: 20),
-                                SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                              AppLocalizations.of(context)!
-                                          .notmemberanygroup,
-                                    style: TextStyle(
-                                      color: Colors.blue,
-                                      fontSize: 16.0,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )
-                          : DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                   value: _privateGroups.isNotEmpty && selectedGroupName.isNotEmpty && _privateGroups.containsValue(selectedGroupName)
-    ? selectedGroupName
-    : (_privateGroups.isNotEmpty ? _privateGroups.values.first : null),
-                                dropdownColor: cards,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16.0,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                icon: Icon(Icons.arrow_drop_down,
-                                    color: Colors.blue),
-                                isExpanded: true,
-                                items: _privateGroups.entries.map((entry) {
-                                  return DropdownMenuItem<String>(
-                                    value: entry.value,
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.lock,
-                                            color: Colors.blue, size: 16),
-                                        SizedBox(width: 8),
-                                        Text(
-                                          entry.value,
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }).toList(),
-                                onChanged: (String? newValue) {
-                                  if (newValue != null) {
-                                    setState(() {
-                                      selectedGroupName = newValue;
-                                    });
-                                   _fetchUsersForSelectedGroup();
-                                  }
-                                },
-                              ),
-                            ),
-                    ),
-                    // Public Groups Dropdown
-                    // Container(
-                    //   margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    //   child: Text(
-                    //     AppLocalizations.of(context)!.publicgroups ??
-                    //         'Public Groups',
-                    //     style: TextStyle(
-                    //       color: Colors.white,
-                    //       fontSize: 16,
-                    //       fontWeight: FontWeight.w600,
-                    //     ),
-                    //   ),
-                    // ),
-                  //   Container(
-                  //       margin:
-                  //           EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  //       decoration: BoxDecoration(
-                  //         color: Colors.blue.withOpacity(0.1),
-                  //         borderRadius: BorderRadius.circular(12),
-                  //       ),
-                  //       padding: EdgeInsets.symmetric(horizontal: 16),
-                  //       child: DropdownButtonHideUnderline(
-                  //         child: DropdownButton<String>(
-                  //  value: _publicGroups.isNotEmpty
-                  //               ? _publicGroups.values.first
-                  //               : null,
-                  //           dropdownColor: cards,
-                  //           style: TextStyle(
-                  //             color: Colors.white,
-                  //             fontSize: 16.0,
-                  //             fontWeight: FontWeight.w500,
-                  //           ),
-                  //           icon: Icon(Icons.arrow_drop_down,
-                  //               color: Colors.blue),
-                  //           isExpanded: true,
-                        
-                  //           items: _publicGroups.entries.map((entry) {
-                  //             return DropdownMenuItem<String>(
-                  //               value: entry.value,
-                  //               child: Row(
-                  //                 children: [
-                  //                   Icon(Icons.public,
-                  //                  color: Colors.blue, size: 16),
-                  //                   SizedBox(width: 8),
-                  //                   Text(
-                  //                     entry.value,
-                  //                     style: TextStyle(
-                  //                       color: Colors.white,
-                  //                     ),
-                  //                   ),
-                  //                 ],
-                  //               ),
-                  //             );
-                  //           }).toList(),
-                  //           onChanged: (String? newValue) {
-                  //             if (newValue != null) {
-                  //               setState(() {
-                  //                 selectedGroupName = newValue;
-                  //               });
-                  //               _fetchUsersForGroup(newValue);
-                  //             }
-                  //           },
-                  //         ),
-                  //       ))
-                  ],
-                ),
-                   if (_privateGroups.isNotEmpty)
+                SizedBox(height: 16),
+                _buildGroupSelector(),
+                SizedBox(height: 16),
+                _buildHeaderStats(),
+                SizedBox(height: 8),
                 Expanded(
-                  child: Container(
-                    margin: EdgeInsets.symmetric(horizontal: 16),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            return SingleChildScrollView(
-                              scrollDirection: Axis.vertical,
-                              child: Theme(
-                                data: Theme.of(context).copyWith(
-                                  dividerColor: Colors.blue.withOpacity(0.1),
-                                ),
-                                child: DataTable(
-                                  headingRowHeight: 50,
-                                  dataRowHeight: 56,
-                                  columnSpacing: 16,
-                                  horizontalMargin: 16,
-                                  headingRowColor: MaterialStateProperty.all(
-                                    Colors.blue.withOpacity(0.1),
-                                  ),
-                                  columns: [
-                                    DataColumn(
-                                      label: Text(
-                                        AppLocalizations.of(context)!.name,
-                                        style: TextStyle(
-                                          color: Colors.blue,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    DataColumn(
-                                      label: Text(
-                                        AppLocalizations.of(context)!.daypoints,
-                                        style: TextStyle(
-                                          color: Colors.blue,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      numeric: true,
-                                    ),
-                                    DataColumn(
-                                      label: Text(
-                                        AppLocalizations.of(context)!.sumpoints,
-                                        style: TextStyle(
-                                          color: Colors.blue,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      numeric: true,
-                                    ),
-                                  ],
-                                  rows: _users.asMap().entries.map((entry) {
-                                    final index = entry.key;
-                                    final user = entry.value;
-                               
-                                    return DataRow(
-                                      color: MaterialStateProperty.resolveWith<
-                                          Color?>(
-                                        (Set<MaterialState> states) {
-                                          if (index % 2 == 0) {
-                                            return Colors.blue
-                                                .withOpacity(0.03);
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      cells: [
-                                        DataCell(
-                                          Row(
-                                            children: [
-                                              Text(
-                                                '${index + 1}.',
-                                                style: TextStyle(
-                                                  color: Colors.grey,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                              SizedBox(width: 8),
-                                              Text(
-                                                user['displayName'] ?? '0',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    Statistics(
-                                                  userId: user['_id'],
-                                                  leagueId: league,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                        DataCell(
-                                          Text(
-                                            user['thisDayPoints']
-                                                        ?[league.toString()]
-                                                    ?.toString() ??
-                                                '0',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    Statistics(
-                                                  userId: user['_id'],
-                                                  leagueId: league,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                        DataCell(
-                                          Text(
-                                            user['points']?[league.toString()]
-                                                    ?.toString() ??
-                                                '0',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    Statistics(
-                                                  userId: user['_id'],
-                                                  leagueId: league,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
+                  child: _privateGroups.isEmpty 
+                      ? _buildEmptyState() 
+                      : _buildRankingList(),
                 ),
-                  (_privateGroups.isNotEmpty)
-                    ? Container(
-                        margin: EdgeInsets.all(16),
-                        child: TextButton.icon(
-                          style: TextButton.styleFrom(
-                            backgroundColor: Colors.blue.withOpacity(0.1),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
-                          ),
-                          icon: Icon(
-                            Icons.share,
-                            color: Colors.blue,
-                            size: 20,
-                          ),
-                          label: Text(
-                            AppLocalizations.of(context)!.invitefriend,
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          onPressed: () => _inviteFriend(selectedGroupName),
-                        ),
-                      )
-                    : SizedBox(
-                        height: 2,
-                      ),
               ],
             ),
+      floatingActionButton: (_privateGroups.isNotEmpty) ? FloatingActionButton(
+        onPressed: () => _inviteFriend(selectedGroupName),
+        backgroundColor: primary,
+        child: Icon(Icons.share, color: Colors.white),
+        tooltip: AppLocalizations.of(context)!.invitefriend,
+      ) : null,
+    );
+  }
+
+  Widget _buildGroupSelector() {
+     if (_privateGroups.isEmpty) return SizedBox.shrink();
+
+     return Container(
+       margin: EdgeInsets.symmetric(horizontal: 16),
+       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+       decoration: BoxDecoration(
+         color: cards,
+         borderRadius: BorderRadius.circular(12),
+         border: Border.all(color: Colors.white.withOpacity(0.05)),
+       ),
+       child: DropdownButtonHideUnderline(
+         child: DropdownButton<String>(
+           value: _privateGroups.isNotEmpty && selectedGroupName.isNotEmpty && _privateGroups.containsValue(selectedGroupName)
+              ? selectedGroupName
+              : (_privateGroups.isNotEmpty ? _privateGroups.values.first : null),
+           dropdownColor: Color(0xFF2C343A),
+           style: TextStyle(
+             color: Colors.white,
+             fontSize: 16.0,
+             fontWeight: FontWeight.w600,
+           ),
+           icon: Icon(Icons.keyboard_arrow_down, color: primary),
+           isExpanded: true,
+           items: _privateGroups.entries.map((entry) {
+             return DropdownMenuItem<String>(
+               value: entry.value,
+               child: Row(
+                 children: [
+                   Container(
+                     padding: EdgeInsets.all(4),
+                     decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), shape: BoxShape.circle),
+                     child: Icon(Icons.shield, color: Colors.blue, size: 14),
+                   ),
+                   SizedBox(width: 12),
+                   Text(
+                     entry.value,
+                     style: TextStyle(color: Colors.white),
+                   ),
+                 ],
+               ),
+             );
+           }).toList(),
+           onChanged: (String? newValue) {
+             if (newValue != null) {
+               changeSelectedGroup(newValue);
+             }
+           },
+         ),
+       ),
+     );
+  }
+
+  Widget _buildHeaderStats() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+      child: Row(
+        children: [
+          Expanded(flex: 3, child: Text(AppLocalizations.of(context)!.name, style: TextStyle(color: Colors.grey, fontSize: 12))),
+          Expanded(flex: 1, child: Text(AppLocalizations.of(context)!.daypoints, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 12))),
+          Expanded(flex: 1, child: Text(AppLocalizations.of(context)!.sumpoints, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 12))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.group_off_outlined, size: 64, color: Colors.white10),
+            SizedBox(height: 16),
+            Text(
+              AppLocalizations.of(context)!.nogroupsfound,
+              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+             SizedBox(height: 8),
+            Text(
+               AppLocalizations.of(context)!.nogroupsmessage,
+               textAlign: TextAlign.center,
+               style: TextStyle(color: Colors.grey, fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRankingList() {
+    return RefreshIndicator(
+      onRefresh: refreshData,
+      color: primary,
+      backgroundColor: cards,
+      child: ListView.separated(
+        itemCount: _users.length,
+        padding: EdgeInsets.fromLTRB(16, 0, 16, 80),
+        separatorBuilder: (context, index) => SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final user = _users[index];
+          final isTop3 = index < 3;
+          
+          Color rankColor;
+          if (index == 0) rankColor = Color(0xFFFFD700); // Gold
+          else if (index == 1) rankColor = Color(0xFFC0C0C0); // Silver
+          else if (index == 2) rankColor = Color(0xFFCD7F32); // Bronze
+          else rankColor = Colors.grey[700]!;
+
+          final bool isMe = user['_id'] == currentUserId;
+
+          return GestureDetector(
+             onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Statistics(
+                      userId: user['_id'],
+                      leagueId: league,
+                    ),
+                  ),
+                );
+             },
+            child: Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isMe ? primary.withOpacity(0.1) : cards,
+                borderRadius: BorderRadius.circular(16),
+                border: isMe ? Border.all(color: primary.withOpacity(0.5)) : null,
+              ),
+              child: Row(
+                children: [
+                  // Rank
+                  Container(
+                    width: 30,
+                    height: 30,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: isTop3 ? rankColor.withOpacity(0.2) : Colors.transparent,
+                      shape: BoxShape.circle,
+                      border: isTop3 ? Border.all(color: rankColor, width: 1) : null,
+                    ),
+                    child: Text(
+                      '${index + 1}',
+                      style: TextStyle(
+                        color: isTop3 ? rankColor : Colors.grey,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  // Name
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      user['displayName'] ?? 'Unknown',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  // Day Points
+                  Expanded(
+                    flex: 1,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                      decoration: BoxDecoration(
+                         color: Colors.white.withOpacity(0.05),
+                         borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        user['thisDayPoints']?[league.toString()]?.toString() ?? '0',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  // Total Points
+                  Expanded(
+                    flex: 1,
+                     child: Text(
+                        user['points']?[league.toString()]?.toString() ?? '0',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
