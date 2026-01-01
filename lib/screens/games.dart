@@ -83,7 +83,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   bool useFakeGames = false;
   String formatDateInHebrew(DateTime date, BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
-
+    print('🔍 _baseUrl in games:  $_baseUrl ');
     // Get day names using localization
     const Map<String, String> dayKeys = {
       'Monday': 'monday',

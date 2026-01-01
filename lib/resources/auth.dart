@@ -309,7 +309,7 @@ class AuthProvider with ChangeNotifier {
       checkForUpdates();
     });
   }
-  static const _baseUrl = '$backendUrl/users';
+  static String get _baseUrl => '$backendUrl/users'; 
   Future<void> signOut(userID) async {
             print('currentUser: ${currentUser?.id}');
             

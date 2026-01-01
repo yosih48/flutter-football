@@ -11,6 +11,7 @@ import 'package:football/resources/appUpdates.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/firebase_messaging_service.dart';
 import 'package:football/resources/gamesMethods.dart';
+import 'package:football/resources/remote_config_service.dart';
 import 'package:football/responsive/mobile_screen_layout.dart';
 import 'package:football/responsive/rsponsive_layout_screen.dart';
 import 'package:football/responsive/web_screen_layout.dart';
@@ -27,7 +28,6 @@ import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_core/firebase_core.dart';
-
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -46,6 +46,7 @@ void main() async {
   final storage = FlutterSecureStorage();
 
   await Firebase.initializeApp();
+  await RemoteConfigService().initialize();
 
   await FirebaseMessagingService.initialize();
   // You can now use the storage in your AuthProvider if needed
