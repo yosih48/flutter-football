@@ -1,6 +1,9 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:football/resources/remote_config_service.dart';
 import 'package:football/utils/utils.dart';
+
+
+import '../screens/maintenance_screen.dart';
 
 class VersionGuard extends StatefulWidget {
   final Widget child;
@@ -11,34 +14,77 @@ class VersionGuard extends StatefulWidget {
 }
 
 class _VersionGuardState extends State<VersionGuard> {
+  // State to track if we are currently under maintenance
+  bool _isMaintenanceActive = false;
+
+  // State to manage loading status (so we don't show the app before checking)
+  bool _isLoading = true;
+
   @override
   void initState() {
     super.initState();
-    // מריצים את הבדיקה מיד כשה-Widget עולה
-    // משתמשים ב-addPostFrameCallback כדי לוודא שיש Context מוכן לדיאלוג
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkVersion();
-    });
+    // Run the check immediately when the widget mounts
+    _checkStatus();
   }
 
-  Future<void> _checkVersion() async {
-    // 1. קריאה לשירות שיצרנו קודם
-    bool mustUpdate = await RemoteConfigService().isUpdateRequired();
+  Future<void> _checkStatus() async {
+    final remoteConfig = RemoteConfigService();
 
-    // 2. אם צריך עדכון וה-Widget עדיין קיים
-    if (mustUpdate && mounted) {
-      print('🚨 Showing Force Update Dialog!');
-      // 3. הקפצת הדיאלוג החוסם שיצרנו בשלב הקודם
-      showForceUpdateDialog(context);
-    } else {
-      print('✅ Version is OK or widget unmounted.');
+    // 1. Check Maintenance Mode FIRST
+    // We check this directly from the service getter we created
+    bool maintenance = remoteConfig.isMaintenanceMode;
+
+    if (maintenance) {
+      // If maintenance is active, update state to show the blocking screen
+      if (mounted) {
+        setState(() {
+          _isMaintenanceActive = true;
+          _isLoading = false; // Stop loading, show maintenance screen
+        });
+      }
+      return; // Stop here, no need to check version
+    }
+
+    // 2. Check Force Update (Only if not in maintenance)
+    // We use addPostFrameCallback to ensure context is ready for the dialog
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      bool mustUpdate = await remoteConfig.isUpdateRequired();
+
+      if (mustUpdate && mounted) {
+        print('🚨 Showing Force Update Dialog!');
+        // Show the blocking dialog over the app
+        showForceUpdateDialog(context);
+      } else {
+        print('✅ Version is OK.');
+      }
+    });
+
+    // 3. Finish Loading
+    // If we reached here, maintenance is off. We can show the app.
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // מציג את האפליקציה הרגילה בינתיים
-    // (הדיאלוג יקפוץ מעליה אם צריך)
+    // 1. Show a loader while checking Firebase (optional but recommended)
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // 2. If Maintenance Mode is Active -> BLOCK EVERYTHING
+    // Return the MaintenanceScreen instead of the app
+    if (_isMaintenanceActive) {
+      return const MaintenanceScreen();
+    }
+
+    // 3. Normal State -> Show the App
+    // (The Force Update dialog will overlay this if needed)
     return widget.child;
   }
 }

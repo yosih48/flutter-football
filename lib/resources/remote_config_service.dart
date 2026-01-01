@@ -90,7 +90,12 @@ class RemoteConfigService {
   }
 
 
+// האם המצב פעיל?
+  bool get isMaintenanceMode => _remoteConfig.getBool('is_maintenance_active');
 
+  // איזה הודעה להציג?
+  String get maintenanceMessage =>
+      _remoteConfig.getString('maintenance_message');
 
 
 
