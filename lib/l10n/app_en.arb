@@ -238,6 +238,9 @@
   "notmemberanygroup": "You are not a member of any group",
   "numberOfGames": "games",
   "chooseCompetitions": "Choose your competitions",
-    "continueButton": "Continue"
+    "continueButton": "Continue",
+    "forceUpdateTitle": "Update Required! 🚀",
+    "forceUpdateContent": "Your version is too old and is no longer supported.\nTo continue playing, you must download the new version.",
+    "forceUpdateButton": "Update Now"
    
 }

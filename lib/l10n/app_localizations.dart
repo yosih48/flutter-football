@@ -1456,6 +1456,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue'**
   String get continueButton;
+
+  /// No description provided for @forceUpdateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Required! 🚀'**
+  String get forceUpdateTitle;
+
+  /// No description provided for @forceUpdateContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Your version is too old and is no longer supported.\nTo continue playing, you must download the new version.'**
+  String get forceUpdateContent;
+
+  /// No description provided for @forceUpdateButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Now'**
+  String get forceUpdateButton;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

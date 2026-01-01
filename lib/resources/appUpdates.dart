@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 
+//old function using nodejs for update
+
 Future<void> checkForUpdates() async {
 
   PackageInfo packageInfo = await PackageInfo.fromPlatform();

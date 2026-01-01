@@ -22,6 +22,7 @@ import 'package:football/screens/login_screen.dart';
 import 'package:football/screens/profile.dart';
 import 'package:football/screens/table.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/widgets/VersionGuard.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:football/l10n/app_localizations.dart';
@@ -68,14 +69,15 @@ void main() async {
 
 class GameApp extends StatelessWidget {
   const GameApp({super.key});
- @override
+
+  @override
   Widget build(BuildContext context) {
     return Consumer2<ThemeProvider, LocaleProvider>(
       builder: (context, themeProvider, localeProvider, child) {
         return MaterialApp(
           navigatorKey: navigatorKey,
           theme: themeProvider.themeData,
-          locale: localeProvider.locale, // Add this line to use the locale from provider
+          locale: localeProvider.locale,
           debugShowCheckedModeBanner: false,
           title: 'Localizations Sample App',
           localizationsDelegates: [
@@ -88,28 +90,34 @@ class GameApp extends StatelessWidget {
             Locale('en'), // English
             Locale('he'), // Hebrew
           ],
-          home: Consumer<AuthProvider>(
-            builder: (context, authProvider, _) {
-              if (authProvider.isInitializing) {
-                print('main isInitializing');
-                print(authProvider.isInitializing);
-                return Scaffold(body: Center(child: CircularProgressIndicator()));
-              }
-    if (authProvider.currentUser != null) {
-      // User is logged in, check if it's first login
-      if (authProvider.currentUser!.isFirstLogin) {
-        return Competitions(
-          userEmail: authProvider.currentUser!.email,
-          userName: authProvider.currentUser!.name,
-        );
-      }
-      return MobileScreenLayout();
-    }
-    
-    return LoginScreen();
-  },
-            
+          // --- THE MAGIC HAPPENS HERE ---
+          // I wrapped the entire Auth Consumer with the VersionGuard.
+          // This ensures the version check happens regardless of the user's login state.
+          home: VersionGuard(
+            child: Consumer<AuthProvider>(
+              builder: (context, authProvider, _) {
+                if (authProvider.isInitializing) {
+                  print('main isInitializing');
+                  print(authProvider.isInitializing);
+                  return Scaffold(
+                      body: Center(child: CircularProgressIndicator()));
+                }
+                if (authProvider.currentUser != null) {
+                  // User is logged in, check if it's first login
+                  if (authProvider.currentUser!.isFirstLogin) {
+                    return Competitions(
+                      userEmail: authProvider.currentUser!.email,
+                      userName: authProvider.currentUser!.name,
+                    );
+                  }
+                  return MobileScreenLayout();
+                }
+
+                return LoginScreen();
+              },
+            ),
           ),
+          // ------------------------------
           routes: {
             '/game_details': (context) => GamesScreen(),
             '/games': (context) => GamesScreen(),

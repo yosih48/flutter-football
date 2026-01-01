@@ -688,4 +688,13 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get continueButton => 'המשך';
+
+  @override
+  String get forceUpdateTitle => 'חייבים לעדכן! 🚀';
+
+  @override
+  String get forceUpdateContent => 'הגרסה שלך מיושנת מדי וכבר לא נתמכת.\nכדי להמשיך לשחק, חייבים להוריד את הגרסה החדשה.';
+
+  @override
+  String get forceUpdateButton => 'עדכן עכשיו';
 }

@@ -6,7 +6,7 @@ import 'package:football/models/users.dart';
 import 'package:football/models/users.dart';
 import 'package:football/models/users.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
-import 'package:football/resources/appUpdates.dart';
+
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/gamesMethods.dart';
 import 'package:football/resources/guessesMethods.dart';

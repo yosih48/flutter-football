@@ -306,7 +306,7 @@ class AuthProvider with ChangeNotifier {
     }
     notifyListeners();
       WidgetsBinding.instance.addPostFrameCallback((_) {
-      checkForUpdates();
+      // checkForUpdates();
     });
   }
   static String get _baseUrl => '$backendUrl/users'; 

@@ -688,4 +688,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get continueButton => 'Continue';
+
+  @override
+  String get forceUpdateTitle => 'Update Required! 🚀';
+
+  @override
+  String get forceUpdateContent => 'Your version is too old and is no longer supported.\nTo continue playing, you must download the new version.';
+
+  @override
+  String get forceUpdateButton => 'Update Now';
 }
