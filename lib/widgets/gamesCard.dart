@@ -146,7 +146,9 @@ print(DateTime.now());
                     ),
                   ),
                   SizedBox(width: 18.0),
-                 if (DateTime.now().isBefore(game.date.toLocal())||game.status.long == "Not Started" )
+                 // STRICT CHECK: Only show inputs if current time is BEFORE game start.
+                 // We removed '|| game.status.long == "Not Started"' because it allowed guessing after start if status wasn't updated.
+                 if (DateTime.now().isBefore(game.date.toLocal()))
                  
                     Row(
                       children: [

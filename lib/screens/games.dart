@@ -611,6 +611,13 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             awayScore != null &&
             homeScore.isNotEmpty &&
             awayScore.isNotEmpty) {
+          
+          // STRICT TIME CHECK: Prevent guessing if game has started
+          if (DateTime.now().isAfter(game.date.toLocal())) {
+            print("❌ Game ${game.home.name} vs ${game.away.name} has already started. Skipping guess.");
+            continue;
+          }
+
           // Check if a guess already exists for this game
           Guess? existingGuess;
           try {
