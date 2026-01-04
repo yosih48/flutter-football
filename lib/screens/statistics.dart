@@ -8,6 +8,7 @@ import 'package:football/theme/colors.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:cupertino_icons/cupertino_icons.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class Statistics extends StatefulWidget {
   final userId;
@@ -84,36 +85,37 @@ class _StatisticsState extends State<Statistics> {
         centerTitle: true,
         elevation: 0,
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  SizedBox(height: 16),
-                  _buildStatCard(
-                    AppLocalizations.of(context)!.totalGuesses,
-                    userGuesses.length.toString(),
-                    Icons.bar_chart,
-                    Colors.blue,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildStatCard(
-                    AppLocalizations.of(context)!.directGuesses,
-                    directGuesses.length.toString(),
-                    Icons.my_location,
-                    Colors.green,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildStatCard(
-                    AppLocalizations.of(context)!.directionGuesses,
-                    directionGuesses.length.toString(),
-                    CupertinoIcons.scope,
-                    Colors.orange,
-                  ),
-                ],
+      body: Skeletonizer(
+        enabled: isLoading,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              SizedBox(height: 16),
+              _buildStatCard(
+                AppLocalizations.of(context)!.totalGuesses,
+                isLoading ? '00' : userGuesses.length.toString(),
+                Icons.bar_chart,
+                Colors.blue,
               ),
-            ),
+              const SizedBox(height: 16),
+              _buildStatCard(
+                AppLocalizations.of(context)!.directGuesses,
+                isLoading ? '00' : directGuesses.length.toString(),
+                Icons.my_location,
+                Colors.green,
+              ),
+              const SizedBox(height: 16),
+              _buildStatCard(
+                AppLocalizations.of(context)!.directionGuesses,
+                isLoading ? '00' : directionGuesses.length.toString(),
+                CupertinoIcons.scope,
+                Colors.orange,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

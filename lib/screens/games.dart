@@ -30,6 +30,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/users.dart';
 import 'package:football/utils/utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class GamesScreen extends StatelessWidget {
   @override
@@ -1027,7 +1028,32 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
         future: UsersMethods().fetchUserById(clientId),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            return Center(child: CircularProgressIndicator());
+            return Skeletonizer(
+              enabled: true,
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: 8,
+                  ),
+                  LeagueSelectorChips(
+                    options: [
+                      'Champions League',
+                      'Premier League',
+                      'La Liga',
+                      'Bundesliga'
+                    ],
+                    selectedIndex: -1,
+                    onSelectionChanged: (index) {},
+                  ),
+                  SizedBox(
+                    height: 16,
+                  ),
+                  Expanded(
+                    child: _buildGamesList([], [], {}),
+                  ),
+                ],
+              ),
+            );
           }
           final userData = snapshot.data!;
           final chosenLeagues =
@@ -1199,13 +1225,57 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 // Rename and simplify this method - it now only handles the games list display
   Widget _buildGamesList(List<Game> filteredGames, List<DateTime> sortedDates,
       Map<DateTime, List<Game>> groupedGames) {
-    // Loading state
-    if (isLoading) {
-      return Center(child: CircularProgressIndicator());
-    }
+    
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    // Prepare effective data for Skeletonizer
+    final effectiveGroupedGames = isLoading
+        ? {
+            today: List.generate(
+                3,
+                (index) => Game(
+                      fixtureId: index,
+                      timezone: 'UTC',
+                      date: today,
+                      timestamp: today.millisecondsSinceEpoch,
+                      periods: {'first': null, 'second': null},
+                      venue: Venue(id: 0, name: 'Venue', city: 'City'),
+                      status: Status(
+                          long: 'Not Started', short: 'NS', elapsed: null),
+                      league: League(
+                          id: 2,
+                          name: 'Champions League',
+                          country: 'World',
+                          season: 2024,
+                          round: 'Group Stage',
+                          logo:
+                              'https://media.api-sports.io/football/leagues/2.png'),
+                      home: Team(
+                          id: 1,
+                          name: 'Home Team',
+                          logo:
+                              'https://media.api-sports.io/football/teams/1.png'),
+                      away: Team(
+                          id: 2,
+                          name: 'Away Team',
+                          logo:
+                              'https://media.api-sports.io/football/teams/2.png'),
+                      goals: Goals(home: null, away: null),
+                      score: Score(
+                          halftime: {'home': null, 'away': null},
+                          fulltime: {'home': null, 'away': null},
+                          extratime: {'home': null, 'away': null},
+                          penalty: {'home': null, 'away': null}),
+                      odds: Odds(home: 1.0, draw: 1.0, away: 1.0),
+                    ))
+          }
+        : groupedGames;
+
+    final effectiveSortedDates = isLoading ? [today] : sortedDates;
 
     // No games at all
-    if (_games.isEmpty) {
+    if (!isLoading && _games.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1230,7 +1300,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     }
 
     // No games after filtering
-    if (groupedGames.isEmpty) {
+    if (!isLoading && groupedGames.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1257,141 +1327,143 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     }
 
     // Show games list
-    return ListView.builder(
-      itemCount: sortedDates.length,
-      itemBuilder: (context, index) {
-        final date = sortedDates[index];
-        var gamesForDate = groupedGames[date]!;
-        print('gamesForDate: ${gamesForDate.length}');
-        // Sort games by time within the date
-        gamesForDate.sort((a, b) {
-          // Assuming your Game object has a time field or you can extract time from fixture
-          // Replace this with your actual time comparison logic
-          return a.date.compareTo(b.date);
-        });
-        // Group consecutive games by league while maintaining time order
-        List<Widget> gameWidgets = [];
+    return Skeletonizer(
+      enabled: isLoading,
+      child: ListView.builder(
+        itemCount: effectiveSortedDates.length,
+        itemBuilder: (context, index) {
+          final date = effectiveSortedDates[index];
+          var gamesForDate = effectiveGroupedGames[date]!;
+          // print('gamesForDate: ${gamesForDate.length}');
+          // Sort games by time within the date
+          gamesForDate.sort((a, b) {
+            return a.date.compareTo(b.date);
+          });
+          // Group consecutive games by league while maintaining time order
+          List<Widget> gameWidgets = [];
 
-        for (int i = 0; i < gamesForDate.length; i++) {
-          final game = gamesForDate[i];
-          final currentLeagueId = game.league.id;
+          for (int i = 0; i < gamesForDate.length; i++) {
+            final game = gamesForDate[i];
+            final currentLeagueId = game.league.id;
 
-          // Check if this is the first game or if league changed from previous game
-          final bool showLeagueHeader =
-              i == 0 || gamesForDate[i - 1].league.id != currentLeagueId;
+            // Check if this is the first game or if league changed from previous game
+            final bool showLeagueHeader =
+                i == 0 || gamesForDate[i - 1].league.id != currentLeagueId;
 
-          // Add league header if needed
-          if (showLeagueHeader) {
-            final leagueName = getLocalizedLeagueName(currentLeagueId, context);
-            gameWidgets.add(
-              GestureDetector(
-                onTap: () => _toggleLeagueFilter(currentLeagueId),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                  child: Row(
-                    children: [
-                      Text(
-                        '$leagueName',
-                        style: TextStyle(
-                          color: _selectedLeagueFilter == currentLeagueId
-                              ? Colors.blue
-                              : Colors.grey[300],
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+            // Add league header if needed
+            if (showLeagueHeader) {
+              final leagueName =
+                  getLocalizedLeagueName(currentLeagueId, context);
+              gameWidgets.add(
+                GestureDetector(
+                  onTap: () => _toggleLeagueFilter(currentLeagueId),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                    child: Row(
+                      children: [
+                        Text(
+                          '$leagueName',
+                          style: TextStyle(
+                            color: _selectedLeagueFilter == currentLeagueId
+                                ? Colors.blue
+                                : Colors.grey[300],
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                      if (_selectedLeagueFilter == currentLeagueId)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 6.0),
-                          child:
-                              Icon(Icons.close, size: 14, color: Colors.blue),
-                        ),
-                    ],
+                        if (_selectedLeagueFilter == currentLeagueId)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 6.0),
+                            child:
+                                Icon(Icons.close, size: 14, color: Colors.blue),
+                          ),
+                      ],
+                    ),
                   ),
+                ),
+              );
+            }
+
+            // Add game widget
+            if (_guessControllers[game.fixtureId] == null) {
+              _guessControllers[game.fixtureId] = {
+                'home': TextEditingController(),
+                'away': TextEditingController(),
+              };
+            }
+
+            final matchingGuesses = _guesses
+                .where((g) => g.gameOriginalId == game.fixtureId)
+                .toList();
+            final guess =
+                matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
+
+            gameWidgets.add(
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                child: GameWidget(
+                  game: game,
+                  guess: guess,
+                  homeController: _guessControllers[game.fixtureId]?['home'],
+                  awayController: _guessControllers[game.fixtureId]?['away'],
+                  onTap: (context) async {
+                    if (game.status.long != "Not Started") {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => GameDetails(
+                            gameOriginalId: game.fixtureId,
+                            game: game,
+                            games: gamesForDate,
+                            initialIndex: gamesForDate.indexOf(game),
+                            userId: clientId,
+                          ),
+                        ),
+                      );
+                    }
+                  },
                 ),
               ),
             );
           }
 
-          // Add game widget
-          if (_guessControllers[game.fixtureId] == null) {
-            _guessControllers[game.fixtureId] = {
-              'home': TextEditingController(),
-              'away': TextEditingController(),
-            };
-          }
-
-          final matchingGuesses = _guesses
-              .where((g) => g.gameOriginalId == game.fixtureId)
-              .toList();
-          final guess =
-              matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
-
-          gameWidgets.add(
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-              child: GameWidget(
-                game: game,
-                guess: guess,
-                homeController: _guessControllers[game.fixtureId]?['home'],
-                awayController: _guessControllers[game.fixtureId]?['away'],
-                onTap: (context) async {
-                  if (game.status.long != "Not Started") {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => GameDetails(
-                          gameOriginalId: game.fixtureId,
-                          game: game,
-                          games: gamesForDate,
-                          initialIndex: gamesForDate.indexOf(game),
-                          userId: clientId,
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Date header
+              Center(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Column(
+                    children: [
+                      Text(
+                        formatDateInHebrew(date, context),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    );
-                  }
-                },
-              ),
-            ),
-          );
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Date header
-            Center(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Column(
-                  children: [
-                    Text(
-                      formatDateInHebrew(date, context),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                      SizedBox(height: 4),
+                      Text(
+                        '${gamesForDate.length} ${AppLocalizations.of(context)!.numberOfGames}',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      '${gamesForDate.length} ${AppLocalizations.of(context)!.numberOfGames}',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            // Games sorted by time, showing league name for each game
-            ...gameWidgets,
-          ],
-        );
-      },
+              // Games sorted by time, showing league name for each game
+              ...gameWidgets,
+            ],
+          );
+        },
+      ),
     );
   }
 }

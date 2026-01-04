@@ -22,6 +22,7 @@ import 'package:http/http.dart' as http;
 import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class TableScreen extends StatelessWidget {
   final String? selectedGroupName;
@@ -359,6 +360,20 @@ class TableScreenContentState extends State<TableScreenContent> {
 
   @override
   Widget build(BuildContext context) {
+    final effectivePrivateGroups = isLoading
+        ? {'0': 'Loading Group'}
+        : _privateGroups;
+
+    final effectiveUsers = isLoading
+        ? List.generate(
+            10,
+            (index) => {
+                  'displayName': 'Loading Name',
+                  'thisDayPoints': {league.toString(): '0'},
+                  'points': {league.toString(): '0'},
+                  '_id': 'dummy_$index'
+                })
+        : _users;
 
     return Scaffold(
       backgroundColor: background,
@@ -402,13 +417,9 @@ class TableScreenContentState extends State<TableScreenContent> {
           ),
         ],
       ),
-      body: isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-              ),
-            )
-          : Column(
+      body: Skeletonizer(
+        enabled: isLoading,
+        child: Column(
               children: [
                 Container(
                margin: EdgeInsets.symmetric(vertical: 8),
@@ -437,7 +448,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                     //     ),
                     //   ),
                     // ),
-                    if (_privateGroups.isEmpty)
+                    if (effectivePrivateGroups.isEmpty)
   Center(
     child: Padding(
       padding: EdgeInsets.all(24),
@@ -476,7 +487,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                           borderRadius: BorderRadius.circular(12),
                       ),
                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: _privateGroups.isEmpty
+                      child: effectivePrivateGroups.isEmpty
                           ? Row(
                               children: [
                                 Icon(Icons.info_outline,
@@ -491,25 +502,30 @@ class TableScreenContentState extends State<TableScreenContent> {
                                       fontSize: 16.0,
                                       fontWeight: FontWeight.w500,
                                     ),
+                                    ),
                                   ),
-                                ),
-                              ],
-                            )
-                          : DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                   value: _privateGroups.isNotEmpty && selectedGroupName.isNotEmpty && _privateGroups.containsValue(selectedGroupName)
-    ? selectedGroupName
-    : (_privateGroups.isNotEmpty ? _privateGroups.values.first : null),
-                                dropdownColor: cards,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16.0,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                icon: Icon(Icons.arrow_drop_down,
-                                    color: Colors.blue),
+                                ],
+                              )
+                            : DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: effectivePrivateGroups.isNotEmpty &&
+                                          selectedGroupName.isNotEmpty &&
+                                          effectivePrivateGroups
+                                              .containsValue(selectedGroupName)
+                                      ? selectedGroupName
+                                      : (effectivePrivateGroups.isNotEmpty
+                                          ? effectivePrivateGroups.values.first
+                                          : null),
+                                  dropdownColor: cards,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16.0,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  icon: Icon(Icons.arrow_drop_down,
+                                      color: Colors.blue),
                                 isExpanded: true,
-                                items: _privateGroups.entries.map((entry) {
+                                items: effectivePrivateGroups.entries.map((entry) {
                                   return DropdownMenuItem<String>(
                                     value: entry.value,
                                     child: Row(
@@ -604,7 +620,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                   //       ))
                   ],
                 ),
-                   if (_privateGroups.isNotEmpty)
+                   if (effectivePrivateGroups.isNotEmpty)
                 Expanded(
                   child: Container(
                     margin: EdgeInsets.symmetric(horizontal: 16),
@@ -662,7 +678,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                                       numeric: true,
                                     ),
                                   ],
-                                  rows: _users.asMap().entries.map((entry) {
+                                  rows: effectiveUsers.asMap().entries.map((entry) {
                                     final index = entry.key;
                                     final user = entry.value;
                                
@@ -770,7 +786,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                     ),
                   ),
                 ),
-                  (_privateGroups.isNotEmpty)
+                  (effectivePrivateGroups.isNotEmpty)
                     ? Container(
                         margin: EdgeInsets.all(16),
                         child: TextButton.icon(
@@ -802,6 +818,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                       ),
               ],
             ),
+      ),
     );
   }
 }

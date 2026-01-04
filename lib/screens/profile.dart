@@ -18,6 +18,7 @@ import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:football/screens/account_screen.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:football/providers/theme_provider.dart';
 
 import 'instructionsb.dart';
@@ -557,23 +558,68 @@ Future<void> _loadSelectedGroupName() async {
                   color: cards.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: _isLoadingGroups
-                    ? Container(
-                        height: 120,
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.blue),
+                child: Skeletonizer(
+                  enabled: _isLoadingGroups,
+                  child: _isLoadingGroups
+                      ? ListView.separated(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          padding: EdgeInsets.all(4),
+                          itemCount: 3,
+                          separatorBuilder: (context, index) => Divider(
+                            color: Colors.white.withOpacity(0.1),
+                            height: 1,
                           ),
-                        ),
-                      )
-                    : usersGroups(selectedGroup),
+                          itemBuilder: (context, index) {
+                            return ListTile(
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 4),
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.blue.withOpacity(0.1),
+                                child: Text(
+                                  'G',
+                                  style: TextStyle(
+                                    color: Colors.blue,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              title: Text(
+                                'Group Name Placeholder',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.exit_to_app,
+                                        color: Colors.red.withOpacity(0.7)),
+                                    onPressed: null,
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.star,
+                                      color: Colors.amber,
+                                    ),
+                                    onPressed: null,
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        )
+                      : usersGroups(selectedGroup),
+                ),
               ),
 
               SizedBox(height: 24),
 
               // Winners/Top Scorers Toggle Section
-              if (_userWinners.isNotEmpty || _userTopScorer.isNotEmpty) ...[
+              if (_isLoadingGroups || _userWinners.isNotEmpty || _userTopScorer.isNotEmpty) ...[
                 Container(
                   margin: EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
@@ -680,26 +726,40 @@ Future<void> _loadSelectedGroupName() async {
                     color: cards.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: AnimatedSwitcher(
-                    duration: Duration(milliseconds: 300),
-                    child: _showWinners
-                        ? usersWinners(
-                            key: ValueKey('winners'),
-                            userWinners: _userWinners,
-                            filteredWinners: filteredWinners,
-                          )
-                        : usersTopScorers(
-                            key: ValueKey('topScorers'),
-                            userTopScorers: _userTopScorer,
-                            userTopScorerPoints: _userTopScorerPoints,
-                            filteredTopScorers: _userTopScorer.entries
-                                .where((entry) =>
-                                    allowedGroupIds.contains(entry.key))
-                                .fold<Map<String, String>>({}, (map, entry) {
-                              map[entry.key] = entry.value;
-                              return map;
-                            }),
-                          ),
+                  child: Skeletonizer(
+                    enabled: _isLoadingGroups,
+                    child: AnimatedSwitcher(
+                      duration: Duration(milliseconds: 300),
+                      child: _showWinners
+                          ? usersWinners(
+                              key: ValueKey('winners'),
+                              userWinners: _isLoadingGroups
+                                  ? {'2': 'Loading', '39': 'Loading'}
+                                  : _userWinners,
+                              filteredWinners: _isLoadingGroups
+                                  ? {'2': 'Loading', '39': 'Loading'}
+                                  : filteredWinners,
+                            )
+                          : usersTopScorers(
+                              key: ValueKey('topScorers'),
+                              userTopScorers: _isLoadingGroups
+                                  ? {'2': 'Loading', '39': 'Loading'}
+                                  : _userTopScorer,
+                              userTopScorerPoints: _isLoadingGroups
+                                  ? {'2': 10, '39': 20}
+                                  : _userTopScorerPoints,
+                              filteredTopScorers: _isLoadingGroups
+                                  ? {'2': 'Loading', '39': 'Loading'}
+                                  : _userTopScorer.entries
+                                      .where((entry) =>
+                                          allowedGroupIds.contains(entry.key))
+                                      .fold<Map<String, String>>({},
+                                          (map, entry) {
+                                      map[entry.key] = entry.value;
+                                      return map;
+                                    }),
+                            ),
+                    ),
                   ),
                 ),
               ],

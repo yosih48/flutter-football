@@ -12,6 +12,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class FavoritsScreen extends StatefulWidget {
   const FavoritsScreen({super.key});
@@ -222,8 +223,8 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<AuthProvider>(context);
-    final name = userProvider.currentUser!.name;
-    final email = userProvider.currentUser!.email;
+    final name = userProvider.currentUser?.name;
+    final email = userProvider.currentUser?.email;
 
     return Scaffold(
 backgroundColor: background,
@@ -243,39 +244,36 @@ backgroundColor: background,
         ),
         centerTitle: true,
       ),
-      body: isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+      body: Skeletonizer(
+        enabled: isLoading,
+        child: Column(
+          children: [
+            Container(
+              margin: EdgeInsets.symmetric(vertical: 8),
+              child: ToggleButtonsSample(
+                options: [
+                  AppLocalizations.of(context)!.chooseleagues,
+                  AppLocalizations.of(context)!.notifications,
+                ],
+                imageUrls: [
+                  'https://img.icons8.com/ios/50/ffffff/football2.png',
+                  'https://img.icons8.com/ios/50/ffffff/notification-center.png',
+                ],
+                onSelectionChanged: (index) {
+                  setState(() {
+                    selectedTab = index;
+                  });
+                },
+                initialSelection: selectedTab,
               ),
-            )
-          : Column(
-              children: [
-                Container(
-                  margin: EdgeInsets.symmetric(vertical: 8),
-                  child: ToggleButtonsSample(
-                    options: [
-                      AppLocalizations.of(context)!.chooseleagues,
-                      AppLocalizations.of(context)!.notifications,
-                    ],
-                    imageUrls: [
-                      'https://img.icons8.com/ios/50/ffffff/football2.png',
-                      'https://img.icons8.com/ios/50/ffffff/notification-center.png',
-                    ],
-                    onSelectionChanged: (index) {
-                      setState(() {
-                        selectedTab = index;
-                      });
-                    },
-                    initialSelection: selectedTab,
-                  ),
-                ),
-                Expanded(
-                    child: selectedTab == 0
-                        ? _buildChosenLeaguesTab(name, email)
-                        : _buildNotificationsTab(name, email)),
-              ],
             ),
+            Expanded(
+                child: selectedTab == 0
+                    ? _buildChosenLeaguesTab(name ?? '', email ?? '')
+                    : _buildNotificationsTab(name ?? '', email ?? '')),
+          ],
+        ),
+      ),
     );
   }
 
