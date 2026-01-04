@@ -35,6 +35,20 @@ class User {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'admin': admin,
+      'email': email,
+      'newToken': newToken,
+      'fcmToken': fcmToken,
+      'isFirstLogin': isFirstLogin,
+      'groups': groups,
+      'groupID': groupID,
+    };
+  }
+
 
   
 }

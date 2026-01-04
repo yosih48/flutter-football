@@ -207,6 +207,7 @@ class AuthProvider with ChangeNotifier {
       await _secureStorage.write(
           key: 'auth_token', value: _currentUser!.newToken);
       await _secureStorage.write(key: 'user_id', value: _currentUser!.id);
+      await _saveUserToPrefs(_currentUser!);
       print('Google Login successful: ${_currentUser?.email}');
 
 
@@ -255,7 +256,9 @@ class AuthProvider with ChangeNotifier {
         await refreshUser(token, userId);
       } catch (e) {
         print("Error refreshing user: $e");
-        await signOut(userId);
+        if (_currentUser == null) {
+           await signOut(userId);
+        }
       }
     }
     _isInitializing = false;
@@ -277,6 +280,7 @@ class AuthProvider with ChangeNotifier {
       await _secureStorage.write(
           key: 'auth_token', value: _currentUser!.newToken);
       await _secureStorage.write(key: 'user_id', value: _currentUser!.id);
+      await _saveUserToPrefs(_currentUser!);
       print('Login successful: ${_currentUser?.email}');
     } catch (e) {
       print('Login failed: $e');
@@ -296,13 +300,28 @@ class AuthProvider with ChangeNotifier {
         _currentUser = user;
         await _secureStorage.write(key: 'auth_token', value: token);
         await _secureStorage.write(key: 'user_id', value: userId);
+        await _saveUserToPrefs(user);
       } else {
         throw Exception('Failed to refresh user');
       }
     } catch (e) {
       print("Error refreshing user: $e");
-      await signOut(userId);
-      rethrow;
+      
+      // Check for 401/403 errors
+      if (e.toString().contains('401') || e.toString().contains('403')) {
+        await signOut(userId);
+        rethrow;
+      }
+
+      // Try to load from cache for other errors
+      final cachedUser = await _loadUserFromPrefs();
+      if (cachedUser != null) {
+        _currentUser = cachedUser;
+        print('Recovered user from local cache');
+      } else {
+        await signOut(userId);
+        rethrow;
+      }
     }
     notifyListeners();
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -428,5 +447,26 @@ class AuthProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+  Future<void> _saveUserToPrefs(User user) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_data', json.encode(user.toJson()));
+    } catch (e) {
+      print('Error saving user to prefs: $e');
+    }
+  }
+
+  Future<User?> _loadUserFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString('user_data');
+      if (userDataString != null) {
+        return User.fromJson(json.decode(userDataString));
+      }
+    } catch (e) {
+      print('Error loading user from prefs: $e');
+    }
+    return null;
   }
 }
