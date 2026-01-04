@@ -42,11 +42,18 @@ class GamesMethods {
         List<int> leaguesToCheck =
             leaguesWithGames.where((id) => allLeagueIds.contains(id)).toList();
 
-        // Try to get games from cache for each active league
-        for (int id in leaguesToCheck) {
-          print('🔍 Searching cache for league $id');
+        // Parallelize cache checks
+        print('🔍 Searching cache for leagues: ${leaguesToCheck.join(', ')}');
+        final cacheResults = await Future.wait(leaguesToCheck.map((id) async {
           final cachedGames =
               await _cacheService.getCachedGames(id, selectedDate);
+          return MapEntry(id, cachedGames);
+        }));
+
+        for (var entry in cacheResults) {
+          final id = entry.key;
+          final cachedGames = entry.value;
+
           if (cachedGames != null) {
             // If we have cached games, check if any are live
             if (_cacheService.hasLiveGames(cachedGames)) {
@@ -88,11 +95,18 @@ class GamesMethods {
       // Instead of a single flag, track which leagues need fresh data
       print('📅 No date filter specified - checking all leagues individually');
 
-      // Try to get games from cache for each league
-      for (int id in allLeagueIds) {
-        print('🔍 Searching cache for league $id');
+      // Parallelize cache checks for all leagues
+      print('🔍 Searching cache for all leagues');
+      final cacheResults = await Future.wait(allLeagueIds.map((id) async {
         final cachedGames =
             await _cacheService.getCachedGames(id, selectedDate);
+        return MapEntry(id, cachedGames);
+      }));
+
+      for (var entry in cacheResults) {
+        final id = entry.key;
+        final cachedGames = entry.value;
+
         if (cachedGames != null) {
           // If we have cached games, check if any are live
           if (_cacheService.hasLiveGames(cachedGames)) {
@@ -116,16 +130,22 @@ class GamesMethods {
     // Fetch fresh data only for leagues that need it
     if (leaguesToFetch.isNotEmpty) {
       print('🔄 Fetching fresh data for leagues: ${leaguesToFetch.join(', ')}');
-      for (int id in leaguesToFetch) {
+      
+      // Parallelize fetching fresh data
+      final fetchedGamesList = await Future.wait(leaguesToFetch.map((id) async {
         final games = await _fetchGamesForLeague(
           id,
           onlyTodayGames: onlyTodayGames,
           selectedDate: selectedDate,
         );
-
+        
         // Cache the fetched games
         await _cacheService.cacheGames(games, id, selectedDate);
+        
+        return games;
+      }));
 
+      for (var games in fetchedGamesList) {
         allGames.addAll(games);
       }
     }

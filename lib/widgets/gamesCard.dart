@@ -246,7 +246,7 @@ print(DateTime.now());
                     )
                   else
                     Text(
-                      '${game.goals.home} - ${game.goals.away}',
+                      '${game.goals.home ?? 0} - ${game.goals.away ?? 0}',
                       style: TextStyle(
                         color: Colors.white, // White color for the team names
                         fontWeight: FontWeight.bold,

@@ -835,19 +835,25 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           ? DateTime(filterDate.year, filterDate.month, filterDate.day)
           : startOfToday;
       print('earliestDate ${earliestDate}');
-      for (final leagueId in leaguesToFetch) {
+      print('earliestDate ${earliestDate}');
+      
+      // Parallelize fetching for multiple leagues
+      final results = await Future.wait(leaguesToFetch.map((leagueId) async {
         final games = await GamesMethods().fetchGamesForLeague(leagueId);
         // Include games that are either:
         // 1. Starting today (including live games)
         // 2. Starting in the future
-
-        allGames.addAll(games.where((g) {
+        return games.where((g) {
           final gameDate = DateTime(g.date.year, g.date.month, g.date.day);
           return gameDate.isAfter(earliestDate.subtract(Duration(days: 1))) ||
               g.status.short == '1H' ||
               g.status.short == '2H' ||
               g.status.short == 'HT';
-        }));
+        }).toList();
+      }));
+
+      for (var games in results) {
+        allGames.addAll(games);
       }
 
       // Apply date filter if specified
