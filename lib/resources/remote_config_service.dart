@@ -1,4 +1,5 @@
 import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:football/utils/config.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class RemoteConfigService {
@@ -10,7 +11,7 @@ class RemoteConfigService {
 
   // הנה הגיבוי! זה הערך שיהיה עד שפיירבייס יתעורר
   // שים פה את הכתובת הנוכחית שעובדת (Render Proxy או VPS)
-  String apiUrl = 'https://leagues.onrender.com';
+  String apiUrl = 'https://scorecast.yossih.dev/';
 
   Future<void> initialize() async {
     try {
@@ -21,7 +22,7 @@ class RemoteConfigService {
 
       // מגדירים גם פה דיפולט ליתר ביטחון
       await _remoteConfig.setDefaults(<String, dynamic>{
-        'api_url': 'https://leagues.onrender.com',
+     'api_url': 'https://scorecast.yossih.dev/',
       });
 
       await _remoteConfig.fetchAndActivate();
