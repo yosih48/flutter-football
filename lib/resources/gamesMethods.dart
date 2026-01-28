@@ -196,20 +196,31 @@ if(leagueId == -1){
     DateTime? selectedDate,
   }) async {
     final url = Uri.parse('$_baseUrl/api/realApiData');
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'data': leagueId}),
-    );
+    print('🌐 Making API request to: $url with leagueId: $leagueId');
+    
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'data': leagueId}),
+      );
+      
+      print('📡 Response status: ${response.statusCode}');
+      print('📡 Response body length: ${response.body.length} bytes');
 
-    if (response.statusCode == 200) {
+      if (response.statusCode == 200) {
       final responseData = jsonDecode(response.body);
+      print('✅ JSON decoded successfully');
       final gamesData = responseData['games'];
+      print('📊 Games data: ${gamesData?.length ?? 0} items');
       if (gamesData != null && gamesData is List) {
+        print('🔄 Parsing ${gamesData.length} games...');
         final List<Game> games =
             gamesData.map((item) => Game.fromJson(item)).toList();
+        print('✅ Parsed ${games.length} games successfully');
 
         // Filter games
+        print('🔍 Filtering games...');
         final filteredGames = games.where((game) {
           bool hasOdds = game.odds.home != 10 ||
               game.odds.draw != 10 ||
@@ -269,7 +280,12 @@ if(leagueId == -1){
         throw Exception('Games data is null or not a list');
       }
     } else {
-      throw Exception('Failed to fetch games');
+      throw Exception('Failed to fetch games with status: ${response.statusCode}');
+    }
+    } catch (e, stackTrace) {
+      print('❌ Error fetching games for league $leagueId: $e');
+      print('📚 Stack trace: $stackTrace');
+      rethrow;
     }
   }
 
