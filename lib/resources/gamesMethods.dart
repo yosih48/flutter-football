@@ -160,9 +160,12 @@ class GamesMethods {
     bool onlyTodayGames = false,
     DateTime? selectedDate,
   }) async {
+    print('🎯 fetchGamesForLeague called for league $leagueId');
     // Try to get games from cache first
+    print('🔍 Checking cache for league $leagueId...');
     final cachedGames =
         await _cacheService.getCachedGames(leagueId, selectedDate);
+    print('🔍 Cache check complete for league $leagueId');
 
     // If we have cached games and none are live, use the cache
     if (cachedGames != null && !_cacheService.hasLiveGames(cachedGames)) {
@@ -195,32 +198,42 @@ if(leagueId == -1){
     bool onlyTodayGames = false,
     DateTime? selectedDate,
   }) async {
+    final startTime = DateTime.now();
     final url = Uri.parse('$_baseUrl/api/realApiData');
     print('🌐 Making API request to: $url with leagueId: $leagueId');
     
     try {
+      final requestStartTime = DateTime.now();
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'data': leagueId}),
       );
+      final requestDuration = DateTime.now().difference(requestStartTime);
       
       print('📡 Response status: ${response.statusCode}');
       print('📡 Response body length: ${response.body.length} bytes');
+      print('⏱️  API request took: ${requestDuration.inMilliseconds}ms');
 
       if (response.statusCode == 200) {
+      final decodeStartTime = DateTime.now();
       final responseData = jsonDecode(response.body);
-      print('✅ JSON decoded successfully');
+      final decodeDuration = DateTime.now().difference(decodeStartTime);
+      print('✅ JSON decoded successfully in ${decodeDuration.inMilliseconds}ms');
+      print('🔑 Response keys: ${responseData.keys.toList()}');
       final gamesData = responseData['games'];
       print('📊 Games data: ${gamesData?.length ?? 0} items');
       if (gamesData != null && gamesData is List) {
         print('🔄 Parsing ${gamesData.length} games...');
+        final parseStartTime = DateTime.now();
         final List<Game> games =
             gamesData.map((item) => Game.fromJson(item)).toList();
-        print('✅ Parsed ${games.length} games successfully');
+        final parseDuration = DateTime.now().difference(parseStartTime);
+        print('✅ Parsed ${games.length} games successfully in ${parseDuration.inMilliseconds}ms');
 
         // Filter games
         print('🔍 Filtering games...');
+        final filterStartTime = DateTime.now();
         final filteredGames = games.where((game) {
           bool hasOdds = game.odds.home != 10 ||
               game.odds.draw != 10 ||
@@ -271,9 +284,17 @@ if(leagueId == -1){
               // (!onlyTodayGames || isToday);
               isSelectedDate;
         }).toList();
+        final filterDuration = DateTime.now().difference(filterStartTime);
+        print('✅ Filtered to ${filteredGames.length} games in ${filterDuration.inMilliseconds}ms');
 
         // Sort the filtered games by timestamp
+        final sortStartTime = DateTime.now();
         filteredGames.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+        final sortDuration = DateTime.now().difference(sortStartTime);
+        
+        final totalDuration = DateTime.now().difference(startTime);
+        print('⏱️  Total operation took: ${totalDuration.inMilliseconds}ms');
+        print('   └─ API: ${requestDuration.inMilliseconds}ms | Decode: ${decodeDuration.inMilliseconds}ms | Parse: ${parseDuration.inMilliseconds}ms | Filter: ${filterDuration.inMilliseconds}ms | Sort: ${sortDuration.inMilliseconds}ms');
 
         return filteredGames;
       } else {

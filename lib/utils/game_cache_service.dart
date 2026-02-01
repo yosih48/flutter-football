@@ -123,19 +123,28 @@ class GameCacheService {
     }
 
     // Parse the cached games
-    final List<dynamic> gamesJson = jsonDecode(cachedData);
-    final games = gamesJson.map((json) => Game.fromJson(json)).toList();
+    try {
+      print('📝 Parsing cached JSON for league $leagueId (${cachedData.length} bytes)...');
+      final List<dynamic> gamesJson = jsonDecode(cachedData);
+      print('📝 JSON parsed, converting ${gamesJson.length} items to Game objects...');
+      final games = gamesJson.map((json) => Game.fromJson(json)).toList();
+      print('✅ Cache parsed successfully: ${games.length} games');
 
-    // Check if cache is valid based on game status
-    if (!_isCacheValid(games, timestamp)) {
-      print('⌛ Cache expired or invalid for league $leagueId');
+      // Check if cache is valid based on game status
+      if (!_isCacheValid(games, timestamp)) {
+        print('⌛ Cache expired or invalid for league $leagueId');
+        return null;
+      }
+
+      final age = DateTime.now().millisecondsSinceEpoch - timestamp;
+      print(
+          '📦 Found valid cache for league $leagueId with ${games.length} games (${(age / 60000).toStringAsFixed(1)} min old)');
+      return games;
+    } catch (e, stackTrace) {
+      print('❌ Error parsing cached data for league $leagueId: $e');
+      print('Stack: $stackTrace');
       return null;
     }
-
-    final age = DateTime.now().millisecondsSinceEpoch - timestamp;
-    print(
-        '📦 Found valid cache for league $leagueId with ${games.length} games (${(age / 60000).toStringAsFixed(1)} min old)');
-    return games;
   }
 
   // Check if there are any live games in the list
