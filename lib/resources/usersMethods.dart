@@ -34,8 +34,9 @@ Future<List<Map<String, dynamic>>>fetchAllUsers() async {
   }
 }
 Future<Map<String, dynamic>> fetchUserById(String userId) async {
-  print('fetchAllUsers');
-  final url = Uri.parse('https://leagues.onrender.com/users/${userId}');
+  print('📍 fetchUserById called for user: $userId');
+  final url = Uri.parse('$_baseUrl/users/$userId');
+  print('🌐 Fetching user from: $url');
 
   try {
     final response = await http.get(url);
