@@ -119,7 +119,6 @@ class _GameDetailsState extends State<GameDetails> {
               child: Column(
                 children: [
                   _buildGameCard(),
-                  _buildEventsSection(),
                   _buildGuessesTable(),
                 ],
               ),
@@ -136,6 +135,8 @@ class _GameDetailsState extends State<GameDetails> {
       ),
       child: FixtureEventsWidget(
         fixtureId: currentGameId,
+        homeTeamName: _currentGame.home.name,
+        awayTeamName: _currentGame.away.name,
       ),
     );
   }
@@ -174,55 +175,46 @@ class _GameDetailsState extends State<GameDetails> {
                   SizedBox(height: 16.0),
                   _buildTeamScores(),
                   SizedBox(height: 8.0),
+                  Divider(color: Colors.grey[800], thickness: 1),
+                  FixtureEventsWidget(
+                    fixtureId: currentGameId,
+                    homeTeamName: _currentGame.home.name,
+                    awayTeamName: _currentGame.away.name,
+                  ),
                 ],
               ),
             ),
           ),
-          // Right arrow
-
-          if (_currentIndex > 0 &&
-              widget.games[_currentIndex - 1].status.long != "Not Started")
-            Positioned(
-              right: 10,
-              top: 10,
-              bottom: 0,
-              child: Center(
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                      // color: Colors.black.withOpacity(0.5),
-                      // shape: BoxShape.circle,
-                      ),
-                  child: IconButton(
-                    icon: Icon(Icons.arrow_back_ios,
-                        color: Colors.white, size: 20),
-                    onPressed: () => _navigateToGame(_currentIndex - 1),
-                  ),
-                ),
-              ),
-            ),
-          // Left arrow
-
+          // Right arrow (Next Game)
           if (_currentIndex < widget.games.length - 1 &&
               widget.games[_currentIndex + 1].status.long != "Not Started")
             Positioned(
-              left: 10,
-              top: 10,
-              bottom: 0,
-              child: Center(
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                      // color: Colors.black.withOpacity(0.5),
-                      // shape: BoxShape.circle,
-                      ),
-                  child: IconButton(
-                    icon: Icon(Icons.arrow_forward_ios,
-                        color: Colors.white, size: 20),
-                    onPressed: () => _navigateToGame(_currentIndex + 1),
-                  ),
+              right: 4,
+              top: 65,
+              child: Container(
+                width: 40,
+                height: 40,
+                child: IconButton(
+                  icon: Icon(Icons.arrow_forward_ios,
+                      color: Colors.white, size: 20),
+                  onPressed: () => _navigateToGame(_currentIndex + 1),
+                ),
+              ),
+            ),
+
+          // Left arrow (Previous Game)
+          if (_currentIndex > 0 &&
+              widget.games[_currentIndex - 1].status.long != "Not Started")
+            Positioned(
+              left: 4,
+              top: 65,
+              child: Container(
+                width: 40,
+                height: 40,
+                child: IconButton(
+                  icon: Icon(Icons.arrow_back_ios,
+                      color: Colors.white, size: 20),
+                  onPressed: () => _navigateToGame(_currentIndex - 1),
                 ),
               ),
             ),
