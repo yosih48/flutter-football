@@ -29,6 +29,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/users.dart';
 import 'package:football/utils/utils.dart';
+import 'package:football/utils/game_cache_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -65,6 +66,7 @@ class _GamesScreenContent extends StatefulWidget {
 
 class _GamesScreenContentState extends State<_GamesScreenContent> {
   List<Game> _games = [];
+  List<Game> _previousGames = [];
   List<Guess> _guesses = [];
   int league = -1;
   bool _hasInitialized = false;
@@ -82,6 +84,13 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   Map<int, Map<String, TextEditingController>> _guessControllers = {};
   bool _hasFetchedInitialGames = false;
   bool useFakeGames = false;
+  
+  // Scroll-up to load previous games
+  final ScrollController _scrollController = ScrollController();
+  final GameCacheService _cacheService = GameCacheService();
+  late DateTime _earliestLoadedDate;
+  bool _isLoadingPrevious = false;
+  bool _noMorePreviousGames = false;
   String formatDateInHebrew(DateTime date, BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
     print('🔍 _baseUrl in games:  $_baseUrl ');
@@ -251,6 +260,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     email = widget.authProvider.currentUser?.email ?? 'Not logged in';
     league = widget.userProvider.selectedLeageId ?? -1;
     selectedDate = DateTime.now();
+    final now = DateTime.now();
+    _earliestLoadedDate = DateTime(now.year, now.month, now.day);
     print('selectedDate: ${selectedDate}');
 
     print('clientId in games: ${clientId}');
@@ -320,11 +331,100 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
   }
 
   void dispose() {
+    _scrollController.dispose();
     for (var controllers in _guessControllers.values) {
       controllers['home']?.dispose();
       controllers['away']?.dispose();
     }
     super.dispose();
+  }
+
+  // Load previous day's games from cache (or API fallback) when user scrolls to top
+  Future<void> _loadPreviousDay() async {
+    if (_isLoadingPrevious || _noMorePreviousGames) return;
+    
+    setState(() {
+      _isLoadingPrevious = true;
+    });
+
+    int daysChecked = 0;
+    const maxDaysToCheck = 3; // Check up to 3 days back per trigger
+    List<Game> foundGames = [];
+
+    while (daysChecked < maxDaysToCheck && foundGames.isEmpty) {
+      _earliestLoadedDate = _earliestLoadedDate.subtract(Duration(days: 1));
+      daysChecked++;
+      
+      // Don't go back more than 30 days
+      final now = DateTime.now();
+      if (now.difference(_earliestLoadedDate).inDays > 30) {
+        setState(() {
+          _noMorePreviousGames = true;
+          _isLoadingPrevious = false;
+        });
+        return;
+      }
+
+      // Try cache first
+      final cached = await _cacheService.getCachedGamesForDate(_earliestLoadedDate);
+      if (cached.isNotEmpty) {
+        foundGames = cached;
+      } else {
+        // Cache miss — fetch from API and cache for next time
+        print('🌐 No cache for ${_earliestLoadedDate.day}/${_earliestLoadedDate.month}, fetching from API...');
+        try {
+          final allLeagues = [2, 383, 140, 3, 39, 78, 848];
+          List<Game> apiGames = [];
+          
+          final results = await Future.wait(allLeagues.map((leagueId) =>
+            GamesMethods().fetchGamesForLeague(leagueId, selectedDate: _earliestLoadedDate)
+          ));
+          
+          for (var games in results) {
+            // Filter to only games on this specific date
+            final dateStart = DateTime(_earliestLoadedDate.year, _earliestLoadedDate.month, _earliestLoadedDate.day);
+            final dateEnd = dateStart.add(Duration(days: 1));
+            apiGames.addAll(games.where((g) =>
+                !g.date.isBefore(dateStart) && g.date.isBefore(dateEnd)));
+          }
+          
+          if (apiGames.isNotEmpty) {
+            foundGames = apiGames;
+          }
+        } catch (e) {
+          print('❌ Failed to fetch previous games from API: $e');
+        }
+      }
+
+      // Filter by selected league if active
+      if (foundGames.isNotEmpty && league != -1) {
+        foundGames = foundGames.where((g) => g.league.id == league).toList();
+      }
+    }
+
+    if (foundGames.isNotEmpty) {
+      // Avoid duplicates
+      final existingIds = _previousGames.map((g) => g.fixtureId).toSet();
+      existingIds.addAll(_games.map((g) => g.fixtureId));
+      final newGames = foundGames.where((g) => !existingIds.contains(g.fixtureId)).toList();
+      newGames.sort((a, b) => a.date.compareTo(b.date));
+      
+      setState(() {
+        _previousGames.insertAll(0, newGames);
+        for (var game in newGames) {
+          if (_guessControllers[game.fixtureId] == null) {
+            _guessControllers[game.fixtureId] = {
+              'home': TextEditingController(),
+              'away': TextEditingController(),
+            };
+          }
+        }
+      });
+    }
+
+    setState(() {
+      _isLoadingPrevious = false;
+    });
   }
 
   // void toggleshowOnlyThisLeagueTodayGames() {
@@ -1104,8 +1204,14 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
             }).toList();
           }
 
+          // Combine previous games (from cache) with current/future games
+          List<Game> allDisplayGames = [..._previousGames, ...filteredGames];
+          // Remove duplicates by fixtureId
+          final seenIds = <int>{};
+          allDisplayGames = allDisplayGames.where((g) => seenIds.add(g.fixtureId)).toList();
+
           // Group games by date
-          final groupedGames = _groupGamesByDate(filteredGames);
+          final groupedGames = _groupGamesByDate(allDisplayGames);
           final sortedDates = groupedGames.keys.toList()..sort();
 
           final initialIndex = enabledLeagues.contains(league)
@@ -1203,7 +1309,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
 
                 Expanded(
                   child:
-                      _buildGamesList(filteredGames, sortedDates, groupedGames),
+                      _buildGamesList(allDisplayGames, sortedDates, groupedGames),
                 ),
               ],
             ),
@@ -1335,140 +1441,186 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     // Show games list
     return Skeletonizer(
       enabled: isLoading,
-      child: ListView.builder(
-        itemCount: effectiveSortedDates.length,
-        itemBuilder: (context, index) {
-          final date = effectiveSortedDates[index];
-          var gamesForDate = effectiveGroupedGames[date]!;
-          // print('gamesForDate: ${gamesForDate.length}');
-          // Sort games by time within the date
-          gamesForDate.sort((a, b) {
-            return a.date.compareTo(b.date);
-          });
-          // Group consecutive games by league while maintaining time order
-          List<Widget> gameWidgets = [];
-
-          for (int i = 0; i < gamesForDate.length; i++) {
-            final game = gamesForDate[i];
-            final currentLeagueId = game.league.id;
-
-            // Check if this is the first game or if league changed from previous game
-            final bool showLeagueHeader =
-                i == 0 || gamesForDate[i - 1].league.id != currentLeagueId;
-
-            // Add league header if needed
-            if (showLeagueHeader) {
-              final leagueName =
-                  getLocalizedLeagueName(currentLeagueId, context);
-              gameWidgets.add(
-                GestureDetector(
-                  onTap: () => _toggleLeagueFilter(currentLeagueId),
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                    child: Row(
-                      children: [
-                        Text(
-                          '$leagueName',
-                          style: TextStyle(
-                            color: _selectedLeagueFilter == currentLeagueId
-                                ? Colors.blue
-                                : Colors.grey[300],
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        if (_selectedLeagueFilter == currentLeagueId)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 6.0),
-                            child:
-                                Icon(Icons.close, size: 14, color: Colors.blue),
-                          ),
-                      ],
+      child: NotificationListener<OverscrollNotification>(
+        onNotification: (notification) {
+          // Detect overscroll at the top (user trying to scroll up past the beginning)
+          if (notification.overscroll < 0 && !_isLoadingPrevious && !_noMorePreviousGames) {
+            _loadPreviousDay();
+          }
+          return false;
+        },
+        child: ListView.builder(
+          controller: _scrollController,
+          // +1 for the loading/end indicator at the top
+          itemCount: effectiveSortedDates.length + 1,
+          itemBuilder: (context, index) {
+            // First item: loading indicator or "no more games" message
+            if (index == 0) {
+              if (_isLoadingPrevious) {
+                return Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.blue,
+                      ),
                     ),
+                  ),
+                );
+              } else if (_previousGames.isNotEmpty || _noMorePreviousGames) {
+                // Show a subtle "scroll up for more" or end indicator
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Center(
+                    child: Text(
+                      _noMorePreviousGames ? '' : '↑',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                );
+              }
+              return SizedBox.shrink();
+            }
+
+            // Adjust index for the actual date items
+            final dateIndex = index - 1;
+            final date = effectiveSortedDates[dateIndex];
+            var gamesForDate = effectiveGroupedGames[date]!;
+            // Sort games by time within the date
+            gamesForDate.sort((a, b) {
+              return a.date.compareTo(b.date);
+            });
+            // Group consecutive games by league while maintaining time order
+            List<Widget> gameWidgets = [];
+
+            for (int i = 0; i < gamesForDate.length; i++) {
+              final game = gamesForDate[i];
+              final currentLeagueId = game.league.id;
+
+              // Check if this is the first game or if league changed from previous game
+              final bool showLeagueHeader =
+                  i == 0 || gamesForDate[i - 1].league.id != currentLeagueId;
+
+              // Add league header if needed
+              if (showLeagueHeader) {
+                final leagueName =
+                    getLocalizedLeagueName(currentLeagueId, context);
+                gameWidgets.add(
+                  GestureDetector(
+                    onTap: () => _toggleLeagueFilter(currentLeagueId),
+                    child: Padding(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                      child: Row(
+                        children: [
+                          Text(
+                            '$leagueName',
+                            style: TextStyle(
+                              color: _selectedLeagueFilter == currentLeagueId
+                                  ? Colors.blue
+                                  : Colors.grey[300],
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          if (_selectedLeagueFilter == currentLeagueId)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 6.0),
+                              child:
+                                  Icon(Icons.close, size: 14, color: Colors.blue),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              // Add game widget
+              if (_guessControllers[game.fixtureId] == null) {
+                _guessControllers[game.fixtureId] = {
+                  'home': TextEditingController(),
+                  'away': TextEditingController(),
+                };
+              }
+
+              final matchingGuesses = _guesses
+                  .where((g) => g.gameOriginalId == game.fixtureId)
+                  .toList();
+              final guess =
+                  matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
+
+              gameWidgets.add(
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  child: GameWidget(
+                    game: game,
+                    guess: guess,
+                    homeController: _guessControllers[game.fixtureId]?['home'],
+                    awayController: _guessControllers[game.fixtureId]?['away'],
+                    onTap: (context) async {
+                      if (game.status.long != "Not Started") {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => GameDetails(
+                              gameOriginalId: game.fixtureId,
+                              game: game,
+                              games: gamesForDate,
+                              initialIndex: gamesForDate.indexOf(game),
+                              userId: clientId,
+                            ),
+                          ),
+                        );
+                      }
+                    },
                   ),
                 ),
               );
             }
 
-            // Add game widget
-            if (_guessControllers[game.fixtureId] == null) {
-              _guessControllers[game.fixtureId] = {
-                'home': TextEditingController(),
-                'away': TextEditingController(),
-              };
-            }
-
-            final matchingGuesses = _guesses
-                .where((g) => g.gameOriginalId == game.fixtureId)
-                .toList();
-            final guess =
-                matchingGuesses.isNotEmpty ? matchingGuesses.first : null;
-
-            gameWidgets.add(
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                child: GameWidget(
-                  game: game,
-                  guess: guess,
-                  homeController: _guessControllers[game.fixtureId]?['home'],
-                  awayController: _guessControllers[game.fixtureId]?['away'],
-                  onTap: (context) async {
-                    if (game.status.long != "Not Started") {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => GameDetails(
-                            gameOriginalId: game.fixtureId,
-                            game: game,
-                            games: gamesForDate,
-                            initialIndex: gamesForDate.indexOf(game),
-                            userId: clientId,
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Date header
+                Center(
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Column(
+                      children: [
+                        Text(
+                          formatDateInHebrew(date, context),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                      );
-                    }
-                  },
-                ),
-              ),
-            );
-          }
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Date header
-              Center(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Column(
-                    children: [
-                      Text(
-                        formatDateInHebrew(date, context),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                        SizedBox(height: 4),
+                        Text(
+                          '${gamesForDate.length} ${AppLocalizations.of(context)!.numberOfGames}',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        '${gamesForDate.length} ${AppLocalizations.of(context)!.numberOfGames}',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              // Games sorted by time, showing league name for each game
-              ...gameWidgets,
-            ],
-          );
-        },
+                // Games sorted by time, showing league name for each game
+                ...gameWidgets,
+              ],
+            );
+          },
+        ),
       ),
     );
   }

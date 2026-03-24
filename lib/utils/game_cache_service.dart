@@ -214,6 +214,67 @@ class GameCacheService {
     return '$_cacheKeyPrefix${leagueId}_${date.year}_${date.month}_${date.day}';
   }
 
+  // Get cached games for a specific date across ALL leagues (ignores expiry)
+  // Used when scrolling up to view past games from cache
+  Future<List<Game>> getCachedGamesForDate(DateTime date) async {
+    final prefs = await SharedPreferences.getInstance();
+    final allLeagues = [2, 383, 140, 3, 39, 78, 848];
+    List<Game> allGames = [];
+    final existingIds = <int>{};
+
+    for (final leagueId in allLeagues) {
+      final cacheKey = _generateCacheKey(leagueId, date);
+      final cachedData = prefs.getString(cacheKey);
+      if (cachedData == null) continue;
+
+      try {
+        final List<dynamic> gamesJson = jsonDecode(cachedData);
+        final games = gamesJson.map((json) => Game.fromJson(json)).toList();
+        // Filter to only include games on the requested date
+        final dateStart = DateTime(date.year, date.month, date.day);
+        final dateEnd = dateStart.add(Duration(days: 1));
+        final gamesForDate = games.where((g) =>
+            !g.date.isBefore(dateStart) && g.date.isBefore(dateEnd)).toList();
+        for (final g in gamesForDate) {
+          if (!existingIds.contains(g.fixtureId)) {
+            existingIds.add(g.fixtureId);
+            allGames.add(g);
+          }
+        }
+      } catch (e) {
+        print('❌ Error reading cache for league $leagueId on ${date.day}/${date.month}: $e');
+      }
+    }
+
+    // Also try the "all" cache key (no date) and filter
+    for (final leagueId in allLeagues) {
+      final cacheKey = '${_cacheKeyPrefix}${leagueId}_all';
+      final cachedData = prefs.getString(cacheKey);
+      if (cachedData == null) continue;
+
+      try {
+        final List<dynamic> gamesJson = jsonDecode(cachedData);
+        final games = gamesJson.map((json) => Game.fromJson(json)).toList();
+        final dateStart = DateTime(date.year, date.month, date.day);
+        final dateEnd = dateStart.add(Duration(days: 1));
+        final gamesForDate = games.where((g) =>
+            !g.date.isBefore(dateStart) && g.date.isBefore(dateEnd)).toList();
+        for (final g in gamesForDate) {
+          if (!existingIds.contains(g.fixtureId)) {
+            existingIds.add(g.fixtureId);
+            allGames.add(g);
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    allGames.sort((a, b) => a.date.compareTo(b.date));
+    print('📦 getCachedGamesForDate: found ${allGames.length} games for ${date.day}/${date.month}');
+    return allGames;
+  }
+
   // Clear all cached games
   Future<void> clearCache() async {
     final prefs = await SharedPreferences.getInstance();
