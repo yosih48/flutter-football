@@ -427,6 +427,23 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
     });
   }
 
+  // Clear loaded previous days and scroll back to today's games
+  void _jumpToToday() {
+    setState(() {
+      _previousGames.clear();
+      final now = DateTime.now();
+      _earliestLoadedDate = DateTime(now.year, now.month, now.day);
+      _noMorePreviousGames = false;
+    });
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: Duration(milliseconds: 400),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
   // void toggleshowOnlyThisLeagueTodayGames() {
   //   setState(() {
   //     _showOnlyThisLeagueTodayGames = !_showOnlyThisLeagueTodayGames;
@@ -1308,8 +1325,59 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
                 //       ),
 
                 Expanded(
-                  child:
-                      _buildGamesList(allDisplayGames, sortedDates, groupedGames),
+                  child: Stack(
+                    children: [
+                      _buildGamesList(
+                          allDisplayGames, sortedDates, groupedGames),
+                      if (_previousGames.isNotEmpty)
+                        Positioned(
+                          bottom: 16,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(24),
+                                onTap: _jumpToToday,
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 22, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF2196F3),
+                                    borderRadius: BorderRadius.circular(24),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.25),
+                                        blurRadius: 8,
+                                        offset: Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        AppLocalizations.of(context)!
+                                            .backToToday,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      SizedBox(width: 6),
+                                      Icon(Icons.keyboard_arrow_down,
+                                          size: 20, color: Colors.white),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -1454,38 +1522,82 @@ class _GamesScreenContentState extends State<_GamesScreenContent> {
           // +1 for the loading/end indicator at the top
           itemCount: effectiveSortedDates.length + 1,
           itemBuilder: (context, index) {
-            // First item: loading indicator or "no more games" message
+            // First item: loading indicator, pull-up hint, or end indicator
             if (index == 0) {
               if (_isLoadingPrevious) {
                 return Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.symmetric(vertical: 14.0),
                   child: Center(
-                    child: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.blue,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.blue,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Text(
+                          AppLocalizations.of(context)!.loadingPreviousGames,
+                          style: TextStyle(
+                            color: Colors.grey[400],
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 );
-              } else if (_previousGames.isNotEmpty || _noMorePreviousGames) {
-                // Show a subtle "scroll up for more" or end indicator
+              } else if (_noMorePreviousGames) {
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(vertical: 12.0),
                   child: Center(
                     child: Text(
-                      _noMorePreviousGames ? '' : '↑',
+                      AppLocalizations.of(context)!.noOlderGames,
                       style: TextStyle(
                         color: Colors.grey[600],
-                        fontSize: 14,
+                        fontSize: 12,
                       ),
                     ),
                   ),
                 );
               }
-              return SizedBox.shrink();
+              // Pull-up hint chip — visible to the user
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10.0),
+                child: Center(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.blue.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.keyboard_arrow_up,
+                            color: Colors.blue, size: 16),
+                        SizedBox(width: 4),
+                        Text(
+                          AppLocalizations.of(context)!.pullUpForPreviousGames,
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
             }
 
             // Adjust index for the actual date items

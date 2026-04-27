@@ -697,4 +697,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forceUpdateButton => 'Update Now';
+
+  @override
+  String get backToToday => 'Today';
+
+  @override
+  String get loadingPreviousGames => 'Loading previous games...';
+
+  @override
+  String get noOlderGames => 'No older games';
+
+  @override
+  String get pullUpForPreviousGames => 'Pull up for previous games';
 }

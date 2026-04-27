@@ -440,8 +440,9 @@
    "continueButton": "המשך",
     "forceUpdateTitle": "חייבים לעדכן! 🚀",
     "forceUpdateContent": "הגרסה שלך מיושנת מדי וכבר לא נתמכת.\nכדי להמשיך לשחק, חייבים להוריד את הגרסה החדשה.",
-    "forceUpdateButton": "עדכן עכשיו"
-
-  
-  
+    "forceUpdateButton": "עדכן עכשיו",
+    "backToToday": "היום",
+    "loadingPreviousGames": "טוען משחקים קודמים...",
+    "noOlderGames": "אין משחקים נוספים",
+    "pullUpForPreviousGames": "משוך מעלה לטעינת משחקים קודמים"
 }

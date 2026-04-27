@@ -1474,6 +1474,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Update Now'**
   String get forceUpdateButton;
+
+  /// No description provided for @backToToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get backToToday;
+
+  /// No description provided for @loadingPreviousGames.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading previous games...'**
+  String get loadingPreviousGames;
+
+  /// No description provided for @noOlderGames.
+  ///
+  /// In en, this message translates to:
+  /// **'No older games'**
+  String get noOlderGames;
+
+  /// No description provided for @pullUpForPreviousGames.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull up for previous games'**
+  String get pullUpForPreviousGames;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

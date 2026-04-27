@@ -241,6 +241,9 @@
     "continueButton": "Continue",
     "forceUpdateTitle": "Update Required! 🚀",
     "forceUpdateContent": "Your version is too old and is no longer supported.\nTo continue playing, you must download the new version.",
-    "forceUpdateButton": "Update Now"
-   
+    "forceUpdateButton": "Update Now",
+    "backToToday": "Today",
+    "loadingPreviousGames": "Loading previous games...",
+    "noOlderGames": "No older games",
+    "pullUpForPreviousGames": "Pull up for previous games"
 }
