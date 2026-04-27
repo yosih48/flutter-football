@@ -70,9 +70,12 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
   bool _showOnlyLiveGames = false;
   DateTime? _selectedDate;
 
-  // ── Date window ──────────────────────────────────────────────────────
-  late DateTime _earliestVisibleDate;
-  bool _noMorePreviousGames = false;
+  // ── Scroll anchoring ─────────────────────────────────────────────────
+  // CustomScrollView center key: anchors "today + future" so prepended past
+  // days extend into negative scroll offsets without ever visually jumping.
+  final Key _centerKey = UniqueKey();
+  final Map<DateTime, GlobalKey> _dateKeys = {};
+  bool _isViewingPast = false;
 
   // ── Loading / refresh ────────────────────────────────────────────────
   bool _isLoading = true;
@@ -95,15 +98,23 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     _clientId = widget.authProvider.currentUser?.id ?? '';
     _email = widget.authProvider.currentUser?.email ?? '';
     _selectedChipLeagueId = widget.userProvider.selectedLeageId ?? -1;
-    final now = DateTime.now();
-    _earliestVisibleDate = DateTime(now.year, now.month, now.day);
+    _scrollController.addListener(_onScroll);
     _bootstrap();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final past = _scrollController.offset < -50;
+    if (past != _isViewingPast) {
+      setState(() => _isViewingPast = past);
+    }
   }
 
   @override
   void dispose() {
     _refreshTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     for (final c in _guessControllers.values) {
       c['home']?.dispose();
@@ -277,13 +288,6 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
       list = list.where((g) => userLive.contains(g.status.short));
     }
 
-    final lowerBound = _selectedDate ?? _earliestVisibleDate;
-    final lb = DateTime(lowerBound.year, lowerBound.month, lowerBound.day);
-    list = list.where((g) {
-      final d = DateTime(g.date.year, g.date.month, g.date.day);
-      return !d.isBefore(lb);
-    });
-
     return list.toList()..sort((a, b) => a.date.compareTo(b.date));
   }
 
@@ -296,47 +300,16 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     return m;
   }
 
-  // ── Scroll-up: just expand the date window (no I/O) ──────────────────
-  void _loadPreviousDay() {
-    if (_noMorePreviousGames) return;
-
-    DateTime? earliestInData;
-    for (final g in _allGames) {
-      final d = DateTime(g.date.year, g.date.month, g.date.day);
-      if (earliestInData == null || d.isBefore(earliestInData)) {
-        earliestInData = d;
-      }
-    }
-
-    final newEarliest = _earliestVisibleDate.subtract(const Duration(days: 1));
-    if (earliestInData != null && newEarliest.isBefore(earliestInData)) {
-      setState(() => _noMorePreviousGames = true);
-      return;
-    }
-    setState(() => _earliestVisibleDate = newEarliest);
-  }
-
+  // Animate to today (offset 0 == start of the center sliver).
   void _jumpToToday() {
-    final now = DateTime.now();
-    setState(() {
-      _earliestVisibleDate = DateTime(now.year, now.month, now.day);
-      _noMorePreviousGames = false;
-      _selectedDate = null;
-    });
+    setState(() => _selectedDate = null);
     if (_scrollController.hasClients) {
-      _scrollController.animateTo(0,
-          duration: const Duration(milliseconds: 400), curve: Curves.easeOut);
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOut,
+      );
     }
-  }
-
-  bool get _isViewingPast {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    return _earliestVisibleDate.isBefore(today) ||
-        (_selectedDate != null &&
-            DateTime(_selectedDate!.year, _selectedDate!.month,
-                    _selectedDate!.day)
-                .isBefore(today));
   }
 
   // ── Chips / filters ──────────────────────────────────────────────────
@@ -386,13 +359,21 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
         );
       },
     );
-    if (picked != null) {
-      setState(() {
-        _selectedDate = picked;
-        _earliestVisibleDate = DateTime(picked.year, picked.month, picked.day);
-        _noMorePreviousGames = false;
-      });
-    }
+    if (picked == null) return;
+    final target = DateTime(picked.year, picked.month, picked.day);
+    setState(() => _selectedDate = target);
+    // Wait one frame so the date section is laid out before we scroll to it.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _dateKeys[target]?.currentContext;
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          alignment: 0,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   // ── Submit guesses ───────────────────────────────────────────────────
@@ -600,7 +581,6 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
   Widget build(BuildContext context) {
     final filteredGames = _filteredGames();
     final grouped = _groupByDate(filteredGames);
-    final sortedDates = grouped.keys.toList()..sort();
 
     final chipOptions = _enabledLeagues
         .map((id) => getLocalizedLeagueName(id, context))
@@ -692,7 +672,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
             Expanded(
               child: Stack(
                 children: [
-                  _buildGamesList(filteredGames, sortedDates, grouped),
+                  _buildGamesList(grouped),
                   if (_isViewingPast)
                     Positioned(
                       bottom: 16,
@@ -760,131 +740,98 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     );
   }
 
-  Widget _buildGamesList(List<Game> filteredGames, List<DateTime> sortedDates,
-      Map<DateTime, List<Game>> groupedGames) {
+  Widget _buildGamesList(Map<DateTime, List<Game>> groupedGames) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    final effectiveGroupedGames = _isLoading
-        ? {today: List.generate(3, (i) => _skeletonGame(today, i))}
-        : groupedGames;
-    final effectiveSortedDates = _isLoading ? [today] : sortedDates;
-
-    if (!_isLoading && _allGames.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    if (_isLoading) {
+      // Simple skeleton list — no anchoring needed during initial load.
+      return Skeletonizer(
+        enabled: true,
+        child: ListView(
           children: [
-            const Icon(Icons.scoreboard_outlined,
-                size: 48, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text(
-              AppLocalizations.of(context)!.nogames,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-              ),
+            _buildDateSection(
+              today,
+              List.generate(3, (i) => _skeletonGame(today, i)),
             ),
           ],
         ),
       );
     }
 
-    if (!_isLoading && groupedGames.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              _showOnlyLiveGames
-                  ? Icons.live_tv
-                  : Icons.scoreboard_outlined,
-              size: 48,
-              color: Colors.grey,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _showOnlyLiveGames
-                  ? AppLocalizations.of(context)!.nolivegames
-                  : AppLocalizations.of(context)!.nogames,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+    if (_allGames.isEmpty) {
+      return _buildEmptyState(
+        icon: Icons.scoreboard_outlined,
+        message: AppLocalizations.of(context)!.nogames,
+      );
+    }
+    if (groupedGames.isEmpty) {
+      return _buildEmptyState(
+        icon:
+            _showOnlyLiveGames ? Icons.live_tv : Icons.scoreboard_outlined,
+        message: _showOnlyLiveGames
+            ? AppLocalizations.of(context)!.nolivegames
+            : AppLocalizations.of(context)!.nogames,
       );
     }
 
-    return Skeletonizer(
-      enabled: _isLoading,
-      child: NotificationListener<OverscrollNotification>(
-        onNotification: (n) {
-          if (n.overscroll < 0 && !_noMorePreviousGames) {
-            _loadPreviousDay();
-          }
-          return false;
-        },
-        child: ListView.builder(
-          controller: _scrollController,
-          itemCount: effectiveSortedDates.length + 1,
-          itemBuilder: (context, index) {
-            if (index == 0) return _buildTopIndicator();
-            final date = effectiveSortedDates[index - 1];
-            final gamesForDate = effectiveGroupedGames[date]!
-              ..sort((a, b) => a.date.compareTo(b.date));
-            return _buildDateSection(date, gamesForDate);
-          },
+    final pastDates = groupedGames.keys.where((d) => d.isBefore(today)).toList()
+      ..sort((a, b) => b.compareTo(a)); // newest past day closest to center
+    final currentDates = groupedGames.keys
+        .where((d) => !d.isBefore(today))
+        .toList()
+      ..sort();
+
+    return CustomScrollView(
+      controller: _scrollController,
+      center: _centerKey,
+      slivers: [
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (ctx, i) {
+              final date = pastDates[i];
+              return _buildKeyedDateSection(date, groupedGames[date]!);
+            },
+            childCount: pastDates.length,
+          ),
         ),
-      ),
+        SliverList(
+          key: _centerKey,
+          delegate: SliverChildBuilderDelegate(
+            (ctx, i) {
+              final date = currentDates[i];
+              return _buildKeyedDateSection(date, groupedGames[date]!);
+            },
+            childCount: currentDates.length,
+          ),
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 80)),
+      ],
     );
   }
 
-  Widget _buildTopIndicator() {
-    if (_noMorePreviousGames) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12.0),
-        child: Center(
-          child: Text(
-            AppLocalizations.of(context)!.noOlderGames,
-            style: TextStyle(color: Colors.grey[600], fontSize: 12),
-          ),
-        ),
-      );
-    }
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.0),
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.blue.withOpacity(0.3),
-              width: 1,
+  Widget _buildKeyedDateSection(DateTime date, List<Game> games) {
+    games.sort((a, b) => a.date.compareTo(b.date));
+    final key = _dateKeys.putIfAbsent(date, () => GlobalKey());
+    return KeyedSubtree(key: key, child: _buildDateSection(date, games));
+  }
+
+  Widget _buildEmptyState({required IconData icon, required String message}) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 48, color: Colors.grey),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.keyboard_arrow_up,
-                  color: Colors.blue, size: 16),
-              const SizedBox(width: 4),
-              Text(
-                AppLocalizations.of(context)!.pullUpForPreviousGames,
-                style: const TextStyle(
-                  color: Colors.blue,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }
