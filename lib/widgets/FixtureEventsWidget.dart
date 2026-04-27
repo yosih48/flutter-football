@@ -402,7 +402,7 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
         padding: const EdgeInsets.all(24),
         child: CircularProgressIndicator(
           strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(primary),
+          valueColor: AlwaysStoppedAnimation<Color>(blue),
         ),
       ),
     );
