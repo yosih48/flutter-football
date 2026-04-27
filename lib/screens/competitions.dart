@@ -75,9 +75,10 @@ class _CompetitionsState extends State<Competitions> {
         // Clear LeagueDataProvider cache after successful update
             final authProvider = Provider.of<AuthProvider>(context, listen: false);
       
-          // Update the current user object to reflect isFirstLogin: false
-          // You might need to add a method to update this in your User model
               await markFirstLoginComplete();
+              // Sync in-memory user + prefs cache so a restart with a failed
+              // /users/:id refresh doesn't bounce the user back here.
+              await authProvider.markCurrentUserAsReturning();
       
         if (!mounted) return;
 

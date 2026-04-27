@@ -121,9 +121,11 @@ class AuthService {
           'name': responseBody['displayName'],
           'admin': responseBody['isAdmin'],
           'email': responseBody['email'],
-          'newToken':
-              responseBody['newToken'], // Assuming this exists in the response
+          'newToken': responseBody['newToken'],
+          'fcmToken': responseBody['fcmToken'],
+          'isFirstLogin': responseBody['isFirstLogin'] ?? false,
           'groups': responseBody['groupID'],
+          'groupID': responseBody['groupID'],
         };
         user = User.fromJson(userMap);
         print('responseBody is map');
@@ -289,6 +291,26 @@ class AuthProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  // Update local state + prefs to reflect that isFirstLogin is now false.
+  // Call this right after the server's mark-first-login-complete succeeds
+  // so we don't have to wait for the next refresh to pick up the new value.
+  Future<void> markCurrentUserAsReturning() async {
+    if (_currentUser == null) return;
+    _currentUser = User(
+      id: _currentUser!.id,
+      name: _currentUser!.name,
+      admin: _currentUser!.admin,
+      email: _currentUser!.email,
+      isFirstLogin: false,
+      newToken: _currentUser!.newToken,
+      fcmToken: _currentUser!.fcmToken,
+      groups: _currentUser!.groups,
+      groupID: _currentUser!.groupID,
+    );
+    await _saveUserToPrefs(_currentUser!);
+    notifyListeners();
   }
 
   Future<void> refreshUser(String token, String userId) async {

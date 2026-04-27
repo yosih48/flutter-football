@@ -41,15 +41,15 @@ void main() async {
   // Ensure that plugin services are initialized
   WidgetsFlutterBinding.ensureInitialized();
 
-  final authProvider = AuthProvider();
-  await authProvider.initializeApp();
-
-  final storage = FlutterSecureStorage();
-
+  // Firebase must be initialized BEFORE AuthProvider, because AuthProvider's
+  // refreshUser() resolves the backend URL via RemoteConfigService, whose
+  // singleton constructor reads FirebaseRemoteConfig.instance.
   await Firebase.initializeApp();
   await RemoteConfigService().initialize();
-
   await FirebaseMessagingService.initialize();
+
+  final authProvider = AuthProvider();
+  await authProvider.initializeApp();
   // You can now use the storage in your AuthProvider if needed
   runApp(
     MultiProvider(
