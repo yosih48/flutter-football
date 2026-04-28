@@ -1498,6 +1498,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pull up for previous games'**
   String get pullUpForPreviousGames;
+
+  /// No description provided for @noWinnersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your champion at the start of each season'**
+  String get noWinnersHint;
+
+  /// No description provided for @noTopScorersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick who you think will score the most goals'**
+  String get noTopScorersHint;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

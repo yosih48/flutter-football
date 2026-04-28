@@ -444,5 +444,7 @@
     "backToToday": "היום",
     "loadingPreviousGames": "טוען משחקים קודמים...",
     "noOlderGames": "אין משחקים נוספים",
-    "pullUpForPreviousGames": "משוך מעלה לטעינת משחקים קודמים"
+    "pullUpForPreviousGames": "משוך מעלה לטעינת משחקים קודמים",
+    "noWinnersHint": "בחר את הקבוצה הזוכה בתחילת כל עונה",
+    "noTopScorersHint": "בחר את השחקן שיכבוש הכי הרבה שערים"
 }

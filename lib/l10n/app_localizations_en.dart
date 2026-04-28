@@ -709,4 +709,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pullUpForPreviousGames => 'Pull up for previous games';
+
+  @override
+  String get noWinnersHint =>
+      'Choose your champion at the start of each season';
+
+  @override
+  String get noTopScorersHint =>
+      'Pick who you think will score the most goals';
 }

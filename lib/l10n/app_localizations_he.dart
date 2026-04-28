@@ -709,4 +709,10 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get pullUpForPreviousGames => 'משוך מעלה לטעינת משחקים קודמים';
+
+  @override
+  String get noWinnersHint => 'בחר את הקבוצה הזוכה בתחילת כל עונה';
+
+  @override
+  String get noTopScorersHint => 'בחר את השחקן שיכבוש הכי הרבה שערים';
 }

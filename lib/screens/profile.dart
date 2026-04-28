@@ -1,38 +1,20 @@
-import 'dart:convert';
-import 'dart:math';
+import 'package:flutter/material.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/resources/auth.dart';
-import 'package:football/resources/groupsMethods.dart';
-
-
-import 'package:football/screens/login_screen.dart';
-import 'package:football/screens/table.dart';
-import 'package:football/theme/colors.dart';
-import 'package:football/utils/config.dart';
-import 'package:football/widgets/SharedPreferences.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter/material.dart';
 import 'package:football/resources/usersMethods.dart';
-import 'package:provider/provider.dart';
+import 'package:football/screens/login_screen.dart';
+import 'package:football/theme/colors.dart';
 import 'package:football/l10n/app_localizations.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:football/screens/account_screen.dart';
+import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import 'package:football/providers/theme_provider.dart';
 
-import 'instructionsb.dart';
-
-
-// AppLocalizations.of(context)!.assigncall
 class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer2<AuthProvider, UserProvider>(
       builder: (context, authProvider, userProvider, child) {
-        // Check if user is authenticated
         if (authProvider.currentUser == null) {
-          return LoginScreen(); // Or some other widget for unauthenticated users
+          return LoginScreen();
         }
         return ProfileScreenContent(
           authProvider: authProvider,
@@ -51,357 +33,48 @@ class ProfileScreenContent extends StatefulWidget {
     required this.authProvider,
     required this.userProvider,
   });
+
   @override
   _ProfileScreenContentState createState() => _ProfileScreenContentState();
 }
 
 class _ProfileScreenContentState extends State<ProfileScreenContent> {
-  Map<String, String> _userGroups = {};
   Map<String, String> _userWinners = {};
   Map<String, String> _userTopScorer = {};
   Map<String, int> _userTopScorerPoints = {};
-  List<Map<String, dynamic>> _groupsInfo = [];
-  bool _isLoadingGroups = true;
-  bool _showWinners = true; // Toggle state for Winners/Top Scorers
+  bool _isLoading = true;
+  bool _showWinners = true;
   late String currentUserId;
   late String currentUserEmail;
-  TextEditingController _groupNameController = TextEditingController();
-  Map<String, dynamic> user = {};
-  late String selectedGroupName = "";
-  //  const _baseUrl = 'https://leagues.onrender.com';
-  String _baseUrl = backendUrl;
+  late String currentUserName;
+
   @override
   void initState() {
     super.initState();
-    currentUserId = widget.authProvider.currentUser?.id ?? 'Not logged in';
-    currentUserEmail =
-        widget.authProvider.currentUser?.email ?? 'Not logged in';
-   
-    _fetchUserData();
-    _initializeGroupSelection(); 
+    currentUserId = widget.authProvider.currentUser?.id ?? '';
+    currentUserEmail = widget.authProvider.currentUser?.email ?? '';
+    currentUserName = widget.authProvider.currentUser?.name ?? '';
+    _fetchPersonalData();
   }
 
-Future<void> _initializeGroupSelection() async {
-    await _fetchUserGroups(); // Fetch groups first
-    await _loadSelectedGroupName(); // Then load/set the selected group
-  }
-
-Future<void> _loadSelectedGroupName() async {
-    final sharedGroupName = await SharedPreferencesUtil.getSelectedGroupName();
-    String groupName;
-
-    if (sharedGroupName == null) {
-      // Use first group from user's groups as default, fallback to 'public'
-      if (_userGroups.isNotEmpty) {
-        groupName = _userGroups.values.first;
-      } else {
-        groupName = 'public'; // Fallback if no groups exist
-      }
-      await SharedPreferencesUtil.setSelectedGroupName(groupName);
-    } else {
-      groupName = sharedGroupName;
-    }
-
-    setState(() {
-      selectedGroupName = groupName;
-    });
-    print('selectedGroupName shared: ${selectedGroupName}');
-  }
-
- Future<void> _fetchUserGroups() async {
+  Future<void> _fetchPersonalData() async {
     try {
-      Map<String, dynamic> userData =
-          await UsersMethods().fetchUserById(currentUserId);
-      List<Map<String, dynamic>> groupsInfo =
-          await GroupsMethods().fetchGroups();
-
+      final userData = await UsersMethods().fetchUserById(currentUserId);
+      if (!mounted) return;
       setState(() {
-        _userGroups = Map<String, String>.from(userData['groupID'] ?? {});
         _userWinners = Map<String, String>.from(userData['winner'] ?? {});
-        _userTopScorer = Map<String, String>.from(userData['topScorer'] ?? {});
+        _userTopScorer =
+            Map<String, String>.from(userData['topScorer'] ?? {});
         _userTopScorerPoints =
             Map<String, int>.from(userData['topScorerPoints'] ?? {});
-        _groupsInfo = groupsInfo;
-
-        // Remove the complex default group selection logic from here
-        // It's now handled in _loadSelectedGroupName()
-
-        Provider.of<UserProvider>(context, listen: false)
-            .setCurrentUser(currentUserId);
-        _isLoadingGroups = false;
+        _isLoading = false;
       });
+      Provider.of<UserProvider>(context, listen: false)
+          .setCurrentUser(currentUserId);
     } catch (e) {
-      print('Failed to fetch user groups: $e');
-      setState(() {
-        _isLoadingGroups = false;
-      });
+      print('Failed to fetch personal data: $e');
+      if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  Future<void> leaveGroup(String groupName) async {
-    // Find the group ID to delete
-    String? groupIdToDelete = _userGroups.entries
-        .firstWhere((entry) => entry.value == groupName,
-            orElse: () => MapEntry('', ''))
-        .key;
-
-    if (groupIdToDelete.isEmpty) {
-      print('Group not found');
-      return;
-    }
-
-    // Show confirmation dialog
-    bool isConfirmed = await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: cards,
-          title: Text(
-            AppLocalizations.of(context)!.leavethegroup,
-            style: TextStyle(color: Colors.white),
-          ),
-          content: Text(
-            AppLocalizations.of(context)!.leavegroup,
-            style: TextStyle(color: Colors.white),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text(
-                AppLocalizations.of(context)!.cancel,
-                style: TextStyle(color: Colors.blue),
-              ),
-              onPressed: () => Navigator.of(context).pop(false),
-            ),
-            TextButton(
-                child: Text(
-                  AppLocalizations.of(context)!.leave,
-                  style: TextStyle(color: Colors.blue),
-                ),
-                onPressed: () async {
-                  final sharedGroupName =
-                      await SharedPreferencesUtil.getSelectedGroupName();
-
-                  Navigator.of(context).pop(true);
-                  if (sharedGroupName == groupName) {
-                    await SharedPreferencesUtil.setSelectedGroupName('public');
-
-                    _loadSelectedGroupName();
-                  }
-                }),
-          ],
-        );
-      },
-    );
-
-    if (isConfirmed == true) {
-      // Remove the group from the local state
-      setState(() {
-        _userGroups.remove(groupIdToDelete);
-      });
-
-      // Update the server
-      try {
-        final response = await http.put(
-          Uri.parse('$_baseUrl/users/'),
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-          body: jsonEncode(<String, dynamic>{
-            '_id': currentUserId,
-            'groupID': _userGroups,
-          }),
-        );
-
-        if (response.statusCode == 200) {
-          print('Successfully left the group');
-          // You might want to update the UserProvider here
-          // Provider.of<UserProvider>(context, listen: false).updateGroups(_userGroups);
-        } else {
-          print('Failed to leave group. Status code: ${response.statusCode}');
-          // Revert the local change if the server update failed
-          await _fetchUserGroups();
-        }
-      } catch (e) {
-        print('Error leaving group: $e');
-        // Revert the local change if there was an error
-        await _fetchUserGroups();
-      }
-    } else {
-      print('Group leaving cancelled by user');
-    }
-  }
-
-  Future<void> _createNewGroup(String groupName) async {
-    final url = Uri.parse('$_baseUrl/groups/add');
-    try {
-      final response = await http.post(
-        url,
-        body: jsonEncode({
-          'name': groupName,
-          'createdBy': currentUserId,
-          'type': 'private',
-          'code': DateTime.now().millisecondsSinceEpoch,
-        }),
-        headers: {
-          'Content-type': 'application/json; charset=UTF-8',
-          // 'Authorization': 'Bearer ${userToken}', // Uncomment if needed
-        },
-      );
-      final responseData = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        // Group created successfully
-          ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.groupcreatedsuccessfully),
-            // backgroundColor: Colors.grey[800],
-            duration: Duration(seconds: 3),
-          ),
-        );
-        await _addGroupToUser(groupName);
-       } else {
-        // Handle error from server
-        String errorMessage = responseData['msg'] ?? 'Unknown error occurred';
- 
- if(errorMessage == 'group name is already exist'){
-  errorMessage = AppLocalizations.of(context)!.groupnamealreadyexists;
- }       // Display error message to user
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      } 
-    } catch (e) {
-      print('Error creating group: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error creating group: ${e.toString()}'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 3),
-        ),
-      );
-    }
-  }
-
-  Future<void> _fetchUserData() async {
-    // Fetch user data including groupID
-    // This is a placeholder - replace with your actual API call
-    try {
-      final _user = await UsersMethods().fetchUserById(currentUserId);
-
-      print('_user: ${_user}');
-      setState(() {
-        user = Map<String, String>.from(_user['groupID'] ?? {});
-        print(' user: ${user}');
-      });
-    } catch (e) {
-      print('Error fetching user data: $e');
-    }
-  }
-
-  Future<void> _addGroupToUser(String groupName) async {
-    final existingGroupKeys =
-        user?.keys?.map((key) => int.parse(key))?.toList() ?? [];
-    final nextKey = existingGroupKeys.isEmpty
-        ? 1
-        : (existingGroupKeys.reduce(max) + 1).toString();
-
-    final url = Uri.parse('$_baseUrl/users/');
-    try {
-      final response = await http.put(
-        url,
-        body: jsonEncode({
-          '_id': currentUserId,
-          'groups': user['groupID'],
-          'email': currentUserEmail,
-          '\$set': {
-            'groupID.$nextKey': groupName,
-          },
-        }),
-        headers: {
-          'Content-type': 'application/json; charset=UTF-8',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['message'] == 'Group name already exists') {
-          print('Group name already exists');
-          // Show snackbar or alert
-        } else {
-          print('User updated successfully');
-          // Show success snackbar
-          _fetchUserGroups(); // Refresh user data
-        }
-      } else {
-        print('User update failed with status: ${response.statusCode}');
-        // Show error snackbar
-      }
-    } catch (e) {
-      print('Error updating user: $e');
-      // Show error snackbar
-    }
-  }
-
-  void _showCreateGroupDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: cards,
-          title: Text(
-            AppLocalizations.of(context)!.createnewgroup,
-            style: TextStyle(color: Colors.white, fontSize: 14),
-          ),
-          content: TextField(
-            controller: _groupNameController,
-            decoration: InputDecoration(
-              labelText: AppLocalizations.of(context)!.entergroupname,
-              labelStyle: TextStyle(
-                color: Colors.blue, // Change this to your desired color
-              ),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(
-                    color: Colors.blue), // Bottom border color when enabled
-              ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.blue, width: 2.0),
-                // Bottom border color when focused, with thicker border
-              ),
-            ),
-            style: TextStyle(
-              color: Colors.white, // Change the input text color to blue
-            ),
-            cursorColor: Colors.blue,
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text(AppLocalizations.of(context)!.cancel,
-                  style: TextStyle(color: Colors.blue)),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white, // Set button background to white
-              ),
-              child: Text(AppLocalizations.of(context)!.create,
-                  style: TextStyle(color: Colors.blue)),
-              onPressed: () {
-                if (_groupNameController.text.isNotEmpty) {
-                  _createNewGroup(_groupNameController.text);
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -413,465 +86,219 @@ Future<void> _loadSelectedGroupName() async {
       map[entry.key] = entry.value;
       return map;
     });
-    final selectedGroup = Provider.of<UserProvider>(context);
 
     return Scaffold(
-    backgroundColor:  background,
-      //  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-    
+      backgroundColor: background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [
-          // IconButton(
-          //   icon: Icon(Icons.help_center_outlined, color: Colors.blue),
-          //   tooltip: 'How to Play',
-          //   onPressed: () => showInstructionsBottomSheet(context),
-          // ),
-          // Container(
-          //   margin: EdgeInsets.only(left: 8),
-          //   child: TextButton.icon(
-          //     style: TextButton.styleFrom(
-          //       backgroundColor: Colors.blue.withOpacity(0.1),
-          //       shape: RoundedRectangleBorder(
-          //         borderRadius: BorderRadius.circular(12),
-          //       ),
-          //       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          //     ),
-          //     icon: Icon(Icons.account_circle, color: Colors.blue),
-          //     label: Text(
-          //       AppLocalizations.of(context)?.account ?? 'Account',
-          //       style: TextStyle(color: Colors.blue),
-          //     ),
-          //     onPressed: () {
-          //       Navigator.push(
-          //         context,
-          //         MaterialPageRoute(
-          //           builder: (context) => AccountScreen(),
-          //         ),
-          //       );
-          //     },
-          //   ),
-          // )
-        ],
       ),
       extendBodyBehindAppBar: true,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF16181b), Color(0xFF16181b)],
-          ),
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: kToolbarHeight + 20),
-              SizedBox(
-                height: 25,
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: kToolbarHeight + 20),
+            _buildPersonalHeader(),
+            SizedBox(height: 32),
+            _buildToggle(),
+            SizedBox(height: 16),
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: cards.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(16),
               ),
-              // Profile Header
-              Container(
-                margin: EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)!.mygroups,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                       
-//                  Consumer<ThemeProvider>(
-//   builder: (context, themeProvider, _) {
-//     return Row(
-//       children: [
-//         Icon(
-//           themeProvider.isDarkMode
-//               ? Icons.dark_mode
-//               : Icons.light_mode,
-//           color: Colors.blue,
-//         ),
-//         Switch(
-//           value: themeProvider.isDarkMode,
-//           onChanged: (value) {
-//             themeProvider.toggleTheme(); // Remove the parameter
-//           },
-//           activeColor: Colors.blue,
-//         ),
-//       ],
-//     );
-//   },
-// )
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              SizedBox(height: 16),
-
-              // Create Group Button
-              Container(
-                margin: EdgeInsets.symmetric(horizontal: 16),
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.withOpacity(0.1),
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  icon: Icon(
-                    Icons.add_circle_outline,
-                    color: Colors.blue,
-                    size: 20,
-                  ),
-                  label: Text(
-                    AppLocalizations.of(context)!.createnewgroup,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.blue,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  onPressed: _showCreateGroupDialog,
-                ),
-              ),
-
-              SizedBox(height: 24),
-
-              // Groups List
-              Container(
-                margin: EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: cards.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Skeletonizer(
-                  enabled: _isLoadingGroups,
-                  child: _isLoadingGroups
-                      ? ListView.separated(
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          padding: EdgeInsets.all(4),
-                          itemCount: 3,
-                          separatorBuilder: (context, index) => Divider(
-                            color: Colors.white.withOpacity(0.1),
-                            height: 1,
-                          ),
-                          itemBuilder: (context, index) {
-                            return ListTile(
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 4),
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.blue.withOpacity(0.1),
-                                child: Text(
-                                  'G',
-                                  style: TextStyle(
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              title: Text(
-                                'Group Name Placeholder',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: Icon(Icons.exit_to_app,
-                                        color: Colors.red.withOpacity(0.7)),
-                                    onPressed: null,
-                                  ),
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.star,
-                                      color: Colors.amber,
-                                    ),
-                                    onPressed: null,
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+              constraints: BoxConstraints(minHeight: 220),
+              child: Skeletonizer(
+                enabled: _isLoading,
+                child: AnimatedSwitcher(
+                  duration: Duration(milliseconds: 300),
+                  child: _showWinners
+                      ? usersWinners(
+                          key: ValueKey('winners'),
+                          userWinners: _isLoading
+                              ? {'2': 'Loading', '39': 'Loading'}
+                              : _userWinners,
+                          filteredWinners: _isLoading
+                              ? {'2': 'Loading', '39': 'Loading'}
+                              : filteredWinners,
                         )
-                      : usersGroups(selectedGroup),
+                      : usersTopScorers(
+                          key: ValueKey('topScorers'),
+                          userTopScorers: _isLoading
+                              ? {'2': 'Loading', '39': 'Loading'}
+                              : _userTopScorer,
+                          userTopScorerPoints: _isLoading
+                              ? {'2': 10, '39': 20}
+                              : _userTopScorerPoints,
+                          filteredTopScorers: _isLoading
+                              ? {'2': 'Loading', '39': 'Loading'}
+                              : _userTopScorer.entries
+                                  .where((entry) =>
+                                      allowedGroupIds.contains(entry.key))
+                                  .fold<Map<String, String>>({},
+                                      (map, entry) {
+                                  map[entry.key] = entry.value;
+                                  return map;
+                                }),
+                        ),
                 ),
               ),
-
-              SizedBox(height: 24),
-
-              // Winners/Top Scorers Toggle Section
-              if (_isLoadingGroups || _userWinners.isNotEmpty || _userTopScorer.isNotEmpty) ...[
-                Container(
-                  margin: EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => setState(() => _showWinners = true),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                                vertical: 12, horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: _showWinners
-                                  ? Colors.blue.withOpacity(0.2)
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: _showWinners
-                                    ? Colors.blue
-                                    : Colors.grey.withOpacity(0.3),
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.emoji_events,
-                                  color:
-                                      _showWinners ? Colors.blue : Colors.grey,
-                                  size: 20,
-                                ),
-                                SizedBox(width: 8),
-                                Text(
-                                  AppLocalizations.of(context)!.yourwinners,
-                                  style: TextStyle(
-                                    color: _showWinners
-                                        ? Colors.blue
-                                        : Colors.grey,
-                                    fontSize: 16,
-                                    fontWeight: _showWinners
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => setState(() => _showWinners = false),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                                vertical: 12, horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: !_showWinners
-                                  ? Colors.blue.withOpacity(0.2)
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: !_showWinners
-                                    ? Colors.blue
-                                    : Colors.grey.withOpacity(0.3),
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.sports_soccer,
-                                  color:
-                                      !_showWinners ? Colors.blue : Colors.grey,
-                                  size: 20,
-                                ),
-                                SizedBox(width: 8),
-                                Text(
-                                  AppLocalizations.of(context)!.topScorers ??
-                                      "Top Scorers",
-                                  style: TextStyle(
-                                    color: !_showWinners
-                                        ? Colors.blue
-                                        : Colors.grey,
-                                    fontSize: 16,
-                                    fontWeight: !_showWinners
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 16),
-                Container(
-                  margin: EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: cards.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Skeletonizer(
-                    enabled: _isLoadingGroups,
-                    child: AnimatedSwitcher(
-                      duration: Duration(milliseconds: 300),
-                      child: _showWinners
-                          ? usersWinners(
-                              key: ValueKey('winners'),
-                              userWinners: _isLoadingGroups
-                                  ? {'2': 'Loading', '39': 'Loading'}
-                                  : _userWinners,
-                              filteredWinners: _isLoadingGroups
-                                  ? {'2': 'Loading', '39': 'Loading'}
-                                  : filteredWinners,
-                            )
-                          : usersTopScorers(
-                              key: ValueKey('topScorers'),
-                              userTopScorers: _isLoadingGroups
-                                  ? {'2': 'Loading', '39': 'Loading'}
-                                  : _userTopScorer,
-                              userTopScorerPoints: _isLoadingGroups
-                                  ? {'2': 10, '39': 20}
-                                  : _userTopScorerPoints,
-                              filteredTopScorers: _isLoadingGroups
-                                  ? {'2': 'Loading', '39': 'Loading'}
-                                  : _userTopScorer.entries
-                                      .where((entry) =>
-                                          allowedGroupIds.contains(entry.key))
-                                      .fold<Map<String, String>>({},
-                                          (map, entry) {
-                                      map[entry.key] = entry.value;
-                                      return map;
-                                    }),
-                            ),
-                    ),
-                  ),
-                ),
-              ],
-
-              SizedBox(height: 24),
-            ],
-          ),
+            ),
+            SizedBox(height: 24),
+          ],
         ),
       ),
     );
   }
 
-  Widget usersGroups(UserProvider selectedGroup) {
-    // Filter out 'public' group
-    final filteredGroups = _userGroups.entries
-        .where((entry) => entry.value.toLowerCase() != 'public')
-        .toList();
-
-    return filteredGroups.isEmpty
-        ? Center(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.group_outlined, size: 48, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
-                    // AppLocalizations.of(context)!.nogroupsyet,
-                     AppLocalizations.of(context)!.notmemberanygroup,
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
-                  ),
-                ],
+  Widget _buildPersonalHeader() {
+    final initial =
+        currentUserName.isNotEmpty ? currentUserName[0].toUpperCase() : '?';
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 32,
+            backgroundColor: Colors.blue.withOpacity(0.2),
+            child: Text(
+              initial,
+              style: TextStyle(
+                color: Colors.blue,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          )
-        : ListView.separated(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            padding: EdgeInsets.all(4),
-            itemCount: filteredGroups.length,
-            separatorBuilder: (context, index) => Divider(
-              color: Colors.white.withOpacity(0.1),
-              height: 1,
-            ),
-            itemBuilder: (context, index) {
-              final groupEntry = filteredGroups[index];
-              final groupId = groupEntry.key;
-              final groupName = groupEntry.value;
-
-              final isCreator = _groupsInfo.any((group) =>
-                  (group['name'] == groupName &&
-                      group['createdBy'] == currentUserId));
-
-              return ListTile(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          TableScreen(selectedGroupName: groupName),
-                    ),
-                  );
-                },
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                leading: CircleAvatar(
-                  backgroundColor: Colors.blue.withOpacity(0.1),
-                  child: Text(
-                    groupName[0].toUpperCase(),
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                title: Text(
-                  groupName,
+          ),
+          SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  currentUserName.isNotEmpty ? currentUserName : '—',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 4),
+                Text(
+                  currentUserEmail,
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToggle() {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _showWinners = true),
+              child: Container(
+                padding:
+                    EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: _showWinners
+                      ? Colors.blue.withOpacity(0.2)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _showWinners
+                        ? Colors.blue
+                        : Colors.grey.withOpacity(0.3),
+                    width: 1,
                   ),
                 ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if (!isCreator)
-                      IconButton(
-                        icon: Icon(Icons.exit_to_app,
-                            color: Colors.red.withOpacity(0.7)),
-                        onPressed: () => leaveGroup(groupName),
+                    Icon(
+                      Icons.emoji_events,
+                      color: _showWinners ? Colors.blue : Colors.grey,
+                      size: 20,
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      AppLocalizations.of(context)!.yourwinners,
+                      style: TextStyle(
+                        color:
+                            _showWinners ? Colors.blue : Colors.grey,
+                        fontSize: 16,
+                        fontWeight: _showWinners
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.star,
-                        color: selectedGroupName == groupName
-                            ? Colors.amber
-                            : Colors.grey.withOpacity(0.5),
-                      ),
-                      onPressed: () async {
-                        selectedGroup.setSelectedGroupName(groupName);
-                        final prefs = await SharedPreferences.getInstance();
-                        prefs.setString('selectedGroupName', groupName);
-                        _loadSelectedGroupName();
-                      },
                     ),
                   ],
                 ),
-              );
-            },
-          );
+              ),
+            ),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _showWinners = false),
+              child: Container(
+                padding:
+                    EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: !_showWinners
+                      ? Colors.blue.withOpacity(0.2)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: !_showWinners
+                        ? Colors.blue
+                        : Colors.grey.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.sports_soccer,
+                      color: !_showWinners ? Colors.blue : Colors.grey,
+                      size: 20,
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      AppLocalizations.of(context)!.topScorers ??
+                          "Top Scorers",
+                      style: TextStyle(
+                        color:
+                            !_showWinners ? Colors.blue : Colors.grey,
+                        fontSize: 16,
+                        fontWeight: !_showWinners
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -890,16 +317,39 @@ class usersWinners extends StatelessWidget {
     return _userWinners.isEmpty
         ? Center(
             child: Padding(
-              padding: EdgeInsets.all(24),
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.emoji_events_outlined,
-                      size: 48, color: Colors.grey),
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.emoji_events_outlined,
+                        size: 36, color: Colors.blue),
+                  ),
                   SizedBox(height: 16),
                   Text(
                     AppLocalizations.of(context)!.noWinnersYet,
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 6),
+                  Text(
+                    AppLocalizations.of(context)!.noWinnersHint,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.grey[400],
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
                   ),
                 ],
               ),
@@ -946,10 +396,6 @@ class usersWinners extends StatelessWidget {
                   leagueName = AppLocalizations.of(context)!.conferenceleague;
                   leagueColor = Colors.purple;
                   break;
-                // case '15':
-                //   leagueName = AppLocalizations.of(context)!.clubworldcup;
-                //   leagueColor = Colors.purple;
-                //   break;
               }
 
               return ListTile(
@@ -1027,16 +473,39 @@ class usersTopScorers extends StatelessWidget {
     return filteredTopScorers.isEmpty
         ? Center(
             child: Padding(
-              padding: EdgeInsets.all(24),
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.sports_soccer_outlined,
-                      size: 48, color: Colors.grey),
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.sports_soccer_outlined,
+                        size: 36, color: Colors.blue),
+                  ),
                   SizedBox(height: 16),
                   Text(
                     AppLocalizations.of(context)!.noTopScorersYet,
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 6),
+                  Text(
+                    AppLocalizations.of(context)!.noTopScorersHint,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.grey[400],
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
                   ),
                 ],
               ),
@@ -1083,10 +552,6 @@ class usersTopScorers extends StatelessWidget {
                   leagueName = AppLocalizations.of(context)!.conferenceleague;
                   leagueColor = Colors.purple;
                   break;
-                // case '15':
-                //   leagueName = AppLocalizations.of(context)!.clubworldcup;
-                //   leagueColor = Colors.purple;
-                //   break;
               }
 
               return ListTile(
@@ -1128,56 +593,21 @@ class usersTopScorers extends StatelessWidget {
                         fontSize: 14,
                       ),
                     ),
-                    SizedBox(
-                      width: 5,
+                    SizedBox(width: 5),
+                    Text(
+                      '${userTopScorerPoints[groupId] ?? 0}'
+                      ' ${AppLocalizations.of(context)!.pst}',
+                      style: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 14,
+                      ),
                     ),
-                    if (userTopScorerPoints[groupId] != null)
-                      Text(
-                        '${userTopScorerPoints[groupId]}'
-                        ' ${AppLocalizations.of(context)!.pst}',
-                        style: TextStyle(
-                          color: Colors.grey[400],
-                          fontSize: 14,
-                        ),
-                      ),
-                    if (userTopScorerPoints[groupId] == null)
-                      Text(
-                        '0' ' ${AppLocalizations.of(context)!.pst}',
-                        style: TextStyle(
-                          color: Colors.grey[400],
-                          fontSize: 14,
-                        ),
-                      ),
                   ],
                 ),
                 trailing: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    // Points display
-                    // if (userTopScorerPoints[groupId] != null) ...[
-                    //   Container(
-                    //     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    //     decoration: BoxDecoration(
-                    //       color: Colors.green.withOpacity(0.1),
-                    //       borderRadius: BorderRadius.circular(12),
-                    //       border: Border.all(
-                    //         color: Colors.green.withOpacity(0.3),
-                    //         width: 1,
-                    //       ),
-                    //     ),
-                    //     child: Text(
-                    //       '${userTopScorerPoints[groupId]}' ' ${AppLocalizations.of(context)!.pst}',
-                    //       style: TextStyle(
-                    //         color: Colors.green,
-                    //         fontWeight: FontWeight.bold,
-                    //         fontSize: 12,
-                    //       ),
-                    //     ),
-                    //   ),
-                    //   SizedBox(height: 6),
-                    // ],
-                    // Player name display
                     Container(
                       padding:
                           EdgeInsets.symmetric(horizontal: 12, vertical: 6),

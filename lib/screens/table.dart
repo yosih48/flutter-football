@@ -15,6 +15,7 @@ import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/screens/statistics.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/utils/config.dart';
 import 'package:football/widgets/SharedPreferences.dart';
 import 'package:football/widgets/toggleButton.dart';
 import 'package:provider/provider.dart';
@@ -26,8 +27,10 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 class TableScreen extends StatelessWidget {
   final String? selectedGroupName;
+  // 'create' / 'join' / null — auto-opens the matching dialog after first build.
+  final String? autoOpenAction;
 
-  TableScreen({this.selectedGroupName});
+  TableScreen({this.selectedGroupName, this.autoOpenAction});
   @override
   Widget build(BuildContext context) {
     return Consumer2<AuthProvider, UserProvider>(
@@ -40,6 +43,7 @@ class TableScreen extends StatelessWidget {
           authProvider: authProvider,
           userProvider: userProvider,
           selectedGroupName: selectedGroupName,
+          autoOpenAction: autoOpenAction,
         );
       },
     );
@@ -50,11 +54,13 @@ class TableScreenContent extends StatefulWidget {
   final AuthProvider authProvider;
   final UserProvider userProvider;
   final String? selectedGroupName;
+  final String? autoOpenAction;
 
   TableScreenContent({
     required this.authProvider,
     required this.userProvider,
     this.selectedGroupName,
+    this.autoOpenAction,
   });
 
   @override
@@ -71,8 +77,17 @@ class TableScreenContentState extends State<TableScreenContent> {
   bool isLoading = true;
   Map<String, String> _privateGroups = {};
   Map<String, String> _publicGroups = {};
-  //  Map<String, dynamic> user = {};
+  List<Map<String, dynamic>> _groupsInfo = [];
+  String _defaultGroupName = '';
   TextEditingController _inviteCodeController = TextEditingController();
+  final TextEditingController _groupNameController = TextEditingController();
+
+  @override
+  void dispose() {
+    _inviteCodeController.dispose();
+    _groupNameController.dispose();
+    super.dispose();
+  }
   void updateSelectedIndex(int index) {
     print(index);
     setState(() {
@@ -167,6 +182,147 @@ class TableScreenContentState extends State<TableScreenContent> {
     }
   }
 
+  Future<void> _createNewGroup(String groupName) async {
+    final url = Uri.parse('$backendUrl/groups/add');
+    try {
+      final response = await http.post(
+        url,
+        body: jsonEncode({
+          'name': groupName,
+          'createdBy': currentUserId,
+          'type': 'private',
+          'code': DateTime.now().millisecondsSinceEpoch,
+        }),
+        headers: {'Content-type': 'application/json; charset=UTF-8'},
+      );
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                AppLocalizations.of(context)!.groupcreatedsuccessfully),
+            duration: Duration(seconds: 3),
+          ),
+        );
+        await _addGroupToUser(groupName);
+      } else {
+        if (!mounted) return;
+        String errorMessage = responseData['msg'] ?? 'Unknown error occurred';
+        if (errorMessage == 'group name is already exist') {
+          errorMessage =
+              AppLocalizations.of(context)!.groupnamealreadyexists;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error creating group: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error creating group: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  Future<void> _addGroupToUser(String groupName) async {
+    Map<String, dynamic> userData;
+    try {
+      userData = await UsersMethods().fetchUserById(currentUserId);
+    } catch (e) {
+      print('Error fetching user for group add: $e');
+      return;
+    }
+    final groupID = Map<String, String>.from(userData['groupID'] ?? {});
+    final existingKeys = groupID.keys.map((k) => int.tryParse(k) ?? 0).toList();
+    final nextKey =
+        existingKeys.isEmpty ? 1 : (existingKeys.reduce(max) + 1);
+
+    final email = widget.authProvider.currentUser?.email;
+    try {
+      final response = await http.put(
+        Uri.parse('$backendUrl/users/'),
+        body: jsonEncode({
+          '_id': currentUserId,
+          'email': email,
+          '\$set': {'groupID.$nextKey': groupName},
+        }),
+        headers: {'Content-type': 'application/json; charset=UTF-8'},
+      );
+      if (response.statusCode == 200) {
+        await _initializeData();
+      } else {
+        print('User update failed with status: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error updating user: $e');
+    }
+  }
+
+  void _showCreateGroupDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          backgroundColor: cards,
+          title: Text(
+            AppLocalizations.of(ctx)!.createnewgroup,
+            style: TextStyle(color: Colors.white, fontSize: 14),
+          ),
+          content: TextField(
+            controller: _groupNameController,
+            decoration: InputDecoration(
+              labelText: AppLocalizations.of(ctx)!.entergroupname,
+              labelStyle: TextStyle(color: Colors.blue),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.blue),
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.blue, width: 2.0),
+              ),
+            ),
+            style: TextStyle(color: Colors.white),
+            cursorColor: Colors.blue,
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text(
+                AppLocalizations.of(ctx)!.cancel,
+                style: TextStyle(color: Colors.blue),
+              ),
+              onPressed: () => Navigator.of(ctx).pop(),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+              child: Text(
+                AppLocalizations.of(ctx)!.create,
+                style: TextStyle(color: Colors.blue),
+              ),
+              onPressed: () {
+                if (_groupNameController.text.isNotEmpty) {
+                  final name = _groupNameController.text;
+                  _groupNameController.clear();
+                  Navigator.of(ctx).pop();
+                  _createNewGroup(name);
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showJoinGroupDialog() {
     showDialog(
       context: context,
@@ -211,12 +367,15 @@ class TableScreenContentState extends State<TableScreenContent> {
               child: Text(AppLocalizations.of(context)!.join,
                   style: TextStyle(color: Colors.blue)),
               onPressed: () async {
-                if (_inviteCodeController.text.isNotEmpty) {
-                  await GroupsMethods().addGroupToUser(
-                      _inviteCodeController.text, currentUserId, context);
-                  _initializeData();
-                  Navigator.of(context).pop();
-                }
+                if (_inviteCodeController.text.isEmpty) return;
+                final code = _inviteCodeController.text;
+                _inviteCodeController.clear();
+                await GroupsMethods()
+                    .addGroupToUser(code, currentUserId, context);
+                if (!mounted) return;
+                await _initializeData();
+                if (!mounted) return;
+                Navigator.of(context).pop();
               },
             ),
           ],
@@ -232,6 +391,17 @@ class TableScreenContentState extends State<TableScreenContent> {
     league = widget.userProvider.selectedLeageId ?? 2;
     print('currentUserId table: ${currentUserId}');
     _initializeData();
+
+    if (widget.autoOpenAction != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (widget.autoOpenAction == 'create') {
+          _showCreateGroupDialog();
+        } else if (widget.autoOpenAction == 'join') {
+          _showJoinGroupDialog();
+        }
+      });
+    }
   }
 
   // Single initialization method that loads everything efficiently
@@ -239,29 +409,36 @@ class TableScreenContentState extends State<TableScreenContent> {
     setState(() => isLoading = true);
 
     try {
-      // Get cached group name first
       final cachedGroupName =
           await SharedPreferencesUtil.getSelectedGroupName();
 
-      // Single API call to get dashboard data
-      final dashboardData =
-          await GroupsMethods.fetchDashboardData(currentUserId);
+      // Parallel fetch: dashboard + groups info (for creator detection)
+      final results = await Future.wait([
+        GroupsMethods.fetchDashboardData(currentUserId),
+        GroupsMethods().fetchGroups(),
+      ]);
+      final dashboardData = results[0] as Map<String, dynamic>;
+      final groupsInfo = results[1] as List<Map<String, dynamic>>;
+
+      print('=== DEBUG: dashboardData keys: ${dashboardData.keys}');
+      print('=== DEBUG: dashboardData FULL: $dashboardData');
+      print('=== DEBUG: privateGroups raw: ${dashboardData['privateGroups']}');
+      print('=== DEBUG: publicGroups raw: ${dashboardData['publicGroups']}');
+
+      final parsedPrivate = Map<String, String>.from(dashboardData['privateGroups'] ?? {});
+      final parsedPublic = Map<String, String>.from(dashboardData['publicGroups'] ?? {});
+      print('=== DEBUG: parsedPrivate count: ${parsedPrivate.length}, entries: $parsedPrivate');
+      print('=== DEBUG: parsedPublic count: ${parsedPublic.length}, entries: $parsedPublic');
 
       setState(() {
-        // Set groups from API response
-        _privateGroups =
-            Map<String, String>.from(dashboardData['privateGroups'] ?? {});
-        _publicGroups =
-            Map<String, String>.from(dashboardData['publicGroups'] ?? {});
-
-        print('Private groups: $_privateGroups');
-        print('Public groups: $_publicGroups');
-
-        // Determine selected group name
+        _privateGroups = parsedPrivate;
+        _publicGroups = parsedPublic;
+        _groupsInfo = groupsInfo;
+        _defaultGroupName = cachedGroupName ?? '';
         selectedGroupName = _determineSelectedGroupName(cachedGroupName);
       });
+      print('=== DEBUG: selectedGroupName: $selectedGroupName');
 
-      // Only fetch users if we have a valid group selection
       if (selectedGroupName.isNotEmpty && _privateGroups.isNotEmpty) {
         await _fetchUsersForSelectedGroup();
       } else {
@@ -331,6 +508,194 @@ class TableScreenContentState extends State<TableScreenContent> {
       });
     }
   }
+  bool get _isCreatorOfActiveGroup => _groupsInfo.any(
+        (g) =>
+            g['name'] == selectedGroupName &&
+            g['createdBy'] == currentUserId,
+      );
+
+  Future<void> _setAsDefaultGroup(String name) async {
+    await SharedPreferencesUtil.setSelectedGroupName(name);
+    if (!mounted) return;
+    setState(() => _defaultGroupName = name);
+    Provider.of<UserProvider>(context, listen: false)
+        .setSelectedGroupName(name);
+  }
+
+  Future<void> _showGroupSwitcherSheet() async {
+    if (_privateGroups.isEmpty) return;
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: cards,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (innerCtx, setSheetState) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  margin: EdgeInsets.only(top: 12, bottom: 8),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Padding(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  child: Row(
+                    children: [
+                      Icon(Icons.lock, color: Colors.blue, size: 18),
+                      SizedBox(width: 8),
+                      Text(
+                        AppLocalizations.of(innerCtx)!.privategroups,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ..._privateGroups.entries.map((entry) {
+                  final name = entry.value;
+                  final isActive = name == selectedGroupName;
+                  final isDefault = name == _defaultGroupName;
+                  return ListTile(
+                    contentPadding: EdgeInsets.symmetric(horizontal: 20),
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.blue.withOpacity(0.15),
+                      child: Text(
+                        name.isNotEmpty ? name[0].toUpperCase() : '?',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    title: Text(
+                      name,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: isActive
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                    trailing: IconButton(
+                      tooltip: 'Set as default',
+                      icon: Icon(
+                        Icons.star,
+                        color: isDefault
+                            ? Colors.amber
+                            : Colors.grey.withOpacity(0.4),
+                      ),
+                      onPressed: () async {
+                        await _setAsDefaultGroup(name);
+                        setSheetState(() {});
+                      },
+                    ),
+                    onTap: () {
+                      Navigator.of(sheetCtx).pop();
+                      if (!isActive) changeSelectedGroup(name);
+                    },
+                  );
+                }).toList(),
+                SizedBox(height: 12),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _leaveActiveGroup() async {
+    if (selectedGroupName.isEmpty || _isCreatorOfActiveGroup) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: cards,
+        title: Text(
+          AppLocalizations.of(ctx)!.leavethegroup,
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          AppLocalizations.of(ctx)!.leavegroup,
+          style: TextStyle(color: Colors.white),
+        ),
+        actions: [
+          TextButton(
+            child: Text(
+              AppLocalizations.of(ctx)!.cancel,
+              style: TextStyle(color: Colors.blue),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(false),
+          ),
+          TextButton(
+            child: Text(
+              AppLocalizations.of(ctx)!.leave,
+              style: TextStyle(color: Colors.red),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    Map<String, dynamic> userData;
+    try {
+      userData = await UsersMethods().fetchUserById(currentUserId);
+    } catch (e) {
+      print('Error fetching user for leave: $e');
+      return;
+    }
+    final userGroups =
+        Map<String, String>.from(userData['groupID'] ?? {});
+    final keyToRemove = userGroups.entries
+        .firstWhere(
+          (e) => e.value == selectedGroupName,
+          orElse: () => MapEntry('', ''),
+        )
+        .key;
+    if (keyToRemove.isEmpty) return;
+    final leftGroupName = selectedGroupName;
+    userGroups.remove(keyToRemove);
+
+    try {
+      final response = await http.put(
+        Uri.parse('$backendUrl/users/'),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({
+          '_id': currentUserId,
+          'groupID': userGroups,
+        }),
+      );
+      if (response.statusCode == 200) {
+        if (_defaultGroupName == leftGroupName) {
+          await SharedPreferencesUtil.setSelectedGroupName('public');
+        }
+        if (!mounted) return;
+        setState(() {
+          selectedGroupName = '';
+        });
+        await _initializeData();
+      } else {
+        print('Leave group failed with status: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error leaving group: $e');
+    }
+  }
+
     // Method to change selected group (call this when user selects different group)
   Future<void> changeSelectedGroup(String newGroupName) async {
     if (newGroupName == selectedGroupName) return;
@@ -381,38 +746,65 @@ class TableScreenContentState extends State<TableScreenContent> {
         elevation: 0,
         backgroundColor: Colors.transparent,
        
-        title: Text(
-          selectedGroupName != 'Public'?selectedGroupName: '' ,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        title: SizedBox.shrink(),
         actions: [
-          Container(
-            margin: EdgeInsets.only(right: 16),
-            child: TextButton.icon(
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.blue.withOpacity(0.1),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          PopupMenuButton<String>(
+            tooltip: '',
+            position: PopupMenuPosition.under,
+            color: cards,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            onSelected: (v) {
+              if (v == 'create') _showCreateGroupDialog();
+              if (v == 'join') _showJoinGroupDialog();
+            },
+            itemBuilder: (ctx) => [
+              PopupMenuItem<String>(
+                value: 'create',
+                child: Row(
+                  children: [
+                    Icon(Icons.add_circle_outline,
+                        color: Colors.blue, size: 20),
+                    SizedBox(width: 12),
+                    Text(
+                      AppLocalizations.of(ctx)!.createnewgroup,
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ],
                 ),
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               ),
-              icon: Icon(
-                Icons.group_add,
-                color: Colors.blue,
-                size: 20,
-              ),
-              label: Text(
-                AppLocalizations.of(context)!.joingroup,
-                style: TextStyle(
-                  color: Colors.blue,
-                  fontWeight: FontWeight.w500,
+              PopupMenuItem<String>(
+                value: 'join',
+                child: Row(
+                  children: [
+                    Icon(Icons.group_add, color: Colors.blue, size: 20),
+                    SizedBox(width: 12),
+                    Text(
+                      AppLocalizations.of(ctx)!.joingroup,
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ],
                 ),
               ),
-              onPressed: _showJoinGroupDialog,
+            ],
+            child: Container(
+              margin: EdgeInsets.only(right: 16),
+              padding:
+                  EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.add, color: Colors.blue, size: 20),
+                  SizedBox(width: 4),
+                  Icon(Icons.arrow_drop_down,
+                      color: Colors.blue, size: 18),
+                ],
+              ),
             ),
           ),
         ],
@@ -458,7 +850,7 @@ class TableScreenContentState extends State<TableScreenContent> {
           Icon(Icons.group_off, size: 64, color: Colors.grey),
           SizedBox(height: 16),
           Text(
-          AppLocalizations.of(context)!.nogroupsfound,
+            AppLocalizations.of(context)!.nogroupsfound,
             style: TextStyle(
               color: Colors.white,
               fontSize: 20,
@@ -474,86 +866,54 @@ class TableScreenContentState extends State<TableScreenContent> {
               fontSize: 16,
             ),
           ),
+          SizedBox(height: 24),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: Icon(Icons.add_circle_outline, size: 20),
+                label: Text(
+                  AppLocalizations.of(context)!.createnewgroup,
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                onPressed: _showCreateGroupDialog,
+              ),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.blue,
+                  side: BorderSide(color: Colors.blue),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: Icon(Icons.group_add, size: 20),
+                label: Text(
+                  AppLocalizations.of(context)!.joingroup,
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                onPressed: _showJoinGroupDialog,
+              ),
+            ],
+          ),
         ],
       ),
     ),
   )
   else
-       Container(
-                             margin:
-                            EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                      ),
-                     padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: effectivePrivateGroups.isEmpty
-                          ? Row(
-                              children: [
-                                Icon(Icons.info_outline,
-                                    color: Colors.blue, size: 20),
-                                SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                              AppLocalizations.of(context)!
-                                          .notmemberanygroup,
-                                    style: TextStyle(
-                                      color: Colors.blue,
-                                      fontSize: 16.0,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    ),
-                                  ),
-                                ],
-                              )
-                            : DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: effectivePrivateGroups.isNotEmpty &&
-                                          selectedGroupName.isNotEmpty &&
-                                          effectivePrivateGroups
-                                              .containsValue(selectedGroupName)
-                                      ? selectedGroupName
-                                      : (effectivePrivateGroups.isNotEmpty
-                                          ? effectivePrivateGroups.values.first
-                                          : null),
-                                  dropdownColor: cards,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16.0,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  icon: Icon(Icons.arrow_drop_down,
-                                      color: Colors.blue),
-                                isExpanded: true,
-                                items: effectivePrivateGroups.entries.map((entry) {
-                                  return DropdownMenuItem<String>(
-                                    value: entry.value,
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.lock,
-                                            color: Colors.blue, size: 16),
-                                        SizedBox(width: 8),
-                                        Text(
-                                          entry.value,
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }).toList(),
-                                onChanged: (String? newValue) {
-                                  if (newValue != null) {
-                                    setState(() {
-                                      selectedGroupName = newValue;
-                                    });
-                                   _fetchUsersForSelectedGroup();
-                                  }
-                                },
-                              ),
-                            ),
-                    ),
+       SizedBox.shrink(),
                     // Public Groups Dropdown
                     // Container(
                     //   margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -620,12 +980,57 @@ class TableScreenContentState extends State<TableScreenContent> {
                   //       ))
                   ],
                 ),
-                   if (effectivePrivateGroups.isNotEmpty)
-                Expanded(
-                  child: Container(
-                    margin: EdgeInsets.symmetric(horizontal: 16),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
+                if (effectivePrivateGroups.isNotEmpty &&
+                    selectedGroupName.isNotEmpty &&
+                    selectedGroupName != 'Public')
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: _showGroupSwitcherSheet,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.blue.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.group,
+                                  color: Colors.blue, size: 18),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  selectedGroupName,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              Icon(Icons.arrow_drop_down,
+                                  color: Colors.blue, size: 24),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (effectivePrivateGroups.isNotEmpty)
+                  Expanded(
+                    child: Container(
+                      margin: EdgeInsets.symmetric(horizontal: 16),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
                       child: Container(
                         decoration: BoxDecoration(
                           color: Colors.blue.withOpacity(0.05),
@@ -787,35 +1192,64 @@ class TableScreenContentState extends State<TableScreenContent> {
                   ),
                 ),
                   (effectivePrivateGroups.isNotEmpty)
-                    ? Container(
-                        margin: EdgeInsets.all(16),
-                        child: TextButton.icon(
-                          style: TextButton.styleFrom(
-                            backgroundColor: Colors.blue.withOpacity(0.1),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
+                      ? Container(
+                          margin: EdgeInsets.all(16),
+                          child: Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 12,
+                            runSpacing: 8,
+                            children: [
+                              TextButton.icon(
+                                style: TextButton.styleFrom(
+                                  backgroundColor:
+                                      Colors.blue.withOpacity(0.1),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(12),
+                                  ),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 12),
+                                ),
+                                icon: Icon(Icons.share,
+                                    color: Colors.blue, size: 20),
+                                label: Text(
+                                  AppLocalizations.of(context)!
+                                      .invitefriend,
+                                  style: TextStyle(
+                                    color: Colors.blue,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                onPressed: () =>
+                                    _inviteFriend(selectedGroupName),
+                              ),
+                              if (!isLoading && !_isCreatorOfActiveGroup)
+                                TextButton.icon(
+                                  style: TextButton.styleFrom(
+                                    backgroundColor:
+                                        Colors.red.withOpacity(0.1),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(12),
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 20, vertical: 12),
+                                  ),
+                                  icon: Icon(Icons.exit_to_app,
+                                      color: Colors.red, size: 20),
+                                  label: Text(
+                                    AppLocalizations.of(context)!.leave,
+                                    style: TextStyle(
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  onPressed: _leaveActiveGroup,
+                                ),
+                            ],
                           ),
-                          icon: Icon(
-                            Icons.share,
-                            color: Colors.blue,
-                            size: 20,
-                          ),
-                          label: Text(
-                            AppLocalizations.of(context)!.invitefriend,
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          onPressed: () => _inviteFriend(selectedGroupName),
-                        ),
-                      )
-                    : SizedBox(
-                        height: 2,
-                      ),
+                        )
+                      : SizedBox(height: 2),
               ],
             ),
       ),

@@ -245,5 +245,7 @@
     "backToToday": "Today",
     "loadingPreviousGames": "Loading previous games...",
     "noOlderGames": "No older games",
-    "pullUpForPreviousGames": "Pull up for previous games"
+    "pullUpForPreviousGames": "Pull up for previous games",
+    "noWinnersHint": "Choose your champion at the start of each season",
+    "noTopScorersHint": "Pick who you think will score the most goals"
 }
