@@ -10,6 +10,7 @@ import 'package:football/screens/login_screen.dart';
 import 'package:football/screens/profile.dart';
 import 'package:football/screens/table.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/theme/typography.dart';
 import 'package:football/utils/status_utils.dart';
 import 'package:football/widgets/FixtureEventsWidget.dart';
 import 'package:football/widgets/SharedPreferences.dart';
@@ -52,39 +53,18 @@ class _GameDetailsState extends State<GameDetails> {
   late Game _currentGame;
   late int currentGameId;
 
-  Color getStatusColor(String status) {
-    switch (status) {
-      case "First Half":
-      case "Second Half":
-      case "Extra Time":
-        return Colors.red;
-      case "Halftime":
-        return Colors.orange;
-      case "Not Started":
-        return Colors.grey;
-      case "Match Finished":
-        return Colors.green;
-      case "Postponed":
-      case "TBD":
-        return Colors.yellow;
-      default:
-        return Color(0xFF9BA4B5).withOpacity(0.9);
-    }
-  }
+  static const Set<String> _liveShort = {'1H', '2H', 'H1', 'H2', 'ET', 'BT', 'P', 'INT'};
 
   @override
   void initState() {
     super.initState();
 
     _currentIndex = widget.initialIndex;
-
     _currentGame = widget.games[_currentIndex];
     league = _currentGame.league.id;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     currentUserId = widget.userId;
     currentGameId = widget.gameOriginalId;
-    print(widget.game.fixtureId);
-    print(widget.games);
 
     _fetchUserGroups();
     _fetchGuesses(selectedGroupName);
@@ -98,413 +78,600 @@ class _GameDetailsState extends State<GameDetails> {
         isLoading = true;
         currentGameId = widget.games[newIndex].fixtureId;
       });
-
       _fetchGuesses(selectedGroupName);
     }
+  }
+
+  bool get _isLive => _liveShort.contains(_currentGame.status.short);
+  bool get _isHalftime => _currentGame.status.short == 'HT';
+  bool get _isFinished =>
+      _currentGame.status.short == 'FT' || _currentGame.status.short == 'AET';
+
+  Color get _accent {
+    if (_isLive) return Editorial.live;
+    if (_isHalftime) return Editorial.amber;
+    if (_isFinished) return Editorial.inkMute;
+    return Editorial.inkDim;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: background,
+      backgroundColor: Editorial.pitch,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        iconTheme: IconThemeData(
-          color: Colors.white,
+        backgroundColor: Editorial.pitch,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        iconTheme: IconThemeData(color: Editorial.ink, size: 20),
+        title: Text(
+          'MATCH CENTRE',
+          style: EType.label(
+              color: Editorial.inkDim, size: 11, letterSpacing: 2.6),
         ),
+        centerTitle: true,
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: Column(
-                children: [
-                  _buildGameCard(),
-                  _buildGuessesTable(),
-                ],
+          ? Center(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 1.5,
+                  valueColor: AlwaysStoppedAnimation(Editorial.live),
+                ),
+              ),
+            )
+          : SafeArea(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: [
+                    _buildHeroCard(),
+                    const SizedBox(height: 8),
+                    _buildEventsBlock(),
+                    const SizedBox(height: 8),
+                    _buildPredictionsBlock(),
+                    const SizedBox(height: 32),
+                  ],
+                ),
               ),
             ),
     );
   }
 
-  Widget _buildEventsSection() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey[850], // Match your existing card color
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: FixtureEventsWidget(
-        fixtureId: currentGameId,
-        homeTeamName: _currentGame.home.name,
-        awayTeamName: _currentGame.away.name,
-      ),
-    );
-  }
+  // ── Hero scoreboard ────────────────────────────────────────────────────
+  Widget _buildHeroCard() {
+    final hasPrev = _currentIndex > 0 &&
+        widget.games[_currentIndex - 1].status.long != "Not Started";
+    final hasNext = _currentIndex < widget.games.length - 1 &&
+        widget.games[_currentIndex + 1].status.long != "Not Started";
 
-  Widget _buildGameCard() {
     return GestureDetector(
-      onHorizontalDragEnd: (DragEndDetails details) {
-        if (details.primaryVelocity! < 0) {
-          // Swipe right - go to previous game
-          if (_currentIndex > 0 &&
-              widget.games[_currentIndex - 1].status.long != "Not Started") {
-            print(widget.games[_currentIndex - 1].home.name);
-
-            _navigateToGame(_currentIndex - 1);
-          }
-        } else if (details.primaryVelocity! > 0) {
-          // Swipe left - go to next game
-          if (_currentIndex < widget.games.length - 1 &&
-              widget.games[_currentIndex + 1].status.long != "Not Started") {
-            _navigateToGame(_currentIndex + 1);
-          }
+      onHorizontalDragEnd: (details) {
+        final v = details.primaryVelocity ?? 0;
+        if (v < 0 && hasPrev) {
+          _navigateToGame(_currentIndex - 1);
+        } else if (v > 0 && hasNext) {
+          _navigateToGame(_currentIndex + 1);
         }
       },
-      child: Stack(
-        children: [
-          Card(
-            color: cards,
-            margin: EdgeInsets.all(12.0),
-            child: Padding(
-              padding: EdgeInsets.only(
-                  top: 8.0, bottom: 24.0, right: 16.0, left: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildGameHeader(),
-                  SizedBox(height: 16.0),
-                  _buildTeamScores(),
-                  SizedBox(height: 8.0),
-                  Divider(color: Colors.grey[800], thickness: 1),
-                  FixtureEventsWidget(
-                    fixtureId: currentGameId,
-                    homeTeamName: _currentGame.home.name,
-                    awayTeamName: _currentGame.away.name,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(2),
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          decoration: BoxDecoration(
+            color: Editorial.card,
+            border: Border(
+              top: BorderSide(color: _accent, width: 2),
+              left: BorderSide(color: Editorial.hairline, width: 1),
+              right: BorderSide(color: Editorial.hairline, width: 1),
+              bottom: BorderSide(color: Editorial.hairline, width: 1),
+            ),
+          ),
+        child: Stack(
+          children: [
+            // Decorative grain stripes.
+            Positioned.fill(
+              child: IgnorePointer(
+                child: CustomPaint(
+                  painter: _PitchLinesPainter(
+                    color: Editorial.hairline.withOpacity(0.4),
                   ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
+              child: Column(
+                children: [
+                  _buildHeroMeta(),
+                  const SizedBox(height: 28),
+                  _buildScoreboard(hasPrev: hasPrev, hasNext: hasNext),
+                  const SizedBox(height: 24),
+                  Container(height: 1, color: Editorial.hairline),
+                  const SizedBox(height: 6),
                 ],
               ),
             ),
-          ),
-          // Right arrow (Next Game)
-          if (_currentIndex < widget.games.length - 1 &&
-              widget.games[_currentIndex + 1].status.long != "Not Started")
-            Positioned(
-              right: 4,
-              top: 65,
-              child: Container(
-                width: 40,
-                height: 40,
-                child: IconButton(
-                  icon: Icon(Icons.arrow_forward_ios,
-                      color: Colors.white, size: 20),
-                  onPressed: () => _navigateToGame(_currentIndex + 1),
-                ),
-              ),
-            ),
+          ],
+        ),
+        ),
+      ),
+    );
+  }
 
-          // Left arrow (Previous Game)
-          if (_currentIndex > 0 &&
-              widget.games[_currentIndex - 1].status.long != "Not Started")
-            Positioned(
-              left: 4,
-              top: 65,
-              child: Container(
-                width: 40,
-                height: 40,
-                child: IconButton(
-                  icon: Icon(Icons.arrow_back_ios,
-                      color: Colors.white, size: 20),
-                  onPressed: () => _navigateToGame(_currentIndex - 1),
+  Widget _buildHeroMeta() {
+    final info =
+        StatusUtils.getStatusInfo(_currentGame.status.short, context);
+    String statusText;
+    Color statusColor;
+    if (_isLive) {
+      final el = _currentGame.status.elapsed;
+      statusText = el != null ? "LIVE  ${el}'" : 'LIVE';
+      statusColor = Editorial.live;
+    } else if (_isHalftime) {
+      statusText = 'HALF TIME';
+      statusColor = Editorial.amber;
+    } else if (_isFinished) {
+      statusText = 'FULL TIME';
+      statusColor = Editorial.inkMute;
+    } else {
+      statusText = (info['text']?.toString() ?? '').toUpperCase();
+      statusColor = Editorial.inkMute;
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            if (_isLive) ...[
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: Editorial.live,
+                  shape: BoxShape.circle,
                 ),
               ),
+              const SizedBox(width: 8),
+            ],
+            Text(
+              statusText,
+              style: EType.label(
+                  color: statusColor, size: 11, letterSpacing: 2.2),
             ),
+          ],
+        ),
+        Text(
+          DateFormat('EEE  dd.MM.yy  •  HH:mm')
+              .format(_currentGame.date.toLocal())
+              .toUpperCase(),
+          style: EType.label(
+              color: Editorial.inkDim, size: 10, letterSpacing: 1.6),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildScoreboard({required bool hasPrev, required bool hasNext}) {
+    final h = _currentGame.goals.home ?? 0;
+    final a = _currentGame.goals.away ?? 0;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        _navArrow(Icons.arrow_back_ios_new, hasPrev,
+            () => _navigateToGame(_currentIndex - 1)),
+        Expanded(child: _heroTeam(_currentGame.home, alignEnd: true)),
+        const SizedBox(width: 12),
+        Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  '$h',
+                  style: EType.scoreboard(
+                    size: 64,
+                    color: _isLive ? Editorial.live : Editorial.ink,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Text(
+                    ':',
+                    style: EType.scoreboard(
+                      size: 56,
+                      color: Editorial.inkDim,
+                    ),
+                  ),
+                ),
+                Text(
+                  '$a',
+                  style: EType.scoreboard(
+                    size: 64,
+                    color: _isLive ? Editorial.live : Editorial.ink,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(width: 12),
+        Expanded(child: _heroTeam(_currentGame.away, alignEnd: false)),
+        _navArrow(Icons.arrow_forward_ios, hasNext,
+            () => _navigateToGame(_currentIndex + 1)),
+      ],
+    );
+  }
+
+  Widget _navArrow(IconData icon, bool enabled, VoidCallback onTap) {
+    return SizedBox(
+      width: 28,
+      child: enabled
+          ? IconButton(
+              padding: EdgeInsets.zero,
+              onPressed: onTap,
+              icon: Icon(icon, color: Editorial.inkMute, size: 14),
+            )
+          : const SizedBox.shrink(),
+    );
+  }
+
+  Widget _heroTeam(Team team, {required bool alignEnd}) {
+    return Column(
+      crossAxisAlignment:
+          alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: () => TeamLinkHandler.linkToTeam(team.name),
+          child: Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: Editorial.cardHi,
+              shape: BoxShape.circle,
+            ),
+            padding: const EdgeInsets.all(10),
+            child: Image.network(
+              team.logo,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) =>
+                  Icon(Icons.shield_outlined, color: Editorial.inkDim),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: () => TeamLinkHandler.linkToTeam(team.name),
+          child: Text(
+            team.name.toUpperCase(),
+            textAlign: alignEnd ? TextAlign.right : TextAlign.left,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: EType.display(
+              size: 18,
+              color: Editorial.ink,
+              letterSpacing: 0.8,
+              height: 1.0,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Match events ───────────────────────────────────────────────────────
+  Widget _buildEventsBlock() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Editorial.card,
+        borderRadius: BorderRadius.circular(2),
+        border: Border.all(color: Editorial.hairline, width: 1),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionLabel('MATCH EVENTS'),
+          const SizedBox(height: 10),
+          FixtureEventsWidget(
+            fixtureId: currentGameId,
+            homeTeamName: _currentGame.home.name,
+            awayTeamName: _currentGame.away.name,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildGameHeader() {
-    final info = StatusUtils.getStatusInfo(_currentGame.status.short as String, context);
-    final statusColor = info['color'];
-    final statusText = info['text'];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-           Text.rich(
-          TextSpan(
+  // ── Predictions table ──────────────────────────────────────────────────
+  Widget _buildPredictionsBlock() {
+    final l = AppLocalizations.of(context)!;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Editorial.card,
+        borderRadius: BorderRadius.circular(2),
+        border: Border.all(color: Editorial.hairline, width: 1),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              if (_currentGame.status.long == "First Half" ||
-                  _currentGame.status.long == "Second Half")
-                TextSpan(
-                  text: "${_currentGame.status.elapsed}'",
-                  style: TextStyle(
-                    color: Colors.red, // Your custom color for elapsed
-                    fontSize: 14.0,
-                  ),
-                )
-              else
-                TextSpan(
-                  text: info['text'],
-                  style: TextStyle(
-                    color: info['color'],
-                    fontSize: 14.0,
+              _sectionLabel('PREDICTIONS'),
+              if (_userGroups.isNotEmpty)
+                Text(
+                  '${_guessesWithNames.length}',
+                  style: EType.numeric(
+                    color: Editorial.inkMute,
+                    size: 12,
                   ),
                 ),
             ],
           ),
-        ),
-        Text(
-          DateFormat('dd/MM/yy').format(_currentGame.date),
-          style: TextStyle(
-            color: Color(0xFF9BA4B5).withOpacity(0.9),
-            fontSize: 14.0,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTeamScores() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildTeamInfo(_currentGame.home, isHome: true),
-        ),
-        SizedBox(width: 8.0),
-        Text(
-          '${_currentGame.goals.home} - ${_currentGame.goals.away}',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 18.0,
-          ),
-        ),
-        SizedBox(width: 8.0),
-        Expanded(
-          child: _buildTeamInfo(_currentGame.away, isHome: false),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTeamInfo(Team team, {required bool isHome}) {
-    return Row(
-      mainAxisAlignment:
-          isHome ? MainAxisAlignment.end : MainAxisAlignment.start,
-      children: [
-        if (!isHome) _buildTeamLogo(team),
-        SizedBox(width: 6.0),
-        Flexible(
-          child: GestureDetector(
-            onTap: () => TeamLinkHandler.linkToTeam(team.name),
-            child: Text(
-              team.name,
-              style: TextStyle(
-                color: Colors.white, // White color for the team names
-                fontWeight: FontWeight.bold,
-                fontSize: 14.0,
-              ),
-              overflow: TextOverflow.ellipsis,
-              textAlign: isHome ? TextAlign.right : TextAlign.left,
-            ),
-          ),
-        ),
-        if (isHome) ...[
-          SizedBox(width: 6.0),
-          _buildTeamLogo(team),
+          const SizedBox(height: 14),
+          if (_userGroups.isEmpty)
+            _joinGroupCallout(l)
+          else ...[
+            _buildGroupSelector(),
+            const SizedBox(height: 14),
+            if (_guessesWithNames.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                child: Text(
+                  l.noGuesses.toUpperCase(),
+                  style: EType.label(
+                      color: Editorial.inkDim,
+                      size: 11,
+                      letterSpacing: 2),
+                ),
+              )
+            else
+              _buildGuessesList(l),
+          ],
         ],
-      ],
-    );
-  }
-
-  Widget _buildTeamLogo(Team team) {
-    return GestureDetector(
-      onTap: () => TeamLinkHandler.linkToTeam(team.name),
-      child: Image.network(
-        team.logo,
-        width: 24.0,
-        height: 24.0,
       ),
     );
   }
 
-  Widget _buildGuessesTable() {
+  Widget _joinGroupCallout(AppLocalizations l) {
+    return InkWell(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => TableScreen()),
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 14),
+        decoration: BoxDecoration(
+          border: Border.all(color: Editorial.hairlineHi, width: 1),
+          borderRadius: BorderRadius.circular(2),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.groups_2_outlined,
+                size: 18, color: Editorial.inkMute),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                l.joingrouptoseefreinds,
+                style: EType.body(
+                    color: Editorial.inkMute, size: 13),
+              ),
+            ),
+            Icon(Icons.arrow_forward,
+                size: 14, color: Editorial.inkMute),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGroupSelector() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Editorial.terrace,
+        border: Border.all(color: Editorial.hairline, width: 1),
+        borderRadius: BorderRadius.circular(2),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: selectedGroupName.isEmpty ? null : selectedGroupName,
+          dropdownColor: Editorial.cardHi,
+          isExpanded: true,
+          icon: Icon(Icons.expand_more, color: Editorial.inkMute, size: 18),
+          style: EType.body(color: Editorial.ink, size: 13),
+          items: _userGroups.entries.map((entry) {
+            return DropdownMenuItem<String>(
+              value: entry.value,
+              child: Row(
+                children: [
+                  Icon(Icons.lock_outline,
+                      color: Editorial.live, size: 14),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      entry.value.toUpperCase(),
+                      style: EType.label(
+                          color: Editorial.ink,
+                          size: 11,
+                          letterSpacing: 1.6),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (newValue) {
+            if (newValue != null) {
+              setState(() => selectedGroupName = newValue);
+              _fetchGuesses(newValue);
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGuessesList(AppLocalizations l) {
+    final sorted = [..._guessesWithNames]..sort((a, b) =>
+        b.guess.sumPoints.compareTo(a.guess.sumPoints));
+
     return Column(
       children: [
-        if (_userGroups.isNotEmpty)
-          Container(
-            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        // Header row.
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 24,
+                child: Text('#',
+                    style: EType.label(
+                        color: Editorial.inkDim,
+                        size: 10,
+                        letterSpacing: 1.4)),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(l.name.toUpperCase(),
+                    style: EType.label(
+                        color: Editorial.inkDim,
+                        size: 10,
+                        letterSpacing: 1.6)),
+              ),
+              SizedBox(
+                width: 56,
+                child: Text(l.guess.toUpperCase(),
+                    textAlign: TextAlign.center,
+                    style: EType.label(
+                        color: Editorial.inkDim,
+                        size: 10,
+                        letterSpacing: 1.6)),
+              ),
+              SizedBox(
+                width: 48,
+                child: Text(l.sumpoints.toUpperCase(),
+                    textAlign: TextAlign.right,
+                    style: EType.label(
+                        color: Editorial.inkDim,
+                        size: 10,
+                        letterSpacing: 1.6)),
+              ),
+            ],
+          ),
+        ),
+        Container(height: 1, color: Editorial.hairline),
+        ...sorted.asMap().entries.map((e) {
+          final i = e.key;
+          final g = e.value;
+          final isMe = g.guess.userId == currentUserId;
+          final pts = g.guess.sumPoints;
+          return Container(
             decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              border: Border(
+                bottom: BorderSide(color: Editorial.hairline, width: 1),
+              ),
+              color: isMe ? Editorial.liveSoft : Colors.transparent,
             ),
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: selectedGroupName,
-                dropdownColor: cards,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16.0,
-                  fontWeight: FontWeight.w500,
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 24,
+                  child: Text(
+                    '${i + 1}'.padLeft(2, '0'),
+                    style: EType.numeric(
+                      color:
+                          i < 3 ? Editorial.live : Editorial.inkDim,
+                      size: 11,
+                      weight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-                icon: Icon(Icons.arrow_drop_down, color: Colors.blue),
-                isExpanded: true,
-                items: _userGroups.entries.map((entry) {
-                  return DropdownMenuItem<String>(
-                    value: entry.value,
-                    child: Row(
-                      children: [
-                                Icon(Icons.lock, color: Colors.blue, size: 16),
-                        SizedBox(width: 8),
-                        Text(
-                          entry.value,
-                          style: TextStyle(
-                            color: Colors.white,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          g.userName,
+                          overflow: TextOverflow.ellipsis,
+                          style: EType.body(
+                            color: Editorial.ink,
+                            size: 13,
+                            weight: isMe
+                                ? FontWeight.w600
+                                : FontWeight.w400,
                           ),
+                        ),
+                      ),
+                      if (isMe) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 5, vertical: 1),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                                color: Editorial.live, width: 1),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                          child: Text('YOU',
+                              style: EType.label(
+                                  color: Editorial.live,
+                                  size: 9,
+                                  letterSpacing: 1.2)),
                         ),
                       ],
-                    ),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  if (newValue != null) {
-                    setState(() {
-                      selectedGroupName = newValue;
-                    });
-                    _fetchGuesses(newValue);
-                  }
-                },
-              ),
-            ),
-          )
-        else
-          Padding(
-            padding: const EdgeInsets.only(top: 10.0),
-            child: GestureDetector(
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => TableScreen()),
-              ),
-              child: Text(
-                AppLocalizations.of(context)!.joingrouptoseefreinds,
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ),
-        if (_userGroups.isNotEmpty)
-          if (_guessesWithNames.isNotEmpty)
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 16),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return SingleChildScrollView(
-                        scrollDirection: Axis.vertical,
-                        child: ConstrainedBox(
-                          constraints:
-                              BoxConstraints(minWidth: constraints.maxWidth),
-                          child: DataTable(
-                            columnSpacing: 0,
-                            horizontalMargin: 0,
-                            columns: [
-                              DataColumn(
-                                label: Expanded(
-                                  child: Center(
-                                    child: Text(
-                                      AppLocalizations.of(context)!.name,
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Expanded(
-                                  child: Center(
-                                    child: Text(
-                                      AppLocalizations.of(context)!.guess,
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Expanded(
-                                  child: Center(
-                                    child: Text(
-                                      AppLocalizations.of(context)!.sumpoints,
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                            rows: _guessesWithNames
-                                .map((guessWithName) => DataRow(
-                                      cells: [
-                                        DataCell(
-                                          Center(
-                                            child: Text(
-                                              guessWithName.userName,
-                                              style: TextStyle(
-                                                  color: Colors.white),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ),
-                                        ),
-                                        DataCell(
-                                          Center(
-                                            child: Text(
-                                              '${guessWithName.guess.homeTeamGoals} - ${guessWithName.guess.awayTeamGoals}',
-                                              style: TextStyle(
-                                                  color: Colors.white),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ),
-                                        ),
-                                        DataCell(
-                                          Center(
-                                            child: Text(
-                                              guessWithName.guess.sumPoints %
-                                                          1 ==
-                                                      0
-                                                  ? guessWithName
-                                                      .guess.sumPoints
-                                                      .toInt()
-                                                      .toString()
-                                                  : guessWithName
-                                                      .guess.sumPoints
-                                                      .toString(),
-                                              style: TextStyle(
-                                                  color: Colors.white),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ))
-                                .toList(),
-                          ),
-                        ),
-                      );
-                    },
+                    ],
                   ),
                 ),
-              ),
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: Text(
-                AppLocalizations.of(context)!.noGuesses,
-                style: TextStyle(color: Colors.white),
-              ),
+                SizedBox(
+                  width: 56,
+                  child: Text(
+                    '${g.guess.homeTeamGoals} : ${g.guess.awayTeamGoals}',
+                    textAlign: TextAlign.center,
+                    style: EType.numeric(
+                      color: Editorial.ink,
+                      size: 13,
+                      weight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 48,
+                  child: Text(
+                    pts % 1 == 0 ? pts.toInt().toString() : pts.toString(),
+                    textAlign: TextAlign.right,
+                    style: EType.numeric(
+                      color: pts > 0 ? Editorial.live : Editorial.inkMute,
+                      size: 14,
+                      weight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _sectionLabel(String s) {
+    return Row(
+      children: [
+        Container(width: 18, height: 1, color: Editorial.live),
+        const SizedBox(width: 10),
+        Text(s,
+            style: EType.label(
+                color: Editorial.ink, size: 11, letterSpacing: 2.4)),
       ],
     );
   }
@@ -517,26 +684,17 @@ class _GameDetailsState extends State<GameDetails> {
         Map<String, String> tempGroups =
             Map<String, String>.from(userData['groupID'] ?? {});
 
-        // Remove the 'public' group if it exists
         tempGroups.removeWhere((key, value) => value.toLowerCase() == 'public');
-
-        // Assign the filtered map to _userGroups
         _userGroups = tempGroups;
 
-        print(_userGroups);
         final userProvider = Provider.of<UserProvider>(context, listen: false);
-        // Check if _userGroups is not empty before accessing first value
         if (_userGroups.isNotEmpty &&
             userProvider.selectedGroupName != 'public') {
           selectedGroupName = userProvider.selectedGroupName;
-
           _fetchGuesses(selectedGroupName);
-        } else {
+        } else if (_userGroups.isNotEmpty) {
           selectedGroupName = _userGroups.values.first;
-
           _fetchGuesses(selectedGroupName);
-          // Handle the case when no groups are left after removing 'public'
-          print('No groups available after removing public');
         }
       });
     } catch (e) {
@@ -570,14 +728,35 @@ class _GameDetailsState extends State<GameDetails> {
         isLoading = false;
       });
     } catch (e, stackTrace) {
-   
       print('Failed to fetch guesses: $e');
       print('Stack trace: $stackTrace');
       setState(() {
         isLoading = false;
       });
-
-
     }
   }
+}
+
+// ── Decorative pitch-line painter (very subtle background texture) ──────
+class _PitchLinesPainter extends CustomPainter {
+  _PitchLinesPainter({required this.color});
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1;
+    // Faint vertical hairlines reminiscent of pitch markings.
+    for (double x = 0; x <= size.width; x += 24) {
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(x, size.height),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _PitchLinesPainter old) => old.color != color;
 }

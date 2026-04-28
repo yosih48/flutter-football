@@ -12,6 +12,7 @@ import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/gameDetails.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/theme/typography.dart';
 import 'package:football/utils/config.dart';
 import 'package:football/widgets/LeagueSelectorChips.dart';
 import 'package:football/widgets/gamesCard.dart';
@@ -347,13 +348,13 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
       builder: (context, child) {
         return Theme(
           data: ThemeData.dark().copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Colors.blue,
-              onPrimary: Colors.white,
-              surface: Color(0xFF303030),
-              onSurface: Colors.white,
+            colorScheme: ColorScheme.dark(
+              primary: Editorial.live,
+              onPrimary: Editorial.pitch,
+              surface: Editorial.card,
+              onSurface: Editorial.ink,
             ),
-            dialogBackgroundColor: const Color(0xFF303030),
+            dialogBackgroundColor: Editorial.card,
           ),
           child: child ?? Container(),
         );
@@ -593,72 +594,13 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     ];
 
     return Scaffold(
-      backgroundColor: background,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        title: GestureDetector(
-          onTap: _pickDate,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                const Icon(Icons.calendar_today,
-                    color: Colors.blue, size: 28),
-                if (_selectedDate != null)
-                  Positioned(
-                    bottom: 4,
-                    child: Text(
-                      '${_selectedDate!.day}',
-                      style: const TextStyle(
-                        color: Colors.blue,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            child: Row(
-              children: [
-                Text(
-                  'Live',
-                  style: TextStyle(
-                    color: white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Transform.scale(
-                  scale: 0.8,
-                  child: Switch(
-                    value: _showOnlyLiveGames,
-                    onChanged: (_) => _toggleShowOnlyLiveGames(),
-                    activeColor: Colors.red,
-                    activeTrackColor: Colors.red.withOpacity(0.5),
-                    inactiveThumbColor: Colors.white,
-                    inactiveTrackColor: Colors.grey.withOpacity(0.5),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      backgroundColor: Editorial.pitch,
+      extendBodyBehindAppBar: true,
+      appBar: _buildEditorialAppBar(context),
       body: RefreshIndicator(
         onRefresh: _handlePullRefresh,
-        color: Colors.blue,
+        color: Editorial.live,
+        backgroundColor: Editorial.card,
         child: Column(
           children: [
             const SizedBox(height: 8),
@@ -668,14 +610,15 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
               selectedIndex: _selectedChipIndex,
               onSelectionChanged: _onChipChanged,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+            Container(height: 1, color: Editorial.hairline),
             Expanded(
               child: Stack(
                 children: [
                   _buildGamesList(grouped),
                   if (_isViewingPast)
                     Positioned(
-                      bottom: 16,
+                      bottom: 20,
                       left: 0,
                       right: 0,
                       child: Center(child: _buildJumpToTodayChip()),
@@ -686,15 +629,96 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _buttonLoading ? null : _submitAllGuesses,
-        backgroundColor: _buttonLoading ? Colors.grey : Colors.blue,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        icon: const Icon(Icons.send),
-        label: Text(
-          AppLocalizations.of(context)!.send,
-          style: const TextStyle(fontWeight: FontWeight.w600),
+      floatingActionButton: _buildSubmitFab(context),
+    );
+  }
+
+  PreferredSizeWidget _buildEditorialAppBar(BuildContext context) {
+    return AppBar(
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      backgroundColor: Editorial.pitch,
+      surfaceTintColor: Colors.transparent,
+      toolbarHeight: 72,
+      titleSpacing: 20,
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('MATCHDAY',
+              style: EType.label(
+                  color: Editorial.inkDim, size: 10, letterSpacing: 3)),
+          const SizedBox(height: 2),
+          Text('FIXTURES',
+              style: EType.display(
+                  size: 28, color: Editorial.ink, letterSpacing: 1.4)),
+        ],
+      ),
+      actions: [
+        _IconBtn(
+          tooltip: 'Pick date',
+          icon: Icons.calendar_today_outlined,
+          badge: _selectedDate?.day.toString(),
+          onTap: _pickDate,
+        ),
+        const SizedBox(width: 4),
+        _LiveToggle(
+          active: _showOnlyLiveGames,
+          onTap: _toggleShowOnlyLiveGames,
+        ),
+        const SizedBox(width: 16),
+      ],
+    );
+  }
+
+  Widget _buildSubmitFab(BuildContext context) {
+    final disabled = _buttonLoading;
+    return Padding(
+      padding: const EdgeInsets.only(right: 4, bottom: 4),
+      child: Material(
+        color: disabled ? Editorial.cardHi : Editorial.live,
+        borderRadius: BorderRadius.circular(2),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(2),
+          onTap: disabled ? null : _submitAllGuesses,
+          child: Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(2),
+              border: Border.all(
+                color: disabled ? Editorial.hairline : Editorial.live,
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (disabled)
+                  SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1.5,
+                      valueColor:
+                          AlwaysStoppedAnimation(Editorial.inkDim),
+                    ),
+                  )
+                else
+                  Icon(Icons.bolt, size: 18, color: Editorial.pitch),
+                const SizedBox(width: 8),
+                Text(
+                  AppLocalizations.of(context)!.send.toUpperCase(),
+                  style: EType.label(
+                    color: disabled ? Editorial.inkDim : Editorial.pitch,
+                    size: 12,
+                    letterSpacing: 2,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -702,37 +726,37 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
 
   Widget _buildJumpToTodayChip() {
     return Material(
-      color: Colors.transparent,
+      color: Editorial.ink,
+      borderRadius: BorderRadius.circular(2),
       child: InkWell(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(2),
         onTap: _jumpToToday,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
           decoration: BoxDecoration(
-            color: const Color(0xFF2196F3),
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(2),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.25),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
+                color: Colors.black.withOpacity(0.5),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              Icon(Icons.keyboard_arrow_down,
+                  size: 16, color: Editorial.pitch),
+              const SizedBox(width: 6),
               Text(
-                AppLocalizations.of(context)!.backToToday,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
+                AppLocalizations.of(context)!.backToToday.toUpperCase(),
+                style: EType.label(
+                  color: Editorial.pitch,
+                  size: 11,
+                  letterSpacing: 1.8,
                 ),
               ),
-              const SizedBox(width: 6),
-              const Icon(Icons.keyboard_arrow_down,
-                  size: 20, color: Colors.white),
             ],
           ),
         ),
@@ -821,15 +845,20 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 48, color: Colors.grey),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              border: Border.all(color: Editorial.hairline, width: 1),
+              shape: BoxShape.circle,
             ),
+            child: Icon(icon, size: 26, color: Editorial.inkDim),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            message.toUpperCase(),
+            style: EType.label(
+                color: Editorial.inkMute, size: 12, letterSpacing: 2.4),
           ),
         ],
       ),
@@ -857,30 +886,27 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
           .firstWhere((_) => true, orElse: () => null);
 
       widgets.add(
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-          child: GameWidget(
-            game: game,
-            guess: guess,
-            homeController: _guessControllers[game.fixtureId]?['home'],
-            awayController: _guessControllers[game.fixtureId]?['away'],
-            onTap: (ctx) async {
-              if (game.status.long != 'Not Started') {
-                await Navigator.push(
-                  ctx,
-                  MaterialPageRoute(
-                    builder: (_) => GameDetails(
-                      gameOriginalId: game.fixtureId,
-                      game: game,
-                      games: gamesForDate,
-                      initialIndex: gamesForDate.indexOf(game),
-                      userId: _clientId,
-                    ),
+        GameWidget(
+          game: game,
+          guess: guess,
+          homeController: _guessControllers[game.fixtureId]?['home'],
+          awayController: _guessControllers[game.fixtureId]?['away'],
+          onTap: (ctx) async {
+            if (game.status.long != 'Not Started') {
+              await Navigator.push(
+                ctx,
+                MaterialPageRoute(
+                  builder: (_) => GameDetails(
+                    gameOriginalId: game.fixtureId,
+                    game: game,
+                    games: gamesForDate,
+                    initialIndex: gamesForDate.indexOf(game),
+                    userId: _clientId,
                   ),
-                );
-              }
-            },
-          ),
+                ),
+              );
+            }
+          },
         ),
       );
     }
@@ -888,33 +914,14 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Center(
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Column(
-              children: [
-                Text(
-                  formatDateInHebrew(date, context),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${gamesForDate.length} ${AppLocalizations.of(context)!.numberOfGames}',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
+        _DateHeader(
+          date: date,
+          dayLabel: formatDateInHebrew(date, context),
+          gameCount: gamesForDate.length,
+          countWord: AppLocalizations.of(context)!.numberOfGames,
         ),
         ...widgets,
+        const SizedBox(height: 8),
       ],
     );
   }
@@ -924,23 +931,39 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     final isFiltered = _selectedLeagueFilter == leagueId;
     return GestureDetector(
       onTap: () => _toggleLeagueHeaderFilter(leagueId),
+      behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
         child: Row(
           children: [
-            Text(
-              leagueName,
-              style: TextStyle(
-                color: isFiltered ? Colors.blue : Colors.grey[300],
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: isFiltered ? Editorial.live : Editorial.inkDim,
+                shape: BoxShape.circle,
               ),
             ),
-            if (isFiltered)
-              const Padding(
-                padding: EdgeInsets.only(left: 6.0),
-                child: Icon(Icons.close, size: 14, color: Colors.blue),
+            const SizedBox(width: 10),
+            Text(
+              leagueName.toUpperCase(),
+              style: EType.label(
+                color: isFiltered ? Editorial.live : Editorial.inkMute,
+                size: 11,
+                letterSpacing: 2.2,
               ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Container(
+                height: 1,
+                color: isFiltered ? Editorial.live.withOpacity(0.3) : Editorial.hairline,
+              ),
+            ),
+            if (isFiltered) ...[
+              const SizedBox(width: 8),
+              Icon(Icons.close, size: 12, color: Editorial.live),
+            ],
           ],
         ),
       ),
@@ -982,6 +1005,205 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
         penalty: {'home': null, 'away': null},
       ),
       odds: Odds(home: 1.0, draw: 1.0, away: 1.0),
+    );
+  }
+}
+
+// ── Editorial chrome widgets ─────────────────────────────────────────────
+
+class _IconBtn extends StatelessWidget {
+  const _IconBtn({
+    required this.icon,
+    required this.onTap,
+    this.tooltip,
+    this.badge,
+  });
+  final IconData icon;
+  final VoidCallback onTap;
+  final String? tooltip;
+  final String? badge;
+
+  @override
+  Widget build(BuildContext context) {
+    final btn = Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(2),
+        onTap: onTap,
+        child: Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            border: Border.all(color: Editorial.hairline, width: 1),
+            borderRadius: BorderRadius.circular(2),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(icon, size: 18, color: Editorial.ink),
+              if (badge != null)
+                Positioned(
+                  bottom: 4,
+                  child: Text(
+                    badge!,
+                    style: EType.numeric(
+                      color: Editorial.live,
+                      size: 9,
+                      weight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    return tooltip != null ? Tooltip(message: tooltip!, child: btn) : btn;
+  }
+}
+
+class _LiveToggle extends StatelessWidget {
+  const _LiveToggle({required this.active, required this.onTap});
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(2),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          decoration: BoxDecoration(
+            color: active ? Editorial.live : Colors.transparent,
+            border: Border.all(
+              color: active ? Editorial.live : Editorial.hairline,
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(2),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: active ? Editorial.pitch : Editorial.flag,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'LIVE',
+                style: EType.label(
+                  color: active ? Editorial.pitch : Editorial.inkMute,
+                  size: 11,
+                  letterSpacing: 1.6,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DateHeader extends StatelessWidget {
+  const _DateHeader({
+    required this.date,
+    required this.dayLabel,
+    required this.gameCount,
+    required this.countWord,
+  });
+  final DateTime date;
+  final String dayLabel;
+  final int gameCount;
+  final String countWord;
+
+  @override
+  Widget build(BuildContext context) {
+    final today = DateTime.now();
+    final isToday = today.year == date.year &&
+        today.month == date.month &&
+        today.day == date.day;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Big editorial day-number.
+          Text(
+            date.day.toString().padLeft(2, '0'),
+            style: EType.display(
+              size: 56,
+              color: Editorial.ink,
+              letterSpacing: 0,
+              height: 0.85,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Container(
+            width: 1,
+            height: 44,
+            color: Editorial.hairline,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        dayLabel.toUpperCase(),
+                        style: EType.display(
+                          size: 18,
+                          color: Editorial.ink,
+                          letterSpacing: 1,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (isToday) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Editorial.live,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                        child: Text('TODAY',
+                            style: EType.label(
+                                color: Editorial.pitch,
+                                size: 9,
+                                letterSpacing: 1.4)),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$gameCount  $countWord'.toUpperCase(),
+                  style: EType.label(
+                    color: Editorial.inkDim,
+                    size: 10,
+                    letterSpacing: 1.8,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
