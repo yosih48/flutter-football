@@ -260,5 +260,17 @@
     "matchCentre": "Match Centre",
     "predictionsLabel": "Predictions",
     "youLabel": "You",
-    "playerProfile": "Player Profile"
+    "playerProfile": "Player Profile",
+    "noUserFound": "No user found",
+    "dangerZoneLabel": "Danger Zone",
+    "failedToDeleteAccount": "Failed to delete account: ",
+    "okLabel": "OK",
+    "setAsDefault": "Set as default",
+    "loadingGroup": "Loading Group",
+    "loadingName": "Loading Name",
+    "league": "League",
+    "standings": "Standings",
+    "group": "Group",
+    "switchGroup": "Switch",
+    "appLabel": "App"
 }

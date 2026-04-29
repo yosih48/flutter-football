@@ -40,7 +40,7 @@ class AccountScreen extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('SETTINGS',
+                      Text(l.settings.toUpperCase(),
                           style: EType.label(
                               color: Editorial.inkMute,
                               size: 10,
@@ -62,7 +62,7 @@ class AccountScreen extends StatelessWidget {
             if (user == null)
               Expanded(
                 child: Center(
-                  child: Text('No user found',
+                  child: Text(l.noUserFound,
                       style: EType.body(color: Editorial.inkMute)),
                 ),
               )
@@ -143,7 +143,7 @@ class AccountScreen extends StatelessWidget {
               // ── Section label ──────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child: _sectionLabel('DANGER ZONE'),
+                child: _sectionLabel(l.dangerZoneLabel.toUpperCase()),
               ),
 
               // ── Sign Out row ───────────────────────────────────────
@@ -227,7 +227,7 @@ class AccountScreen extends StatelessWidget {
                             SnackBar(
                               backgroundColor: Editorial.flag,
                               content: Text(
-                                  'Failed to delete account: $e',
+                                  '${l.failedToDeleteAccount}$e',
                                   style: EType.body(
                                       color: Editorial.ink, size: 13)),
                             ),

@@ -754,4 +754,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playerProfile => 'Player Profile';
+
+  @override
+  String get noUserFound => 'No user found';
+
+  @override
+  String get dangerZoneLabel => 'Danger Zone';
+
+  @override
+  String get failedToDeleteAccount => 'Failed to delete account: ';
+
+  @override
+  String get okLabel => 'OK';
+
+  @override
+  String get setAsDefault => 'Set as default';
+
+  @override
+  String get loadingGroup => 'Loading Group';
+
+  @override
+  String get loadingName => 'Loading Name';
+
+  @override
+  String get league => 'League';
+
+  @override
+  String get standings => 'Standings';
+
+  @override
+  String get group => 'Group';
+
+  @override
+  String get switchGroup => 'Switch';
+
+  @override
+  String get appLabel => 'App';
 }

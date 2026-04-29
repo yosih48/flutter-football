@@ -754,4 +754,40 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get playerProfile => 'פרופיל שחקן';
+
+  @override
+  String get noUserFound => 'משתמש לא נמצא';
+
+  @override
+  String get dangerZoneLabel => 'אזור סכנה';
+
+  @override
+  String get failedToDeleteAccount => 'מחיקת חשבון נכשלה: ';
+
+  @override
+  String get okLabel => 'אישור';
+
+  @override
+  String get setAsDefault => 'הגדר כברירת מחדל';
+
+  @override
+  String get loadingGroup => 'טוען קבוצה';
+
+  @override
+  String get loadingName => 'טוען שם';
+
+  @override
+  String get league => 'ליגה';
+
+  @override
+  String get standings => 'דירוג';
+
+  @override
+  String get group => 'קבוצה';
+
+  @override
+  String get switchGroup => 'החלף';
+
+  @override
+  String get appLabel => 'אפליקציה';
 }

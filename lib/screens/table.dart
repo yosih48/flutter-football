@@ -249,7 +249,7 @@ class TableScreenContentState extends State<TableScreenContent> {
             ],
           ),
           actions: [
-            _solidBtn('OK', () => Navigator.of(context).pop()),
+            _solidBtn(l.okLabel, () => Navigator.of(context).pop()),
           ],
         );
       },
@@ -655,7 +655,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                             ),
                           ),
                           IconButton(
-                            tooltip: 'Set as default',
+                            tooltip: AppLocalizations.of(context)!.setAsDefault,
                             icon: Icon(
                               isDefault ? Icons.star : Icons.star_border,
                               color: isDefault
@@ -788,13 +788,13 @@ class TableScreenContentState extends State<TableScreenContent> {
   @override
   Widget build(BuildContext context) {
     final effectivePrivateGroups =
-        isLoading ? {'0': 'Loading Group'} : _privateGroups;
+        isLoading ? {'0': AppLocalizations.of(context)!.loadingGroup} : _privateGroups;
 
     final effectiveUsers = isLoading
         ? List.generate(
             10,
             (index) => {
-              'displayName': 'Loading Name',
+              'displayName': AppLocalizations.of(context)!.loadingName,
               'thisDayPoints': {league.toString(): '0'},
               'points': {league.toString(): '0'},
               '_id': 'dummy_$index'
@@ -846,11 +846,11 @@ class TableScreenContentState extends State<TableScreenContent> {
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('LEAGUE',
+          Text(AppLocalizations.of(context)!.league.toUpperCase(),
               style: EType.label(
                   color: Editorial.inkDim, size: 10, letterSpacing: 3)),
           const SizedBox(height: 2),
-          Text('STANDINGS',
+          Text(AppLocalizations.of(context)!.standings.toUpperCase(),
               style: EType.display(
                   size: 28, color: Editorial.ink, letterSpacing: 1.4)),
         ],
@@ -952,7 +952,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('GROUP',
+                  Text(AppLocalizations.of(context)!.group.toUpperCase(),
                       style: EType.label(
                           color: Editorial.inkDim,
                           size: 9,
@@ -979,7 +979,7 @@ class TableScreenContentState extends State<TableScreenContent> {
               ),
               child: Row(
                 children: [
-                  Text('SWITCH',
+                  Text(AppLocalizations.of(context)!.switchGroup.toUpperCase(),
                       style: EType.label(
                           color: Editorial.inkMute,
                           size: 10,
@@ -1126,7 +1126,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                                   borderRadius:
                                       BorderRadius.circular(2),
                                 ),
-                                child: Text('YOU',
+                                child: Text(AppLocalizations.of(context)!.youLabel.toUpperCase(),
                                     style: EType.label(
                                         color: Editorial.live,
                                         size: 9,

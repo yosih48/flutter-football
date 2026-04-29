@@ -753,6 +753,7 @@ class _GameDetailsState extends State<GameDetails> {
                         size: 10,
                         letterSpacing: 1.6)),
               ),
+              const SizedBox(width: 24),
               SizedBox(
                 width: 48,
                 child: Text(l.sumpoints.toUpperCase(),
@@ -842,6 +843,7 @@ class _GameDetailsState extends State<GameDetails> {
                     ),
                   ),
                 ),
+                const SizedBox(width: 24),
                 SizedBox(
                   width: 48,
                   child: Text(

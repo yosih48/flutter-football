@@ -459,5 +459,17 @@
     "matchCentre": "מרכז המשחק",
     "predictionsLabel": "ניחושים",
     "youLabel": "אתה",
-    "playerProfile": "פרופיל שחקן"
+    "playerProfile": "פרופיל שחקן",
+    "noUserFound": "משתמש לא נמצא",
+    "dangerZoneLabel": "אזור סכנה",
+    "failedToDeleteAccount": "מחיקת חשבון נכשלה: ",
+    "okLabel": "אישור",
+    "setAsDefault": "הגדר כברירת מחדל",
+    "loadingGroup": "טוען קבוצה",
+    "loadingName": "טוען שם",
+    "league": "ליגה",
+    "standings": "דירוג",
+    "group": "קבוצה",
+    "switchGroup": "החלף",
+    "appLabel": "אפליקציה"
 }

@@ -224,7 +224,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'PREFERENCES',
+            l.preferences.toUpperCase(),
             style: EType.label(
                 color: Editorial.inkDim, size: 10, letterSpacing: 3),
           ),
@@ -702,7 +702,7 @@ class _EmptyNotifs extends StatelessWidget {
             ),
             const SizedBox(height: 18),
             Text(
-              (l.noEnabledLeagues ?? 'No Leagues Enabled').toUpperCase(),
+              l.noEnabledLeagues.toUpperCase(),
               style: EType.display(
                 size: 22,
                 color: Editorial.ink,
@@ -712,8 +712,7 @@ class _EmptyNotifs extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              l.enableLeaguesFirst ??
-                  'Enable leagues in the Choose Leagues tab first',
+              l.enableLeaguesFirst,
               textAlign: TextAlign.center,
               style:
                   EType.body(color: Editorial.inkMute, size: 13, height: 1.5),

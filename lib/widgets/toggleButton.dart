@@ -84,23 +84,18 @@ class _ToggleButtonsSampleState extends State<ToggleButtonsSample> {
                     height: 44,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isSelected
-                          ? Editorial.cardHi
-                          : Colors.transparent,
+                      color: Colors.white,
                       border: Border.all(
                         color: isSelected
                             ? Editorial.live
                             : Editorial.hairline,
-                        width: 1,
+                        width: isSelected ? 2 : 1,
                       ),
                     ),
                     padding: const EdgeInsets.all(8),
                     child: Image.network(
                       widget.imageUrls[i],
                       fit: BoxFit.contain,
-                      color: isSelected ? null : Editorial.inkMute,
-                      colorBlendMode:
-                          isSelected ? BlendMode.dst : BlendMode.modulate,
                       errorBuilder: (_, __, ___) => Icon(
                         Icons.shield_outlined,
                         size: 20,

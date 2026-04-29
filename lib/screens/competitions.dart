@@ -1,23 +1,19 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:football/l10n/app_localizations.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:football/providers/league_data_provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/responsive/mobile_screen_layout.dart';
 import 'package:football/responsive/rsponsive_layout_screen.dart';
 import 'package:football/responsive/web_screen_layout.dart';
 import 'package:football/theme/colors.dart';
-import 'package:football/theme/colors.dart';
+import 'package:football/theme/typography.dart';
 import 'package:football/utils/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
-
 class Competitions extends StatefulWidget {
-    final String userEmail;
+  final String userEmail;
   final String userName;
 
   const Competitions({
@@ -31,260 +27,172 @@ class Competitions extends StatefulWidget {
 }
 
 class _CompetitionsState extends State<Competitions> {
+  Map<int, bool> chosenLeagues = {
+    2: false,   // Champions League
+    383: false, // Ligat Ha'al
+    140: false, // La Liga
+    3: false,   // Europa League
+    39: false,  // Premier League
+    848: false, // Conference League
+  };
 
-  Future<void> updateDatabase(name, email) async {
-    String _baseUrl = backendUrl;
-    final String url = '$_baseUrl/users/profile';
+  static const _leagueLogoBase =
+      'https://media.api-sports.io/football/leagues/';
 
+  Future<void> updateDatabase(String name, String email) async {
+    final url = Uri.parse('$backendUrl/users/profile');
     try {
-      // Convert chosenLeagues map to a format that can be JSON encoded
-      Map<String, bool> encodableChosenLeagues = {};
-      chosenLeagues.forEach((key, value) {
-        encodableChosenLeagues[key.toString()] = value;
-      });
-   
-      final Map<String, dynamic> leagueData = {
-        'championsLeague': false,
-        'israeliLeague': false,
-        'spanishLeague': false,
-        'europeLeague': false,
-        'premierLeague': false,
-        'conferenceLeague': false,
-        'clubworldcup': false,
-        // 'bundesLeague': notificationStates['ליגה גרמנית'],
-        'africaLeague': false,
-        // 'conferenceLeague': false,
-        'euroLeague': false,
-        'copaLeague': false,
-      };
+      final Map<String, bool> encodableLeagues = {};
+      chosenLeagues.forEach((k, v) => encodableLeagues[k.toString()] = v);
+
       final response = await http.put(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
+        url,
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode({
           'email': email,
           'displayName': name,
-          'leagueData': leagueData,
-          'chosenLeagues': encodableChosenLeagues,
+          'leagueData': {
+            'championsLeague': false,
+            'israeliLeague': false,
+            'spanishLeague': false,
+            'europeLeague': false,
+            'premierLeague': false,
+            'conferenceLeague': false,
+            'clubworldcup': false,
+            'africaLeague': false,
+            'euroLeague': false,
+            'copaLeague': false,
+          },
+          'chosenLeagues': encodableLeagues,
         }),
       );
 
       if (response.statusCode == 200) {
-        print('Profile updated and first login completed');
-        // Clear LeagueDataProvider cache after successful update
-            final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      
-              await markFirstLoginComplete();
-              // Sync in-memory user + prefs cache so a restart with a failed
-              // /users/:id refresh doesn't bounce the user back here.
-              await authProvider.markCurrentUserAsReturning();
-      
-        if (!mounted) return;
+        final authProvider =
+            Provider.of<AuthProvider>(context, listen: false);
+        final nav = Navigator.of(context);
+        await markFirstLoginComplete();
+        await authProvider.markCurrentUserAsReturning();
 
-        // Navigate to the main app screen
-        Navigator.pushAndRemoveUntil(
-          context,
+        if (!mounted) return;
+        nav.pushAndRemoveUntil(
           MaterialPageRoute(
-            builder: (context) => const ResponsiveLayout(
+            builder: (_) => const ResponsiveLayout(
               mobileScreenLayout: MobileScreenLayout(),
               webScreenLayout: WebScreenLayout(),
             ),
           ),
-          (route) => false, // This removes ALL previous routes
+          (route) => false,
         );
-        // LeagueDataProvider().clearCache();
-     
-      } else {
-        print('Failed to update database: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error updating database: $e');
+      debugPrint('Error updating database: $e');
     }
   }
 
-
-Future<void> markFirstLoginComplete() async {
+  Future<void> markFirstLoginComplete() async {
     try {
-    
-      final response = await http.post(
+      await http.post(
         Uri.parse('$backendUrl/users/mark-first-login-complete'),
-        headers: {
-     
-          'Content-Type': 'application/json',
-        },
-             body: jsonEncode(<String, String>{
-          'email': widget.userEmail,
-       
-        }),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': widget.userEmail}),
       );
-
-      if (response.statusCode == 200) {
-        print('First login marked as complete');
-      }
     } catch (e) {
-      print('Error marking first login complete: $e');
+      debugPrint('Error marking first login complete: $e');
     }
   }
 
-  Map<int, bool> chosenLeagues = {
-    2: false, // Champions League
-    383: false, // Ligat Ha'al
-    140: false, // La Liga
-    3: false, // Europa League
-    39: false, // Premier League
-    848: false, // conference league
-    // 15: false, // conference league
-    // 78: true, // Bundesliga
-  };
-  final leagueIcons = {
-    2: 'https://media.api-sports.io/football/leagues/2.png',
-    383: 'https://media.api-sports.io/football/leagues/383.png',
-    140: 'https://media.api-sports.io/football/leagues/140.png',
-    3: 'https://media.api-sports.io/football/leagues/3.png',
-    39: 'https://media.api-sports.io/football/leagues/39.png',
-    78: 'https://media.api-sports.io/football/leagues/78.png',
-    848: 'https://media.api-sports.io/football/leagues/848.png',
-    // 15: 'https://media.api-sports.io/football/leagues/15.png',
-  };
-
-  
   @override
   Widget build(BuildContext context) {
-        final leagueNames = {
-      2: AppLocalizations.of(context)!.championsleague,
-      383: AppLocalizations.of(context)!.ligathaal,
-      140: AppLocalizations.of(context)!.laliga,
-      3: AppLocalizations.of(context)!.europaleague,
-      39: AppLocalizations.of(context)!.premierleague,
-      78: AppLocalizations.of(context)!.bundesleague,
-      848: AppLocalizations.of(context)!.conferenceleague,
-      // 15: AppLocalizations.of(context)!.clubworldcup,
+    final l = AppLocalizations.of(context)!;
+    final leagueNames = {
+      2: l.championsleague,
+      383: l.ligathaal,
+      140: l.laliga,
+      3: l.europaleague,
+      39: l.premierleague,
+      848: l.conferenceleague,
     };
 
- return Scaffold(
+    final anySelected = chosenLeagues.values.any((v) => v);
+
+    return Scaffold(
+      backgroundColor: Editorial.pitch,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.transparent,
-        // title: Text(
-        //   AppLocalizations.of(context)!.chooseCompetitions,
-        //   style: TextStyle(
-        //     color: Colors.white,
-        //     fontSize: 20,
-        //     fontWeight: FontWeight.w600,
-        //   ),
-        // ),
-           automaticallyImplyLeading: false,
-        centerTitle: true,
+        scrolledUnderElevation: 0,
+        backgroundColor: Editorial.pitch,
+        surfaceTintColor: Colors.transparent,
+        automaticallyImplyLeading: false,
       ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 32),
+          // ── Header ──────────────────────────────────────────────
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              AppLocalizations.of(context)!.chooseCompetitions,
-              textAlign: Directionality.of(context) == TextDirection.rtl
-                  ? TextAlign.right
-                  : TextAlign.left,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('SETUP',
+                    style: EType.label(
+                        color: Editorial.inkDim,
+                        size: 10,
+                        letterSpacing: 3)),
+                const SizedBox(height: 2),
+                Text(
+                  l.chooseCompetitions.toUpperCase(),
+                  style: EType.display(
+                      size: 28,
+                      color: Editorial.ink,
+                      letterSpacing: 1.4),
+                ),
+              ],
             ),
           ),
-          SizedBox(height: 8),
+
+          // ── Section label ────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+            child: Row(
+              children: [
+                Container(width: 18, height: 1, color: Editorial.live),
+                const SizedBox(width: 10),
+                Text(
+                  l.allCompetitions.toUpperCase(),
+                  style: EType.label(
+                      color: Editorial.ink,
+                      size: 11,
+                      letterSpacing: 2.4),
+                ),
+              ],
+            ),
+          ),
+
+          // ── League grid ──────────────────────────────────────────
           Expanded(
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                physics: const BouncingScrollPhysics(),
+                gridDelegate:
+                    const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
                   crossAxisSpacing: 8,
                   mainAxisSpacing: 8,
-                  childAspectRatio: 0.9,
+                  childAspectRatio: 0.85,
                 ),
                 itemCount: chosenLeagues.length,
                 itemBuilder: (context, index) {
-                  final leagueEntry = chosenLeagues.entries.toList()[index];
-                  final leagueId = leagueEntry.key;
-                  final isSelected = leagueEntry.value;
-
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        chosenLeagues[leagueId] = !isSelected;
-                      });
-                      // updateDatabase(widget.userName, widget.userEmail);
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: cards,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected ? Colors.blue : Colors.transparent,
-                          width: 2,
-                        ),
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: Icon(
-                              isSelected ? Icons.star : Icons.star_border,
-                              color:
-                                  isSelected ? Colors.blue : Colors.grey[400],
-                              size: 18,
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.all(12),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 55,
-                                  height: 55,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  padding: EdgeInsets.all(10),
-                                  child: Image.network(
-                                    leagueIcons[leagueId] ?? '',
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Icon(
-                                        Icons.sports_soccer,
-                                        color: Colors.blue,
-                                        size: 32,
-                                      );
-                                    },
-                                  ),
-                                ),
-                                SizedBox(height: 10),
-                                Text(
-                                  leagueNames[leagueId] ?? '',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  final id =
+                      chosenLeagues.keys.elementAt(index);
+                  final isSelected = chosenLeagues[id]!;
+                  return _LeagueCard(
+                    leagueName: leagueNames[id] ?? '$id',
+                    logoUrl: '$_leagueLogoBase$id.png',
+                    selected: isSelected,
+                    onTap: () => setState(
+                        () => chosenLeagues[id] = !isSelected),
                   );
                 },
               ),
@@ -293,31 +201,155 @@ Future<void> markFirstLoginComplete() async {
         ],
       ),
 
-      // ✅ Add this bottomNavigationBar:
+      // ── Continue button ─────────────────────────────────────────
       bottomNavigationBar: Padding(
-        padding: EdgeInsets.all(16),
-        child: SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: ElevatedButton(
-            onPressed: chosenLeagues.values.any((v) => v)
-                ? () {
-                  updateDatabase(widget.userName, widget.userEmail);
-                    print('Continue pressed!');
-                  }
-                : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              disabledBackgroundColor: Colors.grey[600],
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+        child: GestureDetector(
+          onTap: anySelected
+              ? () => updateDatabase(widget.userName, widget.userEmail)
+              : null,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: 52,
+            decoration: BoxDecoration(
+              color: anySelected ? Editorial.live : Editorial.card,
+              border: Border.all(
+                color: anySelected
+                    ? Editorial.live
+                    : Editorial.hairline,
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(2),
             ),
+            alignment: Alignment.center,
             child: Text(
-             AppLocalizations.of(context)!.continueButton,
-              style: TextStyle(fontSize: 16, color: Colors.white),
+              l.continueButton.toUpperCase(),
+              style: EType.label(
+                color: anySelected
+                    ? Editorial.pitch
+                    : Editorial.inkDim,
+                size: 12,
+                letterSpacing: 2.4,
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+}
 
+// ── League card — identical pattern to favorits.dart ─────────────────────
+class _LeagueCard extends StatelessWidget {
+  const _LeagueCard({
+    required this.leagueName,
+    required this.logoUrl,
+    required this.selected,
+    required this.onTap,
+  });
+  final String leagueName;
+  final String logoUrl;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        decoration: BoxDecoration(
+          color: selected ? Editorial.liveSoft : Editorial.card,
+          borderRadius: BorderRadius.circular(2),
+          border: Border.all(
+            color: selected ? Editorial.live : Editorial.hairline,
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Logo + check badge
+            Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                // White circle
+                Container(
+                  width: 52,
+                  height: 52,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: selected
+                          ? Editorial.live
+                          : Editorial.hairline,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Image.network(
+                    logoUrl,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => Icon(
+                      Icons.shield_outlined,
+                      size: 20,
+                      color: Editorial.inkDim,
+                    ),
+                  ),
+                ),
+                // Check badge
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? Editorial.live
+                          : Editorial.card,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: selected
+                            ? Editorial.live
+                            : Editorial.hairlineHi,
+                        width: 1,
+                      ),
+                    ),
+                    child: selected
+                        ? Icon(Icons.check,
+                            size: 9, color: Editorial.pitch)
+                        : null,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Text(
+                leagueName.toUpperCase(),
+                style: EType.label(
+                  color: selected
+                      ? Editorial.live
+                      : Editorial.inkMute,
+                  size: 9,
+                  letterSpacing: 1.2,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

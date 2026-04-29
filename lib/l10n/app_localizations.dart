@@ -1588,6 +1588,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Player Profile'**
   String get playerProfile;
+
+  /// No description provided for @noUserFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No user found'**
+  String get noUserFound;
+
+  /// No description provided for @dangerZoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Danger Zone'**
+  String get dangerZoneLabel;
+
+  /// No description provided for @failedToDeleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete account: '**
+  String get failedToDeleteAccount;
+
+  /// No description provided for @okLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get okLabel;
+
+  /// No description provided for @setAsDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Set as default'**
+  String get setAsDefault;
+
+  /// No description provided for @loadingGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading Group'**
+  String get loadingGroup;
+
+  /// No description provided for @loadingName.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading Name'**
+  String get loadingName;
+
+  /// No description provided for @league.
+  ///
+  /// In en, this message translates to:
+  /// **'League'**
+  String get league;
+
+  /// No description provided for @standings.
+  ///
+  /// In en, this message translates to:
+  /// **'Standings'**
+  String get standings;
+
+  /// No description provided for @group.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get group;
+
+  /// No description provided for @switchGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get switchGroup;
+
+  /// No description provided for @appLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get appLabel;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
