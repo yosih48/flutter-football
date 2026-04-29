@@ -14,6 +14,7 @@ import 'package:football/theme/typography.dart';
 import 'package:football/utils/status_utils.dart';
 import 'package:football/widgets/FixtureEventsWidget.dart';
 import 'package:football/widgets/SharedPreferences.dart';
+import 'package:football/widgets/LineupsWidget.dart';
 import 'package:football/widgets/teamLinks.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -50,6 +51,7 @@ class _GameDetailsState extends State<GameDetails> {
   Map<String, String> _userGroups = {};
   bool isLoading = true;
   bool _eventsExpanded = false;
+  bool _lineupsExpanded = false;
   late int _currentIndex;
   late Game _currentGame;
   late int currentGameId;
@@ -132,6 +134,8 @@ class _GameDetailsState extends State<GameDetails> {
                     _buildHeroCard(),
                     const SizedBox(height: 8),
                     _buildEventsBlock(),
+                    const SizedBox(height: 8),
+                    _buildLineupsBlock(),
                     const SizedBox(height: 8),
                     _buildPredictionsBlock(),
                     const SizedBox(height: 32),
@@ -409,6 +413,61 @@ class _GameDetailsState extends State<GameDetails> {
               ),
             ),
             crossFadeState: _eventsExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 250),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Lineups ─────────────────────────────────────────────────────────────
+  Widget _buildLineupsBlock() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Editorial.card,
+        borderRadius: BorderRadius.circular(2),
+        border: Border.all(color: Editorial.hairline, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => setState(() => _lineupsExpanded = !_lineupsExpanded),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _sectionLabel(AppLocalizations.of(context)!.lineups.toUpperCase()),
+                  AnimatedRotation(
+                    turns: _lineupsExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      Icons.expand_more,
+                      size: 20,
+                      color: Editorial.inkMute,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+              child: LineupsWidget(
+                fixtureId: currentGameId,
+                matchDate: _currentGame.date,
+                homeTeamName: _currentGame.home.name,
+                awayTeamName: _currentGame.away.name,
+              ),
+            ),
+            crossFadeState: _lineupsExpanded
                 ? CrossFadeState.showSecond
                 : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 250),

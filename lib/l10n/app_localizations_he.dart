@@ -796,4 +796,16 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get appLabel => 'אפליקציה';
+
+  @override
+  String get lineups => 'הרכבים';
+
+  @override
+  String get startingXI => 'הרכב פתיחה';
+
+  @override
+  String get substitutes => 'מחליפים';
+
+  @override
+  String get lineupsNotAvailable => 'ההרכבים עדיין לא זמינים';
 }

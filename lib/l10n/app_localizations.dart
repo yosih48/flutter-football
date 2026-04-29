@@ -1666,6 +1666,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'App'**
   String get appLabel;
+
+  /// No description provided for @lineups.
+  ///
+  /// In en, this message translates to:
+  /// **'Lineups'**
+  String get lineups;
+
+  /// No description provided for @startingXI.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting XI'**
+  String get startingXI;
+
+  /// No description provided for @substitutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Substitutes'**
+  String get substitutes;
+
+  /// No description provided for @lineupsNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Lineups not yet available'**
+  String get lineupsNotAvailable;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

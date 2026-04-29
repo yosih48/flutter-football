@@ -274,5 +274,9 @@
     "standings": "Standings",
     "group": "Group",
     "switchGroup": "Switch",
-    "appLabel": "App"
+    "appLabel": "App",
+    "lineups": "Lineups",
+    "startingXI": "Starting XI",
+    "substitutes": "Substitutes",
+    "lineupsNotAvailable": "Lineups not yet available"
 }

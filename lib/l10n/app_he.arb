@@ -475,5 +475,9 @@
     "standings": "דירוג",
     "group": "קבוצה",
     "switchGroup": "החלף",
-    "appLabel": "אפליקציה"
+    "appLabel": "אפליקציה",
+    "lineups": "הרכבים",
+    "startingXI": "הרכב פתיחה",
+    "substitutes": "מחליפים",
+    "lineupsNotAvailable": "ההרכבים עדיין לא זמינים"
 }

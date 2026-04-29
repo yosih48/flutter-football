@@ -796,4 +796,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appLabel => 'App';
+
+  @override
+  String get lineups => 'Lineups';
+
+  @override
+  String get startingXI => 'Starting XI';
+
+  @override
+  String get substitutes => 'Substitutes';
+
+  @override
+  String get lineupsNotAvailable => 'Lineups not yet available';
 }
