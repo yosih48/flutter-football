@@ -1397,6 +1397,12 @@ abstract class AppLocalizations {
   /// **'Theme'**
   String get settings_theme;
 
+  /// No description provided for @settings_dark.
+  String get settings_dark;
+
+  /// No description provided for @settings_light.
+  String get settings_light;
+
   /// No description provided for @privategroups.
   ///
   /// In en, this message translates to:

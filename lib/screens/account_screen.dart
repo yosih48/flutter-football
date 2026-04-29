@@ -12,6 +12,7 @@ class AccountScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final user = authProvider.currentUser;
@@ -22,7 +23,7 @@ class AccountScreen extends StatelessWidget {
     final initial = userName.isNotEmpty ? userName[0].toUpperCase() : '?';
 
     return Scaffold(
-      backgroundColor: Editorial.pitch,
+      backgroundColor: c.pitch,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -42,14 +43,14 @@ class AccountScreen extends StatelessWidget {
                     children: [
                       Text(l.settings.toUpperCase(),
                           style: EType.label(
-                              color: Editorial.inkMute,
+                              color: c.inkMute,
                               size: 10,
                               letterSpacing: 3)),
                       const SizedBox(height: 2),
                       Text(l.account.toUpperCase(),
                           style: EType.display(
                               size: 28,
-                              color: Editorial.ink,
+                              color: c.ink,
                               letterSpacing: 1.4)),
                     ],
                   ),
@@ -63,7 +64,7 @@ class AccountScreen extends StatelessWidget {
               Expanded(
                 child: Center(
                   child: Text(l.noUserFound,
-                      style: EType.body(color: Editorial.inkMute)),
+                      style: EType.body(color: c.inkMute)),
                 ),
               )
             else ...[
@@ -72,12 +73,12 @@ class AccountScreen extends StatelessWidget {
                 margin: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Editorial.card,
+                  color: c.card,
                   border: Border(
-                    top: BorderSide(color: Editorial.live, width: 2),
-                    left: BorderSide(color: Editorial.hairline, width: 1),
-                    right: BorderSide(color: Editorial.hairline, width: 1),
-                    bottom: BorderSide(color: Editorial.hairline, width: 1),
+                    top: BorderSide(color: c.live, width: 2),
+                    left: BorderSide(color: c.hairline, width: 1),
+                    right: BorderSide(color: c.hairline, width: 1),
+                    bottom: BorderSide(color: c.hairline, width: 1),
                   ),
                 ),
                 child: Row(
@@ -86,17 +87,17 @@ class AccountScreen extends StatelessWidget {
                       width: 64,
                       height: 64,
                       decoration: BoxDecoration(
-                        color: Editorial.cardHi,
+                        color: c.cardHi,
                         shape: BoxShape.circle,
                         border:
-                            Border.all(color: Editorial.live, width: 1.5),
+                            Border.all(color: c.live, width: 1.5),
                       ),
                       alignment: Alignment.center,
                       child: Text(
                         initial,
                         style: EType.display(
                             size: 32,
-                            color: Editorial.ink,
+                            color: c.ink,
                             letterSpacing: 0),
                       ),
                     ),
@@ -112,21 +113,21 @@ class AccountScreen extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: EType.display(
                                 size: 22,
-                                color: Colors.white,
+                                color: c.ink,
                                 letterSpacing: 0.8),
                           ),
                           const SizedBox(height: 6),
                           Row(
                             children: [
                               Icon(Icons.email_outlined,
-                                  size: 12, color: Editorial.inkDim),
+                                  size: 12, color: c.inkDim),
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
                                   userEmail,
                                   overflow: TextOverflow.ellipsis,
                                   style: EType.body(
-                                      color: Editorial.ink, size: 12),
+                                      color: c.ink, size: 12),
                                 ),
                               ),
                             ],
@@ -143,7 +144,7 @@ class AccountScreen extends StatelessWidget {
               // ── Section label ──────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child: _sectionLabel(l.dangerZoneLabel.toUpperCase()),
+                child: _sectionLabel(l.dangerZoneLabel.toUpperCase(), c),
               ),
 
               // ── Sign Out row ───────────────────────────────────────
@@ -152,7 +153,7 @@ class AccountScreen extends StatelessWidget {
                 child: _ActionRow(
                   icon: Icons.exit_to_app_outlined,
                   label: l.signout.toUpperCase(),
-                  accent: Editorial.flag,
+                  accent: c.flag,
                   onTap: () async {
                     final nav = Navigator.of(context);
                     final confirm = await _showEditorialDialog(
@@ -160,7 +161,7 @@ class AccountScreen extends StatelessWidget {
                       title: l.confirmsignout,
                       body: l.leaveapp,
                       confirmLabel: l.yes,
-                      confirmColor: Editorial.flag,
+                      confirmColor: c.flag,
                       cancelLabel: l.cancel,
                     );
                     if (confirm == true) {
@@ -183,21 +184,22 @@ class AccountScreen extends StatelessWidget {
                     onTap: () async {
                       final nav = Navigator.of(context);
                       final messenger = ScaffoldMessenger.of(context);
+                      final cc = context.col;
                       final confirm = await _showEditorialDialog(
                         context: context,
                         title: l.deleteaccount,
                         body: l.deleteaccountconfirm,
                         confirmLabel: l.delete,
-                        confirmColor: Editorial.flag,
+                        confirmColor: cc.flag,
                         cancelLabel: l.cancel,
                       );
                       if (confirm == true) {
                         nav.push(PageRouteBuilder(
                           opaque: false,
                           barrierDismissible: false,
-                          pageBuilder: (_, __, ___) => const Center(
+                          pageBuilder: (_, __, ___) => Center(
                             child: CircularProgressIndicator(
-                                color: Editorial.live),
+                                color: cc.live),
                           ),
                         ));
                         try {
@@ -213,10 +215,10 @@ class AccountScreen extends StatelessWidget {
                             );
                             messenger.showSnackBar(
                               SnackBar(
-                                backgroundColor: Editorial.card,
+                                backgroundColor: cc.card,
                                 content: Text(l.accountDeleted,
                                     style: EType.body(
-                                        color: Editorial.ink,
+                                        color: cc.ink,
                                         size: 13)),
                               ),
                             );
@@ -225,11 +227,11 @@ class AccountScreen extends StatelessWidget {
                           nav.pop();
                           messenger.showSnackBar(
                             SnackBar(
-                              backgroundColor: Editorial.flag,
+                              backgroundColor: cc.flag,
                               content: Text(
                                   '${l.failedToDeleteAccount}$e',
                                   style: EType.body(
-                                      color: Editorial.ink, size: 13)),
+                                      color: cc.ink, size: 13)),
                             ),
                           );
                         }
@@ -242,12 +244,12 @@ class AccountScreen extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.delete_outline,
-                              size: 14, color: Editorial.flag),
+                              size: 14, color: c.flag),
                           const SizedBox(width: 8),
                           Text(
                             l.deleteaccount.toUpperCase(),
                             style: EType.label(
-                                color: Editorial.flag,
+                                color: c.flag,
                                 size: 10,
                                 letterSpacing: 2),
                           ),
@@ -264,14 +266,14 @@ class AccountScreen extends StatelessWidget {
     );
   }
 
-  Widget _sectionLabel(String text) {
+  Widget _sectionLabel(String text, EditorialColors c) {
     return Row(
       children: [
-        Container(width: 18, height: 1, color: Editorial.flag),
+        Container(width: 18, height: 1, color: c.flag),
         const SizedBox(width: 10),
         Text(text,
             style: EType.label(
-                color: Editorial.ink, size: 10, letterSpacing: 2.4)),
+                color: c.ink, size: 10, letterSpacing: 2.4)),
       ],
     );
   }
@@ -284,18 +286,19 @@ class AccountScreen extends StatelessWidget {
     required Color confirmColor,
     required String cancelLabel,
   }) {
+    final c = context.col;
     return showDialog<bool>(
       context: context,
       builder: (ctx) => Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
           decoration: BoxDecoration(
-            color: Editorial.card,
+            color: c.card,
             border: Border(
               top: BorderSide(color: confirmColor, width: 2),
-              left: BorderSide(color: Editorial.hairline, width: 1),
-              right: BorderSide(color: Editorial.hairline, width: 1),
-              bottom: BorderSide(color: Editorial.hairline, width: 1),
+              left: BorderSide(color: c.hairline, width: 1),
+              right: BorderSide(color: c.hairline, width: 1),
+              bottom: BorderSide(color: c.hairline, width: 1),
             ),
           ),
           padding: const EdgeInsets.all(24),
@@ -306,12 +309,12 @@ class AccountScreen extends StatelessWidget {
               Text(title.toUpperCase(),
                   style: EType.display(
                       size: 22,
-                      color: Editorial.ink,
+                      color: c.ink,
                       letterSpacing: 0.8)),
               const SizedBox(height: 12),
               Text(body,
                   style:
-                      EType.body(color: Editorial.inkDim, size: 13)),
+                      EType.body(color: c.inkDim, size: 13)),
               const SizedBox(height: 28),
               Row(
                 children: [
@@ -354,18 +357,19 @@ class _ActionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding:
             const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         decoration: BoxDecoration(
-          color: Editorial.card,
+          color: c.card,
           border: Border(
             top: BorderSide(color: accent, width: 2),
-            left: BorderSide(color: Editorial.hairline, width: 1),
-            right: BorderSide(color: Editorial.hairline, width: 1),
-            bottom: BorderSide(color: Editorial.hairline, width: 1),
+            left: BorderSide(color: c.hairline, width: 1),
+            right: BorderSide(color: c.hairline, width: 1),
+            bottom: BorderSide(color: c.hairline, width: 1),
           ),
         ),
         child: Row(
@@ -405,6 +409,7 @@ class _IconBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -412,11 +417,11 @@ class _IconBtn extends StatelessWidget {
         height: 40,
         margin: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Editorial.card,
-          border: Border.all(color: Editorial.hairline, width: 1),
+          color: c.card,
+          border: Border.all(color: c.hairline, width: 1),
           borderRadius: BorderRadius.circular(2),
         ),
-        child: Icon(icon, size: 16, color: Editorial.ink),
+        child: Icon(icon, size: 16, color: c.ink),
       ),
     );
   }
@@ -430,18 +435,19 @@ class _GhostBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          border: Border.all(color: Editorial.hairline, width: 1),
+          border: Border.all(color: c.hairline, width: 1),
           borderRadius: BorderRadius.circular(2),
         ),
         alignment: Alignment.center,
         child: Text(label.toUpperCase(),
             style: EType.label(
-                color: Editorial.ink,
+                color: c.ink,
                 size: 11,
                 letterSpacing: 1.6)),
       ),
@@ -458,6 +464,7 @@ class _SolidBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -469,7 +476,7 @@ class _SolidBtn extends StatelessWidget {
         alignment: Alignment.center,
         child: Text(label.toUpperCase(),
             style: EType.label(
-                color: Editorial.pitch,
+                color: c.pitch,
                 size: 11,
                 letterSpacing: 1.6)),
       ),

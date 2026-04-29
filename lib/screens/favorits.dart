@@ -184,24 +184,25 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
   // ── Build ──────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     final authProvider = Provider.of<AuthProvider>(context);
     final name = authProvider.currentUser?.name ?? '';
     final userEmail = authProvider.currentUser?.email ?? '';
     final l = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: Editorial.pitch,
-      appBar: _buildAppBar(l),
+      backgroundColor: c.pitch,
+      appBar: _buildAppBar(l, c),
       body: Skeletonizer(
         enabled: isLoading,
         child: Column(
           children: [
-            _buildTabStrip(l),
-            Container(height: 1, color: Editorial.hairline),
+            _buildTabStrip(l, c),
+            Container(height: 1, color: c.hairline),
             Expanded(
               child: selectedTab == 0
-                  ? _buildLeaguesTab(name, userEmail, l)
-                  : _buildNotificationsTab(name, userEmail, l),
+                  ? _buildLeaguesTab(name, userEmail, l, c)
+                  : _buildNotificationsTab(name, userEmail, l, c),
             ),
           ],
         ),
@@ -209,12 +210,12 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar(AppLocalizations l) {
+  PreferredSizeWidget _buildAppBar(AppLocalizations l, EditorialColors c) {
     final title = selectedTab == 0 ? l.chooseleagues : l.notifications;
     return AppBar(
       elevation: 0,
       scrolledUnderElevation: 0,
-      backgroundColor: Editorial.pitch,
+      backgroundColor: c.pitch,
       surfaceTintColor: Colors.transparent,
       toolbarHeight: 72,
       titleSpacing: 20,
@@ -226,22 +227,22 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
           Text(
             l.preferences.toUpperCase(),
             style: EType.label(
-                color: Editorial.inkDim, size: 10, letterSpacing: 3),
+                color: c.inkDim, size: 10, letterSpacing: 3),
           ),
           const SizedBox(height: 2),
           Text(
             title.toUpperCase(),
             style: EType.display(
-                size: 26, color: Editorial.ink, letterSpacing: 1.4),
+                size: 26, color: c.ink, letterSpacing: 1.4),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTabStrip(AppLocalizations l) {
+  Widget _buildTabStrip(AppLocalizations l, EditorialColors c) {
     return Container(
-      color: Editorial.pitch,
+      color: c.pitch,
       child: Row(
         children: [
           _TabItem(
@@ -263,7 +264,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
 
   // ── Choose Leagues tab ─────────────────────────────────────────────────
   Widget _buildLeaguesTab(
-      String name, String userEmail, AppLocalizations l) {
+      String name, String userEmail, AppLocalizations l, EditorialColors c) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -271,12 +272,12 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
           child: Row(
             children: [
-              Container(width: 18, height: 1, color: Editorial.live),
+              Container(width: 18, height: 1, color: c.live),
               const SizedBox(width: 10),
               Text(
                 l.allCompetitions.toUpperCase(),
                 style: EType.label(
-                    color: Editorial.ink, size: 11, letterSpacing: 2.4),
+                    color: c.ink, size: 11, letterSpacing: 2.4),
               ),
             ],
           ),
@@ -324,7 +325,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
 
   // ── Notifications tab ──────────────────────────────────────────────────
   Widget _buildNotificationsTab(
-      String name, String userEmail, AppLocalizations l) {
+      String name, String userEmail, AppLocalizations l, EditorialColors c) {
     final filtered = Map.fromEntries(
       notificationStates.entries.where((e) {
         final id = _notifKeyToId[e.key];
@@ -347,12 +348,12 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: Editorial.card,
+              color: c.card,
               shape: BoxShape.circle,
-              border: Border.all(color: Editorial.hairline, width: 1),
+              border: Border.all(color: c.hairline, width: 1),
             ),
             child: Icon(Icons.notifications_outlined,
-                size: 16, color: Editorial.inkMute),
+                size: 16, color: c.inkMute),
           ),
           label: l.chooseallcompetitions,
           value: allOn,
@@ -368,7 +369,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
           },
           isSelectAll: true,
         ),
-        Container(height: 1, color: Editorial.hairline),
+        Container(height: 1, color: c.hairline),
         // ── Individual leagues ──
         ...filtered.entries.map((entry) {
           final key = entry.key;
@@ -379,14 +380,12 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
               height: 36,
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: entry.value
-                    ? Editorial.liveSoft
-                    : Editorial.card,
+                color: entry.value ? c.liveSoft : c.card,
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: entry.value
-                      ? Editorial.live.withOpacity(0.5)
-                      : Editorial.hairline,
+                      ? c.live.withOpacity(0.5)
+                      : c.hairline,
                   width: 1,
                 ),
               ),
@@ -396,7 +395,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                 errorBuilder: (_, __, ___) => Icon(
                   Icons.shield_outlined,
                   size: 16,
-                  color: Editorial.inkDim,
+                  color: c.inkDim,
                 ),
               ),
             ),
@@ -428,6 +427,7 @@ class _TabItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -442,12 +442,12 @@ class _TabItem extends StatelessWidget {
                 children: [
                   Icon(icon,
                       size: 16,
-                      color: active ? Editorial.ink : Editorial.inkDim),
+                      color: active ? c.ink : c.inkDim),
                   const SizedBox(width: 8),
                   Text(
                     label.toUpperCase(),
                     style: EType.label(
-                      color: active ? Editorial.ink : Editorial.inkDim,
+                      color: active ? c.ink : c.inkDim,
                       size: 11,
                       letterSpacing: 1.6,
                     ),
@@ -459,7 +459,7 @@ class _TabItem extends StatelessWidget {
               duration: const Duration(milliseconds: 180),
               height: 2,
               width: active ? 56.0 : 0.0,
-              color: Editorial.live,
+              color: c.live,
             ),
           ],
         ),
@@ -485,15 +485,16 @@ class _LeagueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
         decoration: BoxDecoration(
-          color: selected ? Editorial.liveSoft : Editorial.card,
+          color: selected ? c.liveSoft : c.card,
           borderRadius: BorderRadius.circular(2),
           border: Border.all(
-            color: selected ? Editorial.live : Editorial.hairline,
+            color: selected ? c.live : c.hairline,
             width: selected ? 1.5 : 1,
           ),
         ),
@@ -515,7 +516,7 @@ class _LeagueCard extends StatelessWidget {
                     color: Colors.white,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: selected ? Editorial.live : Editorial.hairline,
+                      color: selected ? c.live : c.hairline,
                       width: 1.5,
                     ),
                   ),
@@ -525,7 +526,7 @@ class _LeagueCard extends StatelessWidget {
                     errorBuilder: (_, __, ___) => Icon(
                       Icons.shield_outlined,
                       size: 20,
-                      color: Editorial.inkDim,
+                      color: c.inkDim,
                     ),
                   ),
                 ),
@@ -538,17 +539,15 @@ class _LeagueCard extends StatelessWidget {
                     width: 16,
                     height: 16,
                     decoration: BoxDecoration(
-                      color: selected ? Editorial.live : Editorial.card,
+                      color: selected ? c.live : c.card,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: selected
-                            ? Editorial.live
-                            : Editorial.hairlineHi,
+                        color: selected ? c.live : c.hairlineHi,
                         width: 1,
                       ),
                     ),
                     child: selected
-                        ? Icon(Icons.check, size: 9, color: Editorial.pitch)
+                        ? Icon(Icons.check, size: 9, color: c.pitch)
                         : null,
                   ),
                 ),
@@ -562,7 +561,7 @@ class _LeagueCard extends StatelessWidget {
               child: Text(
                 leagueName.toUpperCase(),
                 style: EType.label(
-                  color: selected ? Editorial.live : Editorial.inkMute,
+                  color: selected ? c.live : c.inkMute,
                   size: 9,
                   letterSpacing: 1.2,
                 ),
@@ -595,13 +594,14 @@ class _NotifRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return Container(
       decoration: BoxDecoration(
-        color: isSelectAll ? Editorial.terrace : Colors.transparent,
+        color: isSelectAll ? c.terrace : Colors.transparent,
         border: Border(
-          bottom: BorderSide(color: Editorial.hairline, width: 1),
+          bottom: BorderSide(color: c.hairline, width: 1),
           left: BorderSide(
-            color: value ? Editorial.live : Colors.transparent,
+            color: value ? c.live : Colors.transparent,
             width: 3,
           ),
         ),
@@ -619,10 +619,10 @@ class _NotifRow extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: isSelectAll
                   ? EType.label(
-                      color: Editorial.ink, size: 11, letterSpacing: 1.8)
+                      color: c.ink, size: 11, letterSpacing: 1.8)
                   : EType.display(
                       size: 16,
-                      color: Editorial.ink,
+                      color: c.ink,
                       letterSpacing: 0.8,
                       height: 1.0,
                     ),
@@ -644,6 +644,7 @@ class _EditorialSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return GestureDetector(
       onTap: () => onChanged(!value),
       child: AnimatedContainer(
@@ -651,10 +652,10 @@ class _EditorialSwitch extends StatelessWidget {
         width: 44,
         height: 24,
         decoration: BoxDecoration(
-          color: value ? Editorial.live : Editorial.card,
+          color: value ? c.live : c.card,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: value ? Editorial.live : Editorial.hairlineHi,
+            color: value ? c.live : c.hairlineHi,
             width: 1,
           ),
         ),
@@ -667,7 +668,7 @@ class _EditorialSwitch extends StatelessWidget {
             width: 18,
             height: 18,
             decoration: BoxDecoration(
-              color: value ? Editorial.pitch : Editorial.inkMute,
+              color: value ? c.pitch : c.inkMute,
               shape: BoxShape.circle,
             ),
           ),
@@ -684,6 +685,7 @@ class _EmptyNotifs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(28),
@@ -695,17 +697,17 @@ class _EmptyNotifs extends StatelessWidget {
               height: 64,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: Editorial.hairline, width: 1),
+                border: Border.all(color: c.hairline, width: 1),
               ),
               child: Icon(Icons.notifications_off_outlined,
-                  size: 26, color: Editorial.inkDim),
+                  size: 26, color: c.inkDim),
             ),
             const SizedBox(height: 18),
             Text(
               l.noEnabledLeagues.toUpperCase(),
               style: EType.display(
                 size: 22,
-                color: Editorial.ink,
+                color: c.ink,
                 letterSpacing: 1.2,
               ),
               textAlign: TextAlign.center,
@@ -715,7 +717,7 @@ class _EmptyNotifs extends StatelessWidget {
               l.enableLeaguesFirst,
               textAlign: TextAlign.center,
               style:
-                  EType.body(color: Editorial.inkMute, size: 13, height: 1.5),
+                  EType.body(color: c.inkMute, size: 13, height: 1.5),
             ),
           ],
         ),

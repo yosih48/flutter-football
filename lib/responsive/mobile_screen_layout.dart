@@ -103,11 +103,12 @@ class _EditorialNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return Container(
       decoration: BoxDecoration(
-        color: Editorial.terrace,
+        color: c.terrace,
         border: Border(
-          top: BorderSide(color: Editorial.hairline, width: 1),
+          top: BorderSide(color: c.hairline, width: 1),
         ),
       ),
       child: SafeArea(
@@ -129,7 +130,7 @@ class _EditorialNavBar extends StatelessWidget {
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         height: 2,
-                        color: active ? Editorial.live : Colors.transparent,
+                        color: active ? c.live : Colors.transparent,
                       ),
 
                       // Icon
@@ -143,18 +144,14 @@ class _EditorialNavBar extends StatelessWidget {
                                 active ? tab.activeIcon : tab.icon,
                                 key: ValueKey(active),
                                 size: 22,
-                                color: active
-                                    ? Editorial.live
-                                    : Editorial.inkDim,
+                                color: active ? c.live : c.inkDim,
                               ),
                             ),
                             const SizedBox(height: 3),
                             Text(
                               tab.label.toUpperCase(),
                               style: EType.label(
-                                color: active
-                                    ? Editorial.live
-                                    : Editorial.inkFaint,
+                                color: active ? c.live : c.inkFaint,
                                 size: 8,
                                 letterSpacing: 1.2,
                               ),

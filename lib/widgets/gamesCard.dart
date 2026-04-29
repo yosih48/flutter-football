@@ -31,14 +31,7 @@ class GameWidget extends StatelessWidget {
   }
 
   static const Set<String> _liveShort = {
-    '1H',
-    '2H',
-    'H1',
-    'H2',
-    'ET',
-    'BT',
-    'P',
-    'INT'
+    '1H', '2H', 'H1', 'H2', 'ET', 'BT', 'P', 'INT'
   };
 
   bool get _isLive => _liveShort.contains(game.status.short);
@@ -49,49 +42,55 @@ class GameWidget extends StatelessWidget {
   bool get _kickoffPassed => DateTime.now().isAfter(game.date.toLocal());
   bool get _canGuess => !_kickoffPassed;
 
-  Color get _accent {
-    if (_isLive) return Editorial.live;
-    if (_isHalftime) return Editorial.amber;
-    if (_isFinished) return Editorial.inkDim;
-    return Editorial.hairline;
-  }
-
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     final info = StatusUtils.getStatusInfo(game.status.short, context);
+
+    // Compute accent locally so it can use the theme colors.
+    final Color accent;
+    if (_isLive) {
+      accent = c.live;
+    } else if (_isHalftime) {
+      accent = c.amber;
+    } else if (_isFinished) {
+      accent = c.inkDim;
+    } else {
+      accent = c.hairline;
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Material(
-        color: Editorial.card,
+        color: c.card,
         borderRadius: BorderRadius.circular(2),
         child: InkWell(
           borderRadius: BorderRadius.circular(2),
           onTap: () => onTap(context),
-          splashColor: Editorial.live.withOpacity(0.04),
+          splashColor: c.live.withOpacity(0.04),
           highlightColor: Colors.transparent,
           child: IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Kit-stripe accent — colors the card by match state.
-                Container(width: 3, color: _accent),
+                Container(width: 3, color: accent),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildMeta(info),
+                        _buildMeta(info, c),
                         const SizedBox(height: 14),
-                        _buildMatchRow(),
+                        _buildMatchRow(c),
                         if (_isUpcoming) ...[
                           const SizedBox(height: 14),
-                          _buildOddsRow(),
+                          _buildOddsRow(c),
                         ],
                         if (!_isUpcoming) ...[
                           const SizedBox(height: 12),
-                          _buildGuessFooter(context),
+                          _buildGuessFooter(context, c),
                         ],
                       ],
                     ),
@@ -105,16 +104,16 @@ class GameWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildMeta(Map<String, dynamic> info) {
+  Widget _buildMeta(Map<String, dynamic> info, EditorialColors c) {
     return Row(
       children: [
-        _buildStatusPill(info),
+        _buildStatusPill(info, c),
         const Spacer(),
         if (_isUpcoming)
           Text(
             DateFormat('HH:mm').format(game.date.toLocal()),
             style: EType.numeric(
-              color: Editorial.inkMute,
+              color: c.inkMute,
               size: 13,
               letterSpacing: 0.5,
             ),
@@ -123,7 +122,7 @@ class GameWidget extends StatelessWidget {
         Text(
           DateFormat('dd.MM').format(game.date),
           style: EType.numeric(
-            color: Editorial.inkDim,
+            color: c.inkDim,
             size: 11,
             letterSpacing: 0.4,
           ),
@@ -132,18 +131,18 @@ class GameWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusPill(Map<String, dynamic> info) {
+  Widget _buildStatusPill(Map<String, dynamic> info, EditorialColors c) {
     if (_isLive) {
       final elapsed = game.status.elapsed;
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _PulsingDot(color: Editorial.live),
+          _PulsingDot(color: c.live),
           const SizedBox(width: 6),
           Text(
             elapsed != null ? "LIVE  ${elapsed}'" : 'LIVE',
             style: EType.label(
-              color: Editorial.live,
+              color: c.live,
               size: 10,
               letterSpacing: 1.8,
             ),
@@ -154,36 +153,36 @@ class GameWidget extends StatelessWidget {
     if (_isHalftime) {
       return Text('HALF TIME',
           style: EType.label(
-              color: Editorial.amber, size: 10, letterSpacing: 1.8));
+              color: c.amber, size: 10, letterSpacing: 1.8));
     }
     if (_isFinished) {
       return Text('FULL TIME',
           style: EType.label(
-              color: Editorial.inkMute, size: 10, letterSpacing: 1.8));
+              color: c.inkMute, size: 10, letterSpacing: 1.8));
     }
     return Text(
       (info['text']?.toString() ?? '').toUpperCase(),
-      style: EType.label(color: Editorial.inkDim, size: 10, letterSpacing: 1.8),
+      style: EType.label(color: c.inkDim, size: 10, letterSpacing: 1.8),
     );
   }
 
-  Widget _buildMatchRow() {
+  Widget _buildMatchRow(EditorialColors c) {
     return Row(
       children: [
-        Expanded(child: _buildTeamSide(game.home, alignEnd: true)),
+        Expanded(child: _buildTeamSide(game.home, alignEnd: true, c: c)),
         const SizedBox(width: 14),
-        _buildTeamCrest(game.home),
+        _buildTeamCrest(game.home, c),
         const SizedBox(width: 14),
-        _buildCenter(),
+        _buildCenter(c),
         const SizedBox(width: 14),
-        _buildTeamCrest(game.away),
+        _buildTeamCrest(game.away, c),
         const SizedBox(width: 14),
-        Expanded(child: _buildTeamSide(game.away, alignEnd: false)),
+        Expanded(child: _buildTeamSide(game.away, alignEnd: false, c: c)),
       ],
     );
   }
 
-  Widget _buildTeamSide(Team team, {required bool alignEnd}) {
+  Widget _buildTeamSide(Team team, {required bool alignEnd, required EditorialColors c}) {
     return GestureDetector(
       onTap: () => TeamLinkHandler.linkToTeam(team.name),
       child: Text(
@@ -195,20 +194,20 @@ class GameWidget extends StatelessWidget {
           size: 16,
           letterSpacing: 0.6,
           height: 1.05,
-          color: Editorial.ink,
+          color: c.ink,
         ),
       ),
     );
   }
 
-  Widget _buildTeamCrest(Team team) {
+  Widget _buildTeamCrest(Team team, EditorialColors c) {
     return GestureDetector(
       onTap: () => TeamLinkHandler.linkToTeam(team.name),
       child: Container(
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: Editorial.cardHi,
+          color: c.cardHi,
           shape: BoxShape.circle,
         ),
         padding: const EdgeInsets.all(5),
@@ -218,14 +217,14 @@ class GameWidget extends StatelessWidget {
           errorBuilder: (_, __, ___) => Icon(
             Icons.shield_outlined,
             size: 16,
-            color: Editorial.inkDim,
+            color: c.inkDim,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildCenter() {
+  Widget _buildCenter(EditorialColors c) {
     if (_canGuess && _isUpcoming) {
       return _GuessInput(
         homeController: homeController,
@@ -237,21 +236,21 @@ class GameWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: Editorial.cardHi,
+        color: c.cardHi,
         borderRadius: BorderRadius.circular(2),
       ),
       child: Text(
         '$h  :  $a',
         style: EType.display(
           size: 26,
-          color: _isLive ? Editorial.live : Editorial.ink,
+          color: _isLive ? c.live : c.ink,
           letterSpacing: 1.0,
         ),
       ),
     );
   }
 
-  Widget _buildOddsRow() {
+  Widget _buildOddsRow(EditorialColors c) {
     return Padding(
       padding: const EdgeInsets.only(top: 4),
       child: Row(
@@ -266,7 +265,7 @@ class GameWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildGuessFooter(BuildContext context) {
+  Widget _buildGuessFooter(BuildContext context, EditorialColors c) {
     final l = AppLocalizations.of(context)!;
     final hasGuess = guess != null;
     return Stack(
@@ -277,19 +276,19 @@ class GameWidget extends StatelessWidget {
           children: [
             Text(
               l.yourguess.toUpperCase(),
-              style: EType.label(color: Editorial.inkDim, size: 10),
+              style: EType.label(color: c.inkDim, size: 10),
             ),
             if (hasGuess)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Editorial.liveSoft,
+                  color: c.liveSoft,
                   borderRadius: BorderRadius.circular(2),
                 ),
                 child: Text(
                   '${guess!.sumPoints % 1 == 0 ? guess!.sumPoints.toInt() : guess!.sumPoints} ${l.points.toUpperCase()}',
                   style: EType.label(
-                    color: Editorial.live,
+                    color: c.live,
                     size: 10,
                     letterSpacing: 1.4,
                   ),
@@ -302,7 +301,7 @@ class GameWidget extends StatelessWidget {
               ? '${guess!.homeTeamGoals} : ${guess!.awayTeamGoals}'
               : '— : —',
           style: EType.numeric(
-            color: hasGuess ? Editorial.ink : Editorial.inkFaint,
+            color: hasGuess ? c.ink : c.inkFaint,
             size: 13,
             weight: FontWeight.w600,
           ),
@@ -319,21 +318,22 @@ class _OddsCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
       decoration: BoxDecoration(
-        color: Editorial.terrace,
-        border: Border.all(color: Editorial.hairline, width: 1),
+        color: c.terrace,
+        border: Border.all(color: c.hairline, width: 1),
         borderRadius: BorderRadius.circular(2),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: EType.label(color: Editorial.inkDim, size: 10)),
+          Text(label, style: EType.label(color: c.inkDim, size: 10)),
           Text(
             value.toStringAsFixed(2),
             style: EType.numeric(
-              color: Editorial.ink,
+              color: c.ink,
               size: 12,
               weight: FontWeight.w500,
             ),
@@ -351,25 +351,26 @@ class _GuessInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _digit(homeController),
+        _digit(homeController, c),
         Padding(
           padding: const EdgeInsets.only(left: 6, right: 6, bottom: 20),
           child: Text(':',
               style: EType.display(
                 size: 22,
-                color: Editorial.inkDim,
+                color: c.inkDim,
                 letterSpacing: 0,
               )),
         ),
-        _digit(awayController),
+        _digit(awayController, c),
       ],
     );
   }
 
-  Widget _digit(TextEditingController? controller) {
+  Widget _digit(TextEditingController? controller, EditorialColors c) {
     return SizedBox(
       width: 38,
       height: 44,
@@ -377,21 +378,21 @@ class _GuessInput extends StatelessWidget {
         controller: controller,
         keyboardType: TextInputType.number,
         textAlign: TextAlign.center,
-        cursorColor: Editorial.live,
+        cursorColor: c.live,
         cursorWidth: 1.5,
         style: EType.display(
           size: 22,
-          color: Editorial.ink,
+          color: c.ink,
           letterSpacing: 0,
         ),
         decoration: InputDecoration(
           isDense: true,
           contentPadding: EdgeInsets.zero,
           filled: true,
-          fillColor: Editorial.terrace,
-          border: _border(Editorial.hairline),
-          enabledBorder: _border(Editorial.hairline),
-          focusedBorder: _border(Editorial.live),
+          fillColor: c.terrace,
+          border: _border(c.hairline),
+          enabledBorder: _border(c.hairline),
+          focusedBorder: _border(c.live),
         ),
         inputFormatters: [
           LengthLimitingTextInputFormatter(1),
@@ -401,9 +402,9 @@ class _GuessInput extends StatelessWidget {
     );
   }
 
-  OutlineInputBorder _border(Color c) => OutlineInputBorder(
+  OutlineInputBorder _border(Color col) => OutlineInputBorder(
         borderRadius: BorderRadius.circular(2),
-        borderSide: BorderSide(color: c, width: 1),
+        borderSide: BorderSide(color: col, width: 1),
       );
 }
 

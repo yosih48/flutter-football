@@ -49,30 +49,27 @@ class _EditorialChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(2),
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-          decoration: BoxDecoration(
-            color: selected ? Editorial.ink : Colors.transparent,
-            border: Border.all(
-              color: selected ? Editorial.ink : Editorial.hairline,
-              width: 1,
-            ),
-            borderRadius: BorderRadius.circular(2),
+    final c = context.col;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color: selected ? c.ink : Colors.transparent,
+          border: Border.all(
+            color: selected ? c.ink : c.hairline,
+            width: 1,
           ),
-          child: Text(
-            label.toUpperCase(),
-            style: EType.label(
-              color: selected ? Editorial.pitch : Editorial.inkMute,
-              size: 11,
-              letterSpacing: 1.6,
-            ),
+          borderRadius: BorderRadius.circular(2),
+        ),
+        child: Text(
+          label.toUpperCase(),
+          style: EType.label(
+            color: selected ? c.pitch : c.inkMute,
+            size: 11,
+            letterSpacing: 1.6,
           ),
         ),
       ),

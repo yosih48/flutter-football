@@ -57,6 +57,7 @@ class _ToggleButtonsSampleState extends State<ToggleButtonsSample> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return SizedBox(
       height: 92,
       child: ListView.builder(
@@ -86,9 +87,7 @@ class _ToggleButtonsSampleState extends State<ToggleButtonsSample> {
                       shape: BoxShape.circle,
                       color: Colors.white,
                       border: Border.all(
-                        color: isSelected
-                            ? Editorial.live
-                            : Editorial.hairline,
+                        color: isSelected ? c.live : c.hairline,
                         width: isSelected ? 2 : 1,
                       ),
                     ),
@@ -99,7 +98,7 @@ class _ToggleButtonsSampleState extends State<ToggleButtonsSample> {
                       errorBuilder: (_, __, ___) => Icon(
                         Icons.shield_outlined,
                         size: 20,
-                        color: Editorial.inkDim,
+                        color: c.inkDim,
                       ),
                     ),
                   ),
@@ -109,9 +108,7 @@ class _ToggleButtonsSampleState extends State<ToggleButtonsSample> {
                     child: Text(
                       widget.options[i].toUpperCase(),
                       style: EType.label(
-                        color: isSelected
-                            ? Editorial.ink
-                            : Editorial.inkDim,
+                        color: isSelected ? c.ink : c.inkDim,
                         size: 9,
                         letterSpacing: 1.2,
                       ),
@@ -125,7 +122,7 @@ class _ToggleButtonsSampleState extends State<ToggleButtonsSample> {
                     duration: const Duration(milliseconds: 180),
                     width: isSelected ? 22 : 0,
                     height: 2,
-                    color: Editorial.live,
+                    color: c.live,
                   ),
                 ],
               ),

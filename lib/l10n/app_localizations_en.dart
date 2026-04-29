@@ -660,6 +660,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_theme => 'Theme';
 
   @override
+  String get settings_dark => 'Dark';
+
+  @override
+  String get settings_light => 'Light';
+
+  @override
   String get privategroups => 'Private Group';
 
   @override

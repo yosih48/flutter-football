@@ -50,6 +50,7 @@ class _StatisticsState extends State<Statistics> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     final l = AppLocalizations.of(context)!;
     final total = userGuesses.length;
     final direct = directGuesses.length;
@@ -60,13 +61,13 @@ class _StatisticsState extends State<Statistics> {
     final directionPct = total > 0 ? direction / total : 0.0;
 
     return Scaffold(
-      backgroundColor: Editorial.pitch,
+      backgroundColor: c.pitch,
       appBar: AppBar(
         elevation: 0,
         scrolledUnderElevation: 0,
-        backgroundColor: Editorial.pitch,
+        backgroundColor: c.pitch,
         surfaceTintColor: Colors.transparent,
-        iconTheme: IconThemeData(color: Editorial.ink, size: 20),
+        iconTheme: IconThemeData(color: c.ink, size: 20),
         toolbarHeight: 72,
         titleSpacing: 20,
         title: Column(
@@ -76,11 +77,11 @@ class _StatisticsState extends State<Statistics> {
           children: [
             Text('PLAYER',
                 style: EType.label(
-                    color: Editorial.inkDim, size: 10, letterSpacing: 3)),
+                    color: c.inkDim, size: 10, letterSpacing: 3)),
             const SizedBox(height: 2),
             Text(l.statistics.toUpperCase(),
                 style: EType.display(
-                    size: 28, color: Editorial.ink, letterSpacing: 1.4)),
+                    size: 28, color: c.ink, letterSpacing: 1.4)),
           ],
         ),
       ),
@@ -93,7 +94,7 @@ class _StatisticsState extends State<Statistics> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Section label ───────────────────────────────────────
-              _sectionLabel('OVERVIEW'),
+              _sectionLabel('OVERVIEW', c),
               const SizedBox(height: 16),
 
               // ── Big number trio ─────────────────────────────────────
@@ -105,27 +106,27 @@ class _StatisticsState extends State<Statistics> {
                       child: _MetricBlock(
                         value: isLoading ? '—' : total.toString(),
                         label: l.totalGuesses,
-                        accent: Editorial.ink,
+                        accent: c.ink,
                         isLarge: true,
                       ),
                     ),
                     Container(
-                        width: 1, color: Editorial.hairline, margin: const EdgeInsets.symmetric(vertical: 4)),
+                        width: 1, color: c.hairline, margin: const EdgeInsets.symmetric(vertical: 4)),
                     Expanded(
                       child: _MetricBlock(
                         value: isLoading ? '—' : direct.toString(),
                         label: l.directGuesses,
-                        accent: Editorial.live,
+                        accent: c.live,
                         isLarge: false,
                       ),
                     ),
                     Container(
-                        width: 1, color: Editorial.hairline, margin: const EdgeInsets.symmetric(vertical: 4)),
+                        width: 1, color: c.hairline, margin: const EdgeInsets.symmetric(vertical: 4)),
                     Expanded(
                       child: _MetricBlock(
                         value: isLoading ? '—' : direction.toString(),
                         label: l.directionGuesses,
-                        accent: Editorial.amber,
+                        accent: c.amber,
                         isLarge: false,
                       ),
                     ),
@@ -134,11 +135,11 @@ class _StatisticsState extends State<Statistics> {
               ),
 
               const SizedBox(height: 24),
-              Container(height: 1, color: Editorial.hairline),
+              Container(height: 1, color: c.hairline),
               const SizedBox(height: 24),
 
               // ── Accuracy section ────────────────────────────────────
-              _sectionLabel('ACCURACY'),
+              _sectionLabel('ACCURACY', c),
               const SizedBox(height: 20),
 
               _AccuracyBar(
@@ -146,7 +147,7 @@ class _StatisticsState extends State<Statistics> {
                 count: direct,
                 total: total,
                 ratio: directPct,
-                color: Editorial.live,
+                color: c.live,
                 isLoading: isLoading,
               ),
               const SizedBox(height: 18),
@@ -155,18 +156,18 @@ class _StatisticsState extends State<Statistics> {
                 count: direction,
                 total: total,
                 ratio: directionPct,
-                color: Editorial.amber,
+                color: c.amber,
                 isLoading: isLoading,
               ),
 
               const SizedBox(height: 24),
-              Container(height: 1, color: Editorial.hairline),
+              Container(height: 1, color: c.hairline),
               const SizedBox(height: 24),
 
               // ── Points breakdown ─────────────────────────────────────
-              _sectionLabel('POINTS'),
+              _sectionLabel('POINTS', c),
               const SizedBox(height: 16),
-              _buildPointsBreakdown(context, l),
+              _buildPointsBreakdown(context, l, c),
             ],
           ),
         ),
@@ -174,7 +175,7 @@ class _StatisticsState extends State<Statistics> {
     );
   }
 
-  Widget _buildPointsBreakdown(BuildContext context, AppLocalizations l) {
+  Widget _buildPointsBreakdown(BuildContext context, AppLocalizations l, EditorialColors c) {
     final totalPts = userGuesses.fold<double>(
         0.0, (sum, g) => sum + g.sumPoints);
     final directPts = directGuesses.fold<double>(
@@ -187,8 +188,8 @@ class _StatisticsState extends State<Statistics> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Editorial.card,
-        border: Border.all(color: Editorial.hairline, width: 1),
+        color: c.card,
+        border: Border.all(color: c.hairline, width: 1),
         borderRadius: BorderRadius.circular(2),
       ),
       child: Column(
@@ -196,34 +197,34 @@ class _StatisticsState extends State<Statistics> {
           _PointsRow(
             label: l.totalGuesses,
             value: isLoading ? '—' : fmt(totalPts),
-            accent: Editorial.ink,
+            accent: c.ink,
             isTotal: true,
           ),
-          Container(height: 1, color: Editorial.hairline),
+          Container(height: 1, color: c.hairline),
           _PointsRow(
             label: l.directGuesses,
             value: isLoading ? '—' : fmt(directPts),
-            accent: Editorial.live,
+            accent: c.live,
           ),
-          Container(height: 1, color: Editorial.hairline),
+          Container(height: 1, color: c.hairline),
           _PointsRow(
             label: l.directionGuesses,
             value: isLoading ? '—' : fmt(directionPts),
-            accent: Editorial.amber,
+            accent: c.amber,
           ),
         ],
       ),
     );
   }
 
-  Widget _sectionLabel(String text) {
+  Widget _sectionLabel(String text, EditorialColors c) {
     return Row(
       children: [
-        Container(width: 18, height: 1, color: Editorial.live),
+        Container(width: 18, height: 1, color: c.live),
         const SizedBox(width: 10),
         Text(text,
             style: EType.label(
-                color: Editorial.ink, size: 11, letterSpacing: 2.4)),
+                color: c.ink, size: 11, letterSpacing: 2.4)),
       ],
     );
   }
@@ -244,6 +245,7 @@ class _MetricBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
       child: Column(
@@ -261,7 +263,7 @@ class _MetricBlock extends StatelessWidget {
             label.toUpperCase(),
             textAlign: TextAlign.center,
             style: EType.label(
-              color: Editorial.inkDim,
+              color: c.inkDim,
               size: 9,
               letterSpacing: 1.6,
             ),
@@ -291,6 +293,7 @@ class _AccuracyBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     final pct = (ratio * 100).round();
 
     return Column(
@@ -301,13 +304,13 @@ class _AccuracyBar extends StatelessWidget {
           children: [
             Text(label.toUpperCase(),
                 style: EType.label(
-                    color: Editorial.inkMute, size: 10, letterSpacing: 1.6)),
+                    color: c.inkMute, size: 10, letterSpacing: 1.6)),
             Row(
               children: [
                 Text(
                   isLoading ? '—' : '$count / $total',
                   style: EType.numeric(
-                      color: Editorial.inkDim, size: 11),
+                      color: c.inkDim, size: 11),
                 ),
                 const SizedBox(width: 10),
                 Text(
@@ -327,7 +330,7 @@ class _AccuracyBar extends StatelessWidget {
         Container(
           height: 4,
           decoration: BoxDecoration(
-            color: Editorial.card,
+            color: c.card,
             borderRadius: BorderRadius.circular(2),
           ),
           child: LayoutBuilder(
@@ -369,10 +372,11 @@ class _PointsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: isTotal ? Editorial.terrace : Colors.transparent,
+        color: isTotal ? c.terrace : Colors.transparent,
         border: Border(
           left: BorderSide(color: accent, width: 3),
         ),
@@ -383,7 +387,7 @@ class _PointsRow extends StatelessWidget {
           Text(
             label.toUpperCase(),
             style: EType.label(
-              color: isTotal ? Editorial.ink : Editorial.inkMute,
+              color: isTotal ? c.ink : c.inkMute,
               size: 11,
               letterSpacing: 1.8,
             ),

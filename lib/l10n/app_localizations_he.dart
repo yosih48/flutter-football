@@ -660,6 +660,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settings_theme => 'ערכת נושא';
 
   @override
+  String get settings_dark => 'כהה';
+
+  @override
+  String get settings_light => 'בהיר';
+
+  @override
   String get privategroups => 'ליגות פרטיות';
 
   @override

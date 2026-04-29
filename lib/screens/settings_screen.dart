@@ -11,6 +11,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:football/l10n/app_localizations.dart';
 
 class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({super.key});
+
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
@@ -31,6 +33,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // All color references go through `c` — the only change needed when
+    // migrating a screen to support both light and dark mode.
+    final c = context.col;
     final l = AppLocalizations.of(context)!;
     final user = Provider.of<AuthProvider>(context).currentUser;
     final userName = user?.name ?? '';
@@ -39,7 +44,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         userName.isNotEmpty ? userName[0].toUpperCase() : '?';
 
     return Scaffold(
-      backgroundColor: Editorial.pitch,
+      backgroundColor: c.pitch,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,16 +55,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l.appLabel.toUpperCase(),
+                  Text('APP',
                       style: EType.label(
-                          color: Editorial.inkDim,
+                          color: c.inkDim,
                           size: 10,
                           letterSpacing: 3)),
                   const SizedBox(height: 2),
                   Text(l.settings.toUpperCase(),
                       style: EType.display(
                           size: 28,
-                          color: Editorial.ink,
+                          color: c.ink,
                           letterSpacing: 1.4)),
                 ],
               ),
@@ -70,13 +75,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               margin: const EdgeInsets.fromLTRB(20, 0, 20, 8),
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Editorial.card,
+                color: c.card,
                 border: Border(
-                  top: BorderSide(color: Editorial.live, width: 2),
-                  left: BorderSide(color: Editorial.hairline, width: 1),
-                  right: BorderSide(color: Editorial.hairline, width: 1),
-                  bottom: BorderSide(color: Editorial.hairline, width: 1),
+                  top: BorderSide(color: c.live, width: 2),
+                  left: BorderSide(color: c.hairline, width: 1),
+                  right: BorderSide(color: c.hairline, width: 1),
+                  bottom: BorderSide(color: c.hairline, width: 1),
                 ),
+                borderRadius: BorderRadius.circular(2),
               ),
               child: Row(
                 children: [
@@ -84,18 +90,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     width: 56,
                     height: 56,
                     decoration: BoxDecoration(
-                      color: Editorial.cardHi,
+                      color: c.cardHi,
                       shape: BoxShape.circle,
-                      border: Border.all(
-                          color: Editorial.live, width: 1.5),
+                      border: Border.all(color: c.live, width: 1.5),
                     ),
                     alignment: Alignment.center,
                     child: Text(
                       initial,
                       style: EType.display(
-                          size: 28,
-                          color: Editorial.ink,
-                          letterSpacing: 0),
+                          size: 28, color: c.ink, letterSpacing: 0),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -110,15 +113,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           overflow: TextOverflow.ellipsis,
                           style: EType.display(
                               size: 20,
-                              color: Editorial.ink,
+                              color: c.ink,
                               letterSpacing: 0.8),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           userEmail,
                           overflow: TextOverflow.ellipsis,
-                          style: EType.body(
-                              color: Editorial.inkMute, size: 12),
+                          style:
+                              EType.body(color: c.inkMute, size: 12),
                         ),
                       ],
                     ),
@@ -130,35 +133,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // ── Menu list ─────────────────────────────────────────────
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                padding:
+                    const EdgeInsets.fromLTRB(20, 16, 20, 24),
                 children: [
-                  _sectionLabel(l.account.toUpperCase()),
+                  _sectionLabel('ACCOUNT', c),
                   const SizedBox(height: 12),
 
                   _SettingsRow(
                     icon: Icons.person_outline,
                     label: l.settings_account,
+                    c: c,
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (_) => AccountScreen()),
+                          builder: (_) => const AccountScreen()),
                     ),
                   ),
 
                   const SizedBox(height: 20),
-                  _sectionLabel(l.appLabel.toUpperCase()),
+                  _sectionLabel('APP', c),
                   const SizedBox(height: 12),
 
                   _SettingsRow(
                     icon: Icons.info_outline,
                     label: l.settings_rules,
-                    onTap: () => showInstructionsBottomSheet(context),
+                    c: c,
+                    onTap: () =>
+                        showInstructionsBottomSheet(context),
                   ),
 
                   const SizedBox(height: 8),
 
-                  // Language row — inline editorial toggle
-                  _LanguageRow(l: l),
+                  // Theme toggle — DARK / LIGHT
+                  _ThemeRow(l: l, c: c),
+
+                  const SizedBox(height: 8),
+
+                  // Language toggle — ENG / HEB
+                  _LanguageRow(l: l, c: c),
 
                   const SizedBox(height: 32),
 
@@ -168,7 +180,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: Text(
                         'v$appVersion',
                         style: EType.label(
-                            color: Editorial.inkFaint,
+                            color: c.inkFaint,
                             size: 10,
                             letterSpacing: 1.6),
                       ),
@@ -182,95 +194,90 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _sectionLabel(String text) {
+  Widget _sectionLabel(String text, EditorialColors c) {
     return Row(
       children: [
-        Container(width: 18, height: 1, color: Editorial.live),
+        Container(width: 18, height: 1, color: c.live),
         const SizedBox(width: 10),
         Text(text,
             style: EType.label(
-                color: Editorial.inkMute, size: 10, letterSpacing: 2.4)),
+                color: c.inkMute, size: 10, letterSpacing: 2.4)),
       ],
     );
   }
 }
 
-// ── Settings row ────────────────────────────────────────────────────────
+// ── Settings row ─────────────────────────────────────────────────────────
 class _SettingsRow extends StatelessWidget {
   const _SettingsRow({
     required this.icon,
     required this.label,
+    required this.c,
     required this.onTap,
   });
   final IconData icon;
   final String label;
+  final EditorialColors c;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Editorial.card,
-      borderRadius: BorderRadius.circular(2),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(2),
-        onTap: onTap,
-        child: Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Editorial.hairline, width: 1),
-            borderRadius: BorderRadius.circular(2),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Editorial.terrace,
-                  borderRadius: BorderRadius.circular(2),
-                  border:
-                      Border.all(color: Editorial.hairline, width: 1),
-                ),
-                child:
-                    Icon(icon, size: 16, color: Editorial.inkMute),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        decoration: BoxDecoration(
+          color: c.card,
+          border: Border.all(color: c.hairline, width: 1),
+          borderRadius: BorderRadius.circular(2),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: c.terrace,
+                borderRadius: BorderRadius.circular(2),
+                border: Border.all(color: c.hairline, width: 1),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  label.toUpperCase(),
-                  style: EType.label(
-                      color: Editorial.ink,
-                      size: 11,
-                      letterSpacing: 1.8),
-                ),
+              child: Icon(icon, size: 16, color: c.inkMute),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                label.toUpperCase(),
+                style: EType.label(
+                    color: c.ink, size: 11, letterSpacing: 1.8),
               ),
-              Icon(Icons.arrow_forward_ios,
-                  size: 12, color: Editorial.inkDim),
-            ],
-          ),
+            ),
+            Icon(Icons.arrow_forward_ios,
+                size: 12, color: c.inkDim),
+          ],
         ),
       ),
     );
   }
 }
 
-// ── Language row ────────────────────────────────────────────────────────
-class _LanguageRow extends StatelessWidget {
-  const _LanguageRow({required this.l});
+// ── Theme row — DARK / LIGHT segmented toggle ─────────────────────────────
+class _ThemeRow extends StatelessWidget {
+  const _ThemeRow({required this.l, required this.c});
   final AppLocalizations l;
+  final EditorialColors c;
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LocaleProvider>(
-      builder: (context, localeProvider, _) {
-        final isEn = localeProvider.locale.languageCode == 'en';
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, _) {
+        final isDark = themeProvider.isDarkMode;
         return Container(
           padding:
               const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           decoration: BoxDecoration(
-            color: Editorial.card,
-            border: Border.all(color: Editorial.hairline, width: 1),
+            color: c.card,
+            border: Border.all(color: c.hairline, width: 1),
             borderRadius: BorderRadius.circular(2),
           ),
           child: Row(
@@ -279,54 +286,54 @@ class _LanguageRow extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: Editorial.terrace,
+                  color: c.terrace,
                   borderRadius: BorderRadius.circular(2),
-                  border: Border.all(
-                      color: Editorial.hairline, width: 1),
+                  border: Border.all(color: c.hairline, width: 1),
                 ),
-                child: Icon(Icons.language_outlined,
-                    size: 16, color: Editorial.inkMute),
+                child: Icon(
+                  isDark
+                      ? Icons.dark_mode_outlined
+                      : Icons.light_mode_outlined,
+                  size: 16,
+                  color: c.inkMute,
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
-                  l.settings_language.toUpperCase(),
+                  l.settings_theme.toUpperCase(),
                   style: EType.label(
-                      color: Editorial.ink,
-                      size: 11,
-                      letterSpacing: 1.8),
+                      color: c.ink, size: 11, letterSpacing: 1.8),
                 ),
               ),
-              // Segmented language toggle
               Container(
                 decoration: BoxDecoration(
-                  color: Editorial.terrace,
-                  border:
-                      Border.all(color: Editorial.hairline, width: 1),
+                  color: c.terrace,
+                  border: Border.all(color: c.hairline, width: 1),
                   borderRadius: BorderRadius.circular(2),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _LangChip(
-                      code: l.settings_eng,
-                      active: isEn,
-                      onTap: () => context
-                          .read<LocaleProvider>()
-                          .setLocale(const Locale('en')),
+                    _ModeChip(
+                      label: l.settings_dark,
+                      active: isDark,
+                      c: c,
                       roundLeft: true,
+                      onTap: () {
+                        if (!isDark) themeProvider.setDarkMode(true);
+                      },
                     ),
                     Container(
-                        width: 1,
-                        height: 28,
-                        color: Editorial.hairline),
-                    _LangChip(
-                      code: l.settings_heb,
-                      active: !isEn,
-                      onTap: () => context
-                          .read<LocaleProvider>()
-                          .setLocale(const Locale('he')),
+                        width: 1, height: 28, color: c.hairline),
+                    _ModeChip(
+                      label: l.settings_light,
+                      active: !isDark,
+                      c: c,
                       roundRight: true,
+                      onTap: () {
+                        if (isDark) themeProvider.setDarkMode(false);
+                      },
                     ),
                   ],
                 ),
@@ -339,16 +346,101 @@ class _LanguageRow extends StatelessWidget {
   }
 }
 
-class _LangChip extends StatelessWidget {
-  const _LangChip({
-    required this.code,
+// ── Language row ──────────────────────────────────────────────────────────
+class _LanguageRow extends StatelessWidget {
+  const _LanguageRow({required this.l, required this.c});
+  final AppLocalizations l;
+  final EditorialColors c;
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<LocaleProvider>(
+      builder: (context, localeProvider, _) {
+        final isEn = localeProvider.locale.languageCode == 'en';
+        return Container(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          decoration: BoxDecoration(
+            color: c.card,
+            border: Border.all(color: c.hairline, width: 1),
+            borderRadius: BorderRadius.circular(2),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: c.terrace,
+                  borderRadius: BorderRadius.circular(2),
+                  border:
+                      Border.all(color: c.hairline, width: 1),
+                ),
+                child: Icon(Icons.language_outlined,
+                    size: 16, color: c.inkMute),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  l.settings_language.toUpperCase(),
+                  style: EType.label(
+                      color: c.ink, size: 11, letterSpacing: 1.8),
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: c.terrace,
+                  border:
+                      Border.all(color: c.hairline, width: 1),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _ModeChip(
+                      label: l.settings_eng,
+                      active: isEn,
+                      c: c,
+                      roundLeft: true,
+                      onTap: () => context
+                          .read<LocaleProvider>()
+                          .setLocale(const Locale('en')),
+                    ),
+                    Container(
+                        width: 1, height: 28, color: c.hairline),
+                    _ModeChip(
+                      label: l.settings_heb,
+                      active: !isEn,
+                      c: c,
+                      roundRight: true,
+                      onTap: () => context
+                          .read<LocaleProvider>()
+                          .setLocale(const Locale('he')),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ── Shared segmented chip (theme + language rows) ─────────────────────────
+class _ModeChip extends StatelessWidget {
+  const _ModeChip({
+    required this.label,
     required this.active,
+    required this.c,
     required this.onTap,
     this.roundLeft = false,
     this.roundRight = false,
   });
-  final String code;
+  final String label;
   final bool active;
+  final EditorialColors c;
   final VoidCallback onTap;
   final bool roundLeft;
   final bool roundRight;
@@ -362,7 +454,7 @@ class _LangChip extends StatelessWidget {
         padding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? Editorial.live : Colors.transparent,
+          color: active ? c.live : Colors.transparent,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(roundLeft ? 2 : 0),
             bottomLeft: Radius.circular(roundLeft ? 2 : 0),
@@ -371,9 +463,9 @@ class _LangChip extends StatelessWidget {
           ),
         ),
         child: Text(
-          code.toUpperCase(),
+          label.toUpperCase(),
           style: EType.label(
-            color: active ? Editorial.pitch : Editorial.inkMute,
+            color: active ? c.pitch : c.inkMute,
             size: 11,
             letterSpacing: 1.6,
           ),

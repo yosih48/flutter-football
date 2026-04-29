@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:football/theme/colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider with ChangeNotifier {
@@ -48,7 +49,8 @@ class ThemeProvider with ChangeNotifier {
 
   // Your custom dark theme (from GameApp)
   static final ThemeData darkTheme = ThemeData(
-    scaffoldBackgroundColor: background,
+    scaffoldBackgroundColor: EditorialColors.dark.pitch,
+    extensions: const <ThemeExtension<dynamic>>[EditorialColors.dark],
     cardTheme: const CardThemeData(
       color: cards,
       elevation: 4.0,
@@ -93,7 +95,8 @@ class ThemeProvider with ChangeNotifier {
 
   // Your custom light theme (from GameApp)
   static final ThemeData lightTheme = ThemeData(
-    scaffoldBackgroundColor: white,
+    scaffoldBackgroundColor: EditorialColors.light.pitch,
+    extensions: const <ThemeExtension<dynamic>>[EditorialColors.light],
     cardTheme: const CardThemeData(
       color: Colors.lightBlue,
     ),

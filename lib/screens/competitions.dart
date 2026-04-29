@@ -104,6 +104,7 @@ class _CompetitionsState extends State<Competitions> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     final l = AppLocalizations.of(context)!;
     final leagueNames = {
       2: l.championsleague,
@@ -117,11 +118,11 @@ class _CompetitionsState extends State<Competitions> {
     final anySelected = chosenLeagues.values.any((v) => v);
 
     return Scaffold(
-      backgroundColor: Editorial.pitch,
+      backgroundColor: c.pitch,
       appBar: AppBar(
         elevation: 0,
         scrolledUnderElevation: 0,
-        backgroundColor: Editorial.pitch,
+        backgroundColor: c.pitch,
         surfaceTintColor: Colors.transparent,
         automaticallyImplyLeading: false,
       ),
@@ -136,7 +137,7 @@ class _CompetitionsState extends State<Competitions> {
               children: [
                 Text('SETUP',
                     style: EType.label(
-                        color: Editorial.inkDim,
+                        color: c.inkDim,
                         size: 10,
                         letterSpacing: 3)),
                 const SizedBox(height: 2),
@@ -144,7 +145,7 @@ class _CompetitionsState extends State<Competitions> {
                   l.chooseCompetitions.toUpperCase(),
                   style: EType.display(
                       size: 28,
-                      color: Editorial.ink,
+                      color: c.ink,
                       letterSpacing: 1.4),
                 ),
               ],
@@ -156,12 +157,12 @@ class _CompetitionsState extends State<Competitions> {
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
             child: Row(
               children: [
-                Container(width: 18, height: 1, color: Editorial.live),
+                Container(width: 18, height: 1, color: c.live),
                 const SizedBox(width: 10),
                 Text(
                   l.allCompetitions.toUpperCase(),
                   style: EType.label(
-                      color: Editorial.ink,
+                      color: c.ink,
                       size: 11,
                       letterSpacing: 2.4),
                 ),
@@ -212,11 +213,9 @@ class _CompetitionsState extends State<Competitions> {
             duration: const Duration(milliseconds: 200),
             height: 52,
             decoration: BoxDecoration(
-              color: anySelected ? Editorial.live : Editorial.card,
+              color: anySelected ? c.live : c.card,
               border: Border.all(
-                color: anySelected
-                    ? Editorial.live
-                    : Editorial.hairline,
+                color: anySelected ? c.live : c.hairline,
                 width: 1,
               ),
               borderRadius: BorderRadius.circular(2),
@@ -225,9 +224,7 @@ class _CompetitionsState extends State<Competitions> {
             child: Text(
               l.continueButton.toUpperCase(),
               style: EType.label(
-                color: anySelected
-                    ? Editorial.pitch
-                    : Editorial.inkDim,
+                color: anySelected ? c.pitch : c.inkDim,
                 size: 12,
                 letterSpacing: 2.4,
               ),
@@ -254,15 +251,16 @@ class _LeagueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
         decoration: BoxDecoration(
-          color: selected ? Editorial.liveSoft : Editorial.card,
+          color: selected ? c.liveSoft : c.card,
           borderRadius: BorderRadius.circular(2),
           border: Border.all(
-            color: selected ? Editorial.live : Editorial.hairline,
+            color: selected ? c.live : c.hairline,
             width: selected ? 1.5 : 1,
           ),
         ),
@@ -284,9 +282,7 @@ class _LeagueCard extends StatelessWidget {
                     color: Colors.white,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: selected
-                          ? Editorial.live
-                          : Editorial.hairline,
+                      color: selected ? c.live : c.hairline,
                       width: 1.5,
                     ),
                   ),
@@ -296,7 +292,7 @@ class _LeagueCard extends StatelessWidget {
                     errorBuilder: (_, __, ___) => Icon(
                       Icons.shield_outlined,
                       size: 20,
-                      color: Editorial.inkDim,
+                      color: c.inkDim,
                     ),
                   ),
                 ),
@@ -309,20 +305,15 @@ class _LeagueCard extends StatelessWidget {
                     width: 16,
                     height: 16,
                     decoration: BoxDecoration(
-                      color: selected
-                          ? Editorial.live
-                          : Editorial.card,
+                      color: selected ? c.live : c.card,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: selected
-                            ? Editorial.live
-                            : Editorial.hairlineHi,
+                        color: selected ? c.live : c.hairlineHi,
                         width: 1,
                       ),
                     ),
                     child: selected
-                        ? Icon(Icons.check,
-                            size: 9, color: Editorial.pitch)
+                        ? Icon(Icons.check, size: 9, color: c.pitch)
                         : null,
                   ),
                 ),
@@ -336,9 +327,7 @@ class _LeagueCard extends StatelessWidget {
               child: Text(
                 leagueName.toUpperCase(),
                 style: EType.label(
-                  color: selected
-                      ? Editorial.live
-                      : Editorial.inkMute,
+                  color: selected ? c.live : c.inkMute,
                   size: 9,
                   letterSpacing: 1.2,
                 ),

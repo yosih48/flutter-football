@@ -229,6 +229,8 @@
   "settings_heb": "HEB",
   "from": "from",
   "settings_theme": "Theme",
+  "settings_dark": "Dark",
+  "settings_light": "Light",
   "privategroups": "Private Group",
   "publicgroups": "Public Groups",
   "groupnamealreadyexists": "Group name already exists",

@@ -82,19 +82,20 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     final filteredWinners = _filterById(_userWinners);
     final filteredTopScorers = _filterById(_userTopScorer);
 
     return Scaffold(
-      backgroundColor: Editorial.pitch,
+      backgroundColor: c.pitch,
       body: SafeArea(
         child: Column(
           children: [
             // ── Hero (fixed at top) ──────────────────────────────────
-            _buildHero(context),
+            _buildHero(context, c),
 
             // ── Tab strip (pinned) ───────────────────────────────────
-            _buildTabStrip(context),
+            _buildTabStrip(context, c),
 
             // ── Scrollable content ───────────────────────────────────
             Expanded(
@@ -139,13 +140,13 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   Map<String, String> _filterById(Map<String, String> src) => Map.fromEntries(
       src.entries.where((e) => _allowedIds.contains(e.key)));
 
-  Widget _buildTabStrip(BuildContext context) {
+  Widget _buildTabStrip(BuildContext context, EditorialColors c) {
     final l = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
-        color: Editorial.pitch,
+        color: c.pitch,
         border: Border(
-          bottom: BorderSide(color: Editorial.hairline, width: 1),
+          bottom: BorderSide(color: c.hairline, width: 1),
         ),
       ),
       child: Row(
@@ -167,12 +168,12 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     );
   }
 
-  Widget _buildHero(BuildContext context) {
+  Widget _buildHero(BuildContext context, EditorialColors c) {
     final initial =
         currentUserName.isNotEmpty ? currentUserName[0].toUpperCase() : '?';
 
     return Container(
-      color: Editorial.pitch,
+      color: c.pitch,
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,7 +181,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
           // Overline
           Text(AppLocalizations.of(context)!.playerProfile.toUpperCase(),
               style: EType.label(
-                  color: Editorial.inkDim, size: 10, letterSpacing: 3)),
+                  color: c.inkDim, size: 10, letterSpacing: 3)),
           const SizedBox(height: 20),
 
           Row(
@@ -193,19 +194,19 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: Editorial.card,
+                      color: c.card,
                       shape: BoxShape.circle,
-                      border: Border.all(color: Editorial.live, width: 1.5),
+                      border: Border.all(color: c.live, width: 1.5),
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: CustomPaint(
-                      painter: _MonogramBgPainter(),
+                      painter: _MonogramBgPainter(color: c.hairline),
                       child: Center(
                         child: Text(
                           initial,
                           style: EType.display(
                             size: 42,
-                            color: Editorial.ink,
+                            color: c.ink,
                             letterSpacing: 0,
                           ),
                         ),
@@ -220,9 +221,9 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                       width: 12,
                       height: 12,
                       decoration: BoxDecoration(
-                        color: Editorial.live,
+                        color: c.live,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Editorial.pitch, width: 2),
+                        border: Border.all(color: c.pitch, width: 2),
                       ),
                     ),
                   ),
@@ -241,7 +242,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                           : '—',
                       style: EType.display(
                         size: 28,
-                        color: Editorial.ink,
+                        color: c.ink,
                         letterSpacing: 1.2,
                         height: 0.95,
                       ),
@@ -252,7 +253,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                     Text(
                       currentUserEmail,
                       style: EType.body(
-                          color: Editorial.inkMute, size: 12),
+                          color: c.inkMute, size: 12),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -281,6 +282,7 @@ class _Tab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -296,13 +298,13 @@ class _Tab extends StatelessWidget {
                   Icon(
                     icon,
                     size: 16,
-                    color: active ? Editorial.ink : Editorial.inkDim,
+                    color: active ? c.ink : c.inkDim,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     label.toUpperCase(),
                     style: EType.label(
-                      color: active ? Editorial.ink : Editorial.inkDim,
+                      color: active ? c.ink : c.inkDim,
                       size: 11,
                       letterSpacing: 1.6,
                     ),
@@ -315,7 +317,7 @@ class _Tab extends StatelessWidget {
               duration: const Duration(milliseconds: 180),
               height: 2,
               width: active ? 60.0 : 0.0,
-              color: Editorial.live,
+              color: c.live,
             ),
           ],
         ),
@@ -360,6 +362,7 @@ class usersWinners extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     final l = AppLocalizations.of(context)!;
 
     if (_userWinners.isEmpty) {
@@ -384,7 +387,7 @@ class usersWinners extends StatelessWidget {
           subtitle: Text(
             (l.yourprediction ?? 'Your prediction').toUpperCase(),
             style: EType.label(
-                color: Editorial.inkDim, size: 10, letterSpacing: 1.6),
+                color: c.inkDim, size: 10, letterSpacing: 1.6),
           ),
         );
       }).toList(),
@@ -407,6 +410,7 @@ class usersTopScorers extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     final l = AppLocalizations.of(context)!;
 
     if (filteredTopScorers.isEmpty) {
@@ -434,13 +438,13 @@ class usersTopScorers extends StatelessWidget {
               Text(
                 (l.topScorerPoints ?? 'Goals Points').toUpperCase(),
                 style: EType.label(
-                    color: Editorial.inkDim, size: 10, letterSpacing: 1.6),
+                    color: c.inkDim, size: 10, letterSpacing: 1.6),
               ),
               const SizedBox(width: 6),
               Text(
                 '$pts ${l.pst}',
                 style: EType.numeric(
-                  color: pts > 0 ? Editorial.live : Editorial.inkDim,
+                  color: pts > 0 ? c.live : c.inkDim,
                   size: 11,
                   weight: FontWeight.w600,
                 ),
@@ -468,11 +472,12 @@ class _LeagueRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: Editorial.hairline, width: 1),
+          bottom: BorderSide(color: c.hairline, width: 1),
         ),
       ),
       child: Row(
@@ -483,15 +488,15 @@ class _LeagueRow extends StatelessWidget {
             height: 40,
             padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
-              color: Editorial.card,
+              color: c.card,
               shape: BoxShape.circle,
-              border: Border.all(color: Editorial.hairline, width: 1),
+              border: Border.all(color: c.hairline, width: 1),
             ),
             child: Image.network(
               logoUrl,
               fit: BoxFit.contain,
               errorBuilder: (_, __, ___) =>
-                  Icon(Icons.shield_outlined, size: 16, color: Editorial.inkDim),
+                  Icon(Icons.shield_outlined, size: 16, color: c.inkDim),
             ),
           ),
           const SizedBox(width: 14),
@@ -504,7 +509,7 @@ class _LeagueRow extends StatelessWidget {
                   leagueName.toUpperCase(),
                   style: EType.display(
                     size: 16,
-                    color: Editorial.ink,
+                    color: c.ink,
                     letterSpacing: 0.8,
                     height: 1.0,
                   ),
@@ -531,25 +536,26 @@ class _BadgeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       constraints: const BoxConstraints(maxWidth: 130),
       decoration: BoxDecoration(
-        color: Editorial.liveSoft,
-        border: Border.all(color: Editorial.live.withOpacity(0.5), width: 1),
+        color: c.liveSoft,
+        border: Border.all(color: c.live.withOpacity(0.5), width: 1),
         borderRadius: BorderRadius.circular(2),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: Editorial.live),
+          Icon(icon, size: 12, color: c.live),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
               label,
               overflow: TextOverflow.ellipsis,
               style: EType.body(
-                color: Editorial.live,
+                color: c.live,
                 size: 12,
                 weight: FontWeight.w600,
               ),
@@ -574,6 +580,7 @@ class _EmptyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
       child: Column(
@@ -584,16 +591,16 @@ class _EmptyCard extends StatelessWidget {
             height: 64,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Editorial.hairline, width: 1),
+              border: Border.all(color: c.hairline, width: 1),
             ),
-            child: Icon(icon, size: 26, color: Editorial.inkDim),
+            child: Icon(icon, size: 26, color: c.inkDim),
           ),
           const SizedBox(height: 18),
           Text(
             title.toUpperCase(),
             style: EType.display(
               size: 22,
-              color: Editorial.ink,
+              color: c.ink,
               letterSpacing: 1.2,
             ),
             textAlign: TextAlign.center,
@@ -602,7 +609,7 @@ class _EmptyCard extends StatelessWidget {
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: EType.body(color: Editorial.inkMute, size: 13, height: 1.5),
+            style: EType.body(color: c.inkMute, size: 13, height: 1.5),
           ),
         ],
       ),
@@ -612,10 +619,13 @@ class _EmptyCard extends StatelessWidget {
 
 // ── Decorative monogram background painter ──────────────────────────────
 class _MonogramBgPainter extends CustomPainter {
+  _MonogramBgPainter({required this.color});
+  final Color color;
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Editorial.hairline.withOpacity(0.6)
+      ..color = color.withOpacity(0.6)
       ..strokeWidth = 1;
     for (double x = 0; x <= size.width; x += 14) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
@@ -623,5 +633,5 @@ class _MonogramBgPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_MonogramBgPainter old) => false;
+  bool shouldRepaint(_MonogramBgPainter old) => old.color != color;
 }
