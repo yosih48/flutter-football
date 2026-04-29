@@ -1,16 +1,11 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/theme/typography.dart';
 import 'package:football/l10n/app_localizations.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import '../utils/colors.dart';
 import '../utils/global_variables.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class MobileScreenLayout extends StatefulWidget {
-  const MobileScreenLayout({Key? key}) : super(key: key);
+  const MobileScreenLayout({super.key});
 
   @override
   State<MobileScreenLayout> createState() => _MobileScreenLayoutState();
@@ -28,152 +23,153 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
 
   @override
   void dispose() {
-    super.dispose();
     pageController.dispose();
+    super.dispose();
   }
 
-  void onPageChanged(int page) {
-    setState(() {
-      _page = page;
-    });
-  }
-
-  void navigationTapped(int page) {
-    pageController.jumpToPage(page);
-  }
+  void onPageChanged(int page) => setState(() => _page = page);
+  void navigationTapped(int page) => pageController.jumpToPage(page);
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+
+    final tabs = [
+      _TabDef(
+        label: l.profile,
+        icon: Icons.person_outline,
+        activeIcon: Icons.person,
+      ),
+      _TabDef(
+        label: l.results,
+        icon: Icons.sports_soccer_outlined,
+        activeIcon: Icons.sports_soccer,
+      ),
+      _TabDef(
+        label: l.table,
+        icon: Icons.leaderboard_outlined,
+        activeIcon: Icons.leaderboard,
+      ),
+      _TabDef(
+        label: l.preferences,
+        icon: Icons.favorite_border,
+        activeIcon: Icons.favorite,
+      ),
+      _TabDef(
+        label: l.settings,
+        icon: Icons.tune_outlined,
+        activeIcon: Icons.tune,
+      ),
+    ];
+
     return Scaffold(
       body: PageView(
-        children: homeScreenItems,
         physics: const NeverScrollableScrollPhysics(),
         controller: pageController,
         onPageChanged: onPageChanged,
+        children: homeScreenItems,
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 10,
-              offset: Offset(0, -2),
-            ),
-          ],
+      bottomNavigationBar: _EditorialNavBar(
+        tabs: tabs,
+        currentIndex: _page,
+        onTap: navigationTapped,
+      ),
+    );
+  }
+}
+
+// ── Tab definition ────────────────────────────────────────────────────────
+class _TabDef {
+  const _TabDef({
+    required this.label,
+    required this.icon,
+    required this.activeIcon,
+  });
+  final String label;
+  final IconData icon;
+  final IconData activeIcon;
+}
+
+// ── Editorial nav bar ─────────────────────────────────────────────────────
+class _EditorialNavBar extends StatelessWidget {
+  const _EditorialNavBar({
+    required this.tabs,
+    required this.currentIndex,
+    required this.onTap,
+  });
+  final List<_TabDef> tabs;
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Editorial.terrace,
+        border: Border(
+          top: BorderSide(color: Editorial.hairline, width: 1),
         ),
-        child: CupertinoTabBar(
-          backgroundColor: mobileBackgroundColor,
-          activeColor: Colors.blue,
-          inactiveColor: Colors.grey,
-          border: Border(
-            top: BorderSide(
-              color: Colors.black.withOpacity(0.1),
-              width: 0.5,
-            ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            children: List.generate(tabs.length, (i) {
+              final active = i == currentIndex;
+              final tab = tabs[i];
+              return Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => onTap(i),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      // Active green stripe
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        height: 2,
+                        color: active ? Editorial.live : Colors.transparent,
+                      ),
+
+                      // Icon
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 180),
+                              child: Icon(
+                                active ? tab.activeIcon : tab.icon,
+                                key: ValueKey(active),
+                                size: 22,
+                                color: active
+                                    ? Editorial.live
+                                    : Editorial.inkDim,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              tab.label.toUpperCase(),
+                              style: EType.label(
+                                color: active
+                                    ? Editorial.live
+                                    : Editorial.inkFaint,
+                                size: 8,
+                                letterSpacing: 1.2,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
           ),
-          items: <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.person_outlined,
-                size: 26,
-                color: (_page == 0) ? Colors.blue : Colors.grey,
-              ),
-              activeIcon: Icon(
-                Icons.person,
-                size: 26,
-                color: Colors.blue,
-              ),
-              label: AppLocalizations.of(context)!.profile,
-            ),
-            BottomNavigationBarItem(
-              icon: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Icon(
-                    Icons.scoreboard_outlined,
-                    size: 26,
-                    color: (_page == 1) ? Colors.blue : Colors.grey,
-                  ),
-                  Positioned(
-                    bottom: 2,
-                    child: Container(
-                      width: 12,
-                      height: 12,
-                      child: Icon(
-                        Icons.sports_soccer,
-                        size: 10,
-                        color: (_page == 1) ? Colors.blue : Colors.grey,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              activeIcon: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Icon(
-                    Icons.scoreboard,
-                    size: 26,
-                    color: Colors.blue,
-                  ),
-                  Positioned(
-                    bottom: 2,
-                    child: Container(
-                      width: 12,
-                      height: 12,
-                      child: Icon(
-                        Icons.sports_soccer,
-                        size: 10,
-                        color: Colors.blue,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              label: AppLocalizations.of(context)!.results,
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.leaderboard_outlined,
-                size: 26,
-                color: (_page == 2) ? Colors.blue : Colors.grey,
-              ),
-              activeIcon: Icon(
-                Icons.leaderboard,
-                size: 26,
-                color: Colors.blue,
-              ),
-              label: AppLocalizations.of(context)!.table,
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.star,
-                size: 26,
-                color: (_page == 3) ? Colors.blue : Colors.grey,
-              ),
-              activeIcon: Icon(
-                Icons.star,
-                size: 26,
-                color: Colors.blue,
-              ),
-              label: AppLocalizations.of(context)!.preferences,
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.settings_outlined,
-                size: 26,
-                color: (_page == 4) ? Colors.blue : Colors.grey,
-              ),
-              activeIcon: Icon(
-                Icons.settings,
-                size: 26,
-                color: Colors.blue,
-              ),
-              label: AppLocalizations.of(context)!.settings,
-            ),
-          ],
-          onTap: navigationTapped,
-          currentIndex: _page,
         ),
       ),
     );

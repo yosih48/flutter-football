@@ -4,249 +4,475 @@ import 'package:provider/provider.dart';
 import 'package:football/providers/flutter pub add provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/theme/typography.dart';
 import 'package:football/l10n/app_localizations.dart';
 
 class AccountScreen extends StatelessWidget {
+  const AccountScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final user = authProvider.currentUser;
+    final l = AppLocalizations.of(context)!;
+
+    final userName = user?.name ?? '';
+    final userEmail = user?.email ?? '';
+    final initial = userName.isNotEmpty ? userName[0].toUpperCase() : '?';
 
     return Scaffold(
-      backgroundColor: background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white),
-        title: Text(
-          AppLocalizations.of(context)?.account ?? 'Account',
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
-      body: user == null
-          ? Center(
-              child:
-                  Text('No user found', style: TextStyle(color: Colors.white)))
-          : Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+      backgroundColor: Editorial.pitch,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Back + Header ─────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 12, 24, 0),
+              child: Row(
                 children: [
-                  Text(
-                    AppLocalizations.of(context)?.userdetails ?? 'User Details',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  _IconBtn(
+                    icon: Icons.arrow_back_ios_new,
+                    onTap: () => Navigator.pop(context),
                   ),
-                  SizedBox(height: 24),
-                  Row(
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.person, color: Colors.blue),
-                      SizedBox(width: 12),
-                      Text(user.name ?? '-',
-                          style: TextStyle(color: Colors.white, fontSize: 16)),
+                      Text('SETTINGS',
+                          style: EType.label(
+                              color: Editorial.inkMute,
+                              size: 10,
+                              letterSpacing: 3)),
+                      const SizedBox(height: 2),
+                      Text(l.account.toUpperCase(),
+                          style: EType.display(
+                              size: 28,
+                              color: Editorial.ink,
+                              letterSpacing: 1.4)),
                     ],
-                  ),
-                  SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Icon(Icons.email, color: Colors.blue),
-                      SizedBox(width: 12),
-                      Text(user.email ?? '-',
-                          style: TextStyle(color: Colors.white, fontSize: 16)),
-                    ],
-                  ),
-                  Spacer(),
-                  Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // 🔁 Sign Out button as ElevatedButton
-                        Container(
-                          width: double.infinity,
-                          margin: EdgeInsets.only(left: 16),
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                              foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            icon: Icon(Icons.exit_to_app),
-                            label: Text(AppLocalizations.of(context)!.signout),
-                            onPressed: () async {
-                              final authProvider = Provider.of<AuthProvider>(
-                                  context,
-                                  listen: false);
-                              bool? confirmSignOut = await showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    backgroundColor: cards,
-                                    title: Text(
-                                      AppLocalizations.of(context)!
-                                          .confirmsignout,
-                                      style: TextStyle(
-                                          color: Colors.white, fontSize: 16),
-                                    ),
-                                    content: Text(
-                                      AppLocalizations.of(context)!.leaveapp,
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    actions: <Widget>[
-                                      TextButton(
-                                        child: Text(
-                                          AppLocalizations.of(context)!.cancel,
-                                          style: TextStyle(color: Colors.blue),
-                                        ),
-                                        onPressed: () =>
-                                            Navigator.of(context).pop(false),
-                                      ),
-                                      TextButton(
-                                        child: Text(
-                                          AppLocalizations.of(context)!.yes,
-                                          style: TextStyle(color: Colors.red),
-                                        ),
-                                        onPressed: () =>
-                                            Navigator.of(context).pop(true),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-
-                              if (confirmSignOut == true) {
-                                print('confirmSignOut == true');
-                                Provider.of<UserProvider>(context,
-                                        listen: false)
-                                    .setSelectedGroupName('public');
-                                await authProvider.signOut(user.id);
-                              Navigator.of(context).pushNamedAndRemoveUntil(
-                                  '/login',
-                                  (route) =>
-                                      false, // This removes all previous routes
-                                );
-                              }
-                            },
-                          ),
-                        ),
-
-                        // 🔁 Delete button as TextButton
-                        TextButton(
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                          ),
-                          // icon: Icon(Icons.delete, color: Colors.red),
-                         child: Text(
-                            AppLocalizations.of(context)?.deleteaccount ??
-                                'Delete Account',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                          onPressed: () async {
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                backgroundColor: cards,
-                                title: Text(
-                                  AppLocalizations.of(context)?.deleteaccount ??
-                                      'Delete Account',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                content: Text(
-                                  AppLocalizations.of(context)
-                                          ?.deleteaccountconfirm ??
-                                      'Are you sure you want to delete your account? This cannot be undone.',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    child: Text(
-                                      AppLocalizations.of(context)?.cancel ??
-                                          'Cancel',
-                                      style: TextStyle(color: Colors.blue),
-                                    ),
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(false),
-                                  ),
-                                  TextButton(
-                                    child: Text(
-                                      AppLocalizations.of(context)?.delete ??
-                                          'Delete',
-                                      style: TextStyle(color: Colors.red),
-                                    ),
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(true),
-                                  ),
-                                ],
-                              ),
-                            );
-                            if (confirm == true) {
-                              try {
-                                // Show loading indicator
-                                showDialog(
-                                  context: context,
-                                  barrierDismissible: false,
-                                  builder: (BuildContext context) {
-                                    return Center(
-                                      child: CircularProgressIndicator(),
-                                    );
-                                  },
-                                );
-
-                                // Call your delete account logic here
-                                bool deleteSuccess =
-                                    await authProvider.deleteAccount(user.id);
-
-                                if (deleteSuccess) {
-                                  Navigator.of(context)
-                                      .pop(); // Close loading dialog
-                                  await authProvider.signOut(user.id);
-
-                            Navigator.of(context).pushAndRemoveUntil(
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            LoginScreen()), // Replace with your login screen
-                                    (route) =>
-                                        false, // This removes all previous routes
-                                  );
-
-
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        AppLocalizations.of(context)!
-                                            .accountDeleted,
-                                      ),
-                                    ),
-                                  );
-                                }
-                              } catch (e) {
-                                Navigator.of(context)
-                                    .pop(); // Close loading dialog
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content:
-                                        Text('Failed to delete account: $e'),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                              }
-                            }
-                          },
-                        ),
-                      ],
-                    ),
                   ),
                 ],
               ),
             ),
+
+            const SizedBox(height: 24),
+
+            if (user == null)
+              Expanded(
+                child: Center(
+                  child: Text('No user found',
+                      style: EType.body(color: Editorial.inkMute)),
+                ),
+              )
+            else ...[
+              // ── Identity block ─────────────────────────────────────
+              Container(
+                margin: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Editorial.card,
+                  border: Border(
+                    top: BorderSide(color: Editorial.live, width: 2),
+                    left: BorderSide(color: Editorial.hairline, width: 1),
+                    right: BorderSide(color: Editorial.hairline, width: 1),
+                    bottom: BorderSide(color: Editorial.hairline, width: 1),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: Editorial.cardHi,
+                        shape: BoxShape.circle,
+                        border:
+                            Border.all(color: Editorial.live, width: 1.5),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        initial,
+                        style: EType.display(
+                            size: 32,
+                            color: Editorial.ink,
+                            letterSpacing: 0),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            userName.isNotEmpty
+                                ? userName.toUpperCase()
+                                : '—',
+                            overflow: TextOverflow.ellipsis,
+                            style: EType.display(
+                                size: 22,
+                                color: Colors.white,
+                                letterSpacing: 0.8),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Icon(Icons.email_outlined,
+                                  size: 12, color: Editorial.inkDim),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  userEmail,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: EType.body(
+                                      color: Editorial.ink, size: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // ── Section label ──────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                child: _sectionLabel('DANGER ZONE'),
+              ),
+
+              // ── Sign Out row ───────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                child: _ActionRow(
+                  icon: Icons.exit_to_app_outlined,
+                  label: l.signout.toUpperCase(),
+                  accent: Editorial.flag,
+                  onTap: () async {
+                    final nav = Navigator.of(context);
+                    final confirm = await _showEditorialDialog(
+                      context: context,
+                      title: l.confirmsignout,
+                      body: l.leaveapp,
+                      confirmLabel: l.yes,
+                      confirmColor: Editorial.flag,
+                      cancelLabel: l.cancel,
+                    );
+                    if (confirm == true) {
+                      userProvider.setSelectedGroupName('public');
+                      await authProvider.signOut(user.id);
+                      nav.pushNamedAndRemoveUntil(
+                          '/login', (route) => false);
+                    }
+                  },
+                ),
+              ),
+
+              const Spacer(),
+
+              // ── Delete account ─────────────────────────────────────
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 32),
+                  child: GestureDetector(
+                    onTap: () async {
+                      final nav = Navigator.of(context);
+                      final messenger = ScaffoldMessenger.of(context);
+                      final confirm = await _showEditorialDialog(
+                        context: context,
+                        title: l.deleteaccount,
+                        body: l.deleteaccountconfirm,
+                        confirmLabel: l.delete,
+                        confirmColor: Editorial.flag,
+                        cancelLabel: l.cancel,
+                      );
+                      if (confirm == true) {
+                        nav.push(PageRouteBuilder(
+                          opaque: false,
+                          barrierDismissible: false,
+                          pageBuilder: (_, __, ___) => const Center(
+                            child: CircularProgressIndicator(
+                                color: Editorial.live),
+                          ),
+                        ));
+                        try {
+                          final ok =
+                              await authProvider.deleteAccount(user.id);
+                          if (ok) {
+                            nav.pop();
+                            await authProvider.signOut(user.id);
+                            nav.pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                  builder: (_) => const LoginScreen()),
+                              (route) => false,
+                            );
+                            messenger.showSnackBar(
+                              SnackBar(
+                                backgroundColor: Editorial.card,
+                                content: Text(l.accountDeleted,
+                                    style: EType.body(
+                                        color: Editorial.ink,
+                                        size: 13)),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          nav.pop();
+                          messenger.showSnackBar(
+                            SnackBar(
+                              backgroundColor: Editorial.flag,
+                              content: Text(
+                                  'Failed to delete account: $e',
+                                  style: EType.body(
+                                      color: Editorial.ink, size: 13)),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 10),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.delete_outline,
+                              size: 14, color: Editorial.flag),
+                          const SizedBox(width: 8),
+                          Text(
+                            l.deleteaccount.toUpperCase(),
+                            style: EType.label(
+                                color: Editorial.flag,
+                                size: 10,
+                                letterSpacing: 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionLabel(String text) {
+    return Row(
+      children: [
+        Container(width: 18, height: 1, color: Editorial.flag),
+        const SizedBox(width: 10),
+        Text(text,
+            style: EType.label(
+                color: Editorial.ink, size: 10, letterSpacing: 2.4)),
+      ],
+    );
+  }
+
+  Future<bool?> _showEditorialDialog({
+    required BuildContext context,
+    required String title,
+    required String body,
+    required String confirmLabel,
+    required Color confirmColor,
+    required String cancelLabel,
+  }) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Editorial.card,
+            border: Border(
+              top: BorderSide(color: confirmColor, width: 2),
+              left: BorderSide(color: Editorial.hairline, width: 1),
+              right: BorderSide(color: Editorial.hairline, width: 1),
+              bottom: BorderSide(color: Editorial.hairline, width: 1),
+            ),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title.toUpperCase(),
+                  style: EType.display(
+                      size: 22,
+                      color: Editorial.ink,
+                      letterSpacing: 0.8)),
+              const SizedBox(height: 12),
+              Text(body,
+                  style:
+                      EType.body(color: Editorial.inkDim, size: 13)),
+              const SizedBox(height: 28),
+              Row(
+                children: [
+                  Expanded(
+                    child: _GhostBtn(
+                      label: cancelLabel,
+                      onTap: () => Navigator.of(ctx).pop(false),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _SolidBtn(
+                      label: confirmLabel,
+                      color: confirmColor,
+                      onTap: () => Navigator.of(ctx).pop(true),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Action row ───────────────────────────────────────────────────────────
+class _ActionRow extends StatelessWidget {
+  const _ActionRow({
+    required this.icon,
+    required this.label,
+    required this.accent,
+    required this.onTap,
+  });
+  final IconData icon;
+  final String label;
+  final Color accent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        decoration: BoxDecoration(
+          color: Editorial.card,
+          border: Border(
+            top: BorderSide(color: accent, width: 2),
+            left: BorderSide(color: Editorial.hairline, width: 1),
+            right: BorderSide(color: Editorial.hairline, width: 1),
+            bottom: BorderSide(color: Editorial.hairline, width: 1),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: accent.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(2),
+                border: Border.all(
+                    color: accent.withOpacity(0.3), width: 1),
+              ),
+              child: Icon(icon, size: 16, color: accent),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                label,
+                style: EType.label(
+                    color: accent, size: 11, letterSpacing: 1.8),
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 12, color: accent),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Icon button ──────────────────────────────────────────────────────────
+class _IconBtn extends StatelessWidget {
+  const _IconBtn({required this.icon, required this.onTap});
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        margin: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Editorial.card,
+          border: Border.all(color: Editorial.hairline, width: 1),
+          borderRadius: BorderRadius.circular(2),
+        ),
+        child: Icon(icon, size: 16, color: Editorial.ink),
+      ),
+    );
+  }
+}
+
+// ── Dialog buttons ───────────────────────────────────────────────────────
+class _GhostBtn extends StatelessWidget {
+  const _GhostBtn({required this.label, required this.onTap});
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          border: Border.all(color: Editorial.hairline, width: 1),
+          borderRadius: BorderRadius.circular(2),
+        ),
+        alignment: Alignment.center,
+        child: Text(label.toUpperCase(),
+            style: EType.label(
+                color: Editorial.ink,
+                size: 11,
+                letterSpacing: 1.6)),
+      ),
+    );
+  }
+}
+
+class _SolidBtn extends StatelessWidget {
+  const _SolidBtn(
+      {required this.label, required this.color, required this.onTap});
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(2),
+        ),
+        alignment: Alignment.center,
+        child: Text(label.toUpperCase(),
+            style: EType.label(
+                color: Editorial.pitch,
+                size: 11,
+                letterSpacing: 1.6)),
+      ),
     );
   }
 }

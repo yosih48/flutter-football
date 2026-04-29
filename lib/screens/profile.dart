@@ -4,6 +4,7 @@ import 'package:football/resources/auth.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/theme/typography.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -77,224 +78,187 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     }
   }
 
+  static const Set<String> _allowedIds = {'383', '2', '140', '3', '39', '848'};
+
   @override
   Widget build(BuildContext context) {
-    final allowedGroupIds = {'383', '2', '140', '3', '39', '848'};
-    final filteredWinners = _userWinners.entries
-        .where((entry) => allowedGroupIds.contains(entry.key))
-        .fold<Map<String, String>>({}, (map, entry) {
-      map[entry.key] = entry.value;
-      return map;
-    });
+    final filteredWinners = _filterById(_userWinners);
+    final filteredTopScorers = _filterById(_userTopScorer);
 
     return Scaffold(
-      backgroundColor: background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      extendBodyBehindAppBar: true,
-      body: SingleChildScrollView(
+      backgroundColor: Editorial.pitch,
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: kToolbarHeight + 20),
-            _buildPersonalHeader(),
-            SizedBox(height: 32),
-            _buildToggle(),
-            SizedBox(height: 16),
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: cards.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              constraints: BoxConstraints(minHeight: 220),
-              child: Skeletonizer(
-                enabled: _isLoading,
-                child: AnimatedSwitcher(
-                  duration: Duration(milliseconds: 300),
-                  child: _showWinners
-                      ? usersWinners(
-                          key: ValueKey('winners'),
-                          userWinners: _isLoading
-                              ? {'2': 'Loading', '39': 'Loading'}
-                              : _userWinners,
-                          filteredWinners: _isLoading
-                              ? {'2': 'Loading', '39': 'Loading'}
-                              : filteredWinners,
-                        )
-                      : usersTopScorers(
-                          key: ValueKey('topScorers'),
-                          userTopScorers: _isLoading
-                              ? {'2': 'Loading', '39': 'Loading'}
-                              : _userTopScorer,
-                          userTopScorerPoints: _isLoading
-                              ? {'2': 10, '39': 20}
-                              : _userTopScorerPoints,
-                          filteredTopScorers: _isLoading
-                              ? {'2': 'Loading', '39': 'Loading'}
-                              : _userTopScorer.entries
-                                  .where((entry) =>
-                                      allowedGroupIds.contains(entry.key))
-                                  .fold<Map<String, String>>({},
-                                      (map, entry) {
-                                  map[entry.key] = entry.value;
-                                  return map;
-                                }),
-                        ),
+            // ── Hero (fixed at top) ──────────────────────────────────
+            _buildHero(context),
+
+            // ── Tab strip (pinned) ───────────────────────────────────
+            _buildTabStrip(context),
+
+            // ── Scrollable content ───────────────────────────────────
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Skeletonizer(
+                  enabled: _isLoading,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    child: _showWinners
+                        ? usersWinners(
+                            key: const ValueKey('winners'),
+                            userWinners: _isLoading
+                                ? {'2': 'Loading', '39': 'Loading'}
+                                : _userWinners,
+                            filteredWinners: _isLoading
+                                ? {'2': 'Loading', '39': 'Loading'}
+                                : filteredWinners,
+                          )
+                        : usersTopScorers(
+                            key: const ValueKey('topScorers'),
+                            userTopScorers: _isLoading
+                                ? {'2': 'Loading', '39': 'Loading'}
+                                : _userTopScorer,
+                            userTopScorerPoints: _isLoading
+                                ? {'2': 10, '39': 20}
+                                : _userTopScorerPoints,
+                            filteredTopScorers: _isLoading
+                                ? {'2': 'Loading', '39': 'Loading'}
+                                : filteredTopScorers,
+                          ),
+                  ),
                 ),
               ),
             ),
-            SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPersonalHeader() {
-    final initial =
-        currentUserName.isNotEmpty ? currentUserName[0].toUpperCase() : '?';
+  Map<String, String> _filterById(Map<String, String> src) => Map.fromEntries(
+      src.entries.where((e) => _allowedIds.contains(e.key)));
+
+  Widget _buildTabStrip(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Editorial.pitch,
+        border: Border(
+          bottom: BorderSide(color: Editorial.hairline, width: 1),
+        ),
+      ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 32,
-            backgroundColor: Colors.blue.withOpacity(0.2),
-            child: Text(
-              initial,
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+          _Tab(
+            label: l.yourwinners,
+            icon: Icons.emoji_events_outlined,
+            active: _showWinners,
+            onTap: () => setState(() => _showWinners = true),
           ),
-          SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  currentUserName.isNotEmpty ? currentUserName : '—',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: 4),
-                Text(
-                  currentUserEmail,
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
+          _Tab(
+            label: l.topScorers ?? 'Top Scorers',
+            icon: Icons.sports_soccer_outlined,
+            active: !_showWinners,
+            onTap: () => setState(() => _showWinners = false),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildToggle() {
+  Widget _buildHero(BuildContext context) {
+    final initial =
+        currentUserName.isNotEmpty ? currentUserName[0].toUpperCase() : '?';
+
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
+      color: Editorial.pitch,
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _showWinners = true),
-              child: Container(
-                padding:
-                    EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                decoration: BoxDecoration(
-                  color: _showWinners
-                      ? Colors.blue.withOpacity(0.2)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _showWinners
-                        ? Colors.blue
-                        : Colors.grey.withOpacity(0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.emoji_events,
-                      color: _showWinners ? Colors.blue : Colors.grey,
-                      size: 20,
+          // Overline
+          Text(AppLocalizations.of(context)!.playerProfile.toUpperCase(),
+              style: EType.label(
+                  color: Editorial.inkDim, size: 10, letterSpacing: 3)),
+          const SizedBox(height: 20),
+
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Large monogram with pitch-line texture
+              Stack(
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Editorial.card,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Editorial.live, width: 1.5),
                     ),
-                    SizedBox(width: 8),
-                    Text(
-                      AppLocalizations.of(context)!.yourwinners,
-                      style: TextStyle(
-                        color:
-                            _showWinners ? Colors.blue : Colors.grey,
-                        fontSize: 16,
-                        fontWeight: _showWinners
-                            ? FontWeight.bold
-                            : FontWeight.normal,
+                    clipBehavior: Clip.antiAlias,
+                    child: CustomPaint(
+                      painter: _MonogramBgPainter(),
+                      child: Center(
+                        child: Text(
+                          initial,
+                          style: EType.display(
+                            size: 42,
+                            color: Editorial.ink,
+                            letterSpacing: 0,
+                          ),
+                        ),
                       ),
+                    ),
+                  ),
+                  // Live green dot — "online" indicator
+                  Positioned(
+                    bottom: 4,
+                    right: 4,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: Editorial.live,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Editorial.pitch, width: 2),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(width: 20),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      currentUserName.isNotEmpty
+                          ? currentUserName.toUpperCase()
+                          : '—',
+                      style: EType.display(
+                        size: 28,
+                        color: Editorial.ink,
+                        letterSpacing: 1.2,
+                        height: 0.95,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      currentUserEmail,
+                      style: EType.body(
+                          color: Editorial.inkMute, size: 12),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-            ),
-          ),
-          SizedBox(width: 12),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _showWinners = false),
-              child: Container(
-                padding:
-                    EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                decoration: BoxDecoration(
-                  color: !_showWinners
-                      ? Colors.blue.withOpacity(0.2)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: !_showWinners
-                        ? Colors.blue
-                        : Colors.grey.withOpacity(0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.sports_soccer,
-                      color: !_showWinners ? Colors.blue : Colors.grey,
-                      size: 20,
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      AppLocalizations.of(context)!.topScorers ??
-                          "Top Scorers",
-                      style: TextStyle(
-                        color:
-                            !_showWinners ? Colors.blue : Colors.grey,
-                        fontSize: 16,
-                        fontWeight: !_showWinners
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            ],
           ),
         ],
       ),
@@ -302,6 +266,88 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   }
 }
 
+
+class _Tab extends StatelessWidget {
+  const _Tab({
+    required this.label,
+    required this.icon,
+    required this.active,
+    required this.onTap,
+  });
+  final String label;
+  final IconData icon;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    size: 16,
+                    color: active ? Editorial.ink : Editorial.inkDim,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    label.toUpperCase(),
+                    style: EType.label(
+                      color: active ? Editorial.ink : Editorial.inkDim,
+                      size: 11,
+                      letterSpacing: 1.6,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Active underline indicator
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              height: 2,
+              width: active ? 60.0 : 0.0,
+              color: Editorial.live,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Shared helpers ─────────────────────────────────────────────────────
+String _leagueName(String id, AppLocalizations l) {
+  switch (id) {
+    case '2':
+      return l.championsleague;
+    case '383':
+      return l.ligathaal;
+    case '140':
+      return l.laliga;
+    case '3':
+      return l.europaleague;
+    case '39':
+      return l.premierleague;
+    case '848':
+      return l.conferenceleague;
+    default:
+      return id;
+  }
+}
+
+String _leagueLogoUrl(String id) =>
+    'https://media.api-sports.io/football/leagues/$id.png';
+
+// ── Winners list ────────────────────────────────────────────────────────
 class usersWinners extends StatelessWidget {
   const usersWinners({
     super.key,
@@ -314,148 +360,39 @@ class usersWinners extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _userWinners.isEmpty
-        ? Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.emoji_events_outlined,
-                        size: 36, color: Colors.blue),
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    AppLocalizations.of(context)!.noWinnersYet,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  SizedBox(height: 6),
-                  Text(
-                    AppLocalizations.of(context)!.noWinnersHint,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.grey[400],
-                      fontSize: 13,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          )
-        : ListView.separated(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            padding: EdgeInsets.all(8),
-            itemCount: filteredWinners.length,
-            separatorBuilder: (context, index) => Divider(
-              color: Colors.white.withOpacity(0.1),
-              height: 1,
-            ),
-            itemBuilder: (context, index) {
-              String groupId = filteredWinners.keys.elementAt(index);
-              String groupName = filteredWinners.values.elementAt(index);
+    final l = AppLocalizations.of(context)!;
 
-              String leagueName = '';
-              Color leagueColor = Colors.blue;
+    if (_userWinners.isEmpty) {
+      return _EmptyCard(
+        icon: Icons.emoji_events_outlined,
+        title: l.noWinnersYet,
+        subtitle: l.noWinnersHint,
+      );
+    }
 
-              switch (groupId) {
-                case '2':
-                  leagueName = AppLocalizations.of(context)!.championsleague;
-                  leagueColor = Colors.blue;
-                  break;
-                case '383':
-                  leagueName = AppLocalizations.of(context)!.ligathaal;
-                  leagueColor = Colors.green;
-                  break;
-                case '140':
-                  leagueName = AppLocalizations.of(context)!.laliga;
-                  leagueColor = Colors.orange;
-                  break;
-                case '3':
-                  leagueName = AppLocalizations.of(context)!.europaleague;
-                  leagueColor = Colors.purple;
-                  break;
-                case '39':
-                  leagueName = AppLocalizations.of(context)!.premierleague;
-                  leagueColor = Colors.purple;
-                  break;
-                case '848':
-                  leagueName = AppLocalizations.of(context)!.conferenceleague;
-                  leagueColor = Colors.purple;
-                  break;
-              }
-
-              return ListTile(
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 2, vertical: 8),
-                leading: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: leagueColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Center(
-                    child: Image.network(
-                      'https://media.api-sports.io/football/leagues/$groupId.png',
-                      width: 24,
-                      height: 24,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(Icons.emoji_events, color: leagueColor);
-                      },
-                    ),
-                  ),
-                ),
-                title: Text(
-                  leagueName,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                subtitle: Text(
-                  AppLocalizations.of(context)!.yourprediction ??
-                      "Your prediction",
-                  style: TextStyle(
-                    color: Colors.grey[400],
-                    fontSize: 12,
-                  ),
-                ),
-                trailing: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: leagueColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    groupName,
-                    style: TextStyle(
-                      color: leagueColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              );
-            },
-          );
+    return Column(
+      children: filteredWinners.entries.map((entry) {
+        final id = entry.key;
+        final teamName = entry.value;
+        return _LeagueRow(
+          logoUrl: _leagueLogoUrl(id),
+          leagueName: _leagueName(id, l),
+          trailing: _BadgeChip(
+            icon: Icons.emoji_events_outlined,
+            label: teamName,
+          ),
+          subtitle: Text(
+            (l.yourprediction ?? 'Your prediction').toUpperCase(),
+            style: EType.label(
+                color: Editorial.inkDim, size: 10, letterSpacing: 1.6),
+          ),
+        );
+      }).toList(),
+    );
   }
 }
 
+// ── Top scorers list ────────────────────────────────────────────────────
 class usersTopScorers extends StatelessWidget {
   const usersTopScorers({
     super.key,
@@ -470,183 +407,221 @@ class usersTopScorers extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return filteredTopScorers.isEmpty
-        ? Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.sports_soccer_outlined,
-                        size: 36, color: Colors.blue),
+    final l = AppLocalizations.of(context)!;
+
+    if (filteredTopScorers.isEmpty) {
+      return _EmptyCard(
+        icon: Icons.sports_soccer_outlined,
+        title: l.noTopScorersYet,
+        subtitle: l.noTopScorersHint,
+      );
+    }
+
+    return Column(
+      children: filteredTopScorers.entries.map((entry) {
+        final id = entry.key;
+        final scorerName = entry.value;
+        final pts = userTopScorerPoints[id] ?? 0;
+        return _LeagueRow(
+          logoUrl: _leagueLogoUrl(id),
+          leagueName: _leagueName(id, l),
+          trailing: _BadgeChip(
+            icon: Icons.sports_soccer_outlined,
+            label: scorerName,
+          ),
+          subtitle: Row(
+            children: [
+              Text(
+                (l.topScorerPoints ?? 'Goals Points').toUpperCase(),
+                style: EType.label(
+                    color: Editorial.inkDim, size: 10, letterSpacing: 1.6),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '$pts ${l.pst}',
+                style: EType.numeric(
+                  color: pts > 0 ? Editorial.live : Editorial.inkDim,
+                  size: 11,
+                  weight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+// ── Shared row widget ───────────────────────────────────────────────────
+class _LeagueRow extends StatelessWidget {
+  const _LeagueRow({
+    required this.logoUrl,
+    required this.leagueName,
+    required this.trailing,
+    required this.subtitle,
+  });
+  final String logoUrl;
+  final String leagueName;
+  final Widget trailing;
+  final Widget subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Editorial.hairline, width: 1),
+        ),
+      ),
+      child: Row(
+        children: [
+          // League crest
+          Container(
+            width: 40,
+            height: 40,
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: Editorial.card,
+              shape: BoxShape.circle,
+              border: Border.all(color: Editorial.hairline, width: 1),
+            ),
+            child: Image.network(
+              logoUrl,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) =>
+                  Icon(Icons.shield_outlined, size: 16, color: Editorial.inkDim),
+            ),
+          ),
+          const SizedBox(width: 14),
+          // League name + sub-label
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  leagueName.toUpperCase(),
+                  style: EType.display(
+                    size: 16,
+                    color: Editorial.ink,
+                    letterSpacing: 0.8,
+                    height: 1.0,
                   ),
-                  SizedBox(height: 16),
-                  Text(
-                    AppLocalizations.of(context)!.noTopScorersYet,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  SizedBox(height: 6),
-                  Text(
-                    AppLocalizations.of(context)!.noTopScorersHint,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.grey[400],
-                      fontSize: 13,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                subtitle,
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          trailing,
+        ],
+      ),
+    );
+  }
+}
+
+// ── Pill / badge chip ───────────────────────────────────────────────────
+class _BadgeChip extends StatelessWidget {
+  const _BadgeChip({required this.label, required this.icon});
+  final String label;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      constraints: const BoxConstraints(maxWidth: 130),
+      decoration: BoxDecoration(
+        color: Editorial.liveSoft,
+        border: Border.all(color: Editorial.live.withOpacity(0.5), width: 1),
+        borderRadius: BorderRadius.circular(2),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: Editorial.live),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              style: EType.body(
+                color: Editorial.live,
+                size: 12,
+                weight: FontWeight.w600,
               ),
             ),
-          )
-        : ListView.separated(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            padding: EdgeInsets.all(8),
-            itemCount: filteredTopScorers.length,
-            separatorBuilder: (context, index) => Divider(
-              color: Colors.white.withOpacity(0.1),
-              height: 1,
-            ),
-            itemBuilder: (context, index) {
-              String groupId = filteredTopScorers.keys.elementAt(index);
-              String topScorerName = filteredTopScorers.values.elementAt(index);
-
-              String leagueName = '';
-              Color leagueColor = Colors.blue;
-
-              switch (groupId) {
-                case '2':
-                  leagueName = AppLocalizations.of(context)!.championsleague;
-                  leagueColor = Colors.blue;
-                  break;
-                case '383':
-                  leagueName = AppLocalizations.of(context)!.ligathaal;
-                  leagueColor = Colors.green;
-                  break;
-                case '140':
-                  leagueName = AppLocalizations.of(context)!.laliga;
-                  leagueColor = Colors.orange;
-                  break;
-                case '3':
-                  leagueName = AppLocalizations.of(context)!.europaleague;
-                  leagueColor = Colors.purple;
-                  break;
-                case '39':
-                  leagueName = AppLocalizations.of(context)!.premierleague;
-                  leagueColor = Colors.purple;
-                  break;
-                case '848':
-                  leagueName = AppLocalizations.of(context)!.conferenceleague;
-                  leagueColor = Colors.purple;
-                  break;
-              }
-
-              return ListTile(
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 2, vertical: 8),
-                leading: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: leagueColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Center(
-                    child: Image.network(
-                      'https://media.api-sports.io/football/leagues/$groupId.png',
-                      width: 24,
-                      height: 24,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(Icons.sports_soccer, color: leagueColor);
-                      },
-                    ),
-                  ),
-                ),
-                title: Text(
-                  leagueName,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                subtitle: Row(
-                  children: [
-                    Text(
-                      AppLocalizations.of(context)!.topScorerPoints ??
-                          "Goals Points",
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 14,
-                      ),
-                    ),
-                    SizedBox(width: 5),
-                    Text(
-                      '${userTopScorerPoints[groupId] ?? 0}'
-                      ' ${AppLocalizations.of(context)!.pst}',
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-                trailing: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: leagueColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: leagueColor.withOpacity(0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.sports_soccer,
-                            color: leagueColor,
-                            size: 16,
-                          ),
-                          SizedBox(width: 6),
-                          ConstrainedBox(
-                            constraints: BoxConstraints(maxWidth: 100),
-                            child: Text(
-                              topScorerName,
-                              style: TextStyle(
-                                color: leagueColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
+          ),
+        ],
+      ),
+    );
   }
+}
+
+// ── Empty state card ────────────────────────────────────────────────────
+class _EmptyCard extends StatelessWidget {
+  const _EmptyCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Editorial.hairline, width: 1),
+            ),
+            child: Icon(icon, size: 26, color: Editorial.inkDim),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            title.toUpperCase(),
+            style: EType.display(
+              size: 22,
+              color: Editorial.ink,
+              letterSpacing: 1.2,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: EType.body(color: Editorial.inkMute, size: 13, height: 1.5),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Decorative monogram background painter ──────────────────────────────
+class _MonogramBgPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Editorial.hairline.withOpacity(0.6)
+      ..strokeWidth = 1;
+    for (double x = 0; x <= size.width; x += 14) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_MonogramBgPainter old) => false;
 }

@@ -15,6 +15,7 @@ import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/screens/statistics.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/theme/typography.dart';
 import 'package:football/utils/config.dart';
 import 'package:football/widgets/SharedPreferences.dart';
 import 'package:football/widgets/toggleButton.dart';
@@ -35,9 +36,8 @@ class TableScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer2<AuthProvider, UserProvider>(
       builder: (context, authProvider, userProvider, child) {
-        // Check if user is authenticated
         if (authProvider.currentUser == null) {
-          return LoginScreen(); // Or some other widget for unauthenticated users
+          return LoginScreen();
         }
         return TableScreenContent(
           authProvider: authProvider,
@@ -88,72 +88,168 @@ class TableScreenContentState extends State<TableScreenContent> {
     _groupNameController.dispose();
     super.dispose();
   }
+
   void updateSelectedIndex(int index) {
-    print(index);
     setState(() {
-      // league = index == 0
-      //     ? 2 // Champions League
-      //     : index == 1
-      //         ? 383 // Ligat Ha'al
-      //         : index == 2
-      //             ? 140 // La Liga
-      //             : index == 3
-      //                 ? 3 // Europa League
-      //                 : index == 4
-      //                     ? 39 // Premier League
-      //                          : index == 5
-      //                         ? 848 // conferenceleague
-      //                         : index == 6
-      //                             ? 15 // Club World Cup
-      //                             : index == 7
-      //                                 ? 78 //Bundesliga
-      //                         : 2; // Default to Champions League
       selectedIndex = index;
       league = index;
       Provider.of<UserProvider>(context, listen: false)
           .setselectedLeageId(league);
     });
-   _fetchUsersForSelectedGroup();
+    _fetchUsersForSelectedGroup();
+  }
+
+  // ── Editorial dialog scaffolding ────────────────────────────────────────
+  Widget _editorialDialog({
+    required String title,
+    required Widget body,
+    required List<Widget> actions,
+  }) {
+    return Dialog(
+      backgroundColor: Editorial.card,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(2),
+        side: BorderSide(color: Editorial.hairline, width: 1),
+      ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(width: 18, height: 1, color: Editorial.live),
+                const SizedBox(width: 10),
+                Text(title.toUpperCase(),
+                    style: EType.label(
+                        color: Editorial.ink,
+                        size: 11,
+                        letterSpacing: 2.4)),
+              ],
+            ),
+            const SizedBox(height: 18),
+            body,
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: actions,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  TextField _editorialField(
+      {required TextEditingController controller, required String label}) {
+    return TextField(
+      controller: controller,
+      cursorColor: Editorial.live,
+      cursorWidth: 1.5,
+      style: EType.body(color: Editorial.ink, size: 14),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: EType.label(
+            color: Editorial.inkDim, size: 11, letterSpacing: 1.6),
+        floatingLabelStyle: EType.label(
+            color: Editorial.live, size: 11, letterSpacing: 1.6),
+        filled: true,
+        fillColor: Editorial.terrace,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(2),
+          borderSide: BorderSide(color: Editorial.hairline, width: 1),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(2),
+          borderSide: BorderSide(color: Editorial.hairline, width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(2),
+          borderSide: BorderSide(color: Editorial.live, width: 1),
+        ),
+      ),
+    );
+  }
+
+  Widget _ghostBtn(String label, VoidCallback onPressed,
+      {Color color = Editorial.inkMute}) {
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+      child: Text(
+        label.toUpperCase(),
+        style: EType.label(color: color, size: 11, letterSpacing: 1.8),
+      ),
+    );
+  }
+
+  Widget _solidBtn(String label, VoidCallback onPressed) {
+    return Material(
+      color: Editorial.live,
+      borderRadius: BorderRadius.circular(2),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(2),
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          child: Text(
+            label.toUpperCase(),
+            style: EType.label(
+                color: Editorial.pitch, size: 11, letterSpacing: 1.8),
+          ),
+        ),
+      ),
+    );
   }
 
   void _showInviteDialog(String inviteCode) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: cards,
-          title: Text(
-            AppLocalizations.of(context)!.invitefriend,
-            style: TextStyle(color: Colors.white, fontSize: 14),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
+        final l = AppLocalizations.of(context)!;
+        return _editorialDialog(
+          title: l.invitefriend,
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                AppLocalizations.of(context)!.invitecodecopy,
-                style: TextStyle(color: Colors.white),
+              Text(l.invitecodecopy,
+                  style: EType.body(color: Editorial.inkMute, size: 13)),
+              const SizedBox(height: 14),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 14),
+                decoration: BoxDecoration(
+                  color: Editorial.terrace,
+                  border: Border.all(color: Editorial.hairline, width: 1),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                child: Text(
+                  inviteCode,
+                  style: EType.numeric(
+                    color: Editorial.live,
+                    size: 16,
+                    weight: FontWeight.w600,
+                    letterSpacing: 1.2,
+                  ),
+                ),
               ),
-              SizedBox(height: 10),
-              Text(inviteCode,
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold, color: Colors.white)),
-              SizedBox(height: 20),
-              Text(
-                AppLocalizations.of(context)!.shareinvitecode,
-                style: TextStyle(color: Colors.white),
-              ),
+              const SizedBox(height: 12),
+              Text(l.shareinvitecode,
+                  style: EType.body(color: Editorial.inkDim, size: 12)),
             ],
           ),
-          actions: <Widget>[
-            TextButton(
-              child: Text(
-                'OK',
-                style: TextStyle(color: Colors.blue),
-              ),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
+          actions: [
+            _solidBtn('OK', () => Navigator.of(context).pop()),
           ],
         );
       },
@@ -162,20 +258,10 @@ class TableScreenContentState extends State<TableScreenContent> {
 
   Future<void> _inviteFriend(String groupName) async {
     try {
-      // Fetch the list of groups
       final groups = await GroupsMethods().fetchGroups();
-
-      // Find the group with the specified name
-      final group = groups.firstWhere(
-        (g) => g['name'] == groupName,
-      );
-
-      // Copy the group's code to the clipboard
+      final group = groups.firstWhere((g) => g['name'] == groupName);
       final groupCode = group['_id'];
       await FlutterClipboard.copy(groupCode);
-      print('Group code copied: $groupCode');
-
-      // Show the invite dialog
       _showInviteDialog(groupCode);
     } catch (e) {
       print('Error inviting friend: $e');
@@ -217,7 +303,7 @@ class TableScreenContentState extends State<TableScreenContent> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
-            backgroundColor: Colors.red,
+            backgroundColor: Editorial.flag,
             duration: Duration(seconds: 3),
           ),
         );
@@ -228,7 +314,7 @@ class TableScreenContentState extends State<TableScreenContent> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error creating group: ${e.toString()}'),
-          backgroundColor: Colors.red,
+          backgroundColor: Editorial.flag,
           duration: Duration(seconds: 3),
         ),
       );
@@ -244,7 +330,8 @@ class TableScreenContentState extends State<TableScreenContent> {
       return;
     }
     final groupID = Map<String, String>.from(userData['groupID'] ?? {});
-    final existingKeys = groupID.keys.map((k) => int.tryParse(k) ?? 0).toList();
+    final existingKeys =
+        groupID.keys.map((k) => int.tryParse(k) ?? 0).toList();
     final nextKey =
         existingKeys.isEmpty ? 1 : (existingKeys.reduce(max) + 1);
 
@@ -273,50 +360,24 @@ class TableScreenContentState extends State<TableScreenContent> {
     showDialog(
       context: context,
       builder: (BuildContext ctx) {
-        return AlertDialog(
-          backgroundColor: cards,
-          title: Text(
-            AppLocalizations.of(ctx)!.createnewgroup,
-            style: TextStyle(color: Colors.white, fontSize: 14),
-          ),
-          content: TextField(
+        final l = AppLocalizations.of(ctx)!;
+        return _editorialDialog(
+          title: l.createnewgroup,
+          body: _editorialField(
             controller: _groupNameController,
-            decoration: InputDecoration(
-              labelText: AppLocalizations.of(ctx)!.entergroupname,
-              labelStyle: TextStyle(color: Colors.blue),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.blue),
-              ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.blue, width: 2.0),
-              ),
-            ),
-            style: TextStyle(color: Colors.white),
-            cursorColor: Colors.blue,
+            label: l.entergroupname,
           ),
-          actions: <Widget>[
-            TextButton(
-              child: Text(
-                AppLocalizations.of(ctx)!.cancel,
-                style: TextStyle(color: Colors.blue),
-              ),
-              onPressed: () => Navigator.of(ctx).pop(),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-              child: Text(
-                AppLocalizations.of(ctx)!.create,
-                style: TextStyle(color: Colors.blue),
-              ),
-              onPressed: () {
-                if (_groupNameController.text.isNotEmpty) {
-                  final name = _groupNameController.text;
-                  _groupNameController.clear();
-                  Navigator.of(ctx).pop();
-                  _createNewGroup(name);
-                }
-              },
-            ),
+          actions: [
+            _ghostBtn(l.cancel, () => Navigator.of(ctx).pop()),
+            const SizedBox(width: 8),
+            _solidBtn(l.create, () {
+              if (_groupNameController.text.isNotEmpty) {
+                final name = _groupNameController.text;
+                _groupNameController.clear();
+                Navigator.of(ctx).pop();
+                _createNewGroup(name);
+              }
+            }),
           ],
         );
       },
@@ -326,58 +387,28 @@ class TableScreenContentState extends State<TableScreenContent> {
   void _showJoinGroupDialog() {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: cards,
-          title: Text(AppLocalizations.of(context)!.joingroup,
-              style: TextStyle(color: Colors.white, fontSize: 14)),
-          content: TextField(
+      builder: (BuildContext ctx) {
+        final l = AppLocalizations.of(ctx)!;
+        return _editorialDialog(
+          title: l.joingroup,
+          body: _editorialField(
             controller: _inviteCodeController,
-            decoration: InputDecoration(
-              labelText: AppLocalizations.of(context)!.enterinvitecode,
-              labelStyle: TextStyle(
-                color: Colors.blue, // Change this to your desired color
-              ),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(
-                    color: Colors.blue), // Bottom border color when enabled
-              ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.blue, width: 2.0),
-                // Bottom border color when focused, with thicker border
-              ),
-            ),
-            style: TextStyle(
-              color: Colors.white, // Change the input text color to blue
-            ),
-            cursorColor: Colors.blue,
+            label: l.enterinvitecode,
           ),
-          actions: <Widget>[
-            TextButton(
-              child: Text(AppLocalizations.of(context)!.cancel,
-                  style: TextStyle(color: Colors.blue)),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white, // Set button background to white
-              ),
-              child: Text(AppLocalizations.of(context)!.join,
-                  style: TextStyle(color: Colors.blue)),
-              onPressed: () async {
-                if (_inviteCodeController.text.isEmpty) return;
-                final code = _inviteCodeController.text;
-                _inviteCodeController.clear();
-                await GroupsMethods()
-                    .addGroupToUser(code, currentUserId, context);
-                if (!mounted) return;
-                await _initializeData();
-                if (!mounted) return;
-                Navigator.of(context).pop();
-              },
-            ),
+          actions: [
+            _ghostBtn(l.cancel, () => Navigator.of(ctx).pop()),
+            const SizedBox(width: 8),
+            _solidBtn(l.join, () async {
+              if (_inviteCodeController.text.isEmpty) return;
+              final code = _inviteCodeController.text;
+              _inviteCodeController.clear();
+              await GroupsMethods()
+                  .addGroupToUser(code, currentUserId, context);
+              if (!mounted) return;
+              await _initializeData();
+              if (!mounted) return;
+              Navigator.of(ctx).pop();
+            }),
           ],
         );
       },
@@ -389,7 +420,6 @@ class TableScreenContentState extends State<TableScreenContent> {
     super.initState();
     currentUserId = widget.authProvider.currentUser?.id ?? 'Not logged in';
     league = widget.userProvider.selectedLeageId ?? 2;
-    print('currentUserId table: ${currentUserId}');
     _initializeData();
 
     if (widget.autoOpenAction != null) {
@@ -404,7 +434,6 @@ class TableScreenContentState extends State<TableScreenContent> {
     }
   }
 
-  // Single initialization method that loads everything efficiently
   Future<void> _initializeData() async {
     setState(() => isLoading = true);
 
@@ -412,7 +441,6 @@ class TableScreenContentState extends State<TableScreenContent> {
       final cachedGroupName =
           await SharedPreferencesUtil.getSelectedGroupName();
 
-      // Parallel fetch: dashboard + groups info (for creator detection)
       final results = await Future.wait([
         GroupsMethods.fetchDashboardData(currentUserId),
         GroupsMethods().fetchGroups(),
@@ -420,15 +448,10 @@ class TableScreenContentState extends State<TableScreenContent> {
       final dashboardData = results[0] as Map<String, dynamic>;
       final groupsInfo = results[1] as List<Map<String, dynamic>>;
 
-      print('=== DEBUG: dashboardData keys: ${dashboardData.keys}');
-      print('=== DEBUG: dashboardData FULL: $dashboardData');
-      print('=== DEBUG: privateGroups raw: ${dashboardData['privateGroups']}');
-      print('=== DEBUG: publicGroups raw: ${dashboardData['publicGroups']}');
-
-      final parsedPrivate = Map<String, String>.from(dashboardData['privateGroups'] ?? {});
-      final parsedPublic = Map<String, String>.from(dashboardData['publicGroups'] ?? {});
-      print('=== DEBUG: parsedPrivate count: ${parsedPrivate.length}, entries: $parsedPrivate');
-      print('=== DEBUG: parsedPublic count: ${parsedPublic.length}, entries: $parsedPublic');
+      final parsedPrivate =
+          Map<String, String>.from(dashboardData['privateGroups'] ?? {});
+      final parsedPublic =
+          Map<String, String>.from(dashboardData['publicGroups'] ?? {});
 
       setState(() {
         _privateGroups = parsedPrivate;
@@ -437,7 +460,6 @@ class TableScreenContentState extends State<TableScreenContent> {
         _defaultGroupName = cachedGroupName ?? '';
         selectedGroupName = _determineSelectedGroupName(cachedGroupName);
       });
-      print('=== DEBUG: selectedGroupName: $selectedGroupName');
 
       if (selectedGroupName.isNotEmpty && _privateGroups.isNotEmpty) {
         await _fetchUsersForSelectedGroup();
@@ -457,29 +479,26 @@ class TableScreenContentState extends State<TableScreenContent> {
   }
 
   String _determineSelectedGroupName(String? cachedGroupName) {
-    // Use widget's selected group name if provided
     if (widget.selectedGroupName != null &&
         widget.selectedGroupName!.isNotEmpty) {
       return widget.selectedGroupName!;
     }
 
-    // Use cached group name if it exists in private groups
     if (cachedGroupName != null &&
         cachedGroupName.isNotEmpty &&
         _privateGroups.containsValue(cachedGroupName)) {
       return cachedGroupName;
     }
 
-    // Default to first private group if available
     if (_privateGroups.isNotEmpty) {
       final firstGroupName = _privateGroups.values.first;
-      // Update cache with new selection
       SharedPreferencesUtil.setSelectedGroupName(firstGroupName);
       return firstGroupName;
     }
 
-    return ""; // No valid group found
+    return "";
   }
+
   Future<void> _fetchUsersForSelectedGroup() async {
     if (selectedGroupName.isEmpty) {
       setState(() {
@@ -490,7 +509,6 @@ class TableScreenContentState extends State<TableScreenContent> {
     }
 
     try {
-      // Single API call to get users for the specific group and league
       final users =
           await GroupsMethods.fetchGroupUsers(selectedGroupName, league);
 
@@ -498,8 +516,6 @@ class TableScreenContentState extends State<TableScreenContent> {
         _users = users;
         isLoading = false;
       });
-
-      print('Fetched ${users.length} users for group: $selectedGroupName');
     } catch (e) {
       print('Failed to fetch users for group: $e');
       setState(() {
@@ -508,6 +524,7 @@ class TableScreenContentState extends State<TableScreenContent> {
       });
     }
   }
+
   bool get _isCreatorOfActiveGroup => _groupsInfo.any(
         (g) =>
             g['name'] == selectedGroupName &&
@@ -526,88 +543,137 @@ class TableScreenContentState extends State<TableScreenContent> {
     if (_privateGroups.isEmpty) return;
     await showModalBottomSheet(
       context: context,
-      backgroundColor: cards,
+      backgroundColor: Editorial.card,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(2)),
       ),
       builder: (sheetCtx) {
         return StatefulBuilder(
           builder: (innerCtx, setSheetState) => SafeArea(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  margin: EdgeInsets.only(top: 12, bottom: 8),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(2),
+                // Drag handle
+                Center(
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 10, bottom: 12),
+                    width: 36,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: Editorial.hairlineHi,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
                 Padding(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
                   child: Row(
                     children: [
-                      Icon(Icons.lock, color: Colors.blue, size: 18),
-                      SizedBox(width: 8),
+                      Container(
+                          width: 18, height: 1, color: Editorial.live),
+                      const SizedBox(width: 10),
                       Text(
-                        AppLocalizations.of(innerCtx)!.privategroups,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        AppLocalizations.of(innerCtx)!
+                            .privategroups
+                            .toUpperCase(),
+                        style: EType.label(
+                            color: Editorial.ink,
+                            size: 11,
+                            letterSpacing: 2.4),
                       ),
                     ],
                   ),
                 ),
+                Container(height: 1, color: Editorial.hairline),
                 ..._privateGroups.entries.map((entry) {
                   final name = entry.value;
                   final isActive = name == selectedGroupName;
                   final isDefault = name == _defaultGroupName;
-                  return ListTile(
-                    contentPadding: EdgeInsets.symmetric(horizontal: 20),
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.blue.withOpacity(0.15),
-                      child: Text(
-                        name.isNotEmpty ? name[0].toUpperCase() : '?',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    title: Text(
-                      name,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: isActive
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                    trailing: IconButton(
-                      tooltip: 'Set as default',
-                      icon: Icon(
-                        Icons.star,
-                        color: isDefault
-                            ? Colors.amber
-                            : Colors.grey.withOpacity(0.4),
-                      ),
-                      onPressed: () async {
-                        await _setAsDefaultGroup(name);
-                        setSheetState(() {});
-                      },
-                    ),
+                  return InkWell(
                     onTap: () {
                       Navigator.of(sheetCtx).pop();
                       if (!isActive) changeSelectedGroup(name);
                     },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                              color: Editorial.hairline, width: 1),
+                          left: BorderSide(
+                            color: isActive
+                                ? Editorial.live
+                                : Colors.transparent,
+                            width: 3,
+                          ),
+                        ),
+                        color: isActive
+                            ? Editorial.liveSoft
+                            : Colors.transparent,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 16),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: Editorial.cardHi,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isActive
+                                    ? Editorial.live
+                                    : Editorial.hairline,
+                                width: 1,
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              name.isNotEmpty
+                                  ? name[0].toUpperCase()
+                                  : '?',
+                              style: EType.display(
+                                size: 16,
+                                color: isActive
+                                    ? Editorial.live
+                                    : Editorial.inkMute,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Text(
+                              name.toUpperCase(),
+                              overflow: TextOverflow.ellipsis,
+                              style: EType.display(
+                                size: 16,
+                                color: Editorial.ink,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Set as default',
+                            icon: Icon(
+                              isDefault ? Icons.star : Icons.star_border,
+                              color: isDefault
+                                  ? Editorial.amber
+                                  : Editorial.inkDim,
+                              size: 18,
+                            ),
+                            onPressed: () async {
+                              await _setAsDefaultGroup(name);
+                              setSheetState(() {});
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 }).toList(),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
               ],
             ),
           ),
@@ -621,33 +687,35 @@ class TableScreenContentState extends State<TableScreenContent> {
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: cards,
-        title: Text(
-          AppLocalizations.of(ctx)!.leavethegroup,
-          style: TextStyle(color: Colors.white),
-        ),
-        content: Text(
-          AppLocalizations.of(ctx)!.leavegroup,
-          style: TextStyle(color: Colors.white),
-        ),
-        actions: [
-          TextButton(
-            child: Text(
-              AppLocalizations.of(ctx)!.cancel,
-              style: TextStyle(color: Colors.blue),
+      builder: (ctx) {
+        final l = AppLocalizations.of(ctx)!;
+        return _editorialDialog(
+          title: l.leavethegroup,
+          body: Text(l.leavegroup,
+              style: EType.body(color: Editorial.inkMute, size: 13)),
+          actions: [
+            _ghostBtn(l.cancel, () => Navigator.of(ctx).pop(false)),
+            const SizedBox(width: 8),
+            Material(
+              color: Editorial.flag,
+              borderRadius: BorderRadius.circular(2),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(2),
+                onTap: () => Navigator.of(ctx).pop(true),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 18, vertical: 12),
+                  child: Text(l.leave.toUpperCase(),
+                      style: EType.label(
+                          color: Editorial.ink,
+                          size: 11,
+                          letterSpacing: 1.8)),
+                ),
+              ),
             ),
-            onPressed: () => Navigator.of(ctx).pop(false),
-          ),
-          TextButton(
-            child: Text(
-              AppLocalizations.of(ctx)!.leave,
-              style: TextStyle(color: Colors.red),
-            ),
-            onPressed: () => Navigator.of(ctx).pop(true),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
     if (confirmed != true) return;
 
@@ -696,7 +764,6 @@ class TableScreenContentState extends State<TableScreenContent> {
     }
   }
 
-    // Method to change selected group (call this when user selects different group)
   Future<void> changeSelectedGroup(String newGroupName) async {
     if (newGroupName == selectedGroupName) return;
 
@@ -705,553 +772,580 @@ class TableScreenContentState extends State<TableScreenContent> {
       isLoading = true;
     });
 
-    // Update cache
     await SharedPreferencesUtil.setSelectedGroupName(newGroupName);
-
-    // Fetch users for new group
     await _fetchUsersForSelectedGroup();
   }
 
-  // Refresh method for pull-to-refresh or manual refresh
   Future<void> refreshData() async {
     await _initializeData();
   }
 
-  // Method to refresh only users (lighter refresh)
   Future<void> refreshUsers() async {
     await _fetchUsersForSelectedGroup();
   }
 
-
+  // ── Build ──────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final effectivePrivateGroups = isLoading
-        ? {'0': 'Loading Group'}
-        : _privateGroups;
+    final effectivePrivateGroups =
+        isLoading ? {'0': 'Loading Group'} : _privateGroups;
 
     final effectiveUsers = isLoading
         ? List.generate(
             10,
             (index) => {
-                  'displayName': 'Loading Name',
-                  'thisDayPoints': {league.toString(): '0'},
-                  'points': {league.toString(): '0'},
-                  '_id': 'dummy_$index'
-                })
+              'displayName': 'Loading Name',
+              'thisDayPoints': {league.toString(): '0'},
+              'points': {league.toString(): '0'},
+              '_id': 'dummy_$index'
+            })
         : _users;
 
     return Scaffold(
-      backgroundColor: background,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-       
-        title: SizedBox.shrink(),
-        actions: [
-          PopupMenuButton<String>(
-            tooltip: '',
-            position: PopupMenuPosition.under,
-            color: cards,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            onSelected: (v) {
-              if (v == 'create') _showCreateGroupDialog();
-              if (v == 'join') _showJoinGroupDialog();
-            },
-            itemBuilder: (ctx) => [
-              PopupMenuItem<String>(
-                value: 'create',
-                child: Row(
-                  children: [
-                    Icon(Icons.add_circle_outline,
-                        color: Colors.blue, size: 20),
-                    SizedBox(width: 12),
-                    Text(
-                      AppLocalizations.of(ctx)!.createnewgroup,
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'join',
-                child: Row(
-                  children: [
-                    Icon(Icons.group_add, color: Colors.blue, size: 20),
-                    SizedBox(width: 12),
-                    Text(
-                      AppLocalizations.of(ctx)!.joingroup,
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            child: Container(
-              margin: EdgeInsets.only(right: 16),
-              padding:
-                  EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.add, color: Colors.blue, size: 20),
-                  SizedBox(width: 4),
-                  Icon(Icons.arrow_drop_down,
-                      color: Colors.blue, size: 18),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+      backgroundColor: Editorial.pitch,
+      appBar: _buildAppBar(context),
       body: Skeletonizer(
         enabled: isLoading,
         child: Column(
-              children: [
-                Container(
-               margin: EdgeInsets.symmetric(vertical: 8),
-                  child: LeagueSelector(
-                    userId: currentUserId,
-                    currentLeague: league,
-                    useToggleButtons: true, // Use ToggleButtonsSample
-                    onSelectionChanged: (leagueId, index) {
-                      updateSelectedIndex(leagueId);
-                    },
-                  ),
-                ),
-                Column(
-                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Private Groups Dropdown
-                    // Container(
-                    //   margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    //   child: Text(
-                    //     AppLocalizations.of(context)!.privategroups ??
-                    //         'Private Groups',
-                    //     style: TextStyle(
-                    //       color: Colors.white,
-                    //       fontSize: 16,
-                    //       fontWeight: FontWeight.w600,
-                    //     ),
-                    //   ),
-                    // ),
-                    if (effectivePrivateGroups.isEmpty)
-  Center(
-    child: Padding(
-      padding: EdgeInsets.all(24),
-      child: Column(
+          children: [
+            const SizedBox(height: 4),
+            LeagueSelector(
+              userId: currentUserId,
+              currentLeague: league,
+              useToggleButtons: true,
+              onSelectionChanged: (leagueId, index) {
+                updateSelectedIndex(leagueId);
+              },
+            ),
+            Container(height: 1, color: Editorial.hairline),
+            if (effectivePrivateGroups.isEmpty)
+              Expanded(child: _buildEmptyState(context))
+            else ...[
+              if (selectedGroupName.isNotEmpty &&
+                  selectedGroupName != 'Public')
+                _buildGroupHeader(context),
+              Expanded(child: _buildLeaderboard(context, effectiveUsers)),
+              _buildFooterActions(context),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    return AppBar(
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      backgroundColor: Editorial.pitch,
+      surfaceTintColor: Colors.transparent,
+      toolbarHeight: 72,
+      titleSpacing: 20,
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.group_off, size: 64, color: Colors.grey),
-          SizedBox(height: 16),
-          Text(
-            AppLocalizations.of(context)!.nogroupsfound,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+          Text('LEAGUE',
+              style: EType.label(
+                  color: Editorial.inkDim, size: 10, letterSpacing: 3)),
+          const SizedBox(height: 2),
+          Text('STANDINGS',
+              style: EType.display(
+                  size: 28, color: Editorial.ink, letterSpacing: 1.4)),
+        ],
+      ),
+      actions: [
+        PopupMenuButton<String>(
+          tooltip: '',
+          position: PopupMenuPosition.under,
+          color: Editorial.cardHi,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(2),
+            side: BorderSide(color: Editorial.hairline, width: 1),
           ),
-          SizedBox(height: 8),
-          Text(
-            AppLocalizations.of(context)!.nogroupsmessage,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 16,
-            ),
-          ),
-          SizedBox(height: 24),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+          onSelected: (v) {
+            if (v == 'create') _showCreateGroupDialog();
+            if (v == 'join') _showJoinGroupDialog();
+          },
+          itemBuilder: (ctx) => [
+            PopupMenuItem<String>(
+              value: 'create',
+              child: Row(
+                children: [
+                  Icon(Icons.add, color: Editorial.live, size: 16),
+                  const SizedBox(width: 12),
+                  Text(
+                    AppLocalizations.of(ctx)!
+                        .createnewgroup
+                        .toUpperCase(),
+                    style: EType.label(
+                        color: Editorial.ink,
+                        size: 11,
+                        letterSpacing: 1.6),
                   ),
-                ),
-                icon: Icon(Icons.add_circle_outline, size: 20),
-                label: Text(
-                  AppLocalizations.of(context)!.createnewgroup,
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                onPressed: _showCreateGroupDialog,
+                ],
               ),
-              OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.blue,
-                  side: BorderSide(color: Colors.blue),
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            ),
+            PopupMenuItem<String>(
+              value: 'join',
+              child: Row(
+                children: [
+                  Icon(Icons.group_add_outlined,
+                      color: Editorial.live, size: 16),
+                  const SizedBox(width: 12),
+                  Text(
+                    AppLocalizations.of(ctx)!.joingroup.toUpperCase(),
+                    style: EType.label(
+                        color: Editorial.ink,
+                        size: 11,
+                        letterSpacing: 1.6),
                   ),
+                ],
+              ),
+            ),
+          ],
+          child: Container(
+            margin: const EdgeInsets.only(right: 16),
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              border: Border.all(color: Editorial.hairline, width: 1),
+              borderRadius: BorderRadius.circular(2),
+            ),
+            child: Icon(Icons.add, color: Editorial.ink, size: 18),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGroupHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+      child: InkWell(
+        onTap: _showGroupSwitcherSheet,
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: Editorial.cardHi,
+                shape: BoxShape.circle,
+                border: Border.all(color: Editorial.live, width: 1),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                selectedGroupName.isNotEmpty
+                    ? selectedGroupName[0].toUpperCase()
+                    : '?',
+                style: EType.display(
+                  size: 16,
+                  color: Editorial.live,
                 ),
-                icon: Icon(Icons.group_add, size: 20),
-                label: Text(
-                  AppLocalizations.of(context)!.joingroup,
-                  style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('GROUP',
+                      style: EType.label(
+                          color: Editorial.inkDim,
+                          size: 9,
+                          letterSpacing: 2)),
+                  const SizedBox(height: 4),
+                  Text(
+                    selectedGroupName.toUpperCase(),
+                    overflow: TextOverflow.ellipsis,
+                    style: EType.display(
+                      size: 20,
+                      color: Editorial.ink,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                border: Border.all(color: Editorial.hairline, width: 1),
+                borderRadius: BorderRadius.circular(2),
+              ),
+              child: Row(
+                children: [
+                  Text('SWITCH',
+                      style: EType.label(
+                          color: Editorial.inkMute,
+                          size: 10,
+                          letterSpacing: 1.6)),
+                  const SizedBox(width: 4),
+                  Icon(Icons.expand_more,
+                      color: Editorial.inkMute, size: 14),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLeaderboard(
+      BuildContext context, List<Map<String, dynamic>> rows) {
+    final l = AppLocalizations.of(context)!;
+    return Column(
+      children: [
+        // Column header
+        Container(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: Editorial.hairline, width: 1),
+            ),
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 28,
+                child: Text('#',
+                    style: EType.label(
+                        color: Editorial.inkDim,
+                        size: 10,
+                        letterSpacing: 1.4)),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(l.name.toUpperCase(),
+                    style: EType.label(
+                        color: Editorial.inkDim,
+                        size: 10,
+                        letterSpacing: 1.6)),
+              ),
+              SizedBox(
+                width: 56,
+                child: Text(
+                  l.daypoints.toUpperCase(),
+                  textAlign: TextAlign.right,
+                  style: EType.label(
+                      color: Editorial.inkDim,
+                      size: 10,
+                      letterSpacing: 1.6),
                 ),
-                onPressed: _showJoinGroupDialog,
+              ),
+              SizedBox(
+                width: 56,
+                child: Text(
+                  l.sumpoints.toUpperCase(),
+                  textAlign: TextAlign.right,
+                  style: EType.label(
+                      color: Editorial.inkDim,
+                      size: 10,
+                      letterSpacing: 1.6),
+                ),
               ),
             ],
           ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            physics: const BouncingScrollPhysics(),
+            itemCount: rows.length,
+            itemBuilder: (ctx, index) {
+              final user = rows[index];
+              final isMe = user['_id'] == currentUserId;
+              final dayPts = user['thisDayPoints']?[league.toString()]
+                      ?.toString() ??
+                  '0';
+              final sumPts =
+                  user['points']?[league.toString()]?.toString() ?? '0';
+              final dayPtsNum = double.tryParse(dayPts) ?? 0;
+
+              return InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => Statistics(
+                        userId: user['_id'],
+                        leagueId: league,
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isMe ? Editorial.liveSoft : Colors.transparent,
+                    border: Border(
+                      bottom: BorderSide(
+                          color: Editorial.hairline, width: 1),
+                      left: BorderSide(
+                        color: isMe ? Editorial.live : Colors.transparent,
+                        width: 3,
+                      ),
+                    ),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 14),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 28,
+                        child: _rankCell(index + 1),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                user['displayName'] ?? '—',
+                                overflow: TextOverflow.ellipsis,
+                                style: EType.body(
+                                  color: Editorial.ink,
+                                  size: 14,
+                                  weight: isMe
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                            if (isMe) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 5, vertical: 2),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                      color: Editorial.live, width: 1),
+                                  borderRadius:
+                                      BorderRadius.circular(2),
+                                ),
+                                child: Text('YOU',
+                                    style: EType.label(
+                                        color: Editorial.live,
+                                        size: 9,
+                                        letterSpacing: 1.2)),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      SizedBox(
+                        width: 56,
+                        child: Text(
+                          dayPts,
+                          textAlign: TextAlign.right,
+                          style: EType.numeric(
+                            color: dayPtsNum > 0
+                                ? Editorial.live
+                                : Editorial.inkMute,
+                            size: 13,
+                            weight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 56,
+                        child: Text(
+                          sumPts,
+                          textAlign: TextAlign.right,
+                          style: EType.numeric(
+                            color: Editorial.ink,
+                            size: 15,
+                            weight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _rankCell(int rank) {
+    if (rank <= 3) {
+      final color = rank == 1
+          ? Editorial.amber
+          : rank == 2
+              ? Editorial.chalk
+              : const Color(0xFFCD7F32); // bronze
+      return Container(
+        width: 22,
+        height: 22,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.12),
+          border: Border.all(color: color, width: 1),
+          borderRadius: BorderRadius.circular(2),
+        ),
+        child: Text(
+          rank.toString(),
+          style: EType.numeric(
+            color: color,
+            size: 11,
+            weight: FontWeight.w700,
+          ),
+        ),
+      );
+    }
+    return Text(
+      rank.toString().padLeft(2, '0'),
+      style: EType.numeric(
+        color: Editorial.inkDim,
+        size: 12,
+        weight: FontWeight.w500,
+      ),
+    );
+  }
+
+  Widget _buildFooterActions(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      decoration: BoxDecoration(
+        color: Editorial.pitch,
+        border:
+            Border(top: BorderSide(color: Editorial.hairline, width: 1)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _footerBtn(
+              icon: Icons.share_outlined,
+              label: l.invitefriend,
+              color: Editorial.live,
+              onTap: () => _inviteFriend(selectedGroupName),
+            ),
+          ),
+          if (!isLoading && !_isCreatorOfActiveGroup) ...[
+            const SizedBox(width: 10),
+            Expanded(
+              child: _footerBtn(
+                icon: Icons.logout,
+                label: l.leave,
+                color: Editorial.flag,
+                onTap: _leaveActiveGroup,
+              ),
+            ),
+          ],
         ],
       ),
-    ),
-  )
-  else
-       SizedBox.shrink(),
-                    // Public Groups Dropdown
-                    // Container(
-                    //   margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    //   child: Text(
-                    //     AppLocalizations.of(context)!.publicgroups ??
-                    //         'Public Groups',
-                    //     style: TextStyle(
-                    //       color: Colors.white,
-                    //       fontSize: 16,
-                    //       fontWeight: FontWeight.w600,
-                    //     ),
-                    //   ),
-                    // ),
-                  //   Container(
-                  //       margin:
-                  //           EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  //       decoration: BoxDecoration(
-                  //         color: Colors.blue.withOpacity(0.1),
-                  //         borderRadius: BorderRadius.circular(12),
-                  //       ),
-                  //       padding: EdgeInsets.symmetric(horizontal: 16),
-                  //       child: DropdownButtonHideUnderline(
-                  //         child: DropdownButton<String>(
-                  //  value: _publicGroups.isNotEmpty
-                  //               ? _publicGroups.values.first
-                  //               : null,
-                  //           dropdownColor: cards,
-                  //           style: TextStyle(
-                  //             color: Colors.white,
-                  //             fontSize: 16.0,
-                  //             fontWeight: FontWeight.w500,
-                  //           ),
-                  //           icon: Icon(Icons.arrow_drop_down,
-                  //               color: Colors.blue),
-                  //           isExpanded: true,
-                        
-                  //           items: _publicGroups.entries.map((entry) {
-                  //             return DropdownMenuItem<String>(
-                  //               value: entry.value,
-                  //               child: Row(
-                  //                 children: [
-                  //                   Icon(Icons.public,
-                  //                  color: Colors.blue, size: 16),
-                  //                   SizedBox(width: 8),
-                  //                   Text(
-                  //                     entry.value,
-                  //                     style: TextStyle(
-                  //                       color: Colors.white,
-                  //                     ),
-                  //                   ),
-                  //                 ],
-                  //               ),
-                  //             );
-                  //           }).toList(),
-                  //           onChanged: (String? newValue) {
-                  //             if (newValue != null) {
-                  //               setState(() {
-                  //                 selectedGroupName = newValue;
-                  //               });
-                  //               _fetchUsersForGroup(newValue);
-                  //             }
-                  //           },
-                  //         ),
-                  //       ))
-                  ],
-                ),
-                if (effectivePrivateGroups.isNotEmpty &&
-                    selectedGroupName.isNotEmpty &&
-                    selectedGroupName != 'Public')
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: _showGroupSwitcherSheet,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.blue.withOpacity(0.3),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.group,
-                                  color: Colors.blue, size: 18),
-                              SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  selectedGroupName,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              Icon(Icons.arrow_drop_down,
-                                  color: Colors.blue, size: 24),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                if (effectivePrivateGroups.isNotEmpty)
-                  Expanded(
+    );
+  }
+
+  Widget _footerBtn({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(2),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            border: Border.all(color: color.withOpacity(0.4), width: 1),
+            borderRadius: BorderRadius.circular(2),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: 14),
+              const SizedBox(width: 8),
+              Text(
+                label.toUpperCase(),
+                style: EType.label(
+                    color: color, size: 11, letterSpacing: 1.8),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 76,
+              height: 76,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Editorial.hairline, width: 1),
+              ),
+              child: Icon(Icons.groups_outlined,
+                  size: 30, color: Editorial.inkMute),
+            ),
+            const SizedBox(height: 22),
+            Text(
+              l.nogroupsfound.toUpperCase(),
+              style: EType.display(
+                size: 26,
+                color: Editorial.ink,
+                letterSpacing: 1.2,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              l.nogroupsmessage,
+              textAlign: TextAlign.center,
+              style: EType.body(color: Editorial.inkMute, size: 13),
+            ),
+            const SizedBox(height: 28),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _solidBtn(l.createnewgroup, _showCreateGroupDialog),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(2),
+                    onTap: _showJoinGroupDialog,
                     child: Container(
-                      margin: EdgeInsets.symmetric(horizontal: 16),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            return SingleChildScrollView(
-                              scrollDirection: Axis.vertical,
-                              child: Theme(
-                                data: Theme.of(context).copyWith(
-                                  dividerColor: Colors.blue.withOpacity(0.1),
-                                ),
-                                child: DataTable(
-                                  headingRowHeight: 50,
-                                  dataRowHeight: 56,
-                                  columnSpacing: 16,
-                                  horizontalMargin: 16,
-                                  headingRowColor: MaterialStateProperty.all(
-                                    Colors.blue.withOpacity(0.1),
-                                  ),
-                                  columns: [
-                                    DataColumn(
-                                      label: Text(
-                                        AppLocalizations.of(context)!.name,
-                                        style: TextStyle(
-                                          color: Colors.blue,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    DataColumn(
-                                      label: Text(
-                                        AppLocalizations.of(context)!.daypoints,
-                                        style: TextStyle(
-                                          color: Colors.blue,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      numeric: true,
-                                    ),
-                                    DataColumn(
-                                      label: Text(
-                                        AppLocalizations.of(context)!.sumpoints,
-                                        style: TextStyle(
-                                          color: Colors.blue,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      numeric: true,
-                                    ),
-                                  ],
-                                  rows: effectiveUsers.asMap().entries.map((entry) {
-                                    final index = entry.key;
-                                    final user = entry.value;
-                               
-                                    return DataRow(
-                                      color: MaterialStateProperty.resolveWith<
-                                          Color?>(
-                                        (Set<MaterialState> states) {
-                                          if (index % 2 == 0) {
-                                            return Colors.blue
-                                                .withOpacity(0.03);
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      cells: [
-                                        DataCell(
-                                          Row(
-                                            children: [
-                                              Text(
-                                                '${index + 1}.',
-                                                style: TextStyle(
-                                                  color: Colors.grey,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                              SizedBox(width: 8),
-                                              Text(
-                                                user['displayName'] ?? '0',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    Statistics(
-                                                  userId: user['_id'],
-                                                  leagueId: league,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                        DataCell(
-                                          Text(
-                                            user['thisDayPoints']
-                                                        ?[league.toString()]
-                                                    ?.toString() ??
-                                                '0',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    Statistics(
-                                                  userId: user['_id'],
-                                                  leagueId: league,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                        DataCell(
-                                          Text(
-                                            user['points']?[league.toString()]
-                                                    ?.toString() ??
-                                                '0',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    Statistics(
-                                                  userId: user['_id'],
-                                                  leagueId: league,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 18, vertical: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                            color: Editorial.hairlineHi, width: 1),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                      child: Text(
+                        l.joingroup.toUpperCase(),
+                        style: EType.label(
+                            color: Editorial.ink,
+                            size: 11,
+                            letterSpacing: 1.8),
                       ),
                     ),
                   ),
                 ),
-                  (effectivePrivateGroups.isNotEmpty)
-                      ? Container(
-                          margin: EdgeInsets.all(16),
-                          child: Wrap(
-                            alignment: WrapAlignment.center,
-                            spacing: 12,
-                            runSpacing: 8,
-                            children: [
-                              TextButton.icon(
-                                style: TextButton.styleFrom(
-                                  backgroundColor:
-                                      Colors.blue.withOpacity(0.1),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.circular(12),
-                                  ),
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 20, vertical: 12),
-                                ),
-                                icon: Icon(Icons.share,
-                                    color: Colors.blue, size: 20),
-                                label: Text(
-                                  AppLocalizations.of(context)!
-                                      .invitefriend,
-                                  style: TextStyle(
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                onPressed: () =>
-                                    _inviteFriend(selectedGroupName),
-                              ),
-                              if (!isLoading && !_isCreatorOfActiveGroup)
-                                TextButton.icon(
-                                  style: TextButton.styleFrom(
-                                    backgroundColor:
-                                        Colors.red.withOpacity(0.1),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(12),
-                                    ),
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 20, vertical: 12),
-                                  ),
-                                  icon: Icon(Icons.exit_to_app,
-                                      color: Colors.red, size: 20),
-                                  label: Text(
-                                    AppLocalizations.of(context)!.leave,
-                                    style: TextStyle(
-                                      color: Colors.red,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  onPressed: _leaveActiveGroup,
-                                ),
-                            ],
-                          ),
-                        )
-                      : SizedBox(height: 2),
               ],
             ),
+          ],
+        ),
       ),
     );
   }

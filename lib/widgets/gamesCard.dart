@@ -30,10 +30,20 @@ class GameWidget extends StatelessWidget {
     }
   }
 
-  static const Set<String> _liveShort = {'1H', '2H', 'H1', 'H2', 'ET', 'BT', 'P', 'INT'};
+  static const Set<String> _liveShort = {
+    '1H',
+    '2H',
+    'H1',
+    'H2',
+    'ET',
+    'BT',
+    'P',
+    'INT'
+  };
 
   bool get _isLive => _liveShort.contains(game.status.short);
-  bool get _isFinished => game.status.short == 'FT' || game.status.short == 'AET';
+  bool get _isFinished =>
+      game.status.short == 'FT' || game.status.short == 'AET';
   bool get _isHalftime => game.status.short == 'HT';
   bool get _isUpcoming => game.status.long == 'Not Started';
   bool get _kickoffPassed => DateTime.now().isAfter(game.date.toLocal());
@@ -153,8 +163,7 @@ class GameWidget extends StatelessWidget {
     }
     return Text(
       (info['text']?.toString() ?? '').toUpperCase(),
-      style: EType.label(
-          color: Editorial.inkDim, size: 10, letterSpacing: 1.8),
+      style: EType.label(color: Editorial.inkDim, size: 10, letterSpacing: 1.8),
     );
   }
 
@@ -260,19 +269,34 @@ class GameWidget extends StatelessWidget {
   Widget _buildGuessFooter(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final hasGuess = guess != null;
-    return Row(
+    return Stack(
+      alignment: Alignment.center,
       children: [
-        Container(
-          height: 1,
-          width: 28,
-          color: Editorial.hairline,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              l.yourguess.toUpperCase(),
+              style: EType.label(color: Editorial.inkDim, size: 10),
+            ),
+            if (hasGuess)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Editorial.liveSoft,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                child: Text(
+                  '${guess!.sumPoints % 1 == 0 ? guess!.sumPoints.toInt() : guess!.sumPoints} ${l.points.toUpperCase()}',
+                  style: EType.label(
+                    color: Editorial.live,
+                    size: 10,
+                    letterSpacing: 1.4,
+                  ),
+                ),
+              ),
+          ],
         ),
-        const SizedBox(width: 10),
-        Text(
-          l.yourguess.toUpperCase(),
-          style: EType.label(color: Editorial.inkDim, size: 10),
-        ),
-        const SizedBox(width: 10),
         Text(
           hasGuess
               ? '${guess!.homeTeamGoals} : ${guess!.awayTeamGoals}'
@@ -283,23 +307,6 @@ class GameWidget extends StatelessWidget {
             weight: FontWeight.w600,
           ),
         ),
-        const Spacer(),
-        if (hasGuess)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Editorial.liveSoft,
-              borderRadius: BorderRadius.circular(2),
-            ),
-            child: Text(
-              '${guess!.sumPoints % 1 == 0 ? guess!.sumPoints.toInt() : guess!.sumPoints} ${l.points.toUpperCase()}',
-              style: EType.label(
-                color: Editorial.live,
-                size: 10,
-                letterSpacing: 1.4,
-              ),
-            ),
-          ),
       ],
     );
   }
@@ -322,8 +329,7 @@ class _OddsCell extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: EType.label(color: Editorial.inkDim, size: 10)),
+          Text(label, style: EType.label(color: Editorial.inkDim, size: 10)),
           Text(
             value.toStringAsFixed(2),
             style: EType.numeric(
@@ -350,7 +356,7 @@ class _GuessInput extends StatelessWidget {
       children: [
         _digit(homeController),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
+          padding: const EdgeInsets.only(left: 6, right: 6, bottom: 20),
           child: Text(':',
               style: EType.display(
                 size: 22,

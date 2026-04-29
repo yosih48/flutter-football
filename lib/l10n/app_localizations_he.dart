@@ -715,4 +715,43 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get noTopScorersHint => 'בחר את השחקן שיכבוש הכי הרבה שערים';
+
+  @override
+  String get matchday => 'יום משחק';
+
+  @override
+  String get fixtures => 'משחקים';
+
+  @override
+  String get pickDate => 'בחר תאריך';
+
+  @override
+  String get liveLabel => 'LIVE';
+
+  @override
+  String get fullTimeLabel => 'סיום';
+
+  @override
+  String get halfTimeLabel => 'מחצית';
+
+  @override
+  String get todayLabel => 'היום';
+
+  @override
+  String get refreshFailed => 'הרענון נכשל';
+
+  @override
+  String get failedToSubmitGuesses => 'שליחת או עדכון חלק מהניחושים נכשלה';
+
+  @override
+  String get matchCentre => 'מרכז המשחק';
+
+  @override
+  String get predictionsLabel => 'ניחושים';
+
+  @override
+  String get youLabel => 'אתה';
+
+  @override
+  String get playerProfile => 'פרופיל שחקן';
 }

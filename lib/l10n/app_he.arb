@@ -446,5 +446,18 @@
     "noOlderGames": "אין משחקים נוספים",
     "pullUpForPreviousGames": "משוך מעלה לטעינת משחקים קודמים",
     "noWinnersHint": "בחר את הקבוצה הזוכה בתחילת כל עונה",
-    "noTopScorersHint": "בחר את השחקן שיכבוש הכי הרבה שערים"
+    "noTopScorersHint": "בחר את השחקן שיכבוש הכי הרבה שערים",
+    "matchday": "יום משחק",
+    "fixtures": "משחקים",
+    "pickDate": "בחר תאריך",
+    "liveLabel": "LIVE",
+    "fullTimeLabel": "סיום",
+    "halfTimeLabel": "מחצית",
+    "todayLabel": "היום",
+    "refreshFailed": "הרענון נכשל",
+    "failedToSubmitGuesses": "שליחת או עדכון חלק מהניחושים נכשלה",
+    "matchCentre": "מרכז המשחק",
+    "predictionsLabel": "ניחושים",
+    "youLabel": "אתה",
+    "playerProfile": "פרופיל שחקן"
 }

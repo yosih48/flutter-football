@@ -1510,6 +1510,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick who you think will score the most goals'**
   String get noTopScorersHint;
+
+  /// No description provided for @matchday.
+  ///
+  /// In en, this message translates to:
+  /// **'Matchday'**
+  String get matchday;
+
+  /// No description provided for @fixtures.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixtures'**
+  String get fixtures;
+
+  /// No description provided for @pickDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick date'**
+  String get pickDate;
+
+  /// No description provided for @liveLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get liveLabel;
+
+  /// No description provided for @fullTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Time'**
+  String get fullTimeLabel;
+
+  /// No description provided for @halfTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Half Time'**
+  String get halfTimeLabel;
+
+  /// No description provided for @todayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get todayLabel;
+
+  /// No description provided for @refreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh failed'**
+  String get refreshFailed;
+
+  /// No description provided for @failedToSubmitGuesses.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to submit or update some guesses'**
+  String get failedToSubmitGuesses;
+
+  /// No description provided for @matchCentre.
+  ///
+  /// In en, this message translates to:
+  /// **'Match Centre'**
+  String get matchCentre;
+
+  /// No description provided for @predictionsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Predictions'**
+  String get predictionsLabel;
+
+  /// No description provided for @youLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get youLabel;
+
+  /// No description provided for @playerProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Player Profile'**
+  String get playerProfile;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

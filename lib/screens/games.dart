@@ -266,7 +266,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Refresh failed'),
+            content: Text(AppLocalizations.of(context)!.refreshFailed),
             backgroundColor: Colors.red,
           ),
         );
@@ -461,8 +461,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Failed to submit or update some guesses')),
+        SnackBar(
+            content: Text(AppLocalizations.of(context)!.failedToSubmitGuesses)),
       );
     }
     if (mounted) setState(() => _buttonLoading = false);
@@ -595,7 +595,6 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
 
     return Scaffold(
       backgroundColor: Editorial.pitch,
-      extendBodyBehindAppBar: true,
       appBar: _buildEditorialAppBar(context),
       body: RefreshIndicator(
         onRefresh: _handlePullRefresh,
@@ -646,18 +645,18 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('MATCHDAY',
+          Text(AppLocalizations.of(context)!.matchday.toUpperCase(),
               style: EType.label(
                   color: Editorial.inkDim, size: 10, letterSpacing: 3)),
           const SizedBox(height: 2),
-          Text('FIXTURES',
+          Text(AppLocalizations.of(context)!.fixtures.toUpperCase(),
               style: EType.display(
                   size: 28, color: Editorial.ink, letterSpacing: 1.4)),
         ],
       ),
       actions: [
         _IconBtn(
-          tooltip: 'Pick date',
+          tooltip: AppLocalizations.of(context)!.pickDate,
           icon: Icons.calendar_today_outlined,
           badge: _selectedDate?.day.toString(),
           onTap: _pickDate,
@@ -1098,7 +1097,7 @@ class _LiveToggle extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                'LIVE',
+                AppLocalizations.of(context)!.liveLabel.toUpperCase(),
                 style: EType.label(
                   color: active ? Editorial.pitch : Editorial.inkMute,
                   size: 11,
@@ -1181,7 +1180,7 @@ class _DateHeader extends StatelessWidget {
                           color: Editorial.live,
                           borderRadius: BorderRadius.circular(2),
                         ),
-                        child: Text('TODAY',
+                        child: Text(AppLocalizations.of(context)!.todayLabel.toUpperCase(),
                             style: EType.label(
                                 color: Editorial.pitch,
                                 size: 9,

@@ -711,10 +711,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pullUpForPreviousGames => 'Pull up for previous games';
 
   @override
-  String get noWinnersHint =>
-      'Choose your champion at the start of each season';
+  String get noWinnersHint => 'Choose your champion at the start of each season';
 
   @override
-  String get noTopScorersHint =>
-      'Pick who you think will score the most goals';
+  String get noTopScorersHint => 'Pick who you think will score the most goals';
+
+  @override
+  String get matchday => 'Matchday';
+
+  @override
+  String get fixtures => 'Fixtures';
+
+  @override
+  String get pickDate => 'Pick date';
+
+  @override
+  String get liveLabel => 'Live';
+
+  @override
+  String get fullTimeLabel => 'Full Time';
+
+  @override
+  String get halfTimeLabel => 'Half Time';
+
+  @override
+  String get todayLabel => 'Today';
+
+  @override
+  String get refreshFailed => 'Refresh failed';
+
+  @override
+  String get failedToSubmitGuesses => 'Failed to submit or update some guesses';
+
+  @override
+  String get matchCentre => 'Match Centre';
+
+  @override
+  String get predictionsLabel => 'Predictions';
+
+  @override
+  String get youLabel => 'You';
+
+  @override
+  String get playerProfile => 'Player Profile';
 }

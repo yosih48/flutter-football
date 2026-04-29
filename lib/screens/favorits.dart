@@ -6,12 +6,11 @@ import 'package:football/providers/league_data_provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/theme/typography.dart';
 import 'package:football/utils/config.dart';
-import 'package:football/widgets/toggleButton.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:football/l10n/app_localizations.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class FavoritsScreen extends StatefulWidget {
@@ -26,7 +25,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
   late String email;
   bool isLoading = true;
   String userId = '';
-  int selectedTab = 0; // 0 for notifications, 1 for chosen leagues
+  int selectedTab = 0; // 0 = choose leagues, 1 = notifications
 
   Map<String, bool> notificationStates = {
     'ליגת אלופות': false,
@@ -36,20 +35,42 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
     'ליגה אנגלית': false,
     'קונפרנס ליג': false,
     'גביע מועדונים': false,
-    // 'ליגה גרמנית': false,
   };
 
   Map<int, bool> chosenLeagues = {
-    2: true, // Champions League
-    383: true, // Ligat Ha'al
-    140: true, // La Liga
-    3: true, // Europa League
-    39: true, // Premier League
-    848: true, // conference league
-    // 15: true, // conference league
-    // 78: true, // Bundesliga
+    2: true,
+    383: true,
+    140: true,
+    3: true,
+    39: true,
+    848: true,
   };
 
+  // ── Static league data ─────────────────────────────────────────────────
+  static const _leagueOrder = [2, 383, 140, 3, 39, 848];
+
+  static const _leagueLogoBase =
+      'https://media.api-sports.io/football/leagues/';
+
+  static const _notifKeyToId = {
+    'ליגת אלופות': 2,
+    'ליגת העל': 383,
+    'ליגה ספרדית': 140,
+    'ליגה אירופית': 3,
+    'ליגה אנגלית': 39,
+    'קונפרנס ליג': 848,
+  };
+
+  static const _idToNotifKey = {
+    2: 'ליגת אלופות',
+    383: 'ליגת העל',
+    140: 'ליגה ספרדית',
+    3: 'ליגה אירופית',
+    39: 'ליגה אנגלית',
+    848: 'קונפרנס ליג',
+  };
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -57,21 +78,13 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
   }
 
   Future<void> _loadUserPreferences() async {
-    setState(() {
-      isLoading = true;
-    });
-
+    setState(() => isLoading = true);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     try {
       final user = await authProvider.ensureUserLoaded();
-
       if (user != null) {
-        setState(() {
-          userId = user.id;
-        });
+        setState(() => userId = user.id);
         _getUserInfo();
-      } else {
-        print('User is null after ensuring loaded');
       }
     } catch (e) {
       print('Error loading user preferences: $e');
@@ -80,561 +93,634 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
 
   Future<void> _getUserInfo() async {
     try {
-      Map<String, dynamic> userData =
-          await UsersMethods().fetchUserById(userId);
-      Map<String, dynamic> snetEmail = userData['snetEmail'] ?? {};
-      Map<String, dynamic> chosenLeaguesData = userData['chosenLeagues'] ?? {};
+      final userData = await UsersMethods().fetchUserById(userId);
+      final snetEmail =
+          Map<String, dynamic>.from(userData['snetEmail'] ?? {});
+      final chosenLeaguesData =
+          Map<String, dynamic>.from(userData['chosenLeagues'] ?? {});
 
       setState(() {
-        // Load notification states
         notificationStates['ליגת אלופות'] = snetEmail['2'] ?? false;
         notificationStates['ליגה אירופית'] = snetEmail['3'] ?? false;
         notificationStates['ליגה ספרדית'] = snetEmail['140'] ?? false;
         notificationStates['ליגת העל'] = snetEmail['383'] ?? false;
         notificationStates['ליגה אנגלית'] = snetEmail['39'] ?? false;
         notificationStates['קונפרנס ליג'] = snetEmail['848'] ?? false;
-        // notificationStates['גביע מועדונים'] = snetEmail['15'] ?? false;
-        // notificationStates['ליגה גרמנית'] = snetEmail['78'] ?? false;
 
-        // Load chosen leagues
         chosenLeagues[2] = chosenLeaguesData['2'] ?? true;
         chosenLeagues[3] = chosenLeaguesData['3'] ?? true;
         chosenLeagues[140] = chosenLeaguesData['140'] ?? true;
         chosenLeagues[383] = chosenLeaguesData['383'] ?? true;
         chosenLeagues[39] = chosenLeaguesData['39'] ?? true;
         chosenLeagues[848] = chosenLeaguesData['848'] ?? true;
-        // chosenLeagues[15] = chosenLeaguesData['15'] ?? true;
-        // chosenLeagues[78] = chosenLeaguesData['78'] ?? true;
 
         isLoading = false;
       });
     } catch (e) {
       print('Error loading user preferences: $e');
-      setState(() {
-        isLoading = false;
-      });
+      setState(() => isLoading = false);
     }
   }
 
-  Future<void> updateDatabase(name, email) async {
-    String _baseUrl = backendUrl;
-    final String url = '$_baseUrl/users/profile';
-
+  Future<void> updateDatabase(String name, String email) async {
+    final url = Uri.parse('$backendUrl/users/profile');
     try {
-      // Convert chosenLeagues map to a format that can be JSON encoded
-      Map<String, bool> encodableChosenLeagues = {};
-      chosenLeagues.forEach((key, value) {
-        encodableChosenLeagues[key.toString()] = value;
+      // Sync: disable notifications for disabled leagues.
+      _notifKeyToId.forEach((key, leagueId) {
+        if (notificationStates[key] == true &&
+            chosenLeagues[leagueId] == false) {
+          notificationStates[key] = false;
+        }
       });
-      // Ensure notification states are consistent with chosen leagues
-      if (notificationStates['ליגת אלופות'] == true &&
-          chosenLeagues[2] == false) {
-        notificationStates['ליגת אלופות'] = false;
-      }
-      if (notificationStates['ליגת העל'] == true &&
-          chosenLeagues[383] == false) {
-        notificationStates['ליגת העל'] = false;
-      }
-      if (notificationStates['ליגה ספרדית'] == true &&
-          chosenLeagues[140] == false) {
-        notificationStates['ליגה ספרדית'] = false;
-      }
-      if (notificationStates['ליגה אירופית'] == true &&
-          chosenLeagues[3] == false) {
-        notificationStates['ליגה אירופית'] = false;
-      }
-      if (notificationStates['ליגה אנגלית'] == true &&
-          chosenLeagues[39] == false) {
-        notificationStates['ליגה אנגלית'] = false;
-      }
-      if (notificationStates['קונפרנס ליג'] == true &&
-          chosenLeagues[848] == false) {
-        notificationStates['קונפרנס ליג'] = false;
-      }
-      // if (notificationStates['גביע מועדונים'] == true &&
-      //     chosenLeagues[15] == false) {
-      //   notificationStates['גביע מועדונים'] = false;
-      // }
-      // if (notificationStates['ליגה גרמנית'] == true && chosenLeagues[78] == false) {
-      //   notificationStates['ליגה גרמנית'] = false;
-      // }
-      final Map<String, dynamic> leagueData = {
-        'championsLeague': notificationStates['ליגת אלופות'],
-        'israeliLeague': notificationStates['ליגת העל'],
-        'spanishLeague': notificationStates['ליגה ספרדית'],
-        'europeLeague': notificationStates['ליגה אירופית'],
-        'premierLeague': notificationStates['ליגה אנגלית'],
-        'conferenceLeague': notificationStates['קונפרנס ליג'],
-        // 'clubworldcup': notificationStates['גביע מועדונים'],
-        // 'bundesLeague': notificationStates['ליגה גרמנית'],
-        'africaLeague': false,
-        // 'conferenceLeague': false,
-        'euroLeague': false,
-        'copaLeague': false,
-      };
-      final response = await http.put(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
+
+      final encodableLeagues = chosenLeagues
+          .map((k, v) => MapEntry(k.toString(), v));
+
+      await http.put(
+        url,
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode({
           'email': email,
           'displayName': name,
-          'leagueData': leagueData,
-          'chosenLeagues': encodableChosenLeagues,
+          'leagueData': {
+            'championsLeague': notificationStates['ליגת אלופות'],
+            'israeliLeague': notificationStates['ליגת העל'],
+            'spanishLeague': notificationStates['ליגה ספרדית'],
+            'europeLeague': notificationStates['ליגה אירופית'],
+            'premierLeague': notificationStates['ליגה אנגלית'],
+            'conferenceLeague': notificationStates['קונפרנס ליג'],
+            'africaLeague': false,
+            'euroLeague': false,
+            'copaLeague': false,
+          },
+          'chosenLeagues': encodableLeagues,
         }),
       );
-
-      if (response.statusCode == 200) {
-        print('Database updated successfully');
-          // Clear LeagueDataProvider cache after successful update
-        LeagueDataProvider().clearCache();
-      } else {
-        print('Failed to update database: ${response.statusCode}');
-      }
+      LeagueDataProvider().clearCache();
     } catch (e) {
       print('Error updating database: $e');
     }
   }
 
-  String _getLocalizedLeagueName(String hebrewLeagueName) {
-    switch (hebrewLeagueName) {
-      case 'ליגת אלופות':
-        return AppLocalizations.of(context)!.championsleague;
-      case 'ליגת העל':
-        return AppLocalizations.of(context)!.ligathaal;
-      case 'ליגה ספרדית':
-        return AppLocalizations.of(context)!.laliga;
-      case 'ליגה אירופית':
-        return AppLocalizations.of(context)!.europaleague;
-      case 'ליגה אנגלית':
-        return AppLocalizations.of(context)!.premierleague;
-      case 'קונפרנס ליג':
-        return AppLocalizations.of(context)!.conferenceleague;
-      case 'גביע מועדונים':
-        return AppLocalizations.of(context)!.clubworldcup;
-      // case 'ליגה גרמנית':
-      //   return AppLocalizations.of(context)!.bundesleague;
-      default:
-        return hebrewLeagueName; // Fallback to the original name if no match
+  String _localizedLeagueName(int leagueId) {
+    final l = AppLocalizations.of(context)!;
+    switch (leagueId) {
+      case 2:   return l.championsleague;
+      case 383: return l.ligathaal;
+      case 140: return l.laliga;
+      case 3:   return l.europaleague;
+      case 39:  return l.premierleague;
+      case 848: return l.conferenceleague;
+      default:  return '$leagueId';
     }
   }
 
+  String _localizedLeagueNameFromKey(String key) {
+    final id = _notifKeyToId[key];
+    if (id == null) return key;
+    return _localizedLeagueName(id);
+  }
+
+  // ── Build ──────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<AuthProvider>(context);
-    final name = userProvider.currentUser?.name;
-    final email = userProvider.currentUser?.email;
+    final authProvider = Provider.of<AuthProvider>(context);
+    final name = authProvider.currentUser?.name ?? '';
+    final userEmail = authProvider.currentUser?.email ?? '';
+    final l = AppLocalizations.of(context)!;
 
     return Scaffold(
-backgroundColor: background,
-    //  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        title: Text(
-          selectedTab == 0
-              ? AppLocalizations.of(context)!.chooseleagues
-              : AppLocalizations.of(context)!.notifications,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-      ),
+      backgroundColor: Editorial.pitch,
+      appBar: _buildAppBar(l),
       body: Skeletonizer(
         enabled: isLoading,
         child: Column(
           children: [
-            Container(
-              margin: EdgeInsets.symmetric(vertical: 8),
-              child: ToggleButtonsSample(
-                options: [
-                  AppLocalizations.of(context)!.chooseleagues,
-                  AppLocalizations.of(context)!.notifications,
-                ],
-                imageUrls: [
-                  'https://img.icons8.com/ios/50/ffffff/football2.png',
-                  'https://img.icons8.com/ios/50/ffffff/notification-center.png',
-                ],
-                onSelectionChanged: (index) {
-                  setState(() {
-                    selectedTab = index;
-                  });
-                },
-                initialSelection: selectedTab,
-              ),
-            ),
+            _buildTabStrip(l),
+            Container(height: 1, color: Editorial.hairline),
             Expanded(
-                child: selectedTab == 0
-                    ? _buildChosenLeaguesTab(name ?? '', email ?? '')
-                    : _buildNotificationsTab(name ?? '', email ?? '')),
+              child: selectedTab == 0
+                  ? _buildLeaguesTab(name, userEmail, l)
+                  : _buildNotificationsTab(name, userEmail, l),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildNotificationsTab(String name, String email) {
-    final leagueInfo = {
-      'ליגת אלופות': {'subtitle': 'אירופה', 'id': '2'},
-      'ליגת העל': {'subtitle': 'ישראל', 'id': '383'},
-      'ליגה ספרדית': {'subtitle': 'ספרד', 'id': '140'},
-      'ליגה אירופית': {'subtitle': 'אירופה', 'id': '3'},
-      'ליגה אנגלית': {'subtitle': 'אנגליה', 'id': '39'},
-      'קונפרנס ליג': {'subtitle': 'אירופה', 'id': '848'},
-      // 'גביע מועדונים': {'subtitle': 'עולם', 'id': '15'},
-      // 'בונדסליגה': {'subtitle': 'גרמניה', 'id': '78'},
-    };
-    // Mapping between notification state keys and league IDs
-    final notificationKeyToLeagueId = {
-      'ליגת אלופות': 2,
-      'ליגת העל': 383,
-      'ליגה ספרדית': 140,
-      'ליגה אירופית': 3,
-      'ליגה אנגלית': 39,
-      'קונפרנס ליג': 848,
-      // 'גביע מועדונים': 15,
-      // 'ליגה גרמנית': 78,
-    };
-    // Filter notificationStates to only include enabled leagues from chosenLeagues
-    Map<String, bool> filteredNotificationStates = {};
-    notificationStates.forEach((leagueName, value) {
-      int? leagueId = notificationKeyToLeagueId[leagueName];
-      if (leagueId != null && chosenLeagues[leagueId] == true) {
-        filteredNotificationStates[leagueName] = value;
-      }
-    });
-
-    // Check if there are any enabled leagues at all
-    bool hasEnabledLeagues = filteredNotificationStates.isNotEmpty;
-    return hasEnabledLeagues
-        ? ListView(
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: SwitchListTile(
-                  title: Text(
-                    AppLocalizations.of(context)!.chooseallcompetitions,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  value: filteredNotificationStates.values
-                          .every((value) => value) &&
-                      filteredNotificationStates.isNotEmpty,
-                  onChanged: (bool value) {
-                    setState(() {
-                      // Only update notification states for leagues that are enabled
-                      notificationStates.forEach((key, _) {
-                        int? leagueId = notificationKeyToLeagueId[key];
-                        if (leagueId != null &&
-                            chosenLeagues[leagueId] == true) {
-                          notificationStates[key] = value;
-                        }
-                      });
-                    });
-                    updateDatabase(name, email);
-                  },
-                  activeColor: Colors.blue,
-                  inactiveThumbColor: Colors.white,
-                  inactiveTrackColor: Colors.grey.withOpacity(0.5),
-                ),
-              ),
-              ...filteredNotificationStates.entries.map((entry) {
-                String leagueName = entry.key;
-                String subtitle = leagueInfo[leagueName]?['subtitle'] ?? '';
-                String leagueId = leagueInfo[leagueName]?['id'] ?? '';
-
-                return Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  child: SwitchListTile(
-                    title: Text(
-                      _getLocalizedLeagueName(leagueName),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    secondary: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: entry.value
-                            ? Colors.blue.withOpacity(0.1)
-                            : Colors.transparent,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: Image.network(
-                          'https://media.api-sports.io/football/leagues/$leagueId.png',
-                          width: 24,
-                          height: 24,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Icon(Icons.sports_soccer,
-                                color: Colors.blue);
-                          },
-                        ),
-                      ),
-                    ),
-                    value: entry.value,
-                    onChanged: (bool value) {
-                      setState(() {
-                        notificationStates[leagueName] = value;
-                      });
-                      updateDatabase(name, email);
-                    },
-                    activeColor: Colors.blue,
-                    inactiveThumbColor: Colors.white,
-                    inactiveTrackColor: Colors.grey.withOpacity(0.5),
-                  ),
-                );
-              }).toList(),
-            ],
-          )
-        : Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.sports_soccer_outlined,
-                  size: 64,
-                  color: Colors.grey,
-                ),
-                SizedBox(height: 16),
-                Text(
-                  AppLocalizations.of(context)?.noEnabledLeagues ??
-                      'No leagues available for notifications',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 8),
-                Text(
-                  AppLocalizations.of(context)?.enableLeaguesFirst ??
-                      'Please enable leagues in the Chosen Leagues tab first',
-                  style: TextStyle(
-                    color: Colors.grey[400],
-                    fontSize: 14,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                // SizedBox(height: 24),
-                // ElevatedButton(
-                //   onPressed: () {
-                //     setState(() {
-                //       selectedTab = 1; // Switch to chosen leagues tab
-                //     });
-                //   },
-                //   style: ElevatedButton.styleFrom(
-                //     backgroundColor: Colors.blue,
-                //     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                //     shape: RoundedRectangleBorder(
-                //       borderRadius: BorderRadius.circular(20),
-                //     ),
-                //   ),
-                //   child: Text(
-                //     AppLocalizations.of(context)?.goToChosenLeagues ?? 'Go to Chosen Leagues',
-                //     style: TextStyle(color: Colors.white),
-                //   ),
-                // ),
-              ],
-            ),
-          );
+  PreferredSizeWidget _buildAppBar(AppLocalizations l) {
+    final title = selectedTab == 0 ? l.chooseleagues : l.notifications;
+    return AppBar(
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      backgroundColor: Editorial.pitch,
+      surfaceTintColor: Colors.transparent,
+      toolbarHeight: 72,
+      titleSpacing: 20,
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'PREFERENCES',
+            style: EType.label(
+                color: Editorial.inkDim, size: 10, letterSpacing: 3),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            title.toUpperCase(),
+            style: EType.display(
+                size: 26, color: Editorial.ink, letterSpacing: 1.4),
+          ),
+        ],
+      ),
+    );
   }
 
-  Widget _buildChosenLeaguesTab(String name, String email) {
-    final leagueNames = {
-      2: AppLocalizations.of(context)!.championsleague,
-      383: AppLocalizations.of(context)!.ligathaal,
-      140: AppLocalizations.of(context)!.laliga,
-      3: AppLocalizations.of(context)!.europaleague,
-      39: AppLocalizations.of(context)!.premierleague,
-      78: AppLocalizations.of(context)!.bundesleague,
-      848: AppLocalizations.of(context)!.conferenceleague,
-      // 15: AppLocalizations.of(context)!.clubworldcup,
-    };
+  Widget _buildTabStrip(AppLocalizations l) {
+    return Container(
+      color: Editorial.pitch,
+      child: Row(
+        children: [
+          _TabItem(
+            label: l.chooseleagues,
+            icon: Icons.shield_outlined,
+            active: selectedTab == 0,
+            onTap: () => setState(() => selectedTab = 0),
+          ),
+          _TabItem(
+            label: l.notifications,
+            icon: Icons.notifications_outlined,
+            active: selectedTab == 1,
+            onTap: () => setState(() => selectedTab = 1),
+          ),
+        ],
+      ),
+    );
+  }
 
-    final leagueIcons = {
-      2: 'https://media.api-sports.io/football/leagues/2.png',
-      383: 'https://media.api-sports.io/football/leagues/383.png',
-      140: 'https://media.api-sports.io/football/leagues/140.png',
-      3: 'https://media.api-sports.io/football/leagues/3.png',
-      39: 'https://media.api-sports.io/football/leagues/39.png',
-      78: 'https://media.api-sports.io/football/leagues/78.png',
-      848: 'https://media.api-sports.io/football/leagues/848.png',
-      // 15: 'https://media.api-sports.io/football/leagues/15.png',
-    };
-
-    // Map to translate league IDs to notification state keys
-    final leagueIdToNotificationKey = {
-      2: 'ליגת אלופות',
-      383: 'ליגת העל',
-      140: 'ליגה ספרדית',
-      3: 'ליגה אירופית',
-      39: 'ליגה אנגלית',
-      848: 'קונפרנס ליג',
-      // 15: 'גביע מועדונים',
-      // 78: 'ליגה גרמנית',
-    };
-
+  // ── Choose Leagues tab ─────────────────────────────────────────────────
+  Widget _buildLeaguesTab(
+      String name, String userEmail, AppLocalizations l) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Search Bar
-        // Container(
-        //   margin: EdgeInsets.all(16),
-        //   decoration: BoxDecoration(
-        //     color: cards,
-        //     borderRadius: BorderRadius.circular(12),
-        //     border: Border.all(color: Colors.grey.withOpacity(0.3)),
-        //   ),
-        //   child: TextField(
-        //     style: TextStyle(color: Colors.white),
-        //     decoration: InputDecoration(
-        //       hintText: 'Search for competitions',
-        //       hintStyle: TextStyle(color: Colors.grey[400]),
-        //       prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
-        //       border: InputBorder.none,
-        //       contentPadding:
-        //           EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        //     ),
-        //   ),
-        // ),
-
-        // Popular Competitions Title
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Text(
-            AppLocalizations.of(context)!.allCompetitions,
-            textAlign: Directionality.of(context) == TextDirection.rtl
-                ? TextAlign.right
-                : TextAlign.left,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+          child: Row(
+            children: [
+              Container(width: 18, height: 1, color: Editorial.live),
+              const SizedBox(width: 10),
+              Text(
+                l.allCompetitions.toUpperCase(),
+                style: EType.label(
+                    color: Editorial.ink, size: 11, letterSpacing: 2.4),
+              ),
+            ],
           ),
         ),
-        SizedBox(height: 8),
-        // Leagues Grid
         Expanded(
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: GridView.builder(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              physics: const BouncingScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
                 crossAxisSpacing: 8,
                 mainAxisSpacing: 8,
-                childAspectRatio: 0.9,
+                childAspectRatio: 0.85,
               ),
-              itemCount: chosenLeagues.length,
+              itemCount: _leagueOrder.length,
               itemBuilder: (context, index) {
-                final leagueEntry = chosenLeagues.entries.toList()[index];
-                final leagueId = leagueEntry.key;
-                final isSelected = leagueEntry.value;
-
-                return GestureDetector(
+                final id = _leagueOrder[index];
+                final isSelected = chosenLeagues[id] ?? false;
+                return _LeagueCard(
+                  leagueId: id,
+                  leagueName: _localizedLeagueName(id),
+                  logoUrl: '$_leagueLogoBase$id.png',
+                  selected: isSelected,
                   onTap: () {
                     setState(() {
-                      chosenLeagues[leagueId] = !isSelected;
-                      // If user disables a league, also disable its notification
-                      if (!chosenLeagues[leagueId]!) {
-                        String? notificationKey =
-                            leagueIdToNotificationKey[leagueId];
-                        if (notificationKey != null) {
-                          notificationStates[notificationKey] = false;
-                        }
+                      chosenLeagues[id] = !isSelected;
+                      // Disable notification when league is unchecked.
+                      if (!chosenLeagues[id]!) {
+                        final key = _idToNotifKey[id];
+                        if (key != null) notificationStates[key] = false;
                       }
                     });
-                    updateDatabase(name, email);
+                    updateDatabase(name, userEmail);
                   },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: cards,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isSelected ? Colors.blue : Colors.transparent,
-                        width: 2,
-                      ),
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Star icon for selection
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Icon(
-                            isSelected ? Icons.star : Icons.star_border,
-                            color: isSelected ? Colors.blue : Colors.grey[400],
-                            size: 18,
-                          ),
-                        ),
-
-                        // League content
-                        Padding(
-                          padding: EdgeInsets.all(12),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              // League Logo - Centered and bigger
-                              Container(
-                                width: 55,
-                                height: 55,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                padding: EdgeInsets.all(10),
-                                child: Image.network(
-                                  leagueIcons[leagueId] ?? '',
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Icon(
-                                      Icons.sports_soccer,
-                                      color: Colors.blue,
-                                      size: 32,
-                                    );
-                                  },
-                                ),
-                              ),
-
-                              SizedBox(height: 10),
-
-                              // League Name
-                              Text(
-                                leagueNames[leagueId] ?? '',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 );
               },
             ),
           ),
         ),
+        const SizedBox(height: 16),
       ],
+    );
+  }
+
+  // ── Notifications tab ──────────────────────────────────────────────────
+  Widget _buildNotificationsTab(
+      String name, String userEmail, AppLocalizations l) {
+    final filtered = Map.fromEntries(
+      notificationStates.entries.where((e) {
+        final id = _notifKeyToId[e.key];
+        return id != null && chosenLeagues[id] == true;
+      }),
+    );
+
+    if (filtered.isEmpty) {
+      return _EmptyNotifs(l: l);
+    }
+
+    final allOn = filtered.values.every((v) => v);
+
+    return ListView(
+      physics: const BouncingScrollPhysics(),
+      children: [
+        // ── Select all ──
+        _NotifRow(
+          logoWidget: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: Editorial.card,
+              shape: BoxShape.circle,
+              border: Border.all(color: Editorial.hairline, width: 1),
+            ),
+            child: Icon(Icons.notifications_outlined,
+                size: 16, color: Editorial.inkMute),
+          ),
+          label: l.chooseallcompetitions,
+          value: allOn,
+          onChanged: (v) {
+            setState(() {
+              _notifKeyToId.forEach((key, leagueId) {
+                if (chosenLeagues[leagueId] == true) {
+                  notificationStates[key] = v;
+                }
+              });
+            });
+            updateDatabase(name, userEmail);
+          },
+          isSelectAll: true,
+        ),
+        Container(height: 1, color: Editorial.hairline),
+        // ── Individual leagues ──
+        ...filtered.entries.map((entry) {
+          final key = entry.key;
+          final id = _notifKeyToId[key] ?? 0;
+          return _NotifRow(
+            logoWidget: Container(
+              width: 36,
+              height: 36,
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: entry.value
+                    ? Editorial.liveSoft
+                    : Editorial.card,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: entry.value
+                      ? Editorial.live.withOpacity(0.5)
+                      : Editorial.hairline,
+                  width: 1,
+                ),
+              ),
+              child: Image.network(
+                '$_leagueLogoBase$id.png',
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => Icon(
+                  Icons.shield_outlined,
+                  size: 16,
+                  color: Editorial.inkDim,
+                ),
+              ),
+            ),
+            label: _localizedLeagueNameFromKey(key),
+            value: entry.value,
+            onChanged: (v) {
+              setState(() => notificationStates[key] = v);
+              updateDatabase(name, userEmail);
+            },
+          );
+        }),
+      ],
+    );
+  }
+}
+
+// ── Tab item ────────────────────────────────────────────────────────────
+class _TabItem extends StatelessWidget {
+  const _TabItem({
+    required this.label,
+    required this.icon,
+    required this.active,
+    required this.onTap,
+  });
+  final String label;
+  final IconData icon;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon,
+                      size: 16,
+                      color: active ? Editorial.ink : Editorial.inkDim),
+                  const SizedBox(width: 8),
+                  Text(
+                    label.toUpperCase(),
+                    style: EType.label(
+                      color: active ? Editorial.ink : Editorial.inkDim,
+                      size: 11,
+                      letterSpacing: 1.6,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              height: 2,
+              width: active ? 56.0 : 0.0,
+              color: Editorial.live,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── League card (grid item) ─────────────────────────────────────────────
+class _LeagueCard extends StatelessWidget {
+  const _LeagueCard({
+    required this.leagueId,
+    required this.leagueName,
+    required this.logoUrl,
+    required this.selected,
+    required this.onTap,
+  });
+  final int leagueId;
+  final String leagueName;
+  final String logoUrl;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        decoration: BoxDecoration(
+          color: selected ? Editorial.liveSoft : Editorial.card,
+          borderRadius: BorderRadius.circular(2),
+          border: Border.all(
+            color: selected ? Editorial.live : Editorial.hairline,
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Logo + check badge
+            Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                // White circle — keeps dark logos visible
+                Container(
+                  width: 52,
+                  height: 52,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: selected ? Editorial.live : Editorial.hairline,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Image.network(
+                    logoUrl,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => Icon(
+                      Icons.shield_outlined,
+                      size: 20,
+                      color: Editorial.inkDim,
+                    ),
+                  ),
+                ),
+                // Check badge — top-right of the circle
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: selected ? Editorial.live : Editorial.card,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: selected
+                            ? Editorial.live
+                            : Editorial.hairlineHi,
+                        width: 1,
+                      ),
+                    ),
+                    child: selected
+                        ? Icon(Icons.check, size: 9, color: Editorial.pitch)
+                        : null,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Text(
+                leagueName.toUpperCase(),
+                style: EType.label(
+                  color: selected ? Editorial.live : Editorial.inkMute,
+                  size: 9,
+                  letterSpacing: 1.2,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Notification row ────────────────────────────────────────────────────
+class _NotifRow extends StatelessWidget {
+  const _NotifRow({
+    required this.logoWidget,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    this.isSelectAll = false,
+  });
+  final Widget logoWidget;
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final bool isSelectAll;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isSelectAll ? Editorial.terrace : Colors.transparent,
+        border: Border(
+          bottom: BorderSide(color: Editorial.hairline, width: 1),
+          left: BorderSide(
+            color: value ? Editorial.live : Colors.transparent,
+            width: 3,
+          ),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      child: Row(
+        children: [
+          logoWidget,
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              isSelectAll
+                  ? label.toUpperCase()
+                  : label.toUpperCase(),
+              overflow: TextOverflow.ellipsis,
+              style: isSelectAll
+                  ? EType.label(
+                      color: Editorial.ink, size: 11, letterSpacing: 1.8)
+                  : EType.display(
+                      size: 16,
+                      color: Editorial.ink,
+                      letterSpacing: 0.8,
+                      height: 1.0,
+                    ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          _EditorialSwitch(value: value, onChanged: onChanged),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Editorial toggle switch ─────────────────────────────────────────────
+class _EditorialSwitch extends StatelessWidget {
+  const _EditorialSwitch({required this.value, required this.onChanged});
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 44,
+        height: 24,
+        decoration: BoxDecoration(
+          color: value ? Editorial.live : Editorial.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: value ? Editorial.live : Editorial.hairlineHi,
+            width: 1,
+          ),
+        ),
+        child: AnimatedAlign(
+          duration: const Duration(milliseconds: 200),
+          alignment:
+              value ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            margin: const EdgeInsets.all(2),
+            width: 18,
+            height: 18,
+            decoration: BoxDecoration(
+              color: value ? Editorial.pitch : Editorial.inkMute,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Empty notifications state ───────────────────────────────────────────
+class _EmptyNotifs extends StatelessWidget {
+  const _EmptyNotifs({required this.l});
+  final AppLocalizations l;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Editorial.hairline, width: 1),
+              ),
+              child: Icon(Icons.notifications_off_outlined,
+                  size: 26, color: Editorial.inkDim),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              (l.noEnabledLeagues ?? 'No Leagues Enabled').toUpperCase(),
+              style: EType.display(
+                size: 22,
+                color: Editorial.ink,
+                letterSpacing: 1.2,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              l.enableLeaguesFirst ??
+                  'Enable leagues in the Choose Leagues tab first',
+              textAlign: TextAlign.center,
+              style:
+                  EType.body(color: Editorial.inkMute, size: 13, height: 1.5),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

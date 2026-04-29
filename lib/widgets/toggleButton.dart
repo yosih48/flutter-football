@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/theme/typography.dart';
 
-/// Flutter code sample for [ToggleButtons].
-
-// const List<Widget> options = <Widget>[
-//   Text('חדשות'),
-//   Text('פתוחות'),
-//   // Text('Orange')
-// ];
-
+/// Editorial league rail — horizontally scrolling crests with an
+/// underline indicator on the active league. API-compatible with the
+/// previous `ToggleButtonsSample`.
 class ToggleButtonsSample extends StatefulWidget {
   const ToggleButtonsSample({
     super.key,
@@ -22,41 +18,35 @@ class ToggleButtonsSample extends StatefulWidget {
   final List<String> options;
   final List<String> imageUrls;
   final int initialSelection;
+
   @override
   State<ToggleButtonsSample> createState() => _ToggleButtonsSampleState();
 }
 
 class _ToggleButtonsSampleState extends State<ToggleButtonsSample> {
-  late List<bool> _selectedOptions;
+  late int _selected;
   late ScrollController _scrollController;
+  static const double _itemWidth = 86.0;
 
   @override
   void initState() {
     super.initState();
-    _selectedOptions = List<bool>.generate(
-      widget.options.length,
-      (index) => index == widget.initialSelection,
-    );
+    _selected = widget.initialSelection;
     _scrollController = ScrollController();
-
-    // Scroll to selected item after build
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.initialSelection > 0) {
-        _scrollToSelectedItem();
-      }
+      if (_selected > 0) _scrollTo(_selected);
     });
   }
 
-  void _scrollToSelectedItem() {
-    if (_scrollController.hasClients) {
-      final itemWidth = 80.0; // Approximate width of each item
-      final offset = widget.initialSelection * itemWidth;
-      _scrollController.animateTo(
-        offset,
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
+  void _scrollTo(int index) {
+    if (!_scrollController.hasClients) return;
+    final target = (index * _itemWidth)
+        .clamp(0.0, _scrollController.position.maxScrollExtent);
+    _scrollController.animateTo(
+      target,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   @override
@@ -67,88 +57,86 @@ class _ToggleButtonsSampleState extends State<ToggleButtonsSample> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 85,
-      child: SingleChildScrollView(
+    return SizedBox(
+      height: 92,
+      child: ListView.builder(
         controller: _scrollController,
         scrollDirection: Axis.horizontal,
-        child: ToggleButtons(
-          direction: Axis.horizontal,
-          onPressed: (int index) {
-            setState(() {
-              for (int i = 0; i < _selectedOptions.length; i++) {
-                _selectedOptions[i] = i == index;
-              }
-            });
-            widget.onSelectionChanged(index);
-          },
-          borderRadius: BorderRadius.circular(8),
-          selectedBorderColor: Colors.transparent,
-          borderColor: Colors.transparent,
-          selectedColor: Colors.blue,
-          fillColor: Colors.transparent,
-          color: Colors.grey,
-          constraints: const BoxConstraints(
-            minHeight: 70.0,
-            minWidth: 85.0,
-          ),
-          isSelected: _selectedOptions,
-          children: List.generate(widget.options.length, (index) {
-            return Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: _selectedOptions[index]
-                        ? Colors.blue
-                        : Colors.transparent,
-                    width: 2.0,
-                  ),
-                ),
-              ),
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: _selectedOptions[index]
-                            ? Colors.blue.withOpacity(0.1)
-                            : Colors.transparent,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: Image.network(
-                          widget.imageUrls[index],
-                          width: 24,
-                          height: 24,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Icon(Icons.error, size: 24);
-                          },
-                        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: widget.options.length,
+        itemBuilder: (_, i) {
+          final isSelected = i == _selected;
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              setState(() => _selected = i);
+              widget.onSelectionChanged(i);
+              _scrollTo(i);
+            },
+            child: SizedBox(
+              width: _itemWidth,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isSelected
+                          ? Editorial.cardHi
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: isSelected
+                            ? Editorial.live
+                            : Editorial.hairline,
+                        width: 1,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      widget.options[index],
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: _selectedOptions[index]
-                            ? FontWeight.bold
-                            : FontWeight.normal,
+                    padding: const EdgeInsets.all(8),
+                    child: Image.network(
+                      widget.imageUrls[i],
+                      fit: BoxFit.contain,
+                      color: isSelected ? null : Editorial.inkMute,
+                      colorBlendMode:
+                          isSelected ? BlendMode.dst : BlendMode.modulate,
+                      errorBuilder: (_, __, ___) => Icon(
+                        Icons.shield_outlined,
+                        size: 20,
+                        color: Editorial.inkDim,
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 20,
+                    child: Text(
+                      widget.options[i].toUpperCase(),
+                      style: EType.label(
+                        color: isSelected
+                            ? Editorial.ink
+                            : Editorial.inkDim,
+                        size: 9,
+                        letterSpacing: 1.2,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 4),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: isSelected ? 22 : 0,
+                    height: 2,
+                    color: Editorial.live,
+                  ),
+                ],
               ),
-            );
-          }),
-        ),
+            ),
+          );
+        },
       ),
     );
   }

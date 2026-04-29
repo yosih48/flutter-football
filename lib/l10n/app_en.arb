@@ -247,5 +247,18 @@
     "noOlderGames": "No older games",
     "pullUpForPreviousGames": "Pull up for previous games",
     "noWinnersHint": "Choose your champion at the start of each season",
-    "noTopScorersHint": "Pick who you think will score the most goals"
+    "noTopScorersHint": "Pick who you think will score the most goals",
+    "matchday": "Matchday",
+    "fixtures": "Fixtures",
+    "pickDate": "Pick date",
+    "liveLabel": "Live",
+    "fullTimeLabel": "Full Time",
+    "halfTimeLabel": "Half Time",
+    "todayLabel": "Today",
+    "refreshFailed": "Refresh failed",
+    "failedToSubmitGuesses": "Failed to submit or update some guesses",
+    "matchCentre": "Match Centre",
+    "predictionsLabel": "Predictions",
+    "youLabel": "You",
+    "playerProfile": "Player Profile"
 }

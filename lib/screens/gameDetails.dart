@@ -49,6 +49,7 @@ class _GameDetailsState extends State<GameDetails> {
   late String selectedGroupName = "";
   Map<String, String> _userGroups = {};
   bool isLoading = true;
+  bool _eventsExpanded = false;
   late int _currentIndex;
   late Game _currentGame;
   late int currentGameId;
@@ -106,7 +107,7 @@ class _GameDetailsState extends State<GameDetails> {
         surfaceTintColor: Colors.transparent,
         iconTheme: IconThemeData(color: Editorial.ink, size: 20),
         title: Text(
-          'MATCH CENTRE',
+          AppLocalizations.of(context)!.matchCentre.toUpperCase(),
           style: EType.label(
               color: Editorial.inkDim, size: 11, letterSpacing: 2.6),
         ),
@@ -209,13 +210,13 @@ class _GameDetailsState extends State<GameDetails> {
     Color statusColor;
     if (_isLive) {
       final el = _currentGame.status.elapsed;
-      statusText = el != null ? "LIVE  ${el}'" : 'LIVE';
+      statusText = el != null ? "${AppLocalizations.of(context)!.liveLabel.toUpperCase()}  ${el}'" : AppLocalizations.of(context)!.liveLabel.toUpperCase();
       statusColor = Editorial.live;
     } else if (_isHalftime) {
-      statusText = 'HALF TIME';
+      statusText = AppLocalizations.of(context)!.halfTimeLabel.toUpperCase();
       statusColor = Editorial.amber;
     } else if (_isFinished) {
-      statusText = 'FULL TIME';
+      statusText = AppLocalizations.of(context)!.fullTimeLabel.toUpperCase();
       statusColor = Editorial.inkMute;
     } else {
       statusText = (info['text']?.toString() ?? '').toUpperCase();
@@ -372,16 +373,45 @@ class _GameDetailsState extends State<GameDetails> {
         borderRadius: BorderRadius.circular(2),
         border: Border.all(color: Editorial.hairline, width: 1),
       ),
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionLabel('MATCH EVENTS'),
-          const SizedBox(height: 10),
-          FixtureEventsWidget(
-            fixtureId: currentGameId,
-            homeTeamName: _currentGame.home.name,
-            awayTeamName: _currentGame.away.name,
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => setState(() => _eventsExpanded = !_eventsExpanded),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _sectionLabel(AppLocalizations.of(context)!.matchEvents.toUpperCase()),
+                  AnimatedRotation(
+                    turns: _eventsExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      Icons.expand_more,
+                      size: 20,
+                      color: Editorial.inkMute,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+              child: FixtureEventsWidget(
+                fixtureId: currentGameId,
+                homeTeamName: _currentGame.home.name,
+                awayTeamName: _currentGame.away.name,
+              ),
+            ),
+            crossFadeState: _eventsExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 250),
           ),
         ],
       ),
@@ -405,7 +435,7 @@ class _GameDetailsState extends State<GameDetails> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _sectionLabel('PREDICTIONS'),
+              _sectionLabel(l.predictionsLabel.toUpperCase()),
               if (_userGroups.isNotEmpty)
                 Text(
                   '${_guessesWithNames.length}',
@@ -420,7 +450,7 @@ class _GameDetailsState extends State<GameDetails> {
           if (_userGroups.isEmpty)
             _joinGroupCallout(l)
           else ...[
-            _buildGroupSelector(),
+            _buildGroupHeader(),
             const SizedBox(height: 14),
             if (_guessesWithNames.isEmpty)
               Padding(
@@ -472,48 +502,216 @@ class _GameDetailsState extends State<GameDetails> {
     );
   }
 
-  Widget _buildGroupSelector() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Editorial.terrace,
-        border: Border.all(color: Editorial.hairline, width: 1),
-        borderRadius: BorderRadius.circular(2),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: selectedGroupName.isEmpty ? null : selectedGroupName,
-          dropdownColor: Editorial.cardHi,
-          isExpanded: true,
-          icon: Icon(Icons.expand_more, color: Editorial.inkMute, size: 18),
-          style: EType.body(color: Editorial.ink, size: 13),
-          items: _userGroups.entries.map((entry) {
-            return DropdownMenuItem<String>(
-              value: entry.value,
-              child: Row(
+  Widget _buildGroupHeader() {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _showGroupSwitcherSheet,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: Editorial.terrace,
+          border: Border.all(color: Editorial.hairline, width: 1),
+          borderRadius: BorderRadius.circular(2),
+        ),
+        child: Row(
+          children: [
+            // Monogram circle
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: Editorial.cardHi,
+                shape: BoxShape.circle,
+                border: Border.all(color: Editorial.live, width: 1),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                selectedGroupName.isNotEmpty
+                    ? selectedGroupName[0].toUpperCase()
+                    : '?',
+                style: EType.display(
+                    size: 16, color: Editorial.live, letterSpacing: 0),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Group name
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.lock_outline,
-                      color: Editorial.live, size: 14),
-                  const SizedBox(width: 10),
-                  Flexible(
-                    child: Text(
-                      entry.value.toUpperCase(),
+                  Text('GROUP',
                       style: EType.label(
-                          color: Editorial.ink,
-                          size: 11,
-                          letterSpacing: 1.6),
-                    ),
+                          color: Editorial.inkDim,
+                          size: 9,
+                          letterSpacing: 2)),
+                  const SizedBox(height: 3),
+                  Text(
+                    selectedGroupName.toUpperCase(),
+                    overflow: TextOverflow.ellipsis,
+                    style: EType.display(
+                        size: 18, color: Editorial.ink, letterSpacing: 1),
                   ),
                 ],
               ),
-            );
-          }).toList(),
-          onChanged: (newValue) {
-            if (newValue != null) {
-              setState(() => selectedGroupName = newValue);
-              _fetchGuesses(newValue);
-            }
-          },
+            ),
+            // SWITCH pill
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                border: Border.all(color: Editorial.hairline, width: 1),
+                borderRadius: BorderRadius.circular(2),
+              ),
+              child: Row(
+                children: [
+                  Text('SWITCH',
+                      style: EType.label(
+                          color: Editorial.inkMute,
+                          size: 10,
+                          letterSpacing: 1.6)),
+                  const SizedBox(width: 4),
+                  Icon(Icons.expand_more,
+                      color: Editorial.inkMute, size: 14),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showGroupSwitcherSheet() async {
+    if (_userGroups.isEmpty) return;
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: Editorial.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(2)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Drag handle
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(top: 10, bottom: 12),
+                width: 36,
+                height: 3,
+                decoration: BoxDecoration(
+                  color: Editorial.hairlineHi,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            // Section label
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+              child: Row(
+                children: [
+                  Container(
+                      width: 18, height: 1, color: Editorial.live),
+                  const SizedBox(width: 10),
+                  Text(
+                    AppLocalizations.of(sheetCtx)!.privategroups
+                        .toUpperCase(),
+                    style: EType.label(
+                        color: Editorial.ink,
+                        size: 11,
+                        letterSpacing: 2.4),
+                  ),
+                ],
+              ),
+            ),
+            Container(height: 1, color: Editorial.hairline),
+            // Group rows
+            ..._userGroups.entries.map((entry) {
+              final name = entry.value;
+              final isActive = name == selectedGroupName;
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  Navigator.of(sheetCtx).pop();
+                  if (!isActive) {
+                    setState(() {
+                      selectedGroupName = name;
+                      isLoading = true;
+                    });
+                    _fetchGuesses(name);
+                  }
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isActive
+                        ? Editorial.liveSoft
+                        : Colors.transparent,
+                    border: Border(
+                      bottom: BorderSide(
+                          color: Editorial.hairline, width: 1),
+                      left: BorderSide(
+                        color: isActive
+                            ? Editorial.live
+                            : Colors.transparent,
+                        width: 3,
+                      ),
+                    ),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Editorial.cardHi,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isActive
+                                ? Editorial.live
+                                : Editorial.hairline,
+                            width: 1,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          name.isNotEmpty
+                              ? name[0].toUpperCase()
+                              : '?',
+                          style: EType.display(
+                            size: 16,
+                            color: isActive
+                                ? Editorial.live
+                                : Editorial.inkMute,
+                            letterSpacing: 0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          name.toUpperCase(),
+                          overflow: TextOverflow.ellipsis,
+                          style: EType.display(
+                            size: 16,
+                            color: Editorial.ink,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ),
+                      if (isActive)
+                        Icon(Icons.check,
+                            size: 16, color: Editorial.live),
+                    ],
+                  ),
+                ),
+              );
+            }),
+            const SizedBox(height: 12),
+          ],
         ),
       ),
     );
@@ -622,7 +820,7 @@ class _GameDetailsState extends State<GameDetails> {
                                 color: Editorial.live, width: 1),
                             borderRadius: BorderRadius.circular(2),
                           ),
-                          child: Text('YOU',
+                          child: Text(AppLocalizations.of(context)!.youLabel.toUpperCase(),
                               style: EType.label(
                                   color: Editorial.live,
                                   size: 9,
