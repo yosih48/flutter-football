@@ -1,17 +1,12 @@
-
 import 'package:flutter/material.dart';
 import 'package:football/theme/colors.dart';
-import 'package:football/widgets/text_field_input.dart';
+import 'package:football/theme/typography.dart';
 import 'package:provider/provider.dart';
-
 import '../resources/auth.dart';
 import '../responsive/mobile_screen_layout.dart';
 import '../responsive/rsponsive_layout_screen.dart';
 import '../responsive/web_screen_layout.dart';
-import '../utils/colors.dart';
-import '../utils/utils.dart';
 import 'package:football/l10n/app_localizations.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'login_screen.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -22,241 +17,270 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
   final TextEditingController _usernameController = TextEditingController();
-
-  // final _image = null;
-  bool _isLoading = false;
+  final TextEditingController _emailController    = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading        = false;
+  bool _obscurePassword  = true;
 
   @override
   void dispose() {
-    // TODO: implement dispose
-    super.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-
-    _usernameController.dispose();
+    super.dispose();
   }
 
-  void selectImage() async {}
+  // ── Sign up ────────────────────────────────────────────────────────────
+  Future<void> _signUpUser() async {
+    setState(() => _isLoading = true);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    try {
+      await authProvider.register(
+        _usernameController.text,
+        _emailController.text,
+        _passwordController.text,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                AppLocalizations.of(context)!.registrationsuccessful)),
+      );
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => const ResponsiveLayout(
+            mobileScreenLayout: MobileScreenLayout(),
+            webScreenLayout: WebScreenLayout(),
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                AppLocalizations.of(context)!.registrationfailed)),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
- void signUpUser() async {
-  setState(() {
-    _isLoading = true;
-  });
+  // ── Build ──────────────────────────────────────────────────────────────
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    final l = AppLocalizations.of(context)!;
 
-  final authProvider = Provider.of<AuthProvider>(context, listen: false);
-  
-  try {
-    await authProvider.register(
-      _usernameController.text,
-      _emailController.text,
-      _passwordController.text
-    );
-    
-    // If we reach here, registration was successful
-    print('Registration successful');
-        ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.registrationsuccessful)),
-    );
-    // navigateToLogin();
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => const ResponsiveLayout(
-          mobileScreenLayout: MobileScreenLayout(),
-          webScreenLayout: WebScreenLayout(),
+    return Scaffold(
+      backgroundColor: c.pitch,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 56),
+
+              // ── Brand mark ─────────────────────────────────────
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: c.cardHi,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: c.hairline, width: 1),
+                ),
+                child:
+                    Icon(Icons.sports_soccer, color: c.live, size: 26),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                l.signup.toUpperCase(),
+                style: EType.display(
+                    size: 28, color: c.ink, letterSpacing: 1.6),
+              ),
+              const SizedBox(height: 6),
+              // Kit-stripe accent
+              Container(width: 28, height: 2, color: c.live),
+
+              const SizedBox(height: 36),
+
+              // ── Form card ──────────────────────────────────────
+              Container(
+                decoration: BoxDecoration(
+                  color: c.card,
+                  borderRadius: BorderRadius.circular(2),
+                  border: Border.all(color: c.hairline, width: 1),
+                ),
+                child: Column(
+                  children: [
+                    // Username
+                    _AuthField(
+                      icon: Icons.person_outline,
+                      hintText: l.username,
+                      controller: _usernameController,
+                      c: c,
+                    ),
+                    Container(height: 1, color: c.hairline),
+                    // Email
+                    _AuthField(
+                      icon: Icons.mail_outline,
+                      hintText: l.email,
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      c: c,
+                    ),
+                    Container(height: 1, color: c.hairline),
+                    // Password
+                    _AuthField(
+                      icon: Icons.lock_outline,
+                      hintText: l.createpassword,
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      c: c,
+                      trailing: GestureDetector(
+                        onTap: () => setState(
+                            () => _obscurePassword = !_obscurePassword),
+                        child: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                          size: 18,
+                          color: c.inkDim,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 28),
+
+              // ── Sign-up button ─────────────────────────────────
+              GestureDetector(
+                onTap: _isLoading ? null : _signUpUser,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    color: _isLoading ? c.hairlineHi : c.live,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                  child: _isLoading
+                      ? Center(
+                          child: SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 1.5,
+                              valueColor:
+                                  AlwaysStoppedAnimation(c.pitch),
+                            ),
+                          ),
+                        )
+                      : Center(
+                          child: Text(
+                            l.signup.toUpperCase(),
+                            style: EType.label(
+                              color: c.pitch,
+                              size: 12,
+                              letterSpacing: 2.4,
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+
+              const SizedBox(height: 48),
+
+              // ── Login link ─────────────────────────────────────
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    l.allreadyhaveanaccount,
+                    style: EType.body(color: c.inkMute, size: 13),
+                  ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => const LoginScreen()),
+                    ),
+                    child: Text(
+                      l.login.toUpperCase(),
+                      style: EType.label(
+                          color: c.live, size: 11, letterSpacing: 1.4),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
     );
-  } catch (e) {
-    print('Registration failed: $e');
-    // Show error message to user
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.registrationfailed)),
-    );
-  } finally {
-    setState(() {
-      _isLoading = false;
-    });
   }
 }
 
-  void navigateToLogin() {
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (context) => const LoginScreen()));
-  }
+// ── Reusable auth field row ────────────────────────────────────────────────
+class _AuthField extends StatelessWidget {
+  const _AuthField({
+    required this.icon,
+    required this.hintText,
+    required this.controller,
+    required this.c,
+    this.keyboardType,
+    this.obscureText = false,
+    this.trailing,
+  });
+
+  final IconData                icon;
+  final String                  hintText;
+  final TextEditingController   controller;
+  final EditorialColors         c;
+  final TextInputType?          keyboardType;
+  final bool                    obscureText;
+  final Widget?                 trailing;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: background,
-        body: SafeArea(
-            child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
         children: [
-          Flexible(
-            child: Container(),
-            flex: 2,
-          ),
-          //svg image
-          // SvgPicture.asset('assets/ic_instegram.svg', color: primaryColor,height:64),
-          const SizedBox(height: 64),
-//cicular widget to accept and show our selected file
-
-          const SizedBox(
-            height: 24,
-          ),
-          //test fiels input for username
-          
-          TextField(
-        
-              controller: _usernameController,
-              //  labelText: 'enter your username',
-                               decoration: InputDecoration(
-              labelText: AppLocalizations.of(context)!.username,
-              labelStyle: TextStyle(
-                color: Colors.blue, // Change this to your desired color
+          Icon(icon, size: 18, color: c.inkDim),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              keyboardType: keyboardType,
+              obscureText: obscureText,
+              style: EType.body(color: c.ink, size: 14),
+              cursorColor: c.live,
+              cursorWidth: 1.5,
+              decoration: InputDecoration(
+                hintText: hintText,
+                hintStyle: EType.body(color: c.inkFaint, size: 14),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 16),
               ),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(
-                    color: Colors.blue), // Bottom border color when enabled
-              ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(
-                    color: Colors.blue,
-                    width:
-                        2.0), // Bottom border color when focused, with thicker border
-              ),
-            ),
-            style: TextStyle(
-              color: Colors.white, // Change the input text color to blue
-            ),
-            cursorColor: Colors.blue,
-            onChanged: (value) {
-              _usernameController.text = value;
-            },
-              ),
-          const SizedBox(height: 24),
-          //test fiels input for email
-           TextField(
-        
-              controller: _emailController,
-              //  labelText: 'enter your username',
-                               decoration: InputDecoration(
-              labelText: AppLocalizations.of(context)!.email,
-              labelStyle: TextStyle(
-                color: Colors.blue, // Change this to your desired color
-              ),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(
-                    color: Colors.blue), // Bottom border color when enabled
-              ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(
-                    color: Colors.blue,
-                    width:
-                        2.0), // Bottom border color when focused, with thicker border
-              ),
-            ),
-            style: TextStyle(
-              color: Colors.white, // Change the input text color to blue
-            ),
-            cursorColor: Colors.blue,
-            onChanged: (value) {
-              _emailController.text = value;
-            },
-              ),
-          const SizedBox(height: 24),
-          //test fiels input for password
-                 TextField(
-            controller: _passwordController,
-            //  labelText: 'enter your username',
-            decoration: InputDecoration(
-              labelText: AppLocalizations.of(context)!.createpassword,
-              labelStyle: TextStyle(
-                color: Colors.blue, // Change this to your desired color
-              ),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(
-                    color: Colors.blue), // Bottom border color when enabled
-              ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(
-                    color: Colors.blue,
-                    width:
-                        2.0), // Bottom border color when focused, with thicker border
-              ),
-            ),
-            style: TextStyle(
-              color: Colors.white, // Change the input text color to blue
-            ),
-            cursorColor: Colors.blue,
-            onChanged: (value) {
-              _passwordController.text = value;
-            },
-          ),
-          const SizedBox(height: 24),
-
-          //button login
-
-          InkWell(
-            onTap: signUpUser,
-            child: Container(
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: primaryColor,
-                      ),
-                    )
-                  :  Text(AppLocalizations.of(context)!.signup),
-              width: double.infinity,
-              alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: const ShapeDecoration(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(4)),
-                  ),
-                  color: blueColor),
             ),
           ),
-          const SizedBox(height: 12),
-          Flexible(
-            child: Container(),
-            flex: 2,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                child: Text(AppLocalizations.of(context)!.allreadyhaveanaccount,
-                      style: TextStyle(
-                    color: Colors.white, // Change the input text color to blue
-                  ),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-              ),
-              GestureDetector(
-                onTap: navigateToLogin,
-                child: Container(
-                  child: Text(
-                    AppLocalizations.of(context)!.login,
-                    style: TextStyle(fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                ),
-              )
-            ],
-          )
-          //transition to sign up
+          if (trailing != null) ...[
+            const SizedBox(width: 8),
+            trailing!,
+          ],
         ],
       ),
-    )));
+    );
   }
 }

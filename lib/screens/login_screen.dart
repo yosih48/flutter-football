@@ -1,9 +1,3 @@
-// import 'package:businesses/models/employees.dart';
-// import 'package:businesses/providers/flutter%20pub%20add%20provider.dart';
-// import 'package:businesses/resources/Employees_methods.dart';
-// import 'package:businesses/screens/employeesCalls.dart';
-// import 'package:businesses/screens/signup_screen.dart';
-// import 'package:businesses/utils/utils.dart';
 import 'dart:convert';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -11,14 +5,13 @@ import 'package:football/models/memoryToken.dart';
 import 'package:football/resources/appUpdates.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/competitions.dart';
-import 'package:football/screens/games.dart';
 import 'package:football/screens/signup_screen.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/theme/typography.dart';
 import 'package:football/widgets/googleSignIn.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:football/models/users.dart';
-
 import 'package:football/utils/utils.dart';
 import 'package:http/http.dart' as http;
 import '../providers/flutter pub add provider.dart';
@@ -26,9 +19,7 @@ import '../resources/auth.dart';
 import '../responsive/mobile_screen_layout.dart';
 import '../responsive/rsponsive_layout_screen.dart';
 import '../responsive/web_screen_layout.dart';
-import '../utils/colors.dart';
 import 'package:football/l10n/app_localizations.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -39,420 +30,392 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController    = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _isLoading = false;
-  List<String> _employeeUsernames = [];
-
-  @override
-  void initState() {
-    super.initState();
-  }
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-Future<void> sendResetEmail() async {
+  // ── Forgot password ────────────────────────────────────────────────────
+  Future<void> _sendResetEmail() async {
     try {
       final resetToken =
-          await UsersMethods().sendEmail(_usernameController.text,  context);
-      print('Reset token received: $resetToken');
-
-      // Store token in memory
+          await UsersMethods().sendEmail(_emailController.text, context);
       TokenManager.setToken(resetToken);
-      print('Token stored in memory');
 
-      // Show dialog
-      if (context.mounted) {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              backgroundColor: cards,
-              title: Text(AppLocalizations.of(context)!.emailsent,
-                      style: TextStyle(
-                 
-                      color: Colors.white,
-                    ),
-              ),
-              content: Text(
-                 AppLocalizations.of(context)!.emailsentlink,
-                         style: TextStyle(
-                
-                      color: Colors.white,
-                    ),
-                 ),
-              actions: <Widget>[
-                TextButton(
-                  child: Text('OK'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
+      if (!context.mounted) return;
+      final c = context.col;
+      final l = AppLocalizations.of(context)!;
+
+      showDialog(
+        context: context,
+        builder: (dialogCtx) {
+          final dc = dialogCtx.col;
+          return AlertDialog(
+            backgroundColor: dc.card,
+            surfaceTintColor: Colors.transparent,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(2)),
+            ),
+            title: Text(
+              l.emailsent.toUpperCase(),
+              style: EType.display(
+                  size: 18, color: dc.ink, letterSpacing: 0.8),
+            ),
+            content: Text(
+              l.emailsentlink,
+              style: EType.body(color: dc.inkMute, size: 13, height: 1.55),
+            ),
+            actions: [
+              GestureDetector(
+                onTap: () => Navigator.of(dialogCtx).pop(),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Text(
+                    'OK',
+                    style: EType.label(
+                        color: dc.live, size: 11, letterSpacing: 1.6),
+                  ),
                 ),
-              ],
-            );
-          },
-        );
-      }
+              ),
+            ],
+          );
+        },
+      );
     } catch (e) {
-      print('Exception in sendResetEmail: $e');
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
-      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
     }
   }
 
-  void loginUser() async {
+  // ── Login ──────────────────────────────────────────────────────────────
+  Future<void> _loginUser() async {
     if (!mounted) return;
-
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
     try {
-      String? fcmToken = await FirebaseMessaging.instance.getToken();
-      print('fcmToken: $fcmToken');
-
+      final fcmToken = await FirebaseMessaging.instance.getToken();
       await authProvider.login(
-          _usernameController.text, _passwordController.text, fcmToken);
-  
-      // Navigate to GamesScreen after successful login
+          _emailController.text, _passwordController.text, fcmToken);
       if (!mounted) return;
 
-      // Check if it's first login
       if (authProvider.currentUser?.isFirstLogin == true) {
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
-            builder: (context) => Competitions(
+            builder: (_) => Competitions(
               userEmail: authProvider.currentUser!.email,
-              userName: authProvider.currentUser!.name, // or displayName
+              userName: authProvider.currentUser!.name,
             ),
-            
           ),
-          (route) => false, // This removes ALL previous routes
+          (route) => false,
         );
       } else {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => MobileScreenLayout()),
-          (route) => false, // This removes ALL previous routes
+          MaterialPageRoute(builder: (_) => MobileScreenLayout()),
+          (route) => false,
         );
       }
-     
-// String? fcmToken = await FirebaseMessaging.instance.getToken();
-// print('fcmToken: ${fcmToken}');
-//  await sendFCMTokenToServer(fcmToken);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.loginfailed)),
+        SnackBar(
+            content:
+                Text(AppLocalizations.of(context)!.loginfailed)),
       );
     }
   }
 
-  Future<void> sendFCMTokenToServer(String? fcmToken) async {
-    if (fcmToken == null) {
-      print('FCM token is null. Unable to send to server.');
-      return;
-    }
-
-    final String userId =
-        '6584aceb503733cfc6418e98'; // Replace with actual user ID from your auth system
-    final String email = _usernameController
-        .text; // Replace with actual user ID from your auth system
-    final String serverUrl =
-        'https://leagues.onrender.com/users/store-fcm-token'; // Replace with your actual server URL
-
-    try {
-      final response = await http.post(
-        Uri.parse(serverUrl),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          'userId': userId,
-          'fcmToken': fcmToken,
-          'email': email,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        print('FCM token sent to server successfully');
-      } else {
-        print(
-            'Failed to send FCM token to server. Status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error sending FCM token to server: $e');
-    }
-  }
-
+  // ── Build ──────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
+    final l = AppLocalizations.of(context)!;
     final authProvider = Provider.of<AuthProvider>(context);
+
     return Scaffold(
-        backgroundColor: background,
-        body: SafeArea(
-            child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          width: double.infinity,
+      backgroundColor: c.pitch,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Flexible(
-                child: Container(),
-                flex: 2,
+              const SizedBox(height: 56),
+
+              // ── Brand mark ─────────────────────────────────────
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: c.cardHi,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: c.hairline, width: 1),
+                ),
+                child:
+                    Icon(Icons.sports_soccer, color: c.live, size: 26),
               ),
-              //svg image
-              // SvgPicture.asset('assets/ic_instegram.svg', color: primaryColor,height:64),
-              const SizedBox(height: 64),
-              //test fiels input for email
-              Autocomplete<String>(
-                optionsBuilder: (TextEditingValue textEditingValue) {
-                  if (textEditingValue.text == '') {
-                    return const Iterable<String>.empty();
-                  }
-                  return _employeeUsernames.where((String option) {
-                    return option
-                        .toLowerCase()
-                        .contains(textEditingValue.text.toLowerCase());
-                  });
-                },
-                onSelected: (String selection) {
-                  setState(() {
-                    _usernameController.text = selection;
-                  });
-                },
-                fieldViewBuilder: (BuildContext context,
-                    TextEditingController fieldTextEditingController,
-                    FocusNode fieldFocusNode,
-                    VoidCallback onFieldSubmitted) {
-                  return TextField(
-                    controller: fieldTextEditingController,
-                    focusNode: fieldFocusNode,
-                    decoration: InputDecoration(
-                      labelText:  AppLocalizations.of(context)!.email,
-                      labelStyle: TextStyle(
-                        color: Colors.blue, // Change this to your desired color
-                      ),
-                      enabledBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Colors
-                                .blue), // Bottom border color when enabled
-                      ),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Colors.blue,
-                            width:
-                                2.0), // Bottom border color when focused, with thicker border
-                      ),
+              const SizedBox(height: 20),
+              Text(
+                l.login.toUpperCase(),
+                style: EType.display(
+                    size: 28, color: c.ink, letterSpacing: 1.6),
+              ),
+              const SizedBox(height: 6),
+              // Kit-stripe accent
+              Container(
+                width: 28, height: 2, color: c.live,
+              ),
+
+              const SizedBox(height: 36),
+
+              // ── Form card ──────────────────────────────────────
+              Container(
+                decoration: BoxDecoration(
+                  color: c.card,
+                  borderRadius: BorderRadius.circular(2),
+                  border: Border.all(color: c.hairline, width: 1),
+                ),
+                child: Column(
+                  children: [
+                    // Email row
+                    _AuthField(
+                      icon: Icons.mail_outline,
+                      hintText: l.email,
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      c: c,
                     ),
-                    style: TextStyle(
-                      color:
-                          Colors.white, // Change the input text color to blue
-                    ),
-                    cursorColor: Colors.blue,
-                    onChanged: (value) {
-                      _usernameController.text = value;
-                    },
-                  );
-                },
-                optionsViewBuilder: (BuildContext context,
-                    AutocompleteOnSelected<String> onSelected,
-                    Iterable<String> options) {
-                  return Align(
-                    alignment: Alignment.topLeft,
-                    child: Material(
-                      elevation: 4.0,
-                      child: Container(
-                        width: 330,
-                        height: 60, // Adjust this width as needed
-                        child: ListView.builder(
-                          padding: EdgeInsets.all(8.0),
-                          itemCount: options.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            final String option = options.elementAt(index);
-                            return GestureDetector(
-                              onTap: () {
-                                onSelected(option);
-                              },
-                              child: ListTile(
-                                title: Text(option),
-                              ),
-                            );
-                          },
+                    Container(height: 1, color: c.hairline),
+                    // Password row
+                    _AuthField(
+                      icon: Icons.lock_outline,
+                      hintText: l.password,
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      c: c,
+                      trailing: GestureDetector(
+                        onTap: () => setState(
+                            () => _obscurePassword = !_obscurePassword),
+                        child: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                          size: 18,
+                          color: c.inkDim,
                         ),
                       ),
                     ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 24),
-              //old test fiels input for password
-              // TextFieldInput(
-              //   textEditingController: _passwordController,
-              //   hintText: AppLocalizations.of(context)!.enteryourpassword,
-              //   textInputType: TextInputType.text,
-              //   isPass: true,
-              // ),
-              TextField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.password,
-                  labelStyle: TextStyle(
-                    color: Colors.blue, // Change this to your desired color
-                  ),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(
-                        color: Colors.blue), // Bottom border color when enabled
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(
-                        color: Colors.blue,
-                        width:
-                            2.0), // Bottom border color when focused, with thicker border
-                  ),
-                ),
-                style: TextStyle(
-                  color: Colors.white, // Change the input text color to blue
-                ),
-                cursorColor: Colors.blue,
-              ),
-              const SizedBox(height: 10),
-              GestureDetector(
-                onTap: authProvider.isLoading ? null : sendResetEmail,
-                child: Container(
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      AppLocalizations.of(context)!.forgotpassword,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              InkWell(
-                onTap: authProvider.isLoading ? null : loginUser,
-                child: Container(
-                  child: authProvider.isLoading
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                            color: primaryColor,
-                          ),
-                        )
-                      : Text(
-                          AppLocalizations.of(context)!.login,
-                          style: TextStyle(
-                            color: Colors
-                                .white, // Change the input text color to blue
-                          ),
-                        ),
-                  width: double.infinity,
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: const ShapeDecoration(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(4)),
-                      ),
-                      color: blueColor),
+                  ],
                 ),
               ),
 
               const SizedBox(height: 12),
-              Text(
-                AppLocalizations.of(context)!.or,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+
+              // ── Forgot password ────────────────────────────────
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: authProvider.isLoading ? null : _sendResetEmail,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      l.forgotpassword.toUpperCase(),
+                      style: EType.label(
+                          color: c.inkMute, size: 10, letterSpacing: 1.6),
+                    ),
+                  ),
                 ),
               ),
 
+              const SizedBox(height: 28),
+
+              // ── Login button ───────────────────────────────────
+              GestureDetector(
+                onTap: authProvider.isLoading ? null : _loginUser,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    color: authProvider.isLoading
+                        ? c.hairlineHi
+                        : c.live,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                  child: authProvider.isLoading
+                      ? Center(
+                          child: SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 1.5,
+                              valueColor:
+                                  AlwaysStoppedAnimation(c.pitch),
+                            ),
+                          ),
+                        )
+                      : Center(
+                          child: Text(
+                            l.login.toUpperCase(),
+                            style: EType.label(
+                              color: c.pitch,
+                              size: 12,
+                              letterSpacing: 2.4,
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+
+              const SizedBox(height: 22),
+
+              // ── OR divider ─────────────────────────────────────
+              Row(
+                children: [
+                  Expanded(
+                      child: Container(height: 1, color: c.hairline)),
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14),
+                    child: Text(
+                      l.or.toUpperCase(),
+                      style: EType.label(
+                          color: c.inkDim, size: 10, letterSpacing: 2),
+                    ),
+                  ),
+                  Expanded(
+                      child: Container(height: 1, color: c.hairline)),
+                ],
+              ),
+
+              const SizedBox(height: 22),
+
+              // ── Google sign-in ─────────────────────────────────
               GoogleSignInButton(
-                
                 onSignInSuccess: (String token) {
-                   final authProvider =
+                  final ap =
                       Provider.of<AuthProvider>(context, listen: false);
-                  // Handle successful sign-in
-                  print('Successfully signed in with Google. JWT: ');
-            // Check if it's first login
-                  if (authProvider.currentUser?.isFirstLogin == true) {
+                  if (ap.currentUser?.isFirstLogin == true) {
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(
-                        builder: (context) => Competitions(
-                          userEmail: authProvider.currentUser!.email,
-                          userName:
-                              authProvider.currentUser!.name, // or displayName
+                        builder: (_) => Competitions(
+                          userEmail: ap.currentUser!.email,
+                          userName: ap.currentUser!.name,
                         ),
                       ),
-                         (route) => false,
+                      (route) => false,
                     );
                   } else {
                     Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (context) =>MobileScreenLayout()),
-                         (route) => false,
+                      MaterialPageRoute(
+                          builder: (_) => MobileScreenLayout()),
+                      (route) => false,
                     );
                   }
                 },
                 onSignInError: (String error) {
-                  // Handle sign-in error
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text(error)),
                   );
                 },
               ),
-              
-              const SizedBox(height: 12),
-              Flexible(
-                child: Container(),
-                flex: 2,
-              ),
+
+              const SizedBox(height: 48),
+
+              // ── Sign-up link ───────────────────────────────────
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    child: Text(
-                      AppLocalizations.of(context)!.donthaveanaccount,
-                      style: TextStyle(
-                        color:
-                            Colors.white, // Change the input text color to blue
-                      ),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                  Text(
+                    l.donthaveanaccount,
+                    style: EType.body(color: c.inkMute, size: 13),
                   ),
+                  const SizedBox(width: 6),
                   GestureDetector(
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => const SignupScreen(),
-                      ),
+                          builder: (_) => const SignupScreen()),
                     ),
-                    child: Container(
-                      child: Text(
-                        AppLocalizations.of(context)!.signup,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      l.signup.toUpperCase(),
+                      style: EType.label(
+                          color: c.live, size: 11, letterSpacing: 1.4),
                     ),
-                  )
+                  ),
                 ],
-              )
-              //transition to sign up
+              ),
+
+              const SizedBox(height: 32),
             ],
           ),
-        )));
+        ),
+      ),
+    );
+  }
+}
+
+// ── Reusable auth field row ────────────────────────────────────────────────
+class _AuthField extends StatelessWidget {
+  const _AuthField({
+    required this.icon,
+    required this.hintText,
+    required this.controller,
+    required this.c,
+    this.keyboardType,
+    this.obscureText = false,
+    this.trailing,
+  });
+
+  final IconData                icon;
+  final String                  hintText;
+  final TextEditingController   controller;
+  final EditorialColors         c;
+  final TextInputType?          keyboardType;
+  final bool                    obscureText;
+  final Widget?                 trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: c.inkDim),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              keyboardType: keyboardType,
+              obscureText: obscureText,
+              style: EType.body(color: c.ink, size: 14),
+              cursorColor: c.live,
+              cursorWidth: 1.5,
+              decoration: InputDecoration(
+                hintText: hintText,
+                hintStyle: EType.body(color: c.inkFaint, size: 14),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 16),
+              ),
+            ),
+          ),
+          if (trailing != null) ...[
+            const SizedBox(width: 8),
+            trailing!,
+          ],
+        ],
+      ),
+    );
   }
 }

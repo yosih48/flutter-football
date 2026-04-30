@@ -62,43 +62,42 @@ class GoogleSignInButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-     return Padding(
-      padding: const EdgeInsets.only(left: 0, right: 0, top: 10),
-      child: MaterialButton(
-        color: Colors.white,
-        elevation: 10,
+    return GestureDetector(
+      onTap: () => _handleSignIn(context),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(2),
+          border: Border.all(color: const Color(0xFFE4E7EC), width: 1),
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              height: 30.0,
-              width: 30.0,
-              decoration: BoxDecoration(
+              width: 20,
+              height: 20,
+              decoration: const BoxDecoration(
                 image: DecorationImage(
-                    image: AssetImage('assets/googleimage.png'),
-                    fit: BoxFit.cover),
-                shape: BoxShape.circle,
+                  image: AssetImage('assets/googleimage.png'),
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
-            SizedBox(
-              width: 5,
-            ),
-            Text(AppLocalizations.of(context)!.signinwithgoogle,
-                style: TextStyle(
-                color: Colors.black // Change the input text color to blue
+            const SizedBox(width: 10),
+            Text(
+              AppLocalizations.of(context)!.signinwithgoogle,
+              style: const TextStyle(
+                color: Color(0xFF3C4043),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.25,
               ),
-            )
+            ),
           ],
         ),
-        onPressed: () {
-          _handleSignIn(context);
-   
-        },
       ),
     );
-    // return ElevatedButton(
-    //   child: Text('Sign in with Google'),
-    //   onPressed: () => _handleSignIn(context),
-    // );
   }
 }
