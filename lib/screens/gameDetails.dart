@@ -138,7 +138,10 @@ class _GameDetailsState extends State<GameDetails> {
                     const SizedBox(height: 8),
                     _buildLineupsBlock(),
                     const SizedBox(height: 8),
-                    _buildPredictionsBlock(),
+                    if (_currentGame.status.long != 'Not Started') ...[
+                      _buildPredictionsBlock(),
+                      const SizedBox(height: 8),
+                    ],
                     const SizedBox(height: 32),
                   ],
                 ),

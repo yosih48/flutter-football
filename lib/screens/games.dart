@@ -883,20 +883,18 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
           homeController: _guessControllers[game.fixtureId]?['home'],
           awayController: _guessControllers[game.fixtureId]?['away'],
           onTap: (ctx) async {
-            if (game.status.long != 'Not Started') {
-              await Navigator.push(
-                ctx,
-                MaterialPageRoute(
-                  builder: (_) => GameDetails(
-                    gameOriginalId: game.fixtureId,
-                    game: game,
-                    games: gamesForDate,
-                    initialIndex: gamesForDate.indexOf(game),
-                    userId: _clientId,
-                  ),
+            await Navigator.push(
+              ctx,
+              MaterialPageRoute(
+                builder: (_) => GameDetails(
+                  gameOriginalId: game.fixtureId,
+                  game: game,
+                  games: gamesForDate,
+                  initialIndex: gamesForDate.indexOf(game),
+                  userId: _clientId,
                 ),
-              );
-            }
+              ),
+            );
           },
         ),
       );
