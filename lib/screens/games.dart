@@ -774,6 +774,29 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
         .toList()
       ..sort();
 
+    // When there are no upcoming/today games (e.g. all games are in the past),
+    // the bidirectional CustomScrollView with a center key allows infinite
+    // downward scrolling into empty space.
+    //
+    // Replicate the "other leagues" feel: in the bidirectional scroll, the most
+    // recent past game sits just above the center point (top of viewport) and
+    // you scroll UP to reach older games. We mirror this with reverse: true so
+    // the newest game sits at the visual bottom (the natural anchor position)
+    // and older games are accessible by scrolling up — same gesture as every
+    // other league. pastDates is already sorted newest-first (index 0 = newest).
+    if (currentDates.isEmpty) {
+      return ListView.builder(
+        controller: _scrollController,
+        reverse: true,
+        padding: const EdgeInsets.only(bottom: 80), // FAB clearance
+        itemCount: pastDates.length,
+        itemBuilder: (ctx, i) {
+          final date = pastDates[i];
+          return _buildKeyedDateSection(date, groupedGames[date]!);
+        },
+      );
+    }
+
     return CustomScrollView(
       controller: _scrollController,
       center: _centerKey,

@@ -151,7 +151,7 @@ class _TacticalPitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: 0.62, // portrait pitch — height ≈ 1.6 × width
+      aspectRatio: 0.59, // portrait pitch — height ≈ 1.69 × width
       child: LayoutBuilder(
         builder: (_, constraints) {
           final w     = constraints.maxWidth;
@@ -218,9 +218,10 @@ class _TacticalPitch extends StatelessWidget {
     final sortedRows = byRow.keys.toList()..sort();
     final n = sortedRows.length;
 
-    // Leave 10% at pitch edge, 8% at centre line → 82% usable span.
-    const edgePad  = 0.10;
-    const centPad  = 0.08;
+    // Leave 14% at pitch edge (circle + name ≈ 47 px must fit),
+    // 9% at centre line → 77% usable span.
+    const edgePad  = 0.14;
+    const centPad  = 0.09;
     const usable   = 1.0 - edgePad - centPad;
 
     final List<Widget> out = [];
