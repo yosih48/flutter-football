@@ -187,6 +187,7 @@
         "matchEvents": "אירועי המשחק",
   "loadingEvents": "טוען אירועים...",
   "failedToLoadEvents": "נכשל בטעינת האירועים",
+  "failedToLoadLineUp": "נכשל בטעינת הרכבים",
   "retry": "נסה שוב",
   "noGoals": "אין שערים עדיין",
   "eventsAppear": "האירועים יופיעו כאן כאשר יובקעו שערים",

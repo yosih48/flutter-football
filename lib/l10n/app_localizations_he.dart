@@ -546,6 +546,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get failedToLoadEvents => 'נכשל בטעינת האירועים';
 
   @override
+  String get failedToLoadLineUp => 'נכשל בטעינת הרכבים';
+
+  @override
   String get retry => 'נסה שוב';
 
   @override

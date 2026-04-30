@@ -1169,6 +1169,12 @@ abstract class AppLocalizations {
   /// **'Failed to load events'**
   String get failedToLoadEvents;
 
+  /// No description provided for @failedToLoadLineUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load Line up'**
+  String get failedToLoadLineUp;
+
   /// No description provided for @retry.
   ///
   /// In en, this message translates to:
@@ -1398,9 +1404,15 @@ abstract class AppLocalizations {
   String get settings_theme;
 
   /// No description provided for @settings_dark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
   String get settings_dark;
 
   /// No description provided for @settings_light.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
   String get settings_light;
 
   /// No description provided for @privategroups.

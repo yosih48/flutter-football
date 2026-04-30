@@ -183,6 +183,7 @@
         "matchEvents": "Match Events",
   "loadingEvents": "Loading events...",
   "failedToLoadEvents": "Failed to load events",
+  "failedToLoadLineUp": "Failed to load Line up",
   "retry": "Retry",
   "noGoals": "No goals scored yet",
   "eventsAppear": "Events will appear here when goals are scored",

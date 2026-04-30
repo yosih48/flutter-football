@@ -96,7 +96,7 @@ class _LineupsWidgetState extends State<LineupsWidget> {
           child: GestureDetector(
             onTap: _fetchLineups,
             child: Text(
-              l.failedToLoadEvents.toUpperCase(),
+              l.failedToLoadLineUp.toUpperCase(),
               style: EType.label(color: c.inkDim, size: 11, letterSpacing: 2),
             ),
           ),
