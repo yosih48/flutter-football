@@ -380,7 +380,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
               height: 36,
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: entry.value ? c.liveSoft : c.card,
+                color: Colors.white,
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: entry.value

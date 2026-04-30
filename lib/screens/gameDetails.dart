@@ -418,6 +418,7 @@ class _GameDetailsState extends State<GameDetails> {
                 fixtureId: currentGameId,
                 homeTeamName: _currentGame.home.name,
                 awayTeamName: _currentGame.away.name,
+                showHeader: false,
               ),
             ),
             crossFadeState: _eventsExpanded
@@ -467,14 +468,17 @@ class _GameDetailsState extends State<GameDetails> {
           ),
           AnimatedCrossFade(
             firstChild: const SizedBox.shrink(),
-            secondChild: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-              child: LineupsWidget(
-                fixtureId: currentGameId,
-                matchDate: _currentGame.date,
-                homeTeamName: _currentGame.home.name,
-                awayTeamName: _currentGame.away.name,
-              ),
+            secondChild: Column(
+              children: [
+                // Pitch — full card width, no horizontal padding
+                LineupsWidget(
+                  fixtureId: currentGameId,
+                  matchDate: _currentGame.date,
+                  homeTeamName: _currentGame.home.name,
+                  awayTeamName: _currentGame.away.name,
+                ),
+                const SizedBox(height: 14),
+              ],
             ),
             crossFadeState: _lineupsExpanded
                 ? CrossFadeState.showSecond
@@ -611,7 +615,7 @@ class _GameDetailsState extends State<GameDetails> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('GROUP',
+                  Text(AppLocalizations.of(context)!.group.toUpperCase(),
                       style: EType.label(
                           color: c.inkDim,
                           size: 9,
@@ -636,7 +640,7 @@ class _GameDetailsState extends State<GameDetails> {
               ),
               child: Row(
                 children: [
-                  Text('SWITCH',
+                  Text(AppLocalizations.of(context)!.switchGroup.toUpperCase(),
                       style: EType.label(
                           color: c.inkMute,
                           size: 10,

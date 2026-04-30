@@ -327,9 +327,10 @@ class _OddsCell extends StatelessWidget {
         borderRadius: BorderRadius.circular(2),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(label, style: EType.label(color: c.inkDim, size: 10)),
+          const SizedBox(width: 8),
           Text(
             value.toStringAsFixed(2),
             style: EType.numeric(
@@ -354,10 +355,11 @@ class _GuessInput extends StatelessWidget {
     final c = context.col;
     return Row(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _digit(homeController, c),
         Padding(
-          padding: const EdgeInsets.only(left: 6, right: 6, bottom: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 6),
           child: Text(':',
               style: EType.display(
                 size: 22,
@@ -373,11 +375,11 @@ class _GuessInput extends StatelessWidget {
   Widget _digit(TextEditingController? controller, EditorialColors c) {
     return SizedBox(
       width: 38,
-      height: 44,
       child: TextField(
         controller: controller,
         keyboardType: TextInputType.number,
         textAlign: TextAlign.center,
+        textAlignVertical: TextAlignVertical.center,
         cursorColor: c.live,
         cursorWidth: 1.5,
         style: EType.display(
@@ -387,7 +389,7 @@ class _GuessInput extends StatelessWidget {
         ),
         decoration: InputDecoration(
           isDense: true,
-          contentPadding: EdgeInsets.zero,
+          contentPadding: const EdgeInsets.symmetric(vertical: 14),
           filled: true,
           fillColor: c.terrace,
           border: _border(c.hairline),
