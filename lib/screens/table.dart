@@ -105,11 +105,12 @@ class TableScreenContentState extends State<TableScreenContent> {
     required Widget body,
     required List<Widget> actions,
   }) {
+    final c = context.col;
     return Dialog(
-      backgroundColor: Editorial.card,
+      backgroundColor: c.card,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(2),
-        side: BorderSide(color: Editorial.hairline, width: 1),
+        side: BorderSide(color: c.hairline, width: 1),
       ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 24),
       child: Padding(
@@ -120,11 +121,11 @@ class TableScreenContentState extends State<TableScreenContent> {
           children: [
             Row(
               children: [
-                Container(width: 18, height: 1, color: Editorial.live),
+                Container(width: 18, height: 1, color: c.live),
                 const SizedBox(width: 10),
                 Text(title.toUpperCase(),
                     style: EType.label(
-                        color: Editorial.ink,
+                        color: c.ink,
                         size: 11,
                         letterSpacing: 2.4)),
               ],
@@ -144,39 +145,41 @@ class TableScreenContentState extends State<TableScreenContent> {
 
   TextField _editorialField(
       {required TextEditingController controller, required String label}) {
+    final c = context.col;
     return TextField(
       controller: controller,
-      cursorColor: Editorial.live,
+      cursorColor: c.live,
       cursorWidth: 1.5,
-      style: EType.body(color: Editorial.ink, size: 14),
+      style: EType.body(color: c.ink, size: 14),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: EType.label(
-            color: Editorial.inkDim, size: 11, letterSpacing: 1.6),
+            color: c.inkDim, size: 11, letterSpacing: 1.6),
         floatingLabelStyle: EType.label(
-            color: Editorial.live, size: 11, letterSpacing: 1.6),
+            color: c.live, size: 11, letterSpacing: 1.6),
         filled: true,
-        fillColor: Editorial.terrace,
+        fillColor: c.terrace,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(2),
-          borderSide: BorderSide(color: Editorial.hairline, width: 1),
+          borderSide: BorderSide(color: c.hairline, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(2),
-          borderSide: BorderSide(color: Editorial.hairline, width: 1),
+          borderSide: BorderSide(color: c.hairline, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(2),
-          borderSide: BorderSide(color: Editorial.live, width: 1),
+          borderSide: BorderSide(color: c.live, width: 1),
         ),
       ),
     );
   }
 
-  Widget _ghostBtn(String label, VoidCallback onPressed,
-      {Color color = Editorial.inkMute}) {
+  Widget _ghostBtn(String label, VoidCallback onPressed, {Color? color}) {
+    final c = context.col;
+    final btnColor = color ?? c.inkMute;
     return TextButton(
       onPressed: onPressed,
       style: TextButton.styleFrom(
@@ -187,14 +190,15 @@ class TableScreenContentState extends State<TableScreenContent> {
       ),
       child: Text(
         label.toUpperCase(),
-        style: EType.label(color: color, size: 11, letterSpacing: 1.8),
+        style: EType.label(color: btnColor, size: 11, letterSpacing: 1.8),
       ),
     );
   }
 
   Widget _solidBtn(String label, VoidCallback onPressed) {
+    final c = context.col;
     return Material(
-      color: Editorial.live,
+      color: c.live,
       borderRadius: BorderRadius.circular(2),
       child: InkWell(
         borderRadius: BorderRadius.circular(2),
@@ -204,7 +208,7 @@ class TableScreenContentState extends State<TableScreenContent> {
           child: Text(
             label.toUpperCase(),
             style: EType.label(
-                color: Editorial.pitch, size: 11, letterSpacing: 1.8),
+                color: c.pitch, size: 11, letterSpacing: 1.8),
           ),
         ),
       ),
@@ -215,6 +219,7 @@ class TableScreenContentState extends State<TableScreenContent> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        final c = context.col;
         final l = AppLocalizations.of(context)!;
         return _editorialDialog(
           title: l.invitefriend,
@@ -222,21 +227,21 @@ class TableScreenContentState extends State<TableScreenContent> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(l.invitecodecopy,
-                  style: EType.body(color: Editorial.inkMute, size: 13)),
+                  style: EType.body(color: c.inkMute, size: 13)),
               const SizedBox(height: 14),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(
                     horizontal: 14, vertical: 14),
                 decoration: BoxDecoration(
-                  color: Editorial.terrace,
-                  border: Border.all(color: Editorial.hairline, width: 1),
+                  color: c.terrace,
+                  border: Border.all(color: c.hairline, width: 1),
                   borderRadius: BorderRadius.circular(2),
                 ),
                 child: Text(
                   inviteCode,
                   style: EType.numeric(
-                    color: Editorial.live,
+                    color: c.live,
                     size: 16,
                     weight: FontWeight.w600,
                     letterSpacing: 1.2,
@@ -245,7 +250,7 @@ class TableScreenContentState extends State<TableScreenContent> {
               ),
               const SizedBox(height: 12),
               Text(l.shareinvitecode,
-                  style: EType.body(color: Editorial.inkDim, size: 12)),
+                  style: EType.body(color: c.inkDim, size: 12)),
             ],
           ),
           actions: [
@@ -295,6 +300,7 @@ class TableScreenContentState extends State<TableScreenContent> {
         await _addGroupToUser(groupName);
       } else {
         if (!mounted) return;
+        final c = context.col;
         String errorMessage = responseData['msg'] ?? 'Unknown error occurred';
         if (errorMessage == 'group name is already exist') {
           errorMessage =
@@ -303,7 +309,7 @@ class TableScreenContentState extends State<TableScreenContent> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
-            backgroundColor: Editorial.flag,
+            backgroundColor: c.flag,
             duration: Duration(seconds: 3),
           ),
         );
@@ -311,10 +317,11 @@ class TableScreenContentState extends State<TableScreenContent> {
     } catch (e) {
       print('Error creating group: $e');
       if (!mounted) return;
+      final c = context.col;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error creating group: ${e.toString()}'),
-          backgroundColor: Editorial.flag,
+          backgroundColor: c.flag,
           duration: Duration(seconds: 3),
         ),
       );
@@ -541,142 +548,146 @@ class TableScreenContentState extends State<TableScreenContent> {
 
   Future<void> _showGroupSwitcherSheet() async {
     if (_privateGroups.isEmpty) return;
+    final c = context.col;
     await showModalBottomSheet(
       context: context,
-      backgroundColor: Editorial.card,
+      backgroundColor: c.card,
       shape: RoundedRectangleBorder(
         borderRadius:
             BorderRadius.vertical(top: Radius.circular(2)),
       ),
       builder: (sheetCtx) {
         return StatefulBuilder(
-          builder: (innerCtx, setSheetState) => SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Drag handle
-                Center(
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 10, bottom: 12),
-                    width: 36,
-                    height: 3,
-                    decoration: BoxDecoration(
-                      color: Editorial.hairlineHi,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-                  child: Row(
-                    children: [
-                      Container(
-                          width: 18, height: 1, color: Editorial.live),
-                      const SizedBox(width: 10),
-                      Text(
-                        AppLocalizations.of(innerCtx)!
-                            .privategroups
-                            .toUpperCase(),
-                        style: EType.label(
-                            color: Editorial.ink,
-                            size: 11,
-                            letterSpacing: 2.4),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(height: 1, color: Editorial.hairline),
-                ..._privateGroups.entries.map((entry) {
-                  final name = entry.value;
-                  final isActive = name == selectedGroupName;
-                  final isDefault = name == _defaultGroupName;
-                  return InkWell(
-                    onTap: () {
-                      Navigator.of(sheetCtx).pop();
-                      if (!isActive) changeSelectedGroup(name);
-                    },
+          builder: (innerCtx, setSheetState) {
+            final sc = innerCtx.col;
+            return SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Drag handle
+                  Center(
                     child: Container(
+                      margin: const EdgeInsets.only(top: 10, bottom: 12),
+                      width: 36,
+                      height: 3,
                       decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                              color: Editorial.hairline, width: 1),
-                          left: BorderSide(
-                            color: isActive
-                                ? Editorial.live
-                                : Colors.transparent,
-                            width: 3,
-                          ),
-                        ),
-                        color: isActive
-                            ? Editorial.liveSoft
-                            : Colors.transparent,
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 16),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: Editorial.cardHi,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: isActive
-                                    ? Editorial.live
-                                    : Editorial.hairline,
-                                width: 1,
-                              ),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              name.isNotEmpty
-                                  ? name[0].toUpperCase()
-                                  : '?',
-                              style: EType.display(
-                                size: 16,
-                                color: isActive
-                                    ? Editorial.live
-                                    : Editorial.inkMute,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Text(
-                              name.toUpperCase(),
-                              overflow: TextOverflow.ellipsis,
-                              style: EType.display(
-                                size: 16,
-                                color: Editorial.ink,
-                                letterSpacing: 0.8,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: AppLocalizations.of(context)!.setAsDefault,
-                            icon: Icon(
-                              isDefault ? Icons.star : Icons.star_border,
-                              color: isDefault
-                                  ? Editorial.amber
-                                  : Editorial.inkDim,
-                              size: 18,
-                            ),
-                            onPressed: () async {
-                              await _setAsDefaultGroup(name);
-                              setSheetState(() {});
-                            },
-                          ),
-                        ],
+                        color: sc.hairlineHi,
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                  );
-                }).toList(),
-                const SizedBox(height: 12),
-              ],
-            ),
-          ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+                    child: Row(
+                      children: [
+                        Container(
+                            width: 18, height: 1, color: sc.live),
+                        const SizedBox(width: 10),
+                        Text(
+                          AppLocalizations.of(innerCtx)!
+                              .privategroups
+                              .toUpperCase(),
+                          style: EType.label(
+                              color: sc.ink,
+                              size: 11,
+                              letterSpacing: 2.4),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(height: 1, color: sc.hairline),
+                  ..._privateGroups.entries.map((entry) {
+                    final name = entry.value;
+                    final isActive = name == selectedGroupName;
+                    final isDefault = name == _defaultGroupName;
+                    return InkWell(
+                      onTap: () {
+                        Navigator.of(sheetCtx).pop();
+                        if (!isActive) changeSelectedGroup(name);
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                                color: sc.hairline, width: 1),
+                            left: BorderSide(
+                              color: isActive
+                                  ? sc.live
+                                  : Colors.transparent,
+                              width: 3,
+                            ),
+                          ),
+                          color: isActive
+                              ? sc.liveSoft
+                              : Colors.transparent,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 16),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: sc.cardHi,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: isActive
+                                      ? sc.live
+                                      : sc.hairline,
+                                  width: 1,
+                                ),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                name.isNotEmpty
+                                    ? name[0].toUpperCase()
+                                    : '?',
+                                style: EType.display(
+                                  size: 16,
+                                  color: isActive
+                                      ? sc.live
+                                      : sc.inkMute,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Text(
+                                name.toUpperCase(),
+                                overflow: TextOverflow.ellipsis,
+                                style: EType.display(
+                                  size: 16,
+                                  color: sc.ink,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: AppLocalizations.of(context)!.setAsDefault,
+                              icon: Icon(
+                                isDefault ? Icons.star : Icons.star_border,
+                                color: isDefault
+                                    ? sc.amber
+                                    : sc.inkDim,
+                                size: 18,
+                              ),
+                              onPressed: () async {
+                                await _setAsDefaultGroup(name);
+                                setSheetState(() {});
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  const SizedBox(height: 12),
+                ],
+              ),
+            );
+          },
         );
       },
     );
@@ -688,16 +699,17 @@ class TableScreenContentState extends State<TableScreenContent> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) {
+        final c = ctx.col;
         final l = AppLocalizations.of(ctx)!;
         return _editorialDialog(
           title: l.leavethegroup,
           body: Text(l.leavegroup,
-              style: EType.body(color: Editorial.inkMute, size: 13)),
+              style: EType.body(color: c.inkMute, size: 13)),
           actions: [
             _ghostBtn(l.cancel, () => Navigator.of(ctx).pop(false)),
             const SizedBox(width: 8),
             Material(
-              color: Editorial.flag,
+              color: c.flag,
               borderRadius: BorderRadius.circular(2),
               child: InkWell(
                 borderRadius: BorderRadius.circular(2),
@@ -707,7 +719,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                       horizontal: 18, vertical: 12),
                   child: Text(l.leave.toUpperCase(),
                       style: EType.label(
-                          color: Editorial.ink,
+                          color: c.ink,
                           size: 11,
                           letterSpacing: 1.8)),
                 ),
@@ -787,6 +799,7 @@ class TableScreenContentState extends State<TableScreenContent> {
   // ── Build ──────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     final effectivePrivateGroups =
         isLoading ? {'0': AppLocalizations.of(context)!.loadingGroup} : _privateGroups;
 
@@ -802,8 +815,8 @@ class TableScreenContentState extends State<TableScreenContent> {
         : _users;
 
     return Scaffold(
-      backgroundColor: Editorial.pitch,
-      appBar: _buildAppBar(context),
+      backgroundColor: c.pitch,
+      appBar: _buildAppBar(context, c),
       body: Skeletonizer(
         enabled: isLoading,
         child: Column(
@@ -817,15 +830,15 @@ class TableScreenContentState extends State<TableScreenContent> {
                 updateSelectedIndex(leagueId);
               },
             ),
-            Container(height: 1, color: Editorial.hairline),
+            Container(height: 1, color: c.hairline),
             if (effectivePrivateGroups.isEmpty)
-              Expanded(child: _buildEmptyState(context))
+              Expanded(child: _buildEmptyState(context, c))
             else ...[
               if (selectedGroupName.isNotEmpty &&
                   selectedGroupName != 'Public')
-                _buildGroupHeader(context),
-              Expanded(child: _buildLeaderboard(context, effectiveUsers)),
-              _buildFooterActions(context),
+                _buildGroupHeader(context, c),
+              Expanded(child: _buildLeaderboard(context, effectiveUsers, c)),
+              _buildFooterActions(context, c),
             ],
           ],
         ),
@@ -833,11 +846,11 @@ class TableScreenContentState extends State<TableScreenContent> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar(BuildContext context) {
+  PreferredSizeWidget _buildAppBar(BuildContext context, EditorialColors c) {
     return AppBar(
       elevation: 0,
       scrolledUnderElevation: 0,
-      backgroundColor: Editorial.pitch,
+      backgroundColor: c.pitch,
       surfaceTintColor: Colors.transparent,
       toolbarHeight: 72,
       titleSpacing: 20,
@@ -848,79 +861,82 @@ class TableScreenContentState extends State<TableScreenContent> {
         children: [
           Text(AppLocalizations.of(context)!.league.toUpperCase(),
               style: EType.label(
-                  color: Editorial.inkDim, size: 10, letterSpacing: 3)),
+                  color: c.inkDim, size: 10, letterSpacing: 3)),
           const SizedBox(height: 2),
           Text(AppLocalizations.of(context)!.standings.toUpperCase(),
               style: EType.display(
-                  size: 28, color: Editorial.ink, letterSpacing: 1.4)),
+                  size: 28, color: c.ink, letterSpacing: 1.4)),
         ],
       ),
       actions: [
         PopupMenuButton<String>(
           tooltip: '',
           position: PopupMenuPosition.under,
-          color: Editorial.cardHi,
+          color: c.cardHi,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(2),
-            side: BorderSide(color: Editorial.hairline, width: 1),
+            side: BorderSide(color: c.hairline, width: 1),
           ),
           onSelected: (v) {
             if (v == 'create') _showCreateGroupDialog();
             if (v == 'join') _showJoinGroupDialog();
           },
-          itemBuilder: (ctx) => [
-            PopupMenuItem<String>(
-              value: 'create',
-              child: Row(
-                children: [
-                  Icon(Icons.add, color: Editorial.live, size: 16),
-                  const SizedBox(width: 12),
-                  Text(
-                    AppLocalizations.of(ctx)!
-                        .createnewgroup
-                        .toUpperCase(),
-                    style: EType.label(
-                        color: Editorial.ink,
-                        size: 11,
-                        letterSpacing: 1.6),
-                  ),
-                ],
+          itemBuilder: (ctx) {
+            final mc = ctx.col;
+            return [
+              PopupMenuItem<String>(
+                value: 'create',
+                child: Row(
+                  children: [
+                    Icon(Icons.add, color: mc.live, size: 16),
+                    const SizedBox(width: 12),
+                    Text(
+                      AppLocalizations.of(ctx)!
+                          .createnewgroup
+                          .toUpperCase(),
+                      style: EType.label(
+                          color: mc.ink,
+                          size: 11,
+                          letterSpacing: 1.6),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            PopupMenuItem<String>(
-              value: 'join',
-              child: Row(
-                children: [
-                  Icon(Icons.group_add_outlined,
-                      color: Editorial.live, size: 16),
-                  const SizedBox(width: 12),
-                  Text(
-                    AppLocalizations.of(ctx)!.joingroup.toUpperCase(),
-                    style: EType.label(
-                        color: Editorial.ink,
-                        size: 11,
-                        letterSpacing: 1.6),
-                  ),
-                ],
+              PopupMenuItem<String>(
+                value: 'join',
+                child: Row(
+                  children: [
+                    Icon(Icons.group_add_outlined,
+                        color: mc.live, size: 16),
+                    const SizedBox(width: 12),
+                    Text(
+                      AppLocalizations.of(ctx)!.joingroup.toUpperCase(),
+                      style: EType.label(
+                          color: mc.ink,
+                          size: 11,
+                          letterSpacing: 1.6),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ];
+          },
           child: Container(
             margin: const EdgeInsets.only(right: 16),
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              border: Border.all(color: Editorial.hairline, width: 1),
+              border: Border.all(color: c.hairline, width: 1),
               borderRadius: BorderRadius.circular(2),
             ),
-            child: Icon(Icons.add, color: Editorial.ink, size: 18),
+            child: Icon(Icons.add, color: c.ink, size: 18),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildGroupHeader(BuildContext context) {
+  Widget _buildGroupHeader(BuildContext context, EditorialColors c) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
       child: InkWell(
@@ -931,9 +947,9 @@ class TableScreenContentState extends State<TableScreenContent> {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: Editorial.cardHi,
+                color: c.cardHi,
                 shape: BoxShape.circle,
-                border: Border.all(color: Editorial.live, width: 1),
+                border: Border.all(color: c.live, width: 1),
               ),
               alignment: Alignment.center,
               child: Text(
@@ -942,7 +958,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                     : '?',
                 style: EType.display(
                   size: 16,
-                  color: Editorial.live,
+                  color: c.live,
                 ),
               ),
             ),
@@ -954,7 +970,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                 children: [
                   Text(AppLocalizations.of(context)!.group.toUpperCase(),
                       style: EType.label(
-                          color: Editorial.inkDim,
+                          color: c.inkDim,
                           size: 9,
                           letterSpacing: 2)),
                   const SizedBox(height: 4),
@@ -963,7 +979,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                     overflow: TextOverflow.ellipsis,
                     style: EType.display(
                       size: 20,
-                      color: Editorial.ink,
+                      color: c.ink,
                       letterSpacing: 1,
                     ),
                   ),
@@ -974,19 +990,19 @@ class TableScreenContentState extends State<TableScreenContent> {
               padding: const EdgeInsets.symmetric(
                   horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                border: Border.all(color: Editorial.hairline, width: 1),
+                border: Border.all(color: c.hairline, width: 1),
                 borderRadius: BorderRadius.circular(2),
               ),
               child: Row(
                 children: [
                   Text(AppLocalizations.of(context)!.switchGroup.toUpperCase(),
                       style: EType.label(
-                          color: Editorial.inkMute,
+                          color: c.inkMute,
                           size: 10,
                           letterSpacing: 1.6)),
                   const SizedBox(width: 4),
                   Icon(Icons.expand_more,
-                      color: Editorial.inkMute, size: 14),
+                      color: c.inkMute, size: 14),
                 ],
               ),
             ),
@@ -997,7 +1013,7 @@ class TableScreenContentState extends State<TableScreenContent> {
   }
 
   Widget _buildLeaderboard(
-      BuildContext context, List<Map<String, dynamic>> rows) {
+      BuildContext context, List<Map<String, dynamic>> rows, EditorialColors c) {
     final l = AppLocalizations.of(context)!;
     return Column(
       children: [
@@ -1006,7 +1022,7 @@ class TableScreenContentState extends State<TableScreenContent> {
           padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
           decoration: BoxDecoration(
             border: Border(
-              bottom: BorderSide(color: Editorial.hairline, width: 1),
+              bottom: BorderSide(color: c.hairline, width: 1),
             ),
           ),
           child: Row(
@@ -1015,7 +1031,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                 width: 28,
                 child: Text('#',
                     style: EType.label(
-                        color: Editorial.inkDim,
+                        color: c.inkDim,
                         size: 10,
                         letterSpacing: 1.4)),
               ),
@@ -1023,7 +1039,7 @@ class TableScreenContentState extends State<TableScreenContent> {
               Expanded(
                 child: Text(l.name.toUpperCase(),
                     style: EType.label(
-                        color: Editorial.inkDim,
+                        color: c.inkDim,
                         size: 10,
                         letterSpacing: 1.6)),
               ),
@@ -1033,7 +1049,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                   l.daypoints.toUpperCase(),
                   textAlign: TextAlign.right,
                   style: EType.label(
-                      color: Editorial.inkDim,
+                      color: c.inkDim,
                       size: 10,
                       letterSpacing: 1.6),
                 ),
@@ -1044,7 +1060,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                   l.sumpoints.toUpperCase(),
                   textAlign: TextAlign.right,
                   style: EType.label(
-                      color: Editorial.inkDim,
+                      color: c.inkDim,
                       size: 10,
                       letterSpacing: 1.6),
                 ),
@@ -1080,12 +1096,12 @@ class TableScreenContentState extends State<TableScreenContent> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                    color: isMe ? Editorial.liveSoft : Colors.transparent,
+                    color: isMe ? c.liveSoft : Colors.transparent,
                     border: Border(
                       bottom: BorderSide(
-                          color: Editorial.hairline, width: 1),
+                          color: c.hairline, width: 1),
                       left: BorderSide(
-                        color: isMe ? Editorial.live : Colors.transparent,
+                        color: isMe ? c.live : Colors.transparent,
                         width: 3,
                       ),
                     ),
@@ -1096,7 +1112,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                     children: [
                       SizedBox(
                         width: 28,
-                        child: _rankCell(index + 1),
+                        child: _rankCell(index + 1, c),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -1107,7 +1123,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                                 user['displayName'] ?? '—',
                                 overflow: TextOverflow.ellipsis,
                                 style: EType.body(
-                                  color: Editorial.ink,
+                                  color: c.ink,
                                   size: 14,
                                   weight: isMe
                                       ? FontWeight.w600
@@ -1122,13 +1138,13 @@ class TableScreenContentState extends State<TableScreenContent> {
                                     horizontal: 5, vertical: 2),
                                 decoration: BoxDecoration(
                                   border: Border.all(
-                                      color: Editorial.live, width: 1),
+                                      color: c.live, width: 1),
                                   borderRadius:
                                       BorderRadius.circular(2),
                                 ),
                                 child: Text(AppLocalizations.of(context)!.youLabel.toUpperCase(),
                                     style: EType.label(
-                                        color: Editorial.live,
+                                        color: c.live,
                                         size: 9,
                                         letterSpacing: 1.2)),
                               ),
@@ -1143,8 +1159,8 @@ class TableScreenContentState extends State<TableScreenContent> {
                           textAlign: TextAlign.right,
                           style: EType.numeric(
                             color: dayPtsNum > 0
-                                ? Editorial.live
-                                : Editorial.inkMute,
+                                ? c.live
+                                : c.inkMute,
                             size: 13,
                             weight: FontWeight.w500,
                           ),
@@ -1156,7 +1172,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                           sumPts,
                           textAlign: TextAlign.right,
                           style: EType.numeric(
-                            color: Editorial.ink,
+                            color: c.ink,
                             size: 15,
                             weight: FontWeight.w600,
                           ),
@@ -1173,12 +1189,12 @@ class TableScreenContentState extends State<TableScreenContent> {
     );
   }
 
-  Widget _rankCell(int rank) {
+  Widget _rankCell(int rank, EditorialColors c) {
     if (rank <= 3) {
       final color = rank == 1
-          ? Editorial.amber
+          ? c.amber
           : rank == 2
-              ? Editorial.chalk
+              ? c.chalk
               : const Color(0xFFCD7F32); // bronze
       return Container(
         width: 22,
@@ -1202,21 +1218,21 @@ class TableScreenContentState extends State<TableScreenContent> {
     return Text(
       rank.toString().padLeft(2, '0'),
       style: EType.numeric(
-        color: Editorial.inkDim,
+        color: c.inkDim,
         size: 12,
         weight: FontWeight.w500,
       ),
     );
   }
 
-  Widget _buildFooterActions(BuildContext context) {
+  Widget _buildFooterActions(BuildContext context, EditorialColors c) {
     final l = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       decoration: BoxDecoration(
-        color: Editorial.pitch,
+        color: c.pitch,
         border:
-            Border(top: BorderSide(color: Editorial.hairline, width: 1)),
+            Border(top: BorderSide(color: c.hairline, width: 1)),
       ),
       child: Row(
         children: [
@@ -1224,7 +1240,7 @@ class TableScreenContentState extends State<TableScreenContent> {
             child: _footerBtn(
               icon: Icons.share_outlined,
               label: l.invitefriend,
-              color: Editorial.live,
+              color: c.live,
               onTap: () => _inviteFriend(selectedGroupName),
             ),
           ),
@@ -1234,7 +1250,7 @@ class TableScreenContentState extends State<TableScreenContent> {
               child: _footerBtn(
                 icon: Icons.logout,
                 label: l.leave,
-                color: Editorial.flag,
+                color: c.flag,
                 onTap: _leaveActiveGroup,
               ),
             ),
@@ -1278,7 +1294,7 @@ class TableScreenContentState extends State<TableScreenContent> {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, EditorialColors c) {
     final l = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
@@ -1291,17 +1307,17 @@ class TableScreenContentState extends State<TableScreenContent> {
               height: 76,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: Editorial.hairline, width: 1),
+                border: Border.all(color: c.hairline, width: 1),
               ),
               child: Icon(Icons.groups_outlined,
-                  size: 30, color: Editorial.inkMute),
+                  size: 30, color: c.inkMute),
             ),
             const SizedBox(height: 22),
             Text(
               l.nogroupsfound.toUpperCase(),
               style: EType.display(
                 size: 26,
-                color: Editorial.ink,
+                color: c.ink,
                 letterSpacing: 1.2,
               ),
               textAlign: TextAlign.center,
@@ -1310,7 +1326,7 @@ class TableScreenContentState extends State<TableScreenContent> {
             Text(
               l.nogroupsmessage,
               textAlign: TextAlign.center,
-              style: EType.body(color: Editorial.inkMute, size: 13),
+              style: EType.body(color: c.inkMute, size: 13),
             ),
             const SizedBox(height: 28),
             Wrap(
@@ -1329,13 +1345,13 @@ class TableScreenContentState extends State<TableScreenContent> {
                           horizontal: 18, vertical: 12),
                       decoration: BoxDecoration(
                         border: Border.all(
-                            color: Editorial.hairlineHi, width: 1),
+                            color: c.hairlineHi, width: 1),
                         borderRadius: BorderRadius.circular(2),
                       ),
                       child: Text(
                         l.joingroup.toUpperCase(),
                         style: EType.label(
-                            color: Editorial.ink,
+                            color: c.ink,
                             size: 11,
                             letterSpacing: 1.8),
                       ),

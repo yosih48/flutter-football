@@ -72,8 +72,6 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
   DateTime? _selectedDate;
 
   // ── Scroll anchoring ─────────────────────────────────────────────────
-  // CustomScrollView center key: anchors "today + future" so prepended past
-  // days extend into negative scroll offsets without ever visually jumping.
   final Key _centerKey = UniqueKey();
   final Map<DateTime, GlobalKey> _dateKeys = {};
   bool _isViewingPast = false;
@@ -227,7 +225,6 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
         liveLeagueIds.add(g.league.id);
         continue;
       }
-      // Game's kickoff has passed but status hasn't updated — refresh.
       if (g.status.long == 'Not Started' && g.date.toLocal().isBefore(now)) {
         liveLeagueIds.add(g.league.id);
       }
@@ -301,7 +298,6 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     return m;
   }
 
-  // Animate to today (offset 0 == start of the center sliver).
   void _jumpToToday() {
     setState(() => _selectedDate = null);
     if (_scrollController.hasClients) {
@@ -346,15 +342,16 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
       firstDate: DateTime(2024),
       lastDate: DateTime(DateTime.now().year + 1),
       builder: (context, child) {
+        final c = context.col;
         return Theme(
           data: ThemeData.dark().copyWith(
             colorScheme: ColorScheme.dark(
-              primary: Editorial.live,
-              onPrimary: Editorial.pitch,
-              surface: Editorial.card,
-              onSurface: Editorial.ink,
+              primary: c.live,
+              onPrimary: c.pitch,
+              surface: c.card,
+              onSurface: c.ink,
             ),
-            dialogBackgroundColor: Editorial.card,
+            dialogBackgroundColor: c.card,
           ),
           child: child ?? Container(),
         );
@@ -363,7 +360,6 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     if (picked == null) return;
     final target = DateTime(picked.year, picked.month, picked.day);
     setState(() => _selectedDate = target);
-    // Wait one frame so the date section is laid out before we scroll to it.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = _dateKeys[target]?.currentContext;
       if (ctx != null) {
@@ -512,74 +508,47 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
   String _getLocalizedString(
       AppLocalizations l, String key, String fallback) {
     switch (key) {
-      case 'monday':
-        return l.monday;
-      case 'tuesday':
-        return l.tuesday;
-      case 'wednesday':
-        return l.wednesday;
-      case 'thursday':
-        return l.thursday;
-      case 'friday':
-        return l.friday;
-      case 'saturday':
-        return l.saturday;
-      case 'sunday':
-        return l.sunday;
-      case 'january_short':
-        return l.january_short;
-      case 'february_short':
-        return l.february_short;
-      case 'march_short':
-        return l.march_short;
-      case 'april_short':
-        return l.april_short;
-      case 'may_short':
-        return l.may_short;
-      case 'june_short':
-        return l.june_short;
-      case 'july_short':
-        return l.july_short;
-      case 'august_short':
-        return l.august_short;
-      case 'september_short':
-        return l.september_short;
-      case 'october_short':
-        return l.october_short;
-      case 'november_short':
-        return l.november_short;
-      case 'december_short':
-        return l.december_short;
-      default:
-        return fallback;
+      case 'monday': return l.monday;
+      case 'tuesday': return l.tuesday;
+      case 'wednesday': return l.wednesday;
+      case 'thursday': return l.thursday;
+      case 'friday': return l.friday;
+      case 'saturday': return l.saturday;
+      case 'sunday': return l.sunday;
+      case 'january_short': return l.january_short;
+      case 'february_short': return l.february_short;
+      case 'march_short': return l.march_short;
+      case 'april_short': return l.april_short;
+      case 'may_short': return l.may_short;
+      case 'june_short': return l.june_short;
+      case 'july_short': return l.july_short;
+      case 'august_short': return l.august_short;
+      case 'september_short': return l.september_short;
+      case 'october_short': return l.october_short;
+      case 'november_short': return l.november_short;
+      case 'december_short': return l.december_short;
+      default: return fallback;
     }
   }
 
   String getLocalizedLeagueName(int leagueId, BuildContext context) {
     final l = AppLocalizations.of(context)!;
     switch (leagueId) {
-      case 2:
-        return l.championsleague;
-      case 383:
-        return l.ligathaal;
-      case 140:
-        return l.laliga;
-      case 3:
-        return l.europaleague;
-      case 39:
-        return l.premierleague;
-      case 78:
-        return l.bundesleague;
-      case 848:
-        return l.conferenceleague;
-      default:
-        return '';
+      case 2:   return l.championsleague;
+      case 383: return l.ligathaal;
+      case 140: return l.laliga;
+      case 3:   return l.europaleague;
+      case 39:  return l.premierleague;
+      case 78:  return l.bundesleague;
+      case 848: return l.conferenceleague;
+      default:  return '';
     }
   }
 
   // ── Build ────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     final filteredGames = _filteredGames();
     final grouped = _groupByDate(filteredGames);
 
@@ -594,12 +563,12 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     ];
 
     return Scaffold(
-      backgroundColor: Editorial.pitch,
-      appBar: _buildEditorialAppBar(context),
+      backgroundColor: c.pitch,
+      appBar: _buildEditorialAppBar(context, c),
       body: RefreshIndicator(
         onRefresh: _handlePullRefresh,
-        color: Editorial.live,
-        backgroundColor: Editorial.card,
+        color: c.live,
+        backgroundColor: c.card,
         child: Column(
           children: [
             const SizedBox(height: 8),
@@ -610,17 +579,17 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
               onSelectionChanged: _onChipChanged,
             ),
             const SizedBox(height: 12),
-            Container(height: 1, color: Editorial.hairline),
+            Container(height: 1, color: c.hairline),
             Expanded(
               child: Stack(
                 children: [
-                  _buildGamesList(grouped),
+                  _buildGamesList(grouped, c),
                   if (_isViewingPast)
                     Positioned(
                       bottom: 20,
                       left: 0,
                       right: 0,
-                      child: Center(child: _buildJumpToTodayChip()),
+                      child: Center(child: _buildJumpToTodayChip(c)),
                     ),
                 ],
               ),
@@ -628,15 +597,15 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
           ],
         ),
       ),
-      floatingActionButton: _buildSubmitFab(context),
+      floatingActionButton: _buildSubmitFab(context, c),
     );
   }
 
-  PreferredSizeWidget _buildEditorialAppBar(BuildContext context) {
+  PreferredSizeWidget _buildEditorialAppBar(BuildContext context, EditorialColors c) {
     return AppBar(
       elevation: 0,
       scrolledUnderElevation: 0,
-      backgroundColor: Editorial.pitch,
+      backgroundColor: c.pitch,
       surfaceTintColor: Colors.transparent,
       toolbarHeight: 72,
       titleSpacing: 20,
@@ -647,11 +616,11 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
         children: [
           Text(AppLocalizations.of(context)!.matchday.toUpperCase(),
               style: EType.label(
-                  color: Editorial.inkDim, size: 10, letterSpacing: 3)),
+                  color: c.inkDim, size: 10, letterSpacing: 3)),
           const SizedBox(height: 2),
           Text(AppLocalizations.of(context)!.fixtures.toUpperCase(),
               style: EType.display(
-                  size: 28, color: Editorial.ink, letterSpacing: 1.4)),
+                  size: 28, color: c.ink, letterSpacing: 1.4)),
         ],
       ),
       actions: [
@@ -671,12 +640,12 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     );
   }
 
-  Widget _buildSubmitFab(BuildContext context) {
+  Widget _buildSubmitFab(BuildContext context, EditorialColors c) {
     final disabled = _buttonLoading;
     return Padding(
       padding: const EdgeInsets.only(right: 4, bottom: 4),
       child: Material(
-        color: disabled ? Editorial.cardHi : Editorial.live,
+        color: disabled ? c.cardHi : c.live,
         borderRadius: BorderRadius.circular(2),
         child: InkWell(
           borderRadius: BorderRadius.circular(2),
@@ -687,7 +656,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(2),
               border: Border.all(
-                color: disabled ? Editorial.hairline : Editorial.live,
+                color: disabled ? c.hairline : c.live,
                 width: 1,
               ),
             ),
@@ -701,16 +670,16 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
                     child: CircularProgressIndicator(
                       strokeWidth: 1.5,
                       valueColor:
-                          AlwaysStoppedAnimation(Editorial.inkDim),
+                          AlwaysStoppedAnimation(c.inkDim),
                     ),
                   )
                 else
-                  Icon(Icons.bolt, size: 18, color: Editorial.pitch),
+                  Icon(Icons.bolt, size: 18, color: c.pitch),
                 const SizedBox(width: 8),
                 Text(
                   AppLocalizations.of(context)!.send.toUpperCase(),
                   style: EType.label(
-                    color: disabled ? Editorial.inkDim : Editorial.pitch,
+                    color: disabled ? c.inkDim : c.pitch,
                     size: 12,
                     letterSpacing: 2,
                   ),
@@ -723,9 +692,9 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     );
   }
 
-  Widget _buildJumpToTodayChip() {
+  Widget _buildJumpToTodayChip(EditorialColors c) {
     return Material(
-      color: Editorial.ink,
+      color: c.ink,
       borderRadius: BorderRadius.circular(2),
       child: InkWell(
         borderRadius: BorderRadius.circular(2),
@@ -746,12 +715,12 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.keyboard_arrow_down,
-                  size: 16, color: Editorial.pitch),
+                  size: 16, color: c.pitch),
               const SizedBox(width: 6),
               Text(
                 AppLocalizations.of(context)!.backToToday.toUpperCase(),
                 style: EType.label(
-                  color: Editorial.pitch,
+                  color: c.pitch,
                   size: 11,
                   letterSpacing: 1.8,
                 ),
@@ -763,12 +732,11 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     );
   }
 
-  Widget _buildGamesList(Map<DateTime, List<Game>> groupedGames) {
+  Widget _buildGamesList(Map<DateTime, List<Game>> groupedGames, EditorialColors c) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
     if (_isLoading) {
-      // Simple skeleton list — no anchoring needed during initial load.
       return Skeletonizer(
         enabled: true,
         child: ListView(
@@ -786,20 +754,21 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
       return _buildEmptyState(
         icon: Icons.scoreboard_outlined,
         message: AppLocalizations.of(context)!.nogames,
+        c: c,
       );
     }
     if (groupedGames.isEmpty) {
       return _buildEmptyState(
-        icon:
-            _showOnlyLiveGames ? Icons.live_tv : Icons.scoreboard_outlined,
+        icon: _showOnlyLiveGames ? Icons.live_tv : Icons.scoreboard_outlined,
         message: _showOnlyLiveGames
             ? AppLocalizations.of(context)!.nolivegames
             : AppLocalizations.of(context)!.nogames,
+        c: c,
       );
     }
 
     final pastDates = groupedGames.keys.where((d) => d.isBefore(today)).toList()
-      ..sort((a, b) => b.compareTo(a)); // newest past day closest to center
+      ..sort((a, b) => b.compareTo(a));
     final currentDates = groupedGames.keys
         .where((d) => !d.isBefore(today))
         .toList()
@@ -839,7 +808,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     return KeyedSubtree(key: key, child: _buildDateSection(date, games));
   }
 
-  Widget _buildEmptyState({required IconData icon, required String message}) {
+  Widget _buildEmptyState({required IconData icon, required String message, required EditorialColors c}) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -848,16 +817,16 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              border: Border.all(color: Editorial.hairline, width: 1),
+              border: Border.all(color: c.hairline, width: 1),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 26, color: Editorial.inkDim),
+            child: Icon(icon, size: 26, color: c.inkDim),
           ),
           const SizedBox(height: 18),
           Text(
             message.toUpperCase(),
             style: EType.label(
-                color: Editorial.inkMute, size: 12, letterSpacing: 2.4),
+                color: c.inkMute, size: 12, letterSpacing: 2.4),
           ),
         ],
       ),
@@ -926,6 +895,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
   }
 
   Widget _buildLeagueHeader(int leagueId) {
+    final c = context.col;
     final leagueName = getLocalizedLeagueName(leagueId, context);
     final isFiltered = _selectedLeagueFilter == leagueId;
     return GestureDetector(
@@ -939,7 +909,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
               width: 6,
               height: 6,
               decoration: BoxDecoration(
-                color: isFiltered ? Editorial.live : Editorial.inkDim,
+                color: isFiltered ? c.live : c.inkDim,
                 shape: BoxShape.circle,
               ),
             ),
@@ -947,7 +917,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
             Text(
               leagueName.toUpperCase(),
               style: EType.label(
-                color: isFiltered ? Editorial.live : Editorial.inkMute,
+                color: isFiltered ? c.live : c.inkMute,
                 size: 11,
                 letterSpacing: 2.2,
               ),
@@ -956,12 +926,12 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
             Expanded(
               child: Container(
                 height: 1,
-                color: isFiltered ? Editorial.live.withOpacity(0.3) : Editorial.hairline,
+                color: isFiltered ? c.live.withOpacity(0.3) : c.hairline,
               ),
             ),
             if (isFiltered) ...[
               const SizedBox(width: 8),
-              Icon(Icons.close, size: 12, color: Editorial.live),
+              Icon(Icons.close, size: 12, color: c.live),
             ],
           ],
         ),
@@ -1024,6 +994,7 @@ class _IconBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     final btn = Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1033,20 +1004,20 @@ class _IconBtn extends StatelessWidget {
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            border: Border.all(color: Editorial.hairline, width: 1),
+            border: Border.all(color: c.hairline, width: 1),
             borderRadius: BorderRadius.circular(2),
           ),
           child: Stack(
             alignment: Alignment.center,
             children: [
-              Icon(icon, size: 18, color: Editorial.ink),
+              Icon(icon, size: 18, color: c.ink),
               if (badge != null)
                 Positioned(
                   bottom: 4,
                   child: Text(
                     badge!,
                     style: EType.numeric(
-                      color: Editorial.live,
+                      color: c.live,
                       size: 9,
                       weight: FontWeight.w600,
                     ),
@@ -1068,6 +1039,7 @@ class _LiveToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1077,9 +1049,9 @@ class _LiveToggle extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           decoration: BoxDecoration(
-            color: active ? Editorial.live : Colors.transparent,
+            color: active ? c.live : Colors.transparent,
             border: Border.all(
-              color: active ? Editorial.live : Editorial.hairline,
+              color: active ? c.live : c.hairline,
               width: 1,
             ),
             borderRadius: BorderRadius.circular(2),
@@ -1091,7 +1063,7 @@ class _LiveToggle extends StatelessWidget {
                 width: 6,
                 height: 6,
                 decoration: BoxDecoration(
-                  color: active ? Editorial.pitch : Editorial.flag,
+                  color: active ? c.pitch : c.flag,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -1099,7 +1071,7 @@ class _LiveToggle extends StatelessWidget {
               Text(
                 AppLocalizations.of(context)!.liveLabel.toUpperCase(),
                 style: EType.label(
-                  color: active ? Editorial.pitch : Editorial.inkMute,
+                  color: active ? c.pitch : c.inkMute,
                   size: 11,
                   letterSpacing: 1.6,
                 ),
@@ -1126,6 +1098,7 @@ class _DateHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     final today = DateTime.now();
     final isToday = today.year == date.year &&
         today.month == date.month &&
@@ -1136,12 +1109,11 @@ class _DateHeader extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Big editorial day-number.
           Text(
             date.day.toString().padLeft(2, '0'),
             style: EType.display(
               size: 56,
-              color: Editorial.ink,
+              color: c.ink,
               letterSpacing: 0,
               height: 0.85,
             ),
@@ -1150,7 +1122,7 @@ class _DateHeader extends StatelessWidget {
           Container(
             width: 1,
             height: 44,
-            color: Editorial.hairline,
+            color: c.hairline,
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -1165,7 +1137,7 @@ class _DateHeader extends StatelessWidget {
                         dayLabel.toUpperCase(),
                         style: EType.display(
                           size: 18,
-                          color: Editorial.ink,
+                          color: c.ink,
                           letterSpacing: 1,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -1177,12 +1149,12 @@ class _DateHeader extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 5, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Editorial.live,
+                          color: c.live,
                           borderRadius: BorderRadius.circular(2),
                         ),
                         child: Text(AppLocalizations.of(context)!.todayLabel.toUpperCase(),
                             style: EType.label(
-                                color: Editorial.pitch,
+                                color: c.pitch,
                                 size: 9,
                                 letterSpacing: 1.4)),
                       ),
@@ -1193,7 +1165,7 @@ class _DateHeader extends StatelessWidget {
                 Text(
                   '$gameCount  $countWord'.toUpperCase(),
                   style: EType.label(
-                    color: Editorial.inkDim,
+                    color: c.inkDim,
                     size: 10,
                     letterSpacing: 1.8,
                   ),
