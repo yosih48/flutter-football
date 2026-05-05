@@ -810,5 +810,5 @@ class AppLocalizationsHe extends AppLocalizations {
   String get substitutes => 'מחליפים';
 
   @override
-  String get lineupsNotAvailable => 'ההרכבים עדיין לא זמינים';
+  String get lineupsNotAvailable => 'הרכבים לא זמינים';
 }

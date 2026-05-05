@@ -189,7 +189,7 @@
   "failedToLoadEvents": "נכשל בטעינת האירועים",
   "failedToLoadLineUp": "נכשל בטעינת הרכבים",
   "retry": "נסה שוב",
-  "noGoals": "אין שערים עדיין",
+  "noGoals": "אין אירועים עדיין",
   "eventsAppear": "האירועים יופיעו כאן כאשר יובקעו שערים",
   "goals": "שערים",
   "assist": "בישול:",
@@ -480,5 +480,5 @@
     "lineups": "הרכבים",
     "startingXI": "הרכב פתיחה",
     "substitutes": "מחליפים",
-    "lineupsNotAvailable": "ההרכבים עדיין לא זמינים"
+    "lineupsNotAvailable": "הרכבים לא זמינים"
 }

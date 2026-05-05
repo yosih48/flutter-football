@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
 import 'package:football/models/users.dart';
@@ -1361,6 +1362,94 @@ class TableScreenContentState extends State<TableScreenContent> {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HeaderActionButton extends StatefulWidget {
+  final String label;
+  final VoidCallback onTap;
+  final bool primary;
+  final IconData? icon;
+
+  const _HeaderActionButton({
+    required this.label,
+    required this.onTap,
+    required this.primary,
+    this.icon,
+  });
+
+  @override
+  State<_HeaderActionButton> createState() => _HeaderActionButtonState();
+}
+
+class _HeaderActionButtonState extends State<_HeaderActionButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+
+    final Color fillColor = widget.primary ? c.live : c.cardHi;
+    final Color textColor = widget.primary ? c.pitch : c.ink;
+    final Color borderColor = widget.primary
+        ? c.live
+        : c.hairlineHi.withOpacity(0.55);
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapCancel: () => setState(() => _pressed = false),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _pressed ? 0.96 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOut,
+          height: 40,
+          padding: EdgeInsets.symmetric(
+            horizontal: widget.icon != null ? 14 : 18,
+          ),
+          decoration: BoxDecoration(
+            color: fillColor,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: borderColor, width: 1),
+            boxShadow: widget.primary
+                ? [
+                    BoxShadow(
+                      color: c.live.withOpacity(_pressed ? 0.10 : 0.28),
+                      blurRadius: _pressed ? 8 : 16,
+                      spreadRadius: 0,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.icon != null) ...[
+                Icon(widget.icon, color: textColor, size: 16),
+                const SizedBox(width: 6),
+              ],
+              Text(
+                widget.label,
+                style: GoogleFonts.sora(
+                  fontSize: 13,
+                  color: textColor,
+                  fontWeight:
+                      widget.primary ? FontWeight.w700 : FontWeight.w600,
+                  letterSpacing: 0.2,
+                  height: 1.0,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
