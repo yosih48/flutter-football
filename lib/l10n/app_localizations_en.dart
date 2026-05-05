@@ -811,4 +811,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lineupsNotAvailable => 'Lineups not yet available';
+
+  @override
+  String get timeline => 'Timeline';
+
+  @override
+  String get tableTab => 'Table';
+
+  @override
+  String get statsTab => 'Stats';
+
+  @override
+  String get statsNotAvailable => 'Stats not yet available';
+
+  @override
+  String get standingsNotAvailable => 'Standings not yet available';
+
+  @override
+  String get colPlayed => 'P';
+
+  @override
+  String get colWon => 'W';
+
+  @override
+  String get colDrawn => 'D';
+
+  @override
+  String get colLost => 'L';
+
+  @override
+  String get colGoalDiff => 'GD';
+
+  @override
+  String get colPoints => 'Pts';
 }

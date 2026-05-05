@@ -480,5 +480,16 @@
     "lineups": "הרכבים",
     "startingXI": "הרכב פתיחה",
     "substitutes": "מחליפים",
-    "lineupsNotAvailable": "הרכבים לא זמינים"
+    "lineupsNotAvailable": "לא נמצאו הרכבים",
+    "timeline": "אירועים",
+    "tableTab": "טבלה",
+    "statsTab": "סטטיסטיקה",
+    "statsNotAvailable": "אין עדיין סטטיסטיקה",
+    "standingsNotAvailable": "אין עדיין טבלה",
+    "colPlayed": "מ",
+    "colWon": "נ",
+    "colDrawn": "ת",
+    "colLost": "ה",
+    "colGoalDiff": "הפ",
+    "colPoints": "נק"
 }

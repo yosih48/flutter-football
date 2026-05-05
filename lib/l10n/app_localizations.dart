@@ -1702,6 +1702,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Lineups not yet available'**
   String get lineupsNotAvailable;
+
+  String get timeline;
+  String get tableTab;
+  String get statsTab;
+  String get statsNotAvailable;
+  String get standingsNotAvailable;
+  String get colPlayed;
+  String get colWon;
+  String get colDrawn;
+  String get colLost;
+  String get colGoalDiff;
+  String get colPoints;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

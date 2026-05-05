@@ -15,6 +15,8 @@ import 'package:football/utils/status_utils.dart';
 import 'package:football/widgets/FixtureEventsWidget.dart';
 import 'package:football/widgets/SharedPreferences.dart';
 import 'package:football/widgets/LineupsWidget.dart';
+import 'package:football/widgets/StatsWidget.dart';
+import 'package:football/widgets/StandingsTableWidget.dart';
 import 'package:football/widgets/teamLinks.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -50,8 +52,7 @@ class _GameDetailsState extends State<GameDetails> {
   late String selectedGroupName = "";
   Map<String, String> _userGroups = {};
   bool isLoading = true;
-  bool _eventsExpanded = false;
-  bool _lineupsExpanded = false;
+  int _selectedTab = 0; // 0=Timeline, 1=Lineups, 2=Table, 3=Stats
   late int _currentIndex;
   late Game _currentGame;
   late int currentGameId;
@@ -134,9 +135,7 @@ class _GameDetailsState extends State<GameDetails> {
                   children: [
                     _buildHeroCard(),
                     const SizedBox(height: 8),
-                    _buildEventsBlock(),
-                    const SizedBox(height: 8),
-                    _buildLineupsBlock(),
+                    _buildTabsBlock(),
                     const SizedBox(height: 8),
                     if (_currentGame.status.long != 'Not Started') ...[
                       _buildPredictionsBlock(),
@@ -378,9 +377,18 @@ class _GameDetailsState extends State<GameDetails> {
     );
   }
 
-  // ── Match events ───────────────────────────────────────────────────────
-  Widget _buildEventsBlock() {
+  // ── Tabbed block: Timeline / Lineups / Table / Stats ───────────────────
+  Widget _buildTabsBlock() {
     final c = context.col;
+    final l = AppLocalizations.of(context)!;
+
+    final tabs = <String>[
+      l.timeline.toUpperCase(),
+      l.lineups.toUpperCase(),
+      l.tableTab.toUpperCase(),
+      l.statsTab.toUpperCase(),
+    ];
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -389,108 +397,86 @@ class _GameDetailsState extends State<GameDetails> {
         border: Border.all(color: c.hairline, width: 1),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => setState(() => _eventsExpanded = !_eventsExpanded),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _sectionLabel(AppLocalizations.of(context)!.matchEvents.toUpperCase()),
-                  AnimatedRotation(
-                    turns: _eventsExpanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 200),
-                    child: Icon(
-                      Icons.expand_more,
-                      size: 20,
-                      color: c.inkMute,
+          // Tab bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+            child: Row(
+              children: List.generate(tabs.length, (i) {
+                final isActive = i == _selectedTab;
+                return Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => setState(() => _selectedTab = i),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: isActive ? c.live : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        tabs[i],
+                        textAlign: TextAlign.center,
+                        style: EType.label(
+                          color: isActive ? c.live : c.inkMute,
+                          size: 11,
+                          letterSpacing: 1.6,
+                        ),
+                      ),
                     ),
                   ),
-                ],
-              ),
+                );
+              }),
             ),
           ),
-          AnimatedCrossFade(
-            firstChild: const SizedBox.shrink(),
-            secondChild: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-              child: FixtureEventsWidget(
-                fixtureId: currentGameId,
-                homeTeamName: _currentGame.home.name,
-                awayTeamName: _currentGame.away.name,
-                showHeader: false,
-              ),
-            ),
-            crossFadeState: _eventsExpanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 250),
-          ),
+          Container(height: 1, color: c.hairline),
+          _buildTabBody(),
         ],
       ),
     );
   }
 
-  // ── Lineups ─────────────────────────────────────────────────────────────
-  Widget _buildLineupsBlock() {
-    final c = context.col;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: c.card,
-        borderRadius: BorderRadius.circular(2),
-        border: Border.all(color: c.hairline, width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => setState(() => _lineupsExpanded = !_lineupsExpanded),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _sectionLabel(AppLocalizations.of(context)!.lineups.toUpperCase()),
-                  AnimatedRotation(
-                    turns: _lineupsExpanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 200),
-                    child: Icon(
-                      Icons.expand_more,
-                      size: 20,
-                      color: c.inkMute,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+  Widget _buildTabBody() {
+    switch (_selectedTab) {
+      case 0:
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
+          child: FixtureEventsWidget(
+            fixtureId: currentGameId,
+            homeTeamName: _currentGame.home.name,
+            awayTeamName: _currentGame.away.name,
+            showHeader: false,
           ),
-          AnimatedCrossFade(
-            firstChild: const SizedBox.shrink(),
-            secondChild: Column(
-              children: [
-                // Pitch — full card width, no horizontal padding
-                LineupsWidget(
-                  fixtureId: currentGameId,
-                  matchDate: _currentGame.date,
-                  homeTeamName: _currentGame.home.name,
-                  awayTeamName: _currentGame.away.name,
-                ),
-                const SizedBox(height: 14),
-              ],
-            ),
-            crossFadeState: _lineupsExpanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 250),
+        );
+      case 1:
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: LineupsWidget(
+            fixtureId: currentGameId,
+            matchDate: _currentGame.date,
+            homeTeamName: _currentGame.home.name,
+            awayTeamName: _currentGame.away.name,
           ),
-        ],
-      ),
-    );
+        );
+      case 2:
+        return StandingsTableWidget(
+          leagueId: _currentGame.league.id,
+          highlightHomeId: _currentGame.home.id,
+          highlightAwayId: _currentGame.away.id,
+        );
+      case 3:
+      default:
+        return StatsWidget(
+          fixtureId: currentGameId,
+          homeTeamName: _currentGame.home.name,
+          awayTeamName: _currentGame.away.name,
+        );
+    }
   }
 
   // ── Predictions table ──────────────────────────────────────────────────

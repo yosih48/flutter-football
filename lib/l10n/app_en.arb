@@ -279,5 +279,16 @@
     "lineups": "Lineups",
     "startingXI": "Starting XI",
     "substitutes": "Substitutes",
-    "lineupsNotAvailable": "Lineups not yet available"
+    "lineupsNotAvailable": "Lineups not yet available",
+    "timeline": "Timeline",
+    "tableTab": "Table",
+    "statsTab": "Stats",
+    "statsNotAvailable": "Stats not yet available",
+    "standingsNotAvailable": "Standings not yet available",
+    "colPlayed": "P",
+    "colWon": "W",
+    "colDrawn": "D",
+    "colLost": "L",
+    "colGoalDiff": "GD",
+    "colPoints": "Pts"
 }

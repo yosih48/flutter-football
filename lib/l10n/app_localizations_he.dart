@@ -810,5 +810,38 @@ class AppLocalizationsHe extends AppLocalizations {
   String get substitutes => 'מחליפים';
 
   @override
-  String get lineupsNotAvailable => 'הרכבים לא זמינים';
+  String get lineupsNotAvailable => 'לא נמצאו הרכבים';
+
+  @override
+  String get timeline => 'אירועים';
+
+  @override
+  String get tableTab => 'טבלה';
+
+  @override
+  String get statsTab => 'סטטיסטיקה';
+
+  @override
+  String get statsNotAvailable => 'אין עדיין סטטיסטיקה';
+
+  @override
+  String get standingsNotAvailable => 'אין עדיין טבלה';
+
+  @override
+  String get colPlayed => 'מ';
+
+  @override
+  String get colWon => 'נ';
+
+  @override
+  String get colDrawn => 'ת';
+
+  @override
+  String get colLost => 'ה';
+
+  @override
+  String get colGoalDiff => 'הפ';
+
+  @override
+  String get colPoints => 'נק';
 }
