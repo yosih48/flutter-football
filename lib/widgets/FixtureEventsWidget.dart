@@ -252,47 +252,7 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
             const SizedBox(width: 10),
           ],
           Flexible(
-            child: Column(
-              crossAxisAlignment:
-                  isHome ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  event.player,
-                  style: EType.body(
-                    color: c.ink,
-                    size: 13,
-                    weight: FontWeight.w600,
-                  ),
-                  textAlign: isHome ? TextAlign.right : TextAlign.left,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (event.detail != null && event.detail!.isNotEmpty)
-                  Text(
-                    event.detail!,
-                    style: EType.label(
-                      color: c.inkMute,
-                      size: 11,
-                    ),
-                    textAlign: isHome ? TextAlign.right : TextAlign.left,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                if (event.assist != null && event.assist!.isNotEmpty)
-                  Text(
-                    "Asst: ${event.assist}",
-                    style: EType.body(
-                      color: c.inkDim,
-                      size: 10,
-                      height: 1.3,
-                    ),
-                    textAlign: isHome ? TextAlign.right : TextAlign.left,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-              ],
-            ),
+            child: _buildEventBody(event, isHome: isHome, c: c),
           ),
           if (isHome) ...[
             const SizedBox(width: 10),
@@ -300,6 +260,121 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
           ],
         ],
       ),
+    );
+  }
+
+  Widget _buildEventBody(
+    FixtureEvent event, {
+    required bool isHome,
+    required EditorialColors c,
+  }) {
+    final l = AppLocalizations.of(context)!;
+    final type = event.type.toLowerCase();
+    final align = isHome ? CrossAxisAlignment.end : CrossAxisAlignment.start;
+    final textAlign = isHome ? TextAlign.right : TextAlign.left;
+
+    if (type == 'subst') {
+      // For subs API-Sports puts the player going OFF in `player` and the
+      // player coming ON in `assist`.
+      return Column(
+        crossAxisAlignment: align,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (event.assist != null && event.assist!.isNotEmpty)
+            _subRow(
+              icon: Icons.arrow_upward,
+              color: Colors.green,
+              label: l.playerIn,
+              name: event.assist!,
+              isHome: isHome,
+              c: c,
+            ),
+          if (event.assist != null && event.assist!.isNotEmpty)
+            const SizedBox(height: 2),
+          _subRow(
+            icon: Icons.arrow_downward,
+            color: Colors.redAccent,
+            label: l.playerOut,
+            name: event.player,
+            isHome: isHome,
+            c: c,
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: align,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          event.player,
+          style: EType.body(
+            color: c.ink,
+            size: 13,
+            weight: FontWeight.w600,
+          ),
+          textAlign: textAlign,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        if (event.detail != null && event.detail!.isNotEmpty)
+          Text(
+            event.detail!,
+            style: EType.label(
+              color: c.inkMute,
+              size: 11,
+            ),
+            textAlign: textAlign,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        if (event.assist != null && event.assist!.isNotEmpty)
+          Text(
+            "${l.assist} ${event.assist}",
+            style: EType.body(
+              color: c.inkDim,
+              size: 10,
+              height: 1.3,
+            ),
+            textAlign: textAlign,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+      ],
+    );
+  }
+
+  Widget _subRow({
+    required IconData icon,
+    required Color color,
+    required String label,
+    required String name,
+    required bool isHome,
+    required EditorialColors c,
+  }) {
+    final children = <Widget>[
+      Icon(icon, color: color, size: 12),
+      const SizedBox(width: 4),
+      Text(
+        label.toUpperCase(),
+        style: EType.label(color: color, size: 9, letterSpacing: 1.2),
+      ),
+      const SizedBox(width: 6),
+      Flexible(
+        child: Text(
+          name,
+          style: EType.body(color: c.ink, size: 12, weight: FontWeight.w500),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    ];
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment:
+          isHome ? MainAxisAlignment.end : MainAxisAlignment.start,
+      children: isHome ? children.reversed.toList() : children,
     );
   }
 
@@ -337,17 +412,33 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
 
     if (type == 'goal') {
       if (detail.contains('missed')) {
-        return {'icon': Icons.sports_soccer, 'color': Colors.red, 'type': 'icon', 'isGoal': true};
+        return {'icon': Icons.sports_soccer, 'color': Colors.red, 'type': 'icon'};
       }
-      return {'icon': Icons.sports_soccer, 'color': Colors.blue, 'type': 'icon', 'isGoal': true};
+      if (detail.contains('own')) {
+        return {'icon': Icons.sports_soccer, 'color': Colors.orange, 'type': 'icon'};
+      }
+      if (detail.contains('penalty')) {
+        return {'icon': Icons.sports_soccer, 'color': Colors.blue, 'type': 'icon'};
+      }
+      return {'icon': Icons.sports_soccer, 'color': Colors.blue, 'type': 'icon'};
     } else if (type == 'card') {
+      // Yellow→Red second-yellow handled like a red.
+      if (detail.contains('yellow') && detail.contains('red')) {
+        return {'icon': Icons.style, 'color': Colors.red, 'type': 'icon'};
+      }
       return {
         'icon': Icons.style,
-        'color': detail.contains('yellow') ? Colors.yellow : Colors.red,
+        'color': detail.contains('yellow')
+            ? const Color(0xFFFACC15)
+            : Colors.red,
         'type': 'icon',
       };
     } else if (type == 'subst') {
-      return {'icon': Icons.import_export, 'color': Colors.green, 'type': 'icon'};
+      return {
+        'icon': Icons.swap_vert,
+        'color': Colors.green,
+        'type': 'icon',
+      };
     } else if (type == 'var') {
       return {'text': 'VAR', 'color': Colors.purpleAccent, 'type': 'text'};
     }
@@ -409,7 +500,7 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
           Icon(Icons.event_busy, color: c.inkDim, size: 36),
           const SizedBox(height: 12),
           Text(
-            AppLocalizations.of(context)!.noGoals,
+            AppLocalizations.of(context)!.noEvents,
             style: EType.label(color: c.inkMute, size: 12, letterSpacing: 1.4),
           ),
         ],

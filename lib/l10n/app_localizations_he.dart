@@ -555,6 +555,15 @@ class AppLocalizationsHe extends AppLocalizations {
   String get noGoals => 'אין שערים עדיין';
 
   @override
+  String get noEvents => 'אין אירועים עדיין';
+
+  @override
+  String get playerIn => 'נכנס';
+
+  @override
+  String get playerOut => 'יוצא';
+
+  @override
   String get eventsAppear => 'האירועים יופיעו כאן כאשר יובקעו שערים';
 
   @override

@@ -55,7 +55,7 @@ class _GameDetailsState extends State<GameDetails> {
   late String selectedGroupName = "";
   Map<String, String> _userGroups = {};
   bool isLoading = true;
-  int _selectedTab = 0; // 0=Timeline, 1=Lineups, 2=Table, 3=Stats
+  int? _selectedTab = 0; // 0=Timeline, 1=Lineups, 2=Table, 3=Stats. null = collapsed.
   late int _currentIndex;
   late Game _currentGame;
   late int currentGameId;
@@ -449,7 +449,9 @@ class _GameDetailsState extends State<GameDetails> {
                 return Expanded(
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () => setState(() => _selectedTab = i),
+                    onTap: () => setState(() {
+                      _selectedTab = _selectedTab == i ? null : i;
+                    }),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       decoration: BoxDecoration(
@@ -475,8 +477,10 @@ class _GameDetailsState extends State<GameDetails> {
               }),
             ),
           ),
-          Container(height: 1, color: c.hairline),
-          _buildTabBody(),
+          if (_selectedTab != null) ...[
+            Container(height: 1, color: c.hairline),
+            _buildTabBody(),
+          ],
         ],
       ),
     );

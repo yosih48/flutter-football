@@ -555,6 +555,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noGoals => 'No goals scored yet';
 
   @override
+  String get noEvents => 'No events yet';
+
+  @override
+  String get playerIn => 'In';
+
+  @override
+  String get playerOut => 'Out';
+
+  @override
   String get eventsAppear => 'Events will appear here when goals are scored';
 
   @override

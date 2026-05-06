@@ -1187,6 +1187,15 @@ abstract class AppLocalizations {
   /// **'No goals scored yet'**
   String get noGoals;
 
+  /// No description provided for @noEvents.
+  String get noEvents;
+
+  /// No description provided for @playerIn.
+  String get playerIn;
+
+  /// No description provided for @playerOut.
+  String get playerOut;
+
   /// No description provided for @eventsAppear.
   ///
   /// In en, this message translates to:
