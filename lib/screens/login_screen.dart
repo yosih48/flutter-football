@@ -90,9 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      showSnackBar(context, e.toString(), tone: SnackTone.error);
     }
   }
 
@@ -126,10 +124,10 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content:
-                Text(AppLocalizations.of(context)!.loginfailed)),
+      showSnackBar(
+        context,
+        AppLocalizations.of(context)!.loginfailed,
+        tone: SnackTone.error,
       );
     }
   }
@@ -324,9 +322,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   }
                 },
                 onSignInError: (String error) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(error)),
-                  );
+                  showSnackBar(context, error, tone: SnackTone.error);
                 },
               ),
 

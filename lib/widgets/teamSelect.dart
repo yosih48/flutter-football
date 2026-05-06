@@ -7,6 +7,7 @@ import 'package:football/resources/usersMethods.dart';
 import 'package:football/resources/gamesMethods.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/utils/config.dart';
+import 'package:football/utils/utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -220,8 +221,10 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
 
       if (teams.isEmpty) {
         print('No teams found, showing error message');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No teams found for this league')),
+        showSnackBar(
+          context,
+          'No teams found for this league',
+          tone: SnackTone.warning,
         );
         return;
       }
@@ -355,10 +358,10 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
       );
 
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content:
-                  Text(AppLocalizations.of(context)!.teamSavedsuccessfully)),
+        showSnackBar(
+          context,
+          AppLocalizations.of(context)!.teamSavedsuccessfully,
+          tone: SnackTone.success,
         );
         // Refresh user data to update the UI
         _fetchUserData();
@@ -367,14 +370,17 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
           widget.onTeamSelected!(selectedTeam);
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(AppLocalizations.of(context)!.failedtoSaveTeam)),
+        showSnackBar(
+          context,
+          AppLocalizations.of(context)!.failedtoSaveTeam,
+          tone: SnackTone.error,
         );
       }
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.errorsavingteam)),
+      showSnackBar(
+        context,
+        AppLocalizations.of(context)!.errorsavingteam,
+        tone: SnackTone.error,
       );
     }
   }
@@ -383,49 +389,15 @@ class _TeamSelectionButtonState extends State<TeamSelectionButton> {
   void _showAvailabilityMessage(String? message) {
     if (message == null) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.info_outline, color: Colors.white),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                message,
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.orange[700],
-        duration: Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.only(bottom: 80, left: 16, right: 16),
-      ),
-    );
+    showSnackBar(context, message, tone: SnackTone.warning);
   }
 
   // Show hint to user about selecting a league (moved from games.dart)
   void _showLeagueSelectionHint() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.info_outline, color: Colors.white),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                AppLocalizations.of(context)!.selectleaguefirst + " 👆",
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.blue[700],
-        duration: Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.only(bottom: 80, left: 16, right: 16),
-      ),
+    showSnackBar(
+      context,
+      AppLocalizations.of(context)!.selectleaguefirst + " 👆",
+      tone: SnackTone.neutral,
     );
   }
 

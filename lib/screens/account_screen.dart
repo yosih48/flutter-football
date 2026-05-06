@@ -5,6 +5,7 @@ import 'package:football/providers/flutter pub add provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
+import 'package:football/utils/utils.dart';
 import 'package:football/l10n/app_localizations.dart';
 
 class AccountScreen extends StatelessWidget {
@@ -214,24 +215,20 @@ class AccountScreen extends StatelessWidget {
                               (route) => false,
                             );
                             messenger.showSnackBar(
-                              SnackBar(
-                                backgroundColor: cc.card,
-                                content: Text(l.accountDeleted,
-                                    style: EType.body(
-                                        color: cc.ink,
-                                        size: 13)),
+                              buildEditorialSnackBar(
+                                text: l.accountDeleted,
+                                colors: cc,
+                                tone: SnackTone.success,
                               ),
                             );
                           }
                         } catch (e) {
                           nav.pop();
                           messenger.showSnackBar(
-                            SnackBar(
-                              backgroundColor: cc.flag,
-                              content: Text(
-                                  '${l.failedToDeleteAccount}$e',
-                                  style: EType.body(
-                                      color: cc.ink, size: 13)),
+                            buildEditorialSnackBar(
+                              text: '${l.failedToDeleteAccount}$e',
+                              colors: cc,
+                              tone: SnackTone.error,
                             ),
                           );
                         }

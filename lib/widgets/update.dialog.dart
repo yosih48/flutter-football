@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/utils/utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -17,8 +18,10 @@ class UpdateDialog extends StatelessWidget {
         throw 'Could not launch $url';
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to open download link: $e')),
+      showSnackBar(
+        context,
+        'Failed to open download link: $e',
+        tone: SnackTone.error,
       );
     }
   }

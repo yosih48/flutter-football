@@ -8,6 +8,7 @@ import 'package:football/resources/gamesMethods.dart';
 import 'package:football/resources/playersMethods.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/utils/config.dart';
+import 'package:football/utils/utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -173,8 +174,10 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
 
       if (players.isEmpty) {
         print('No players found, showing error message');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No players found for this league')),
+        showSnackBar(
+          context,
+          'No players found for this league',
+          tone: SnackTone.warning,
         );
         return;
       }
@@ -306,10 +309,10 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
       );
 
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content:
-                  Text(AppLocalizations.of(context)!.playerSavedsuccessfully)),
+        showSnackBar(
+          context,
+          AppLocalizations.of(context)!.playerSavedsuccessfully,
+          tone: SnackTone.success,
         );
         // Refresh user data to update the UI
         _fetchUserData();
@@ -318,15 +321,17 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
           widget.onPlayerSelected!(selectedPlayer);
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(AppLocalizations.of(context)!.failedtoSaveplayer)),
+        showSnackBar(
+          context,
+          AppLocalizations.of(context)!.failedtoSaveplayer,
+          tone: SnackTone.error,
         );
       }
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(AppLocalizations.of(context)!.errorsavingplayer)),
+      showSnackBar(
+        context,
+        AppLocalizations.of(context)!.errorsavingplayer,
+        tone: SnackTone.error,
       );
     }
   }
@@ -335,49 +340,15 @@ class _PlayerSelectionButtonState extends State<PlayerSelectionButton> {
   void _showAvailabilityMessage(String? message) {
     if (message == null) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.info_outline, color: Colors.white),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                message,
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.orange[700],
-        duration: Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.only(bottom: 80, left: 16, right: 16),
-      ),
-    );
+    showSnackBar(context, message, tone: SnackTone.warning);
   }
 
   // Show hint to user about selecting a league
   void _showLeagueSelectionHint() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.info_outline, color: Colors.white),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                AppLocalizations.of(context)!.selectleaguefirst + " 👆",
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.blue[700],
-        duration: Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.only(bottom: 80, left: 16, right: 16),
-      ),
+    showSnackBar(
+      context,
+      AppLocalizations.of(context)!.selectleaguefirst + " 👆",
+      tone: SnackTone.neutral,
     );
   }
 

@@ -18,6 +18,7 @@ import 'package:football/screens/statistics.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/utils/config.dart';
+import 'package:football/utils/utils.dart';
 import 'package:football/widgets/SharedPreferences.dart';
 import 'package:football/widgets/toggleButton.dart';
 import 'package:provider/provider.dart';
@@ -291,40 +292,28 @@ class TableScreenContentState extends State<TableScreenContent> {
 
       if (response.statusCode == 200) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                AppLocalizations.of(context)!.groupcreatedsuccessfully),
-            duration: Duration(seconds: 3),
-          ),
+        showSnackBar(
+          context,
+          AppLocalizations.of(context)!.groupcreatedsuccessfully,
+          tone: SnackTone.success,
         );
         await _addGroupToUser(groupName);
       } else {
         if (!mounted) return;
-        final c = context.col;
         String errorMessage = responseData['msg'] ?? 'Unknown error occurred';
         if (errorMessage == 'group name is already exist') {
           errorMessage =
               AppLocalizations.of(context)!.groupnamealreadyexists;
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: c.flag,
-            duration: Duration(seconds: 3),
-          ),
-        );
+        showSnackBar(context, errorMessage, tone: SnackTone.error);
       }
     } catch (e) {
       print('Error creating group: $e');
       if (!mounted) return;
-      final c = context.col;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error creating group: ${e.toString()}'),
-          backgroundColor: c.flag,
-          duration: Duration(seconds: 3),
-        ),
+      showSnackBar(
+        context,
+        'Error creating group: ${e.toString()}',
+        tone: SnackTone.error,
       );
     }
   }
@@ -923,7 +912,7 @@ class TableScreenContentState extends State<TableScreenContent> {
             ];
           },
           child: Container(
-            margin: const EdgeInsets.only(right: 16),
+            margin: const EdgeInsetsDirectional.only(end: 20),
             width: 42,
             height: 42,
             decoration: BoxDecoration(

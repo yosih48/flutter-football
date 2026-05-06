@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/utils/config.dart';
+import 'package:football/utils/utils.dart';
 import 'package:http/http.dart' as http;
 
 String _baseUrl = backendUrl;
@@ -162,13 +163,17 @@ class GroupsMethods {
           final data = json.decode(response.body);
           if (data['message'] == 'Group name already exists') {
             print('Group name already exists');
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("אתה כבר חבר בקבוצה זו")),
+            showSnackBar(
+              context,
+              "אתה כבר חבר בקבוצה זו",
+              tone: SnackTone.warning,
             );
           } else {
             print('User updated successfully');
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("הצטרפת לקבוצה בצלחה")),
+            showSnackBar(
+              context,
+              "הצטרפת לקבוצה בצלחה",
+              tone: SnackTone.success,
             );
           }
         } else {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
+import 'package:football/utils/utils.dart';
 import 'package:provider/provider.dart';
 import '../resources/auth.dart';
 import '../responsive/mobile_screen_layout.dart';
@@ -42,10 +43,10 @@ class _SignupScreenState extends State<SignupScreen> {
         _passwordController.text,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                AppLocalizations.of(context)!.registrationsuccessful)),
+      showSnackBar(
+        context,
+        AppLocalizations.of(context)!.registrationsuccessful,
+        tone: SnackTone.success,
       );
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -57,10 +58,10 @@ class _SignupScreenState extends State<SignupScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                AppLocalizations.of(context)!.registrationfailed)),
+      showSnackBar(
+        context,
+        AppLocalizations.of(context)!.registrationfailed,
+        tone: SnackTone.error,
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);

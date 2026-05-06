@@ -14,6 +14,7 @@ import 'package:football/screens/login_screen.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/utils/config.dart';
+import 'package:football/utils/utils.dart';
 import 'package:football/widgets/LeagueSelectorChips.dart';
 import 'package:football/widgets/gamesCard.dart';
 import 'package:http/http.dart' as http;
@@ -261,11 +262,10 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     } catch (e) {
       print('❌ pull refresh failed: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.refreshFailed),
-            backgroundColor: Colors.red,
-          ),
+        showSnackBar(
+          context,
+          AppLocalizations.of(context)!.refreshFailed,
+          tone: SnackTone.error,
         );
       }
     }
@@ -419,8 +419,10 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     }
 
     if (newGuesses.isEmpty && updatedGuesses.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.noguessesfound)),
+      showSnackBar(
+        context,
+        AppLocalizations.of(context)!.noguessesfound,
+        tone: SnackTone.warning,
       );
       setState(() => _buttonLoading = false);
       return;
@@ -443,10 +445,10 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
 
     if (!mounted) return;
     if (ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content:
-                Text(AppLocalizations.of(context)!.savedsuccessfully)),
+      showSnackBar(
+        context,
+        AppLocalizations.of(context)!.savedsuccessfully,
+        tone: SnackTone.success,
       );
       final refreshed = await GuessesMethods().fetchThisUserGuesses(_clientId);
       if (mounted) {
@@ -456,9 +458,10 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
         });
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(AppLocalizations.of(context)!.failedToSubmitGuesses)),
+      showSnackBar(
+        context,
+        AppLocalizations.of(context)!.failedToSubmitGuesses,
+        tone: SnackTone.error,
       );
     }
     if (mounted) setState(() => _buttonLoading = false);

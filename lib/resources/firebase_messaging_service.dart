@@ -7,6 +7,7 @@ import 'package:football/main.dart';
 import 'package:football/models/games.dart';
 import 'package:football/resources/gamesMethods.dart';
 import 'package:football/screens/gameDetails.dart';
+import 'package:football/utils/utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class FirebaseMessagingService {
@@ -200,13 +201,25 @@ class FirebaseMessagingService {
 
   static void _showCustomSnackbar(Map<String, dynamic>? data) {
     if (data != null && navigatorKey.currentContext != null) {
-      ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
-        SnackBar(
-          content: Text(data['message'] ?? 'Notification'),
-          backgroundColor:
-              data['color'] != null ? Color(int.parse(data['color'])) : null,
-          duration: Duration(seconds: data['duration'] ?? 3),
-        ),
+      // Map optional payload color hint to a tone; fall back to neutral.
+      SnackTone tone = SnackTone.neutral;
+      final colorHint = data['color']?.toString().toLowerCase();
+      if (colorHint != null) {
+        if (colorHint.contains('green') || colorHint.contains('success')) {
+          tone = SnackTone.success;
+        } else if (colorHint.contains('red') || colorHint.contains('error')) {
+          tone = SnackTone.error;
+        } else if (colorHint.contains('amber') ||
+            colorHint.contains('orange') ||
+            colorHint.contains('warn')) {
+          tone = SnackTone.warning;
+        }
+      }
+      showSnackBar(
+        navigatorKey.currentContext!,
+        data['message']?.toString() ?? 'Notification',
+        tone: tone,
+        duration: Duration(seconds: data['duration'] ?? 3),
       );
     }
   }
