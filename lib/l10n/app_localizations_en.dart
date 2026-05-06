@@ -850,4 +850,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get relegationRound => 'Relegation Round';
+
+  @override
+  String get matchesTab => 'Matches';
+
+  @override
+  String get recentResults => 'Recent Results';
+
+  @override
+  String get upcomingMatches => 'Upcoming';
+
+  @override
+  String get noMatchesForTeam => 'No matches available';
 }

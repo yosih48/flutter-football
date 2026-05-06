@@ -292,5 +292,9 @@
     "colGoalDiff": "GD",
     "colPoints": "Pts",
     "championshipRound": "Championship Round",
-    "relegationRound": "Relegation Round"
+    "relegationRound": "Relegation Round",
+    "matchesTab": "Matches",
+    "recentResults": "Recent Results",
+    "upcomingMatches": "Upcoming",
+    "noMatchesForTeam": "No matches available"
 }

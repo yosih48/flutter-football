@@ -850,4 +850,16 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get relegationRound => 'פלייאוף תחתון';
+
+  @override
+  String get matchesTab => 'משחקים';
+
+  @override
+  String get recentResults => 'תוצאות אחרונות';
+
+  @override
+  String get upcomingMatches => 'קרובים';
+
+  @override
+  String get noMatchesForTeam => 'אין משחקים להצגה';
 }

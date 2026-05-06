@@ -493,5 +493,9 @@
     "colGoalDiff": "הפ",
     "colPoints": "נק",
     "championshipRound": "פלייאוף עליון",
-    "relegationRound": "פלייאוף תחתון"
+    "relegationRound": "פלייאוף תחתון",
+    "matchesTab": "משחקים",
+    "recentResults": "תוצאות אחרונות",
+    "upcomingMatches": "קרובים",
+    "noMatchesForTeam": "אין משחקים להצגה"
 }

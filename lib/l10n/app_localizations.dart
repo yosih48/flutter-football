@@ -1780,6 +1780,10 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Relegation Round'**
   String get relegationRound;
+  String get matchesTab;
+  String get recentResults;
+  String get upcomingMatches;
+  String get noMatchesForTeam;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
