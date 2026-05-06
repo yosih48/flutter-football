@@ -11,6 +11,7 @@ import 'package:football/resources/guessesMethods.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/gameDetails.dart';
 import 'package:football/screens/login_screen.dart';
+import 'package:football/screens/teamDetails.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/utils/config.dart';
@@ -885,6 +886,19 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
           guess: guess,
           homeController: _guessControllers[game.fixtureId]?['home'],
           awayController: _guessControllers[game.fixtureId]?['away'],
+          onTeamTap: (team) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => TeamDetailsScreen(
+                  team: team,
+                  league: game.league,
+                  allLeagueGames: _allGames,
+                  userId: _clientId,
+                ),
+              ),
+            );
+          },
           onTap: (ctx) async {
             await Navigator.push(
               ctx,
@@ -895,6 +909,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
                   games: gamesForDate,
                   initialIndex: gamesForDate.indexOf(game),
                   userId: _clientId,
+                  allLeagueGames: _allGames,
                 ),
               ),
             );

@@ -9,6 +9,7 @@ import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/screens/profile.dart';
 import 'package:football/screens/table.dart';
+import 'package:football/screens/teamDetails.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/utils/status_utils.dart';
@@ -29,6 +30,7 @@ class GameDetails extends StatefulWidget {
   final Game game;
   final List<Game> games;
   final int initialIndex;
+  final List<Game>? allLeagueGames;
 
   const GameDetails({
     super.key,
@@ -37,6 +39,7 @@ class GameDetails extends StatefulWidget {
     required this.games,
     required this.initialIndex,
     this.userId,
+    this.allLeagueGames,
   });
 
   @override
@@ -201,7 +204,8 @@ class _GameDetailsState extends State<GameDetails> {
                   _buildScoreboard(hasPrev: hasPrev, hasNext: hasNext),
                   const SizedBox(height: 24),
                   Container(height: 1, color: c.hairline),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 12),
+                  _buildLeagueStrip(),
                 ],
               ),
             ),
@@ -262,6 +266,43 @@ class _GameDetailsState extends State<GameDetails> {
               .toUpperCase(),
           style: EType.label(
               color: c.inkDim, size: 10, letterSpacing: 1.6),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLeagueStrip() {
+    final c = context.col;
+    final league = _currentGame.league;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (league.logo != null && league.logo!.isNotEmpty) ...[
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: Image.network(
+              league.logo!,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) =>
+                  Icon(Icons.emoji_events_outlined, size: 14, color: c.inkDim),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
+        Flexible(
+          child: Text(
+            league.round.isNotEmpty
+                ? '${league.name}  ·  ${league.round}'.toUpperCase()
+                : league.name.toUpperCase(),
+            overflow: TextOverflow.ellipsis,
+            style: EType.label(
+              color: c.inkMute,
+              size: 10,
+              letterSpacing: 1.8,
+            ),
+          ),
         ),
       ],
     );
@@ -340,7 +381,7 @@ class _GameDetailsState extends State<GameDetails> {
           alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
         GestureDetector(
-          onTap: () => TeamLinkHandler.linkToTeam(team.name),
+          onTap: () => _openTeamDetails(team),
           child: Container(
             width: 56,
             height: 56,
@@ -359,7 +400,7 @@ class _GameDetailsState extends State<GameDetails> {
         ),
         const SizedBox(height: 12),
         GestureDetector(
-          onTap: () => TeamLinkHandler.linkToTeam(team.name),
+          onTap: () => _openTeamDetails(team),
           child: Text(
             team.name.toUpperCase(),
             textAlign: alignEnd ? TextAlign.right : TextAlign.left,
@@ -468,6 +509,9 @@ class _GameDetailsState extends State<GameDetails> {
           leagueId: _currentGame.league.id,
           highlightHomeId: _currentGame.home.id,
           highlightAwayId: _currentGame.away.id,
+          onTeamTap: (id, name, logo) => _openTeamDetails(
+            Team(id: id, name: name, logo: logo),
+          ),
         );
       case 3:
       default:
@@ -942,6 +986,19 @@ class _GameDetailsState extends State<GameDetails> {
             style: EType.label(
                 color: c.ink, size: 11, letterSpacing: 2.4)),
       ],
+    );
+  }
+
+  void _openTeamDetails(Team team) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => TeamDetailsScreen(
+          team: team,
+          league: _currentGame.league,
+          allLeagueGames: widget.allLeagueGames ?? widget.games,
+          userId: widget.userId,
+        ),
+      ),
     );
   }
 

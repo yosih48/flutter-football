@@ -8,12 +8,14 @@ class StandingsTableWidget extends StatefulWidget {
   final int leagueId;
   final int? highlightHomeId;
   final int? highlightAwayId;
+  final void Function(int teamId, String teamName, String teamLogo)? onTeamTap;
 
   const StandingsTableWidget({
     super.key,
     required this.leagueId,
     this.highlightHomeId,
     this.highlightAwayId,
+    this.onTeamTap,
   });
 
   @override
@@ -164,7 +166,7 @@ class _StandingsTableWidgetState extends State<StandingsTableWidget> {
     final isMatch =
         row.teamId == widget.highlightHomeId || row.teamId == widget.highlightAwayId;
 
-    return Container(
+    final content = Container(
       decoration: BoxDecoration(
         color: isMatch ? c.liveSoft : Colors.transparent,
         border: Border(bottom: BorderSide(color: c.hairline, width: 1)),
@@ -240,6 +242,12 @@ class _StandingsTableWidgetState extends State<StandingsTableWidget> {
           ),
         ],
       ),
+    );
+
+    if (widget.onTeamTap == null) return content;
+    return InkWell(
+      onTap: () => widget.onTeamTap!(row.teamId, row.teamName, row.teamLogo),
+      child: content,
     );
   }
 

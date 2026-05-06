@@ -226,14 +226,67 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
           if (upcoming.isNotEmpty) ...[
             _sectionHeader(l.upcomingMatches.toUpperCase()),
             const SizedBox(height: 8),
-            _matchesGroup(upcoming, teamId),
+            ..._buildPerDateGroups(upcoming, teamId),
             const SizedBox(height: 16),
           ],
           if (past.isNotEmpty) ...[
             _sectionHeader(l.recentResults.toUpperCase()),
             const SizedBox(height: 8),
-            _matchesGroup(past, teamId),
+            ..._buildPerDateGroups(past, teamId),
           ],
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildPerDateGroups(List<Game> games, int teamId) {
+    final byDate = <DateTime, List<Game>>{};
+    for (final g in games) {
+      final local = g.date.toLocal();
+      final key = DateTime(local.year, local.month, local.day);
+      byDate.putIfAbsent(key, () => []).add(g);
+    }
+    final keys = byDate.keys.toList()..sort((a, b) => b.compareTo(a));
+    final widgets = <Widget>[];
+    for (var i = 0; i < keys.length; i++) {
+      final dateGames = byDate[keys[i]]!
+        ..sort((a, b) => a.date.compareTo(b.date));
+      widgets.add(_dateGroup(keys[i], dateGames, teamId));
+      if (i < keys.length - 1) widgets.add(const SizedBox(height: 10));
+    }
+    return widgets;
+  }
+
+  Widget _dateGroup(DateTime date, List<Game> games, int teamId) {
+    final c = context.col;
+    return Container(
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(2),
+        border: Border.all(color: c.hairline, width: 1),
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Text(
+                  DateFormat('EEE  d MMM yyyy').format(date).toUpperCase(),
+                  style: EType.label(
+                    color: c.ink,
+                    size: 11,
+                    letterSpacing: 1.6,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(height: 1, color: c.hairline),
+          ...games.asMap().entries.map((e) {
+            final isLast = e.key == games.length - 1;
+            return _matchRow(e.value, teamId, isLast: isLast);
+          }),
         ],
       ),
     );
@@ -251,58 +304,6 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
             label,
             style: EType.label(color: c.inkDim, size: 11, letterSpacing: 2.2),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _matchesGroup(List<Game> games, int teamId) {
-    final c = context.col;
-    return Container(
-      decoration: BoxDecoration(
-        color: c.card,
-        borderRadius: BorderRadius.circular(2),
-        border: Border.all(color: c.hairline, width: 1),
-      ),
-      child: Column(
-        children: [
-          // League header row
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              children: [
-                if (widget.league.logo != null &&
-                    widget.league.logo!.isNotEmpty) ...[
-                  SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: Image.network(
-                      widget.league.logo!,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => Icon(
-                          Icons.emoji_events_outlined,
-                          size: 14,
-                          color: c.inkDim),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                ],
-                Text(
-                  widget.league.name,
-                  style: EType.body(
-                    color: c.ink,
-                    size: 13,
-                    weight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(height: 1, color: c.hairline),
-          ...games.asMap().entries.map((e) {
-            final isLast = e.key == games.length - 1;
-            return _matchRow(e.value, teamId, isLast: isLast);
-          }),
         ],
       ),
     );
@@ -345,7 +346,7 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(
           children: [
-            // Status / date column
+            // Status / league column
             SizedBox(
               width: 56,
               child: Column(
@@ -363,15 +364,22 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
                       letterSpacing: 1.4,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    DateFormat('d MMM').format(game.date.toLocal()),
-                    style: EType.label(
-                      color: c.inkDim,
-                      size: 10,
-                      letterSpacing: 1,
+                  const SizedBox(height: 6),
+                  if (game.league.logo != null &&
+                      game.league.logo!.isNotEmpty)
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: Image.network(
+                        game.league.logo!,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Icon(
+                          Icons.emoji_events_outlined,
+                          size: 12,
+                          color: c.inkDim,
+                        ),
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -481,6 +489,19 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
       child: StandingsTableWidget(
         leagueId: widget.league.id,
         highlightHomeId: widget.team.id,
+        onTeamTap: (id, name, logo) {
+          if (id == widget.team.id) return;
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => TeamDetailsScreen(
+                team: Team(id: id, name: name, logo: logo),
+                league: widget.league,
+                allLeagueGames: widget.allLeagueGames,
+                userId: widget.userId,
+              ),
+            ),
+          );
+        },
       ),
     );
   }

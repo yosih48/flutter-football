@@ -14,6 +14,7 @@ class GameWidget extends StatelessWidget {
   final Game game;
   final Guess? guess;
   final Function(BuildContext) onTap;
+  final void Function(Team team)? onTeamTap;
   final TextEditingController? homeController;
   final TextEditingController? awayController;
 
@@ -21,6 +22,7 @@ class GameWidget extends StatelessWidget {
     required this.game,
     this.guess,
     required this.onTap,
+    this.onTeamTap,
     this.homeController,
     this.awayController,
   }) {
@@ -184,7 +186,9 @@ class GameWidget extends StatelessWidget {
 
   Widget _buildTeamSide(Team team, {required bool alignEnd, required EditorialColors c}) {
     return GestureDetector(
-      onTap: () => TeamLinkHandler.linkToTeam(team.name),
+      onTap: () => onTeamTap != null
+          ? onTeamTap!(team)
+          : TeamLinkHandler.linkToTeam(team.name),
       child: Text(
         team.name.toUpperCase(),
         textAlign: alignEnd ? TextAlign.right : TextAlign.left,
@@ -202,7 +206,9 @@ class GameWidget extends StatelessWidget {
 
   Widget _buildTeamCrest(Team team, EditorialColors c) {
     return GestureDetector(
-      onTap: () => TeamLinkHandler.linkToTeam(team.name),
+      onTap: () => onTeamTap != null
+          ? onTeamTap!(team)
+          : TeamLinkHandler.linkToTeam(team.name),
       child: Container(
         width: 36,
         height: 36,
