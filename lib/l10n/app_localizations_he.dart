@@ -822,10 +822,10 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statsTab => 'סטטיסטיקה';
 
   @override
-  String get statsNotAvailable => 'אין עדיין סטטיסטיקה';
+  String get statsNotAvailable => 'לא נמצאו סטטיסטיקות';
 
   @override
-  String get standingsNotAvailable => 'אין עדיין טבלה';
+  String get standingsNotAvailable => 'לא נמצאה טבלה';
 
   @override
   String get colPlayed => 'מ';

@@ -1703,18 +1703,82 @@ abstract class AppLocalizations {
   /// **'Lineups not yet available'**
   String get lineupsNotAvailable;
 
+  /// No description provided for @timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
   String get timeline;
+
+  /// No description provided for @tableTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Table'**
   String get tableTab;
+
+  /// No description provided for @statsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats'**
   String get statsTab;
+
+  /// No description provided for @statsNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats not yet available'**
   String get statsNotAvailable;
+
+  /// No description provided for @standingsNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Standings not yet available'**
   String get standingsNotAvailable;
+
+  /// No description provided for @colPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'P'**
   String get colPlayed;
+
+  /// No description provided for @colWon.
+  ///
+  /// In en, this message translates to:
+  /// **'W'**
   String get colWon;
+
+  /// No description provided for @colDrawn.
+  ///
+  /// In en, this message translates to:
+  /// **'D'**
   String get colDrawn;
+
+  /// No description provided for @colLost.
+  ///
+  /// In en, this message translates to:
+  /// **'L'**
   String get colLost;
+
+  /// No description provided for @colGoalDiff.
+  ///
+  /// In en, this message translates to:
+  /// **'GD'**
   String get colGoalDiff;
+
+  /// No description provided for @colPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Pts'**
   String get colPoints;
+
+  /// No description provided for @championshipRound.
+  ///
+  /// In en, this message translates to:
+  /// **'Championship Round'**
   String get championshipRound;
+
+  /// No description provided for @relegationRound.
+  ///
+  /// In en, this message translates to:
+  /// **'Relegation Round'**
   String get relegationRound;
 }
 
