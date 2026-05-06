@@ -290,5 +290,7 @@
     "colDrawn": "D",
     "colLost": "L",
     "colGoalDiff": "GD",
-    "colPoints": "Pts"
+    "colPoints": "Pts",
+    "championshipRound": "Championship Round",
+    "relegationRound": "Relegation Round"
 }

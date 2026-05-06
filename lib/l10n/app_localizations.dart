@@ -1714,6 +1714,8 @@ abstract class AppLocalizations {
   String get colLost;
   String get colGoalDiff;
   String get colPoints;
+  String get championshipRound;
+  String get relegationRound;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

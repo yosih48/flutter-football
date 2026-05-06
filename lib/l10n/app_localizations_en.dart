@@ -844,4 +844,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get colPoints => 'Pts';
+
+  @override
+  String get championshipRound => 'Championship Round';
+
+  @override
+  String get relegationRound => 'Relegation Round';
 }

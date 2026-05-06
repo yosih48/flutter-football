@@ -189,7 +189,7 @@
   "failedToLoadEvents": "נכשל בטעינת האירועים",
   "failedToLoadLineUp": "נכשל בטעינת הרכבים",
   "retry": "נסה שוב",
-  "noGoals": "אין אירועים עדיין",
+  "noGoals": "לא נמצאו אירועים",
   "eventsAppear": "האירועים יופיעו כאן כאשר יובקעו שערים",
   "goals": "שערים",
   "assist": "בישול:",
@@ -484,12 +484,14 @@
     "timeline": "אירועים",
     "tableTab": "טבלה",
     "statsTab": "סטטיסטיקה",
-    "statsNotAvailable": "אין עדיין סטטיסטיקה",
-    "standingsNotAvailable": "אין עדיין טבלה",
+    "statsNotAvailable": "לא נמצאו סטטיסטיקות",
+    "standingsNotAvailable": "לא נמצאה טבלה",
     "colPlayed": "מ",
     "colWon": "נ",
     "colDrawn": "ת",
     "colLost": "ה",
     "colGoalDiff": "הפ",
-    "colPoints": "נק"
+    "colPoints": "נק",
+    "championshipRound": "פלייאוף עליון",
+    "relegationRound": "פלייאוף תחתון"
 }

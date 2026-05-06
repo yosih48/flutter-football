@@ -80,14 +80,52 @@ class _StandingsTableWidgetState extends State<StandingsTableWidget> {
       );
     }
 
+    final groups = <String, List<StandingRow>>{};
+    for (final row in _rows!) {
+      final key = row.group ?? '';
+      groups.putIfAbsent(key, () => []).add(row);
+    }
+    final showGroupHeaders = groups.length > 1;
+
+    final children = <Widget>[
+      _headerRow(l),
+      Container(height: 1, color: c.hairline),
+    ];
+    groups.forEach((groupName, rows) {
+      if (showGroupHeaders && groupName.isNotEmpty) {
+        children.add(_groupHeader(_localizedGroupName(groupName, l)));
+      }
+      children.addAll(rows.map(_bodyRow));
+    });
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
-      child: Column(
-        children: [
-          _headerRow(l),
-          Container(height: 1, color: c.hairline),
-          ..._rows!.map((row) => _bodyRow(row)),
-        ],
+      child: Column(children: children),
+    );
+  }
+
+  // Maps known playoff-round suffixes from the API (English) to localized
+  // labels. Unknown groups (e.g. Champions League "Group A 25/26") fall through
+  // to the raw API string.
+  String _localizedGroupName(String raw, AppLocalizations l) {
+    final lower = raw.toLowerCase();
+    if (lower.contains('championship round')) return l.championshipRound;
+    if (lower.contains('relegation round')) return l.relegationRound;
+    return raw;
+  }
+
+  Widget _groupHeader(String name) {
+    final c = context.col;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+      margin: const EdgeInsets.only(top: 8),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: c.hairline, width: 1)),
+      ),
+      child: Text(
+        name,
+        style: EType.label(color: c.ink, size: 11, letterSpacing: 1.2),
       ),
     );
   }
