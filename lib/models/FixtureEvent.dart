@@ -20,13 +20,20 @@ class FixtureEvent {
   });
 
   factory FixtureEvent.fromJson(Map<String, dynamic> json) {
+    // Tolerate missing/null nested objects — some upstream events omit them.
+    final time = json['time'];
+    final team = json['team'];
+    final player = json['player'];
+    final assist = json['assist'];
     return FixtureEvent(
-      type: json['type'] ?? '',
-      time: json['time']['elapsed'] ?? 0,
-      team: json['team']['name'] ?? '',
-      player: json['player']['name'] ?? '',
-      assist: json['assist']?['name'],
-      detail: json['detail'],
+      type: json['type']?.toString() ?? '',
+      time: (time is Map ? time['elapsed'] : null) is int
+          ? (time as Map)['elapsed'] as int
+          : 0,
+      team: (team is Map ? team['name']?.toString() : null) ?? '',
+      player: (player is Map ? player['name']?.toString() : null) ?? '',
+      assist: assist is Map ? assist['name']?.toString() : null,
+      detail: json['detail']?.toString(),
     );
   }
 }
@@ -45,16 +52,21 @@ class FixtureEventsResponse {
   });
 
   factory FixtureEventsResponse.fromJson(Map<String, dynamic> json) {
-    var eventsList = json['events'] as List? ?? [];
-    List<FixtureEvent> events = eventsList
-        .map((eventJson) => FixtureEvent.fromJson(eventJson))
+    // Defensive: legacy/corrupt cached files on the backend can shape `events`
+    // as a Map instead of a List. Treat any non-List as empty so the screen
+    // renders cleanly instead of crashing.
+    final raw = json['events'];
+    final eventsList = raw is List ? raw : const [];
+    final events = eventsList
+        .whereType<Map>()
+        .map((e) => FixtureEvent.fromJson(Map<String, dynamic>.from(e)))
         .toList();
 
     return FixtureEventsResponse(
       success: json['success'] ?? false,
-      fixtureId: json['fixtureId'] ?? '',
+      fixtureId: json['fixtureId']?.toString() ?? '',
       events: events,
-      count: json['count'] ?? 0,
+      count: json['count'] is int ? json['count'] as int : events.length,
     );
   }
 }

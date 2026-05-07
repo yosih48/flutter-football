@@ -55,7 +55,7 @@ class _GameDetailsState extends State<GameDetails> {
   late String selectedGroupName = "";
   Map<String, String> _userGroups = {};
   bool isLoading = true;
-  int? _selectedTab = 0; // 0=Timeline, 1=Lineups, 2=Table, 3=Stats. null = collapsed.
+  int? _selectedTab; // 0=Timeline, 1=Lineups, 2=Table, 3=Stats. null = collapsed (default).
   late int _currentIndex;
   late Game _currentGame;
   late int currentGameId;
@@ -73,8 +73,10 @@ class _GameDetailsState extends State<GameDetails> {
     currentUserId = widget.userId;
     currentGameId = widget.gameOriginalId;
 
+    // _fetchUserGroups is enough — it kicks off _fetchGuesses with the right
+    // group name once it has it. A bare _fetchGuesses("") call here would
+    // just be wasted work that always returns nothing.
     _fetchUserGroups();
-    _fetchGuesses(selectedGroupName);
   }
 
   void _navigateToGame(int newIndex) {
@@ -120,35 +122,24 @@ class _GameDetailsState extends State<GameDetails> {
         ),
         centerTitle: true,
       ),
-      body: isLoading
-          ? Center(
-              child: SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 1.5,
-                  valueColor: AlwaysStoppedAnimation(c.live),
-                ),
-              ),
-            )
-          : SafeArea(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  children: [
-                    _buildHeroCard(),
-                    const SizedBox(height: 8),
-                    _buildTabsBlock(),
-                    const SizedBox(height: 8),
-                    if (_currentGame.status.long != 'Not Started') ...[
-                      _buildPredictionsBlock(),
-                      const SizedBox(height: 8),
-                    ],
-                    const SizedBox(height: 32),
-                  ],
-                ),
-              ),
-            ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            children: [
+              _buildHeroCard(),
+              const SizedBox(height: 8),
+              _buildTabsBlock(),
+              const SizedBox(height: 8),
+              if (_currentGame.status.long != 'Not Started') ...[
+                _buildPredictionsBlock(),
+                const SizedBox(height: 8),
+              ],
+              const SizedBox(height: 32),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -562,7 +553,21 @@ class _GameDetailsState extends State<GameDetails> {
           else ...[
             _buildGroupHeader(),
             const SizedBox(height: 14),
-            if (_guessesWithNames.isEmpty)
+            if (isLoading)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1.5,
+                      valueColor: AlwaysStoppedAnimation(c.live),
+                    ),
+                  ),
+                ),
+              )
+            else if (_guessesWithNames.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 child: Text(
@@ -1037,22 +1042,28 @@ class _GameDetailsState extends State<GameDetails> {
       final guesses =
           await GuessesMethods().fetchAllUsersGuesses(currentGameId);
       final callService = CallService();
-      final guessesWithNames = <GuessWithNames>[];
 
-      for (var guess in guesses) {
-        try {
-          final guessWithName = await callService.getGuessWithNames(guess);
-          guessesWithNames.add(guessWithName);
-        } catch (e) {
-          print('Skipping guess due to error: $e');
-        }
-      }
+      // Parallelize the per-guess name lookups instead of awaiting them in
+      // series. With ~10 users in a group this turns 10 sequential round-trips
+      // into 10 concurrent ones — typically 3-5× faster end-to-end.
+      final results = await Future.wait(
+        guesses.map((g) async {
+          try {
+            return await callService.getGuessWithNames(g);
+          } catch (e) {
+            print('Skipping guess due to error: $e');
+            return null;
+          }
+        }),
+      );
+      final guessesWithNames = results.whereType<GuessWithNames>().toList();
 
       final filteredGuesses = guessesWithNames.where((guessWithName) {
         return guessWithName.userGroups != null &&
             guessWithName.userGroups.values.contains(groupName);
       }).toList();
 
+      if (!mounted) return;
       setState(() {
         _guessesWithNames = filteredGuesses;
         isLoading = false;
@@ -1060,6 +1071,7 @@ class _GameDetailsState extends State<GameDetails> {
     } catch (e, stackTrace) {
       print('Failed to fetch guesses: $e');
       print('Stack trace: $stackTrace');
+      if (!mounted) return;
       setState(() {
         isLoading = false;
       });
