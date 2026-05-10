@@ -135,7 +135,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     }
   }
 
-  // ── Bootstrap: user + guesses + leagues, all parallel ────────────────
+  // ── Bootstrap: stale-while-revalidate + progressive per-league render ─
   Future<void> _bootstrap() async {
     if (mounted) setState(() => _isLoading = true);
     try {
@@ -152,13 +152,10 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
           .where((id) => chosenLeagues[id.toString()] == true)
           .toList();
 
-      final games = await _fetchLeaguesParallel(enabled);
-
       if (!mounted) return;
       setState(() {
         _enabledLeagues = enabled;
         _guesses = guesses;
-        _allGames = games;
         if (_selectedChipLeagueId != -1 &&
             enabled.contains(_selectedChipLeagueId)) {
           _selectedChipIndex = enabled.indexOf(_selectedChipLeagueId);
@@ -166,10 +163,47 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
           _selectedChipIndex = -1;
           _selectedChipLeagueId = -1;
         }
-        _hydrateControllers();
-        _isLoading = false;
       });
 
+      // 1) Paint stale cache immediately so the user sees fixtures fast.
+      final stalePerLeague = await Future.wait(
+        enabled.map((id) => GamesMethods().getCachedGamesStale(id)),
+      );
+      final staleGames = <Game>[];
+      for (final list in stalePerLeague) staleGames.addAll(list);
+      bool firstArrived = false;
+      if (staleGames.isNotEmpty && mounted) {
+        staleGames.sort((a, b) => a.date.compareTo(b.date));
+        firstArrived = true;
+        setState(() {
+          _allGames = staleGames;
+          _hydrateControllers();
+          _isLoading = false;
+        });
+      }
+
+      // 2) Refresh each league in parallel; merge as each arrives.
+      await Future.wait(enabled.map((id) async {
+        try {
+          final fresh = await GamesMethods().fetchGamesForLeague(id);
+          if (!mounted) return;
+          setState(() {
+            _allGames = [
+              ..._allGames.where((g) => g.league.id != id),
+              ...fresh,
+            ]..sort((a, b) => a.date.compareTo(b.date));
+            _hydrateControllers();
+            if (!firstArrived) {
+              firstArrived = true;
+              _isLoading = false;
+            }
+          });
+        } catch (e) {
+          print('❌ league $id fetch failed: $e');
+        }
+      }));
+
+      if (mounted && _isLoading) setState(() => _isLoading = false);
       _startRefreshLoop();
     } catch (e) {
       print('❌ bootstrap failed: $e');

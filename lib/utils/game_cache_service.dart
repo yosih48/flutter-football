@@ -14,6 +14,10 @@ class GameCacheService {
   static const int _upcomingGamesCacheDuration = 7 * 60 * 1000; // 15 minutes
   static const int _masterCacheDuration = 6 * 60 * 60 * 1000; // 6 hours
 
+  // Daily reset is checked at most once per app session to avoid 3+
+  // SharedPreferences round-trips on every cache read.
+  static bool _dailyResetChecked = false;
+
   // Store games in cache by league and date
   Future<void> cacheGames(
       List<Game> games, int leagueId, DateTime? date) async {
@@ -143,6 +147,24 @@ class GameCacheService {
     } catch (e, stackTrace) {
       print('❌ Error parsing cached data for league $leagueId: $e');
       print('Stack: $stackTrace');
+      return null;
+    }
+  }
+
+  // Return cached games regardless of expiry / live status. Used for
+  // stale-while-revalidate paint on cold load.
+  Future<List<Game>?> getCachedGamesIgnoreExpiry(
+      int leagueId, DateTime? date) async {
+    await _performDailyResetIfNeeded();
+    final prefs = await SharedPreferences.getInstance();
+    final cacheKey = _generateCacheKey(leagueId, date);
+    final cachedData = prefs.getString(cacheKey);
+    if (cachedData == null) return null;
+    try {
+      final List<dynamic> gamesJson = jsonDecode(cachedData);
+      return gamesJson.map((json) => Game.fromJson(json)).toList();
+    } catch (e) {
+      print('❌ Error parsing stale cache for league $leagueId: $e');
       return null;
     }
   }
@@ -289,8 +311,12 @@ class GameCacheService {
     }
   }
 
-  // ✅ Daily reset checker — clears cache once after 12:00 PM each day
+  // ✅ Daily reset checker — clears cache once after 12:00 PM each day.
+  // Runs at most once per app session.
   Future<void> _performDailyResetIfNeeded() async {
+    if (_dailyResetChecked) return;
+    _dailyResetChecked = true;
+
     final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now();
 

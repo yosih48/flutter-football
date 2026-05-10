@@ -310,6 +310,13 @@ if(leagueId == -1){
     }
   }
 
+  // Returns whatever is in cache for this league (any date key) without
+  // expiry/live checks. Used to paint immediately on cold load.
+  Future<List<Game>> getCachedGamesStale(int leagueId) async {
+    final games = await _cacheService.getCachedGamesIgnoreExpiry(leagueId, null);
+    return games ?? [];
+  }
+
   // Method to force refresh data - useful for manual refresh
   Future<List<Game>> forceRefreshGames(int leagueId,
       {bool onlyTodayGames = false, DateTime? selectedDate}) async {

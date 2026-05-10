@@ -21,7 +21,8 @@
       "Bash(curl -s \"https://raw.githubusercontent.com/lacassef/recodexapicodeexamples/master/allsportsapi/Footapi/README.md\")",
       "Bash(curl -s \"https://api.github.com/repos/lacassef/recodexapicodeexamples/contents/allsportsapi/openapi\")",
       "Bash(curl -s \"https://raw.githubusercontent.com/lacassef/recodexapicodeexamples/master/allsportsapi/openapi/football_openapi.yaml\" -o /tmp/football_oa.yaml)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(grep -nA 12 \"export.*loadApiData\" C:/worldBackend/api.js)"
     ]
   }
 }
