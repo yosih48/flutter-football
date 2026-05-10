@@ -558,6 +558,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get noEvents => 'אין אירועים עדיין';
 
   @override
+  String get allEvents => 'הכל';
+
+  @override
+  String get majorEvents => 'עיקריים';
+
+  @override
   String get playerIn => 'נכנס';
 
   @override

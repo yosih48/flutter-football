@@ -191,6 +191,8 @@
   "retry": "נסה שוב",
   "noGoals": "לא נמצאו אירועים",
   "noEvents": "אין אירועים עדיין",
+  "allEvents": "הכל",
+  "majorEvents": "עיקריים",
   "playerIn": "נכנס",
   "playerOut": "יוצא",
   "eventsAppear": "האירועים יופיעו כאן כאשר יובקעו שערים",

@@ -14,8 +14,8 @@ const Color _kPitchLight = Color(0xFF1E6842);
 const Color _kLine  = Color(0x52FFFFFF); // white @ 32%
 
 // ── Player dot geometry ───────────────────────────────────────────────────
-const double _kDia      = 32.0; // circle diameter
-const double _kLabelW   = 62.0; // total width incl. name
+const double _kDia      = 34.0; // circle diameter
+const double _kLabelW   = 64.0; // total width incl. name
 
 class LineupsWidget extends StatefulWidget {
   final int fixtureId;
@@ -218,7 +218,7 @@ class _TacticalPitch extends StatelessWidget {
     final sortedRows = byRow.keys.toList()..sort();
     final n = sortedRows.length;
 
-    // Leave 14% at pitch edge (circle + name ≈ 47 px must fit),
+    // Leave 14% at pitch edge (circle + name ≈ 50 px must fit),
     // 9% at centre line → 77% usable span.
     const edgePad  = 0.14;
     const centPad  = 0.09;
@@ -416,16 +416,21 @@ class _PlayerDot extends StatelessWidget {
                 horizontal: (_kLabelW - _kDia) / 2,
               ),
               decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.88),
-                  width: 1.5,
+                gradient: RadialGradient(
+                  center: const Alignment(-0.2, -0.3),
+                  radius: 0.95,
+                  colors: [
+                    Color.lerp(color, Colors.white, 0.18)!,
+                    color,
+                    Color.lerp(color, Colors.black, 0.18)!,
+                  ],
+                  stops: const [0.0, 0.55, 1.0],
                 ),
+                shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.40),
-                    blurRadius: 4,
+                    color: Colors.black.withOpacity(0.45),
+                    blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
                 ],
@@ -435,7 +440,7 @@ class _PlayerDot extends StatelessWidget {
                   '${player.number}',
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: FontWeight.w800,
                     height: 1.0,
                   ),
@@ -443,7 +448,7 @@ class _PlayerDot extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 3),
+            const SizedBox(height: 4),
 
             // ── Name tag ──────────────────────────────────────
             Text(
@@ -452,12 +457,13 @@ class _PlayerDot extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: Colors.white,
-                fontSize: 9.0,
+                color: Colors.white.withOpacity(0.95),
+                fontSize: 9.5,
                 fontWeight: FontWeight.w600,
+                height: 1.1,
                 shadows: const [
                   Shadow(
-                    color: Color(0xBB000000),
+                    color: Color(0xCC000000),
                     blurRadius: 4,
                   ),
                 ],

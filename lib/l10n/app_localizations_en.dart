@@ -558,6 +558,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noEvents => 'No events yet';
 
   @override
+  String get allEvents => 'All';
+
+  @override
+  String get majorEvents => 'Major';
+
+  @override
   String get playerIn => 'In';
 
   @override

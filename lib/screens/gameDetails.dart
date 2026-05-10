@@ -55,6 +55,7 @@ class _GameDetailsState extends State<GameDetails> {
   late String selectedGroupName = "";
   Map<String, String> _userGroups = {};
   bool isLoading = true;
+  bool _groupsLoading = true;
   int? _selectedTab; // 0=Timeline, 1=Lineups, 2=Table, 3=Stats. null = collapsed (default).
   late int _currentIndex;
   late Game _currentGame;
@@ -548,7 +549,21 @@ class _GameDetailsState extends State<GameDetails> {
             ],
           ),
           const SizedBox(height: 14),
-          if (_userGroups.isEmpty)
+          if (_groupsLoading)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.5,
+                    valueColor: AlwaysStoppedAnimation(c.live),
+                  ),
+                ),
+              ),
+            )
+          else if (_userGroups.isEmpty)
             _joinGroupCallout(l)
           else ...[
             _buildGroupHeader(),
@@ -1015,12 +1030,14 @@ class _GameDetailsState extends State<GameDetails> {
     try {
       Map<String, dynamic> userData =
           await UsersMethods().fetchUserById(currentUserId);
+      if (!mounted) return;
       setState(() {
         Map<String, String> tempGroups =
             Map<String, String>.from(userData['groupID'] ?? {});
 
         tempGroups.removeWhere((key, value) => value.toLowerCase() == 'public');
         _userGroups = tempGroups;
+        _groupsLoading = false;
 
         final userProvider = Provider.of<UserProvider>(context, listen: false);
         if (_userGroups.isNotEmpty &&
@@ -1030,10 +1047,17 @@ class _GameDetailsState extends State<GameDetails> {
         } else if (_userGroups.isNotEmpty) {
           selectedGroupName = _userGroups.values.first;
           _fetchGuesses(selectedGroupName);
+        } else {
+          isLoading = false;
         }
       });
     } catch (e) {
       print('Failed to fetch user groups: $e');
+      if (!mounted) return;
+      setState(() {
+        _groupsLoading = false;
+        isLoading = false;
+      });
     }
   }
 

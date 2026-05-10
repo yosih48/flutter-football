@@ -187,6 +187,8 @@
   "retry": "Retry",
   "noGoals": "No goals scored yet",
   "noEvents": "No events yet",
+  "allEvents": "All",
+  "majorEvents": "Major",
   "playerIn": "In",
   "playerOut": "Out",
   "eventsAppear": "Events will appear here when goals are scored",

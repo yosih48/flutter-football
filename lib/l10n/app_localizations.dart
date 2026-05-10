@@ -1190,6 +1190,12 @@ abstract class AppLocalizations {
   /// No description provided for @noEvents.
   String get noEvents;
 
+  /// No description provided for @allEvents.
+  String get allEvents;
+
+  /// No description provided for @majorEvents.
+  String get majorEvents;
+
   /// No description provided for @playerIn.
   String get playerIn;
 

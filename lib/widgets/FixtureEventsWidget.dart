@@ -34,6 +34,18 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
   bool _isLoading = false;
   String? _error;
   bool _expanded = true;
+  bool _majorOnly = false;
+
+  bool _isMajor(FixtureEvent e) {
+    final type = e.type.toLowerCase();
+    final detail = e.detail?.toLowerCase() ?? '';
+    if (type == 'goal') return true;
+    if (detail.contains('penalty')) return true;
+    if (e.assist != null && e.assist!.isNotEmpty && type != 'subst') {
+      return true;
+    }
+    return false;
+  }
 
   @override
   void initState() {
@@ -98,9 +110,62 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
     if (_isLoading) return _buildLoadingWidget(c);
     if (_error != null) return _buildErrorWidget(c);
     if (_eventsResponse != null && _eventsResponse!.events.isNotEmpty) {
-      return _buildTimeline(_eventsResponse!.events, c);
+      final all = _eventsResponse!.events;
+      final filtered = _majorOnly ? all.where(_isMajor).toList() : all;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildFilterToggle(c),
+          const SizedBox(height: 8),
+          if (filtered.isEmpty)
+            _buildEmptyWidget(c)
+          else
+            _buildTimeline(filtered, c),
+        ],
+      );
     }
     return _buildEmptyWidget(c);
+  }
+
+  Widget _buildFilterToggle(EditorialColors c) {
+    final l = AppLocalizations.of(context)!;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _filterPill(l.allEvents.toUpperCase(), !_majorOnly,
+            () => setState(() => _majorOnly = false), c),
+        const SizedBox(width: 8),
+        _filterPill(l.majorEvents.toUpperCase(), _majorOnly,
+            () => setState(() => _majorOnly = true), c),
+      ],
+    );
+  }
+
+  Widget _filterPill(
+      String label, bool active, VoidCallback onTap, EditorialColors c) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: active ? c.liveSoft : Colors.transparent,
+          border: Border.all(
+            color: active ? c.live : c.hairline,
+            width: 1,
+          ),
+          borderRadius: BorderRadius.circular(2),
+        ),
+        child: Text(
+          label,
+          style: EType.label(
+            color: active ? c.live : c.inkMute,
+            size: 10,
+            letterSpacing: 1.6,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildHeader(EditorialColors c) {
@@ -240,6 +305,10 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
     required EditorialColors c,
   }) {
     final eventInfo = _getEventInfo(event);
+    // Substitutions already render up/down arrows inside the body, so the
+    // outer swap icon would be redundant and steals horizontal room from the
+    // player names.
+    final isSubst = event.type.toLowerCase() == 'subst';
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 4.0),
@@ -247,14 +316,14 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
         mainAxisAlignment:
             isHome ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
-          if (!isHome) ...[
+          if (!isHome && !isSubst) ...[
             _buildEventIcon(eventInfo),
             const SizedBox(width: 10),
           ],
           Flexible(
             child: _buildEventBody(event, isHome: isHome, c: c),
           ),
-          if (isHome) ...[
+          if (isHome && !isSubst) ...[
             const SizedBox(width: 10),
             _buildEventIcon(eventInfo),
           ],
@@ -355,18 +424,15 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
   }) {
     final children = <Widget>[
       Icon(icon, color: color, size: 12),
-      const SizedBox(width: 4),
-      Text(
-        label.toUpperCase(),
-        style: EType.label(color: color, size: 9, letterSpacing: 1.2),
-      ),
       const SizedBox(width: 6),
       Flexible(
         child: Text(
           name,
           style: EType.body(color: c.ink, size: 12, weight: FontWeight.w500),
-          maxLines: 1,
+          maxLines: 2,
+          softWrap: true,
           overflow: TextOverflow.ellipsis,
+          textAlign: isHome ? TextAlign.right : TextAlign.left,
         ),
       ),
     ];

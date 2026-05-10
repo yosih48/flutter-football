@@ -195,7 +195,12 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
     final c = context.col;
     final l = AppLocalizations.of(context)!;
 
-    final teamId = widget.team.id;
+    // The standings endpoint and the fixtures endpoint of API-Football don't
+    // always agree on team IDs (or even exact names — "FC Barcelona" vs
+    // "Barcelona", "Atlético" vs "Atletico", etc.). So we resolve the
+    // fixture-side team id once by picking the unique team in the league's
+    // fixtures whose name best overlaps with widget.team.name.
+    final teamId = _resolveFixtureTeamId();
     final teamGames = widget.allLeagueGames
         .where((g) => g.home.id == teamId || g.away.id == teamId)
         .toList()
@@ -474,6 +479,78 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
         ),
       ),
     );
+  }
+
+  // Common club abbreviations / qualifiers that vary between API endpoints.
+  static const Set<String> _stopWords = {
+    'fc', 'cf', 'afc', 'sc', 'ac', 'rc', 'cd', 'ud', 'sd', 'club', 'de',
+    'the',
+  };
+
+  // Lowercase, strip diacritics and punctuation, drop stop-words.
+  static const String _accented =
+      'àáâãäåāăąèéêëēĕėęěìíîïĩīĭįòóôõöōŏőùúûüũūŭůűñçßýÿźżž';
+  static const String _plain =
+      'aaaaaaaaaeeeeeeeeeiiiiiiiiooooooooouuuuuuuuuncbyyzzz';
+
+  static List<String> _tokens(String s) {
+    final buf = StringBuffer();
+    final lower = s.toLowerCase();
+    for (final ch in lower.runes) {
+      final c = String.fromCharCode(ch);
+      final i = _accented.indexOf(c);
+      if (i >= 0) {
+        buf.write(_plain[i]);
+      } else if (RegExp(r'[a-z0-9]').hasMatch(c)) {
+        buf.write(c);
+      } else {
+        buf.write(' ');
+      }
+    }
+    return buf
+        .toString()
+        .split(RegExp(r'\s+'))
+        .where((t) => t.isNotEmpty && !_stopWords.contains(t))
+        .toList();
+  }
+
+  // Score how similar two team names are by token overlap, weighting longer
+  // shared tokens higher (so "madrid" alone is weaker than "real madrid").
+  static int _nameScore(List<String> a, List<String> b) {
+    final bSet = b.toSet();
+    int score = 0;
+    for (final t in a) {
+      if (bSet.contains(t)) score += t.length;
+    }
+    return score;
+  }
+
+  int _resolveFixtureTeamId() {
+    // Direct id match wins immediately.
+    for (final g in widget.allLeagueGames) {
+      if (g.home.id == widget.team.id || g.away.id == widget.team.id) {
+        return widget.team.id;
+      }
+    }
+    final wanted = _tokens(widget.team.name);
+    if (wanted.isEmpty) return widget.team.id;
+
+    final seen = <int, List<String>>{};
+    for (final g in widget.allLeagueGames) {
+      seen.putIfAbsent(g.home.id, () => _tokens(g.home.name));
+      seen.putIfAbsent(g.away.id, () => _tokens(g.away.name));
+    }
+
+    int bestId = widget.team.id;
+    int bestScore = 0;
+    seen.forEach((id, toks) {
+      final s = _nameScore(wanted, toks);
+      if (s > bestScore) {
+        bestScore = s;
+        bestId = id;
+      }
+    });
+    return bestScore > 0 ? bestId : widget.team.id;
   }
 
   // ── Table tab ────────────────────────────────────────────────────────────
