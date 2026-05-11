@@ -29,7 +29,16 @@
       "Bash(curl -s \"https://scorecast.yossih.dev/api/standings/3\")",
       "Bash(curl -s \"https://scorecast.yossih.dev/api/leagues/3/standings\")",
       "Bash(python -c \"import sys, json; d=json.load\\(sys.stdin\\); rows=d.get\\('standings',[]\\)[0]['league']['standings'][0][:3]; print\\(json.dumps\\([{'name':r['team']['name'],'id':r['team']['id'],'logo':r['team']['logo']} for r in rows], indent=2\\)\\)\")",
-      "Bash(curl -s \"https://scorecast.yossih.dev/leagues/3/standings\")"
+      "Bash(curl -s \"https://scorecast.yossih.dev/leagues/3/standings\")",
+      "Bash(node --check scripts/migrateJsonToMongo.js)",
+      "Bash(node --check src/models/cacheModels.js)",
+      "Bash(node --check src/cache/getOrFetch.js)",
+      "Bash(node --check odds.js)",
+      "Bash(node --check api.js)",
+      "Bash(node --check src/cache/oddsRepo.js)",
+      "Bash(node --check src/cache/fixturesRepo.js)",
+      "Bash(node --check scripts/warmMongoCache.js)",
+      "Bash(grep -rn \"from \\\\\"./app\\\\|from \\\\\"./app.js\\\\|from \\\\\"\\\\\\\\../app\" /c/worldBackend/api.js /c/worldBackend/odds.js /c/worldBackend/editPoints.js /c/worldBackend/fetchGames.js /c/worldBackend/src/)"
     ]
   }
 }
