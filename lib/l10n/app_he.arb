@@ -490,6 +490,11 @@
     "tableTab": "טבלה",
     "statsTab": "סטטיסטיקה",
     "statsNotAvailable": "לא נמצאו סטטיסטיקות",
+    "statsAsOf": "נכון לדקה {minute}",
+    "@statsAsOf": {
+      "placeholders": { "minute": { "type": "String" } }
+    },
+    "statsAsOfFullTime": "נכון לסיום המשחק",
     "standingsNotAvailable": "לא נמצאה טבלה",
     "colPlayed": "מ",
     "colWon": "נ",

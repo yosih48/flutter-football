@@ -566,6 +566,7 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
       child: StandingsTableWidget(
         leagueId: widget.league.id,
         highlightHomeId: widget.team.id,
+        logoSourceGames: widget.allLeagueGames,
         onTeamTap: (id, name, logo) {
           if (id == widget.team.id) return;
           Navigator.of(context).push(

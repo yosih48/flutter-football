@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:football/l10n/app_localizations.dart';
+import 'package:football/models/games.dart';
 import 'package:football/resources/standings_service.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
@@ -10,12 +11,19 @@ class StandingsTableWidget extends StatefulWidget {
   final int? highlightAwayId;
   final void Function(int teamId, String teamName, String teamLogo)? onTeamTap;
 
+  /// Optional games used to recover working team logos when the standings
+  /// endpoint returns a logo URL the backend can't proxy (e.g. UEFA cup
+  /// tournament-scoped team IDs that 404 on Sofascore). We grab the API-
+  /// Football logos from these games by matching on team name.
+  final List<Game>? logoSourceGames;
+
   const StandingsTableWidget({
     super.key,
     required this.leagueId,
     this.highlightHomeId,
     this.highlightAwayId,
     this.onTeamTap,
+    this.logoSourceGames,
   });
 
   @override
@@ -26,6 +34,94 @@ class _StandingsTableWidgetState extends State<StandingsTableWidget> {
   final StandingsService _service = StandingsService();
   List<StandingRow>? _rows;
   bool _loading = true;
+
+  static const Set<String> _stopWords = {
+    'fc', 'cf', 'afc', 'sc', 'ac', 'rc', 'cd', 'ud', 'sd', 'club', 'de',
+    'the',
+  };
+  static const String _accented =
+      'àáâãäåāăąèéêëēĕėęěìíîïĩīĭįòóôõöōŏőùúûüũūŭůűñçßýÿźżž';
+  static const String _plain =
+      'aaaaaaaaaeeeeeeeeeiiiiiiiiooooooooouuuuuuuuuncbyyzzz';
+
+  static List<String> _tokens(String s) {
+    final buf = StringBuffer();
+    for (final ch in s.toLowerCase().runes) {
+      final c = String.fromCharCode(ch);
+      final i = _accented.indexOf(c);
+      if (i >= 0) {
+        buf.write(_plain[i]);
+      } else if (RegExp(r'[a-z0-9]').hasMatch(c)) {
+        buf.write(c);
+      } else {
+        buf.write(' ');
+      }
+    }
+    return buf
+        .toString()
+        .split(RegExp(r'\s+'))
+        .where((t) => t.isNotEmpty && !_stopWords.contains(t))
+        .toList();
+  }
+
+  // Token-overlap score weighted by token length. "real madrid" vs "real madrid"
+  // beats "real madrid" vs "atletico madrid" because the first shares both
+  // tokens (10 chars) vs only "madrid" (6 chars).
+  static int _score(List<String> a, Set<String> b) {
+    int s = 0;
+    for (final t in a) {
+      if (b.contains(t)) s += t.length;
+    }
+    return s;
+  }
+
+  // Per-(games list) caches so we tokenize each fixture team once, not per row.
+  List<Game>? _cachedGames;
+  late List<({Team team, Set<String> tokens})> _candidates;
+
+  void _rebuildCandidatesIfNeeded() {
+    final games = widget.logoSourceGames;
+    if (identical(games, _cachedGames)) return;
+    _cachedGames = games;
+    final byId = <int, ({Team team, Set<String> tokens})>{};
+    if (games != null) {
+      for (final g in games) {
+        byId.putIfAbsent(
+            g.home.id, () => (team: g.home, tokens: _tokens(g.home.name).toSet()));
+        byId.putIfAbsent(
+            g.away.id, () => (team: g.away, tokens: _tokens(g.away.name).toSet()));
+      }
+    }
+    _candidates = byId.values.toList();
+  }
+
+  // Returns the matching fixture-side Team for this standings row, or null
+  // if no fixture team shares any meaningful token with the row's name.
+  Team? _fixtureTeamFor(StandingRow row) {
+    _rebuildCandidatesIfNeeded();
+    if (_candidates.isEmpty) return null;
+    final wanted = _tokens(row.teamName);
+    if (wanted.isEmpty) return null;
+
+    Team? best;
+    int bestScore = 0;
+    for (final cand in _candidates) {
+      final s = _score(wanted, cand.tokens);
+      if (s > bestScore) {
+        bestScore = s;
+        best = cand.team;
+      }
+    }
+    // Require at least a 3-letter token match to avoid spurious 1-2 letter
+    // collisions (e.g. a stray "u" or "a" lingering after stop-word removal).
+    return bestScore >= 3 ? best : null;
+  }
+
+  String _logoFor(StandingRow row) {
+    final t = _fixtureTeamFor(row);
+    if (t != null && t.logo.isNotEmpty) return t.logo;
+    return row.teamLogo;
+  }
 
   @override
   void initState() {
@@ -194,14 +290,23 @@ class _StandingsTableWidgetState extends State<StandingsTableWidget> {
                   height: 20,
                   padding: const EdgeInsets.all(1),
                   decoration: BoxDecoration(color: c.cardHi, shape: BoxShape.circle),
-                  child: row.teamLogo.isNotEmpty
-                      ? Image.network(
-                          row.teamLogo,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) =>
-                              Icon(Icons.shield_outlined, size: 10, color: c.inkDim),
-                        )
-                      : Icon(Icons.shield_outlined, size: 10, color: c.inkDim),
+                  child: Builder(builder: (_) {
+                    var logo = _logoFor(row);
+                    if (logo.isEmpty) {
+                      return Icon(Icons.shield_outlined, size: 10, color: c.inkDim);
+                    }
+                    // Cache-bust ONLY proxy URLs that previously 404'd — leaves
+                    // the API-Football CDN URLs untouched so they stay cached.
+                    if (logo.contains('/api/team-image/')) {
+                      logo += logo.contains('?') ? '&v=2' : '?v=2';
+                    }
+                    return Image.network(
+                      logo,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) =>
+                          Icon(Icons.shield_outlined, size: 10, color: c.inkDim),
+                    );
+                  }),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -246,7 +351,17 @@ class _StandingsTableWidgetState extends State<StandingsTableWidget> {
 
     if (widget.onTeamTap == null) return content;
     return InkWell(
-      onTap: () => widget.onTeamTap!(row.teamId, row.teamName, row.teamLogo),
+      onTap: () {
+        // Prefer the fixture-side team (canonical API-Football id, clean name,
+        // working CDN logo). Falls back to the standings row when we can't
+        // match by name.
+        final t = _fixtureTeamFor(row);
+        widget.onTeamTap!(
+          t?.id ?? row.teamId,
+          t?.name ?? row.teamName,
+          (t?.logo.isNotEmpty ?? false) ? t!.logo : row.teamLogo,
+        );
+      },
       child: content,
     );
   }

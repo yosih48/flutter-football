@@ -840,6 +840,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsNotAvailable => 'Stats not yet available';
 
   @override
+  String statsAsOf(String minute) => "As of $minute'";
+
+  @override
+  String get statsAsOfFullTime => 'As of full time';
+
+  @override
   String get standingsNotAvailable => 'Standings not yet available';
 
   @override

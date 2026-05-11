@@ -21,7 +21,15 @@
       "Bash(curl -s \"https://raw.githubusercontent.com/lacassef/recodexapicodeexamples/master/allsportsapi/Footapi/README.md\")",
       "Bash(curl -s \"https://api.github.com/repos/lacassef/recodexapicodeexamples/contents/allsportsapi/openapi\")",
       "Bash(curl -s \"https://raw.githubusercontent.com/lacassef/recodexapicodeexamples/master/allsportsapi/openapi/football_openapi.yaml\" -o /tmp/football_oa.yaml)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(dir C:\\\\Users\\\\1\\\\worldBackend)",
+      "Bash(dir C:\\\\worldBackend)",
+      "Bash(dir \"C:\\\\Users\\\\1\\\\Documents\\\\worldBackend\")",
+      "Bash(where /R C:\\\\Users\\\\1 teamImage.js)",
+      "Bash(curl -s \"https://scorecast.yossih.dev/api/standings/3\")",
+      "Bash(curl -s \"https://scorecast.yossih.dev/api/leagues/3/standings\")",
+      "Bash(python -c \"import sys, json; d=json.load\\(sys.stdin\\); rows=d.get\\('standings',[]\\)[0]['league']['standings'][0][:3]; print\\(json.dumps\\([{'name':r['team']['name'],'id':r['team']['id'],'logo':r['team']['logo']} for r in rows], indent=2\\)\\)\")",
+      "Bash(curl -s \"https://scorecast.yossih.dev/leagues/3/standings\")"
     ]
   }
 }

@@ -1742,6 +1742,18 @@ abstract class AppLocalizations {
   /// **'Stats not yet available'**
   String get statsNotAvailable;
 
+  /// No description provided for @statsAsOf.
+  ///
+  /// In en, this message translates to:
+  /// **'As of {minute}\''**
+  String statsAsOf(String minute);
+
+  /// No description provided for @statsAsOfFullTime.
+  ///
+  /// In en, this message translates to:
+  /// **'As of full time'**
+  String get statsAsOfFullTime;
+
   /// No description provided for @standingsNotAvailable.
   ///
   /// In en, this message translates to:

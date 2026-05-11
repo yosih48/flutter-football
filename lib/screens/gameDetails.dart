@@ -368,6 +368,9 @@ class _GameDetailsState extends State<GameDetails> {
 
   Widget _heroTeam(Team team, {required bool alignEnd}) {
     final c = context.col;
+    const double nameFontSize = 18;
+    const double nameLineHeight = 1.1;
+    const double nameBlockHeight = nameFontSize * nameLineHeight * 2;
     return Column(
       crossAxisAlignment:
           alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
@@ -391,18 +394,21 @@ class _GameDetailsState extends State<GameDetails> {
           ),
         ),
         const SizedBox(height: 12),
-        GestureDetector(
-          onTap: () => _openTeamDetails(team),
-          child: Text(
-            team.name.toUpperCase(),
-            textAlign: alignEnd ? TextAlign.right : TextAlign.left,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: EType.display(
-              size: 18,
-              color: c.ink,
-              letterSpacing: 0.8,
-              height: 1.0,
+        SizedBox(
+          height: nameBlockHeight,
+          child: GestureDetector(
+            onTap: () => _openTeamDetails(team),
+            child: Text(
+              team.name.toUpperCase(),
+              textAlign: alignEnd ? TextAlign.right : TextAlign.left,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: EType.display(
+                size: nameFontSize,
+                color: c.ink,
+                letterSpacing: 0.8,
+                height: nameLineHeight,
+              ),
             ),
           ),
         ),
@@ -505,6 +511,7 @@ class _GameDetailsState extends State<GameDetails> {
           leagueId: _currentGame.league.id,
           highlightHomeId: _currentGame.home.id,
           highlightAwayId: _currentGame.away.id,
+          logoSourceGames: widget.allLeagueGames ?? widget.games,
           onTeamTap: (id, name, logo) => _openTeamDetails(
             Team(id: id, name: name, logo: logo),
           ),
@@ -515,6 +522,8 @@ class _GameDetailsState extends State<GameDetails> {
           fixtureId: currentGameId,
           homeTeamName: _currentGame.home.name,
           awayTeamName: _currentGame.away.name,
+          matchElapsed: _currentGame.status.elapsed,
+          matchStatusShort: _currentGame.status.short,
         );
     }
   }

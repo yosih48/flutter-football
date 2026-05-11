@@ -840,6 +840,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statsNotAvailable => 'לא נמצאו סטטיסטיקות';
 
   @override
+  String statsAsOf(String minute) => "נכון לדקה $minute";
+
+  @override
+  String get statsAsOfFullTime => 'נכון לסיום המשחק';
+
+  @override
   String get standingsNotAvailable => 'לא נמצאה טבלה';
 
   @override
