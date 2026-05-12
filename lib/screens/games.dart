@@ -235,7 +235,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
 
     try {
       final results = await Future.wait(
-        liveLeagueIds.map((id) => GamesMethods().forceRefreshGames(id)),
+        liveLeagueIds.map((id) => GamesMethods().fetchLiveGamesForLeague(id)),
       );
       final byId = {for (final g in _allGames) g.fixtureId: g};
       for (final list in results) {

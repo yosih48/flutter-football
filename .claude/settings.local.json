@@ -38,7 +38,14 @@
       "Bash(node --check src/cache/oddsRepo.js)",
       "Bash(node --check src/cache/fixturesRepo.js)",
       "Bash(node --check scripts/warmMongoCache.js)",
-      "Bash(grep -rn \"from \\\\\"./app\\\\|from \\\\\"./app.js\\\\|from \\\\\"\\\\\\\\../app\" /c/worldBackend/api.js /c/worldBackend/odds.js /c/worldBackend/editPoints.js /c/worldBackend/fetchGames.js /c/worldBackend/src/)"
+      "Bash(grep -rn \"from \\\\\"./app\\\\|from \\\\\"./app.js\\\\|from \\\\\"\\\\\\\\../app\" /c/worldBackend/api.js /c/worldBackend/odds.js /c/worldBackend/editPoints.js /c/worldBackend/fetchGames.js /c/worldBackend/src/)",
+      "Bash(npm install *)",
+      "Bash(flutter analyze *)",
+      "Bash(node --check src/routes/games.js)",
+      "Bash(node --check src/routes/reminders.js)",
+      "Bash(node --check src/routes/system.js)",
+      "Bash(node --check src/controllers/gamesFetcher.js)",
+      "Bash(node --check editPoints.js)"
     ]
   }
 }

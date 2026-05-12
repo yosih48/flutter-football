@@ -199,16 +199,12 @@ if(leagueId == -1){
     DateTime? selectedDate,
   }) async {
     final startTime = DateTime.now();
-    final url = Uri.parse('$_baseUrl/api/realApiData');
+    final url = Uri.parse('$_baseUrl/api/games/$leagueId');
     print('🌐 Making API request to: $url with leagueId: $leagueId');
-    
+
     try {
       final requestStartTime = DateTime.now();
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'data': leagueId}),
-      );
+      final response = await http.get(url);
       final requestDuration = DateTime.now().difference(requestStartTime);
       
       print('📡 Response status: ${response.statusCode}');
@@ -307,6 +303,29 @@ if(leagueId == -1){
       print('❌ Error fetching games for league $leagueId: $e');
       print('📚 Stack trace: $stackTrace');
       rethrow;
+    }
+  }
+
+  // Lightweight live-tick fetch. Asks the backend only for currently in-progress
+  // fixtures in the league (typically 0-3 docs) instead of the full ~380-game
+  // season list. Used by the 30s refresh loop to update live scores cheaply.
+  // Returns parsed Game objects; no filtering — the caller merges by fixtureId
+  // into its existing in-memory list.
+  Future<List<Game>> fetchLiveGamesForLeague(int leagueId) async {
+    final url = Uri.parse('$_baseUrl/api/liveGames/$leagueId');
+    try {
+      final response = await http.get(url);
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Failed to fetch live games (status ${response.statusCode})');
+      }
+      final body = jsonDecode(response.body);
+      final gamesData = body['games'];
+      if (gamesData is! List) return [];
+      return gamesData.map((item) => Game.fromJson(item)).toList();
+    } catch (e) {
+      print('❌ fetchLiveGamesForLeague($leagueId) failed: $e');
+      return [];
     }
   }
 

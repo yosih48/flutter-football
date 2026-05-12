@@ -84,6 +84,8 @@ class TableScreenContentState extends State<TableScreenContent> {
   TextEditingController _inviteCodeController = TextEditingController();
   final TextEditingController _groupNameController = TextEditingController();
 
+  String _usersCacheKey(String group, int lg) => '$group|$lg';
+
   @override
   void dispose() {
     _inviteCodeController.dispose();
@@ -417,7 +419,9 @@ class TableScreenContentState extends State<TableScreenContent> {
     super.initState();
     currentUserId = widget.authProvider.currentUser?.id ?? 'Not logged in';
     league = widget.userProvider.selectedLeageId ?? 2;
-    _initializeData();
+
+    final hydrated = _hydrateFromCache();
+    _initializeData(background: hydrated);
 
     if (widget.autoOpenAction != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -431,8 +435,35 @@ class TableScreenContentState extends State<TableScreenContent> {
     }
   }
 
-  Future<void> _initializeData() async {
-    setState(() => isLoading = true);
+  bool _hydrateFromCache() {
+    if (_TableCache.dashboardUserId != currentUserId ||
+        _TableCache.dashboard == null) {
+      return false;
+    }
+    final dashboardData = _TableCache.dashboard!;
+    final parsedPrivate =
+        Map<String, String>.from(dashboardData['privateGroups'] ?? {});
+    final parsedPublic =
+        Map<String, String>.from(dashboardData['publicGroups'] ?? {});
+
+    _privateGroups = parsedPrivate;
+    _publicGroups = parsedPublic;
+    _groupsInfo = _TableCache.groupsInfo ?? [];
+    _defaultGroupName = _TableCache.defaultGroupName ?? '';
+    selectedGroupName = _TableCache.lastSelectedGroupName ??
+        _determineSelectedGroupName(_TableCache.defaultGroupName);
+
+    final cachedUsers =
+        _TableCache.users[_usersCacheKey(selectedGroupName, league)];
+    if (cachedUsers != null) {
+      _users = cachedUsers;
+    }
+    isLoading = false;
+    return true;
+  }
+
+  Future<void> _initializeData({bool background = false}) async {
+    if (!background) setState(() => isLoading = true);
 
     try {
       final cachedGroupName =
@@ -445,11 +476,17 @@ class TableScreenContentState extends State<TableScreenContent> {
       final dashboardData = results[0] as Map<String, dynamic>;
       final groupsInfo = results[1] as List<Map<String, dynamic>>;
 
+      _TableCache.dashboardUserId = currentUserId;
+      _TableCache.dashboard = dashboardData;
+      _TableCache.groupsInfo = groupsInfo;
+      _TableCache.defaultGroupName = cachedGroupName;
+
       final parsedPrivate =
           Map<String, String>.from(dashboardData['privateGroups'] ?? {});
       final parsedPublic =
           Map<String, String>.from(dashboardData['publicGroups'] ?? {});
 
+      if (!mounted) return;
       setState(() {
         _privateGroups = parsedPrivate;
         _publicGroups = parsedPublic;
@@ -457,9 +494,10 @@ class TableScreenContentState extends State<TableScreenContent> {
         _defaultGroupName = cachedGroupName ?? '';
         selectedGroupName = _determineSelectedGroupName(cachedGroupName);
       });
+      _TableCache.lastSelectedGroupName = selectedGroupName;
 
       if (selectedGroupName.isNotEmpty && _privateGroups.isNotEmpty) {
-        await _fetchUsersForSelectedGroup();
+        await _fetchUsersForSelectedGroup(background: background);
       } else {
         setState(() {
           _users = [];
@@ -468,10 +506,12 @@ class TableScreenContentState extends State<TableScreenContent> {
       }
     } catch (e) {
       print('Failed to initialize data: $e');
-      setState(() {
-        _users = [];
-        isLoading = false;
-      });
+      if (!background && mounted) {
+        setState(() {
+          _users = [];
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -496,7 +536,7 @@ class TableScreenContentState extends State<TableScreenContent> {
     return "";
   }
 
-  Future<void> _fetchUsersForSelectedGroup() async {
+  Future<void> _fetchUsersForSelectedGroup({bool background = false}) async {
     if (selectedGroupName.isEmpty) {
       setState(() {
         _users = [];
@@ -505,22 +545,68 @@ class TableScreenContentState extends State<TableScreenContent> {
       return;
     }
 
+    final key = _usersCacheKey(selectedGroupName, league);
+    final cached = _TableCache.users[key];
+
+    if (cached != null) {
+      if (mounted) {
+        setState(() {
+          _users = cached;
+          isLoading = false;
+        });
+      }
+      // SWR: always revalidate in background when serving cached data.
+      _revalidateUsers(selectedGroupName, league);
+      return;
+    }
+
+    if (!background && mounted) {
+      setState(() => isLoading = true);
+    }
+
     try {
       final users =
           await GroupsMethods.fetchGroupUsers(selectedGroupName, league);
-
-      setState(() {
-        _users = users;
-        isLoading = false;
-      });
+      _TableCache.users[key] = users;
+      if (!mounted) return;
+      if (selectedGroupName == _keyGroup(key) && league == _keyLeague(key)) {
+        setState(() {
+          _users = users;
+          isLoading = false;
+        });
+      }
     } catch (e) {
       print('Failed to fetch users for group: $e');
-      setState(() {
-        _users = [];
-        isLoading = false;
-      });
+      if (!background && mounted) {
+        setState(() {
+          _users = [];
+          isLoading = false;
+        });
+      }
     }
   }
+
+  Future<void> _revalidateUsers(String group, int lg) async {
+    try {
+      final users = await GroupsMethods.fetchGroupUsers(group, lg);
+      final key = _usersCacheKey(group, lg);
+      _TableCache.users[key] = users;
+      if (!mounted) return;
+      // Only swap into UI if user is still viewing this slice.
+      if (selectedGroupName == group && league == lg) {
+        setState(() {
+          _users = users;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Background users refresh failed: $e');
+    }
+  }
+
+  String _keyGroup(String key) => key.substring(0, key.lastIndexOf('|'));
+  int _keyLeague(String key) =>
+      int.parse(key.substring(key.lastIndexOf('|') + 1));
 
   bool get _isCreatorOfActiveGroup => _groupsInfo.any(
         (g) =>
@@ -769,10 +855,18 @@ class TableScreenContentState extends State<TableScreenContent> {
   Future<void> changeSelectedGroup(String newGroupName) async {
     if (newGroupName == selectedGroupName) return;
 
+    final cached =
+        _TableCache.users[_usersCacheKey(newGroupName, league)];
     setState(() {
       selectedGroupName = newGroupName;
-      isLoading = true;
+      if (cached != null) {
+        _users = cached;
+        isLoading = false;
+      } else {
+        isLoading = true;
+      }
     });
+    _TableCache.lastSelectedGroupName = newGroupName;
 
     await SharedPreferencesUtil.setSelectedGroupName(newGroupName);
     await _fetchUsersForSelectedGroup();
@@ -1355,6 +1449,15 @@ class TableScreenContentState extends State<TableScreenContent> {
       ),
     );
   }
+}
+
+class _TableCache {
+  static String? dashboardUserId;
+  static Map<String, dynamic>? dashboard;
+  static List<Map<String, dynamic>>? groupsInfo;
+  static String? defaultGroupName;
+  static String? lastSelectedGroupName;
+  static final Map<String, List<Map<String, dynamic>>> users = {};
 }
 
 class _HeaderActionButton extends StatefulWidget {
