@@ -169,9 +169,14 @@ class GameWidget extends StatelessWidget {
   }
 
   Widget _buildMatchRow(EditorialColors c) {
+    // Keep both team labels on a single line by default; only wrap to two
+    // lines when at least one name is multi-word (and never mid-word).
+    final bool anyMultiWord = game.home.name.trim().contains(' ') ||
+        game.away.name.trim().contains(' ');
+    final int nameMaxLines = anyMultiWord ? 2 : 1;
     return Row(
       children: [
-        Expanded(child: _buildTeamSide(game.home, alignEnd: true, c: c)),
+        Expanded(child: _buildTeamSide(game.home, alignEnd: true, c: c, maxLines: nameMaxLines)),
         const SizedBox(width: 14),
         _buildTeamCrest(game.home, c),
         const SizedBox(width: 14),
@@ -179,12 +184,12 @@ class GameWidget extends StatelessWidget {
         const SizedBox(width: 14),
         _buildTeamCrest(game.away, c),
         const SizedBox(width: 14),
-        Expanded(child: _buildTeamSide(game.away, alignEnd: false, c: c)),
+        Expanded(child: _buildTeamSide(game.away, alignEnd: false, c: c, maxLines: nameMaxLines)),
       ],
     );
   }
 
-  Widget _buildTeamSide(Team team, {required bool alignEnd, required EditorialColors c}) {
+  Widget _buildTeamSide(Team team, {required bool alignEnd, required EditorialColors c, required int maxLines}) {
     return GestureDetector(
       onTap: () => onTeamTap != null
           ? onTeamTap!(team)
@@ -192,7 +197,8 @@ class GameWidget extends StatelessWidget {
       child: Text(
         team.name.toUpperCase(),
         textAlign: alignEnd ? TextAlign.right : TextAlign.left,
-        maxLines: 2,
+        maxLines: maxLines,
+        softWrap: maxLines > 1,
         overflow: TextOverflow.ellipsis,
         style: EType.display(
           size: 16,

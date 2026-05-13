@@ -175,33 +175,19 @@ class _GameDetailsState extends State<GameDetails> {
               bottom: BorderSide(color: c.hairline, width: 1),
             ),
           ),
-        child: Stack(
-          children: [
-            // Decorative grain stripes.
-            Positioned.fill(
-              child: IgnorePointer(
-                child: CustomPaint(
-                  painter: _PitchLinesPainter(
-                    color: c.hairline.withOpacity(0.4),
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
-              child: Column(
-                children: [
-                  _buildHeroMeta(),
-                  const SizedBox(height: 28),
-                  _buildScoreboard(hasPrev: hasPrev, hasNext: hasNext),
-                  const SizedBox(height: 24),
-                  Container(height: 1, color: c.hairline),
-                  const SizedBox(height: 12),
-                  _buildLeagueStrip(),
-                ],
-              ),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
+          child: Column(
+            children: [
+              _buildHeroMeta(),
+              const SizedBox(height: 28),
+              _buildScoreboard(hasPrev: hasPrev, hasNext: hasNext),
+              const SizedBox(height: 24),
+              Container(height: 1, color: c.hairline),
+              const SizedBox(height: 12),
+              _buildLeagueStrip(),
+            ],
+          ),
         ),
         ),
       ),
@@ -304,12 +290,18 @@ class _GameDetailsState extends State<GameDetails> {
     final c = context.col;
     final h = _currentGame.goals.home ?? 0;
     final a = _currentGame.goals.away ?? 0;
+    // Reserve 2 lines for both teams only if at least one name has multiple
+    // words; otherwise keep it to a single line. This keeps the two sides
+    // symmetric and never splits a word mid-letter.
+    final bool anyMultiWord = _currentGame.home.name.trim().contains(' ') ||
+        _currentGame.away.name.trim().contains(' ');
+    final int nameMaxLines = anyMultiWord ? 2 : 1;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _navArrow(Icons.arrow_back_ios_new, hasPrev,
             () => _navigateToGame(_currentIndex - 1)),
-        Expanded(child: _heroTeam(_currentGame.home, alignEnd: true)),
+        Expanded(child: _heroTeam(_currentGame.home, alignEnd: true, maxLines: nameMaxLines)),
         const SizedBox(width: 12),
         Column(
           children: [
@@ -345,7 +337,7 @@ class _GameDetailsState extends State<GameDetails> {
           ],
         ),
         const SizedBox(width: 12),
-        Expanded(child: _heroTeam(_currentGame.away, alignEnd: false)),
+        Expanded(child: _heroTeam(_currentGame.away, alignEnd: false, maxLines: nameMaxLines)),
         _navArrow(Icons.arrow_forward_ios, hasNext,
             () => _navigateToGame(_currentIndex + 1)),
       ],
@@ -366,11 +358,11 @@ class _GameDetailsState extends State<GameDetails> {
     );
   }
 
-  Widget _heroTeam(Team team, {required bool alignEnd}) {
+  Widget _heroTeam(Team team, {required bool alignEnd, required int maxLines}) {
     final c = context.col;
     const double nameFontSize = 18;
     const double nameLineHeight = 1.1;
-    const double nameBlockHeight = nameFontSize * nameLineHeight * 2;
+    final double nameBlockHeight = nameFontSize * nameLineHeight * maxLines;
     return Column(
       crossAxisAlignment:
           alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
@@ -401,7 +393,8 @@ class _GameDetailsState extends State<GameDetails> {
             child: Text(
               team.name.toUpperCase(),
               textAlign: alignEnd ? TextAlign.right : TextAlign.left,
-              maxLines: 2,
+              maxLines: maxLines,
+              softWrap: maxLines > 1,
               overflow: TextOverflow.ellipsis,
               style: EType.display(
                 size: nameFontSize,
@@ -1112,26 +1105,3 @@ class _GameDetailsState extends State<GameDetails> {
   }
 }
 
-// ── Decorative pitch-line painter (very subtle background texture) ──────
-class _PitchLinesPainter extends CustomPainter {
-  _PitchLinesPainter({required this.color});
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1;
-    // Faint vertical hairlines reminiscent of pitch markings.
-    for (double x = 0; x <= size.width; x += 24) {
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x, size.height),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _PitchLinesPainter old) => old.color != color;
-}

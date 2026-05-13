@@ -45,7 +45,8 @@
       "Bash(node --check src/routes/reminders.js)",
       "Bash(node --check src/routes/system.js)",
       "Bash(node --check src/controllers/gamesFetcher.js)",
-      "Bash(node --check editPoints.js)"
+      "Bash(node --check editPoints.js)",
+      "Bash(flutter gen-l10n *)"
     ]
   }
 }

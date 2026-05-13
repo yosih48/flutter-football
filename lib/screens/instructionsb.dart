@@ -115,19 +115,26 @@ class _InstructionsBottomSheetState extends State<_InstructionsBottomSheet>
           child: Opacity(
             opacity: _fade.value,
             child: Container(
-              height: size.height * 0.75,
+              // Add the system gesture/nav bar inset to the sheet height so the
+              // navigation row at the bottom isn't clipped on devices that
+              // reserve space there.
+              height: size.height * 0.75 +
+                  MediaQuery.viewPaddingOf(context).bottom,
               decoration: BoxDecoration(
                 color: c.card,
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(2)),
               ),
-              child: Column(
-                children: [
-                  _buildHandle(c),
-                  _buildPageView(c),
-                  _buildIndicators(c),
-                  _buildNavBar(c),
-                ],
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  children: [
+                    _buildHandle(c),
+                    _buildPageView(c),
+                    _buildIndicators(c),
+                    _buildNavBar(c),
+                  ],
+                ),
               ),
             ),
           ),
@@ -262,7 +269,7 @@ class _InstructionsBottomSheetState extends State<_InstructionsBottomSheet>
   // ── Navigation bar ───────────────────────────────────────────────────────
   Widget _buildNavBar(EditorialColors c) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 4, 24, 28),
+      padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

@@ -77,6 +77,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
   final Key _centerKey = UniqueKey();
   final Map<DateTime, GlobalKey> _dateKeys = {};
   bool _isViewingPast = false;
+  bool _isViewingFuture = false;
 
   // ── Loading / refresh ────────────────────────────────────────────────
   bool _isLoading = true;
@@ -105,9 +106,18 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
 
   void _onScroll() {
     if (!_scrollController.hasClients) return;
+    // The CustomScrollView is anchored at today's section (center key), so
+    // negative offset means we scrolled up into past games, and positive
+    // offset means we scrolled down into future games. Show the "Back to
+    // today" chip in both cases. The future threshold is larger so the chip
+    // doesn't pop while today's own section is still partially visible.
     final past = _scrollController.offset < -50;
-    if (past != _isViewingPast) {
-      setState(() => _isViewingPast = past);
+    final future = _scrollController.offset > 300;
+    if (past != _isViewingPast || future != _isViewingFuture) {
+      setState(() {
+        _isViewingPast = past;
+        _isViewingFuture = future;
+      });
     }
   }
 
@@ -588,7 +598,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
               child: Stack(
                 children: [
                   _buildGamesList(grouped, c),
-                  if (_isViewingPast)
+                  if (_isViewingPast || _isViewingFuture)
                     Positioned(
                       bottom: 20,
                       left: 0,
@@ -718,8 +728,12 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.keyboard_arrow_down,
-                  size: 16, color: c.pitch),
+              Icon(
+                  _isViewingFuture
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down,
+                  size: 16,
+                  color: c.pitch),
               const SizedBox(width: 6),
               Text(
                 AppLocalizations.of(context)!.backToToday.toUpperCase(),

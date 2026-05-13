@@ -203,8 +203,15 @@ class _CompetitionsState extends State<Competitions> {
       ),
 
       // ── Continue button ─────────────────────────────────────────
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+      // SafeArea here pushes the button up above the system gesture/nav bar
+      // on phones whose OS reserves space at the bottom of the screen.
+      bottomNavigationBar: SafeArea(
+        top: false,
+        left: false,
+        right: false,
+        minimum: const EdgeInsets.only(bottom: 12),
+        child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
         child: GestureDetector(
           onTap: anySelected
               ? () => updateDatabase(widget.userName, widget.userEmail)
@@ -230,6 +237,7 @@ class _CompetitionsState extends State<Competitions> {
               ),
             ),
           ),
+        ),
         ),
       ),
     );
