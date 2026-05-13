@@ -357,10 +357,25 @@ class _OddsCell extends StatelessWidget {
   }
 }
 
-class _GuessInput extends StatelessWidget {
+class _GuessInput extends StatefulWidget {
   const _GuessInput({this.homeController, this.awayController});
   final TextEditingController? homeController;
   final TextEditingController? awayController;
+
+  @override
+  State<_GuessInput> createState() => _GuessInputState();
+}
+
+class _GuessInputState extends State<_GuessInput> {
+  final FocusNode _homeFocus = FocusNode();
+  final FocusNode _awayFocus = FocusNode();
+
+  @override
+  void dispose() {
+    _homeFocus.dispose();
+    _awayFocus.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -369,7 +384,15 @@ class _GuessInput extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _digit(homeController, c),
+        _digit(
+          widget.homeController,
+          c,
+          focusNode: _homeFocus,
+          onChanged: (v) {
+            // Auto-advance to the away field once a digit is entered.
+            if (v.length == 1) _awayFocus.requestFocus();
+          },
+        ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 6),
           child: Text(':',
@@ -379,16 +402,31 @@ class _GuessInput extends StatelessWidget {
                 letterSpacing: 0,
               )),
         ),
-        _digit(awayController, c),
+        _digit(
+          widget.awayController,
+          c,
+          focusNode: _awayFocus,
+          onChanged: (v) {
+            // Dismiss the keyboard once both digits are filled.
+            if (v.length == 1) _awayFocus.unfocus();
+          },
+        ),
       ],
     );
   }
 
-  Widget _digit(TextEditingController? controller, EditorialColors c) {
+  Widget _digit(
+    TextEditingController? controller,
+    EditorialColors c, {
+    FocusNode? focusNode,
+    ValueChanged<String>? onChanged,
+  }) {
     return SizedBox(
       width: 38,
       child: TextField(
         controller: controller,
+        focusNode: focusNode,
+        onChanged: onChanged,
         keyboardType: TextInputType.number,
         textAlign: TextAlign.center,
         textAlignVertical: TextAlignVertical.center,
