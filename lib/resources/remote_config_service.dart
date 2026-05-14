@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:football/utils/config.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -13,6 +15,11 @@ class RemoteConfigService {
   // שים פה את הכתובת הנוכחית שעובדת (Render Proxy או VPS)
   String apiUrl = 'https://scorecast.yossih.dev/';
 
+  // Display-only Hebrew names keyed by API-Football team id. Populated from
+  // the `team_names_he` Remote Config parameter (a JSON object string). Lookup
+  // misses fall back to the English API name in `localizedTeamName`.
+  Map<int, String> _teamNamesHe = const {};
+
   Future<void> initialize() async {
     try {
       await _remoteConfig.setConfigSettings(RemoteConfigSettings(
@@ -22,7 +29,8 @@ class RemoteConfigService {
 
       // מגדירים גם פה דיפולט ליתר ביטחון
       await _remoteConfig.setDefaults(<String, dynamic>{
-     'api_url': 'https://scorecast.yossih.dev/',
+        'api_url': 'https://scorecast.yossih.dev/',
+        'team_names_he': '{}',
       });
 
       await _remoteConfig.fetchAndActivate();
@@ -32,10 +40,32 @@ class RemoteConfigService {
         apiUrl = newUrl; // מעדכנים את המשתנה הראשי
         print('🔥 Config Updated: $apiUrl');
       }
+
+      _teamNamesHe = _parseTeamNames(_remoteConfig.getString('team_names_he'));
+      print('🔥 team_names_he loaded: ${_teamNamesHe.length} teams');
     } catch (e) {
       print('Unable to fetch remote config. Using default: $apiUrl');
     }
   }
+
+  Map<int, String> _parseTeamNames(String raw) {
+    if (raw.isEmpty) return const {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return const {};
+      final out = <int, String>{};
+      decoded.forEach((k, v) {
+        final id = int.tryParse(k.toString());
+        if (id != null && v is String && v.isNotEmpty) out[id] = v;
+      });
+      return out;
+    } catch (e) {
+      print('⚠️ Failed to parse team_names_he: $e');
+      return const {};
+    }
+  }
+
+  String? hebrewTeamName(int id) => _teamNamesHe[id];
 
 
   // הפונקציה שבודקת אם צריך לבעוט את המשתמש לחנות
