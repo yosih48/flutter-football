@@ -177,13 +177,13 @@ class GameWidget extends StatelessWidget {
     return Row(
       children: [
         Expanded(child: _buildTeamSide(game.home, alignEnd: true, c: c, maxLines: nameMaxLines)),
-        const SizedBox(width: 14),
+        const SizedBox(width: 10),
         _buildTeamCrest(game.home, c),
-        const SizedBox(width: 14),
+        const SizedBox(width: 10),
         _buildCenter(c),
-        const SizedBox(width: 14),
+        const SizedBox(width: 10),
         _buildTeamCrest(game.away, c),
-        const SizedBox(width: 14),
+        const SizedBox(width: 10),
         Expanded(child: _buildTeamSide(game.away, alignEnd: false, c: c, maxLines: nameMaxLines)),
       ],
     );
@@ -246,17 +246,17 @@ class GameWidget extends StatelessWidget {
     final h = game.goals.home ?? 0;
     final a = game.goals.away ?? 0;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: c.cardHi,
         borderRadius: BorderRadius.circular(2),
       ),
       child: Text(
-        '$h  :  $a',
+        '$h : $a',
         style: EType.display(
-          size: 26,
+          size: 22,
           color: _isLive ? c.live : c.ink,
-          letterSpacing: 1.0,
+          letterSpacing: 0.6,
         ),
       ),
     );
