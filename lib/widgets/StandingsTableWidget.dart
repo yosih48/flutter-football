@@ -39,6 +39,20 @@ class _StandingsTableWidgetState extends State<StandingsTableWidget> {
     'fc', 'cf', 'afc', 'sc', 'ac', 'rc', 'cd', 'ud', 'sd', 'club', 'de',
     'the',
   };
+
+  // Manual aliases for clubs that the standings endpoint and API-Football
+  // disagree on past mere abbreviations — usually historical rebrands or
+  // colloquial names. Key/value pre-normalization, lower-case. Add more as
+  // we discover them.
+  static const Map<String, String> _nameAliases = {
+    'hapoel jerusalem': 'hapoel katamon',
+    'olympique lyonnais': 'lyon',
+  };
+
+  static String _applyAliases(String s) {
+    final key = s.toLowerCase().trim();
+    return _nameAliases[key] ?? s;
+  }
   static const String _accented =
       'àáâãäåāăąèéêëēĕėęěìíîïĩīĭįòóôõöōŏőùúûüũūŭůűñçßýÿźżž';
   static const String _plain =
@@ -75,6 +89,14 @@ class _StandingsTableWidgetState extends State<StandingsTableWidget> {
     return s;
   }
 
+  static int _sharedTokenCount(List<String> a, Set<String> b) {
+    int n = 0;
+    for (final t in a) {
+      if (b.contains(t)) n++;
+    }
+    return n;
+  }
+
   // Per-(games list) caches so we tokenize each fixture team once, not per row.
   List<Game>? _cachedGames;
   late List<({Team team, Set<String> tokens})> _candidates;
@@ -96,25 +118,31 @@ class _StandingsTableWidgetState extends State<StandingsTableWidget> {
   }
 
   // Returns the matching fixture-side Team for this standings row, or null
-  // if no fixture team shares any meaningful token with the row's name.
+  // if no fixture team shares enough tokens with the row's name to be
+  // confident in the mapping.
   Team? _fixtureTeamFor(StandingRow row) {
     _rebuildCandidatesIfNeeded();
     if (_candidates.isEmpty) return null;
-    final wanted = _tokens(row.teamName);
+    final wanted = _tokens(_applyAliases(row.teamName));
     if (wanted.isEmpty) return null;
 
     Team? best;
     int bestScore = 0;
+    int bestSharedTokens = 0;
     for (final cand in _candidates) {
       final s = _score(wanted, cand.tokens);
       if (s > bestScore) {
         bestScore = s;
+        bestSharedTokens = _sharedTokenCount(wanted, cand.tokens);
         best = cand.team;
       }
     }
-    // Require at least a 3-letter token match to avoid spurious 1-2 letter
-    // collisions (e.g. a stray "u" or "a" lingering after stop-word removal).
-    return bestScore >= 3 ? best : null;
+    if (best == null || bestScore < 3) return null;
+    // When the standings name has 2+ tokens, require at least 2 to overlap.
+    // Otherwise a single common token (e.g. "jerusalem") would let any
+    // unrelated team in the same city claim the row.
+    if (wanted.length >= 2 && bestSharedTokens < 2) return null;
+    return best;
   }
 
   String _logoFor(StandingRow row) {
