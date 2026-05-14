@@ -162,21 +162,17 @@ class _GameDetailsState extends State<GameDetails> {
           _navigateToGame(_currentIndex + 1);
         }
       },
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(2),
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Container(
+          margin: const EdgeInsets.only(top: 8),
           decoration: BoxDecoration(
             color: c.card,
             border: Border(
               top: BorderSide(color: accent, width: 2),
-              left: BorderSide(color: c.hairline, width: 1),
-              right: BorderSide(color: c.hairline, width: 1),
               bottom: BorderSide(color: c.hairline, width: 1),
             ),
           ),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
+          padding: const EdgeInsets.fromLTRB(16, 22, 16, 22),
           child: Column(
             children: [
               _buildHeroMeta(),
@@ -188,7 +184,6 @@ class _GameDetailsState extends State<GameDetails> {
               _buildLeagueStrip(),
             ],
           ),
-        ),
         ),
       ),
     );
@@ -302,7 +297,7 @@ class _GameDetailsState extends State<GameDetails> {
         _navArrow(Icons.arrow_back_ios_new, hasPrev,
             () => _navigateToGame(_currentIndex - 1)),
         Expanded(child: _heroTeam(_currentGame.home, alignEnd: true, maxLines: nameMaxLines)),
-        const SizedBox(width: 12),
+        const SizedBox(width: 24),
         Column(
           children: [
             Row(
@@ -336,7 +331,7 @@ class _GameDetailsState extends State<GameDetails> {
             ),
           ],
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 24),
         Expanded(child: _heroTeam(_currentGame.away, alignEnd: false, maxLines: nameMaxLines)),
         _navArrow(Icons.arrow_forward_ios, hasNext,
             () => _navigateToGame(_currentIndex + 1)),
@@ -422,11 +417,12 @@ class _GameDetailsState extends State<GameDetails> {
     ];
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: c.card,
-        borderRadius: BorderRadius.circular(2),
-        border: Border.all(color: c.hairline, width: 1),
+        border: Border(
+          top: BorderSide(color: c.hairline, width: 1),
+          bottom: BorderSide(color: c.hairline, width: 1),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -491,7 +487,7 @@ class _GameDetailsState extends State<GameDetails> {
         );
       case 1:
         return Padding(
-          padding: const EdgeInsets.only(bottom: 14),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
           child: LineupsWidget(
             fixtureId: currentGameId,
             matchDate: _currentGame.date,
@@ -526,13 +522,14 @@ class _GameDetailsState extends State<GameDetails> {
     final c = context.col;
     final l = AppLocalizations.of(context)!;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: c.card,
-        borderRadius: BorderRadius.circular(2),
-        border: Border.all(color: c.hairline, width: 1),
+        border: Border(
+          top: BorderSide(color: c.hairline, width: 1),
+          bottom: BorderSide(color: c.hairline, width: 1),
+        ),
       ),
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -619,7 +616,7 @@ class _GameDetailsState extends State<GameDetails> {
           children: [
             Icon(Icons.groups_2_outlined,
                 size: 18, color: c.inkMute),
-            const SizedBox(width: 12),
+            const SizedBox(width: 24),
             Expanded(
               child: Text(
                 l.joingrouptoseefreinds,
@@ -644,7 +641,6 @@ class _GameDetailsState extends State<GameDetails> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: c.terrace,
-          border: Border.all(color: c.hairline, width: 1),
           borderRadius: BorderRadius.circular(2),
         ),
         child: Row(
@@ -667,7 +663,7 @@ class _GameDetailsState extends State<GameDetails> {
                     size: 16, color: c.live, letterSpacing: 0),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 24),
             // Group name
             Expanded(
               child: Column(
@@ -892,15 +888,18 @@ class _GameDetailsState extends State<GameDetails> {
                         size: 10,
                         letterSpacing: 1.6)),
               ),
-              const SizedBox(width: 24),
+              const SizedBox(width: 12),
               SizedBox(
-                width: 48,
+                width: 72,
                 child: Text(l.sumpoints.toUpperCase(),
                     textAlign: TextAlign.right,
+                    maxLines: 1,
+                    overflow: TextOverflow.visible,
+                    softWrap: false,
                     style: EType.label(
                         color: c.inkDim,
                         size: 10,
-                        letterSpacing: 1.6)),
+                        letterSpacing: 1.2)),
               ),
             ],
           ),
@@ -981,9 +980,9 @@ class _GameDetailsState extends State<GameDetails> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 24),
+                const SizedBox(width: 12),
                 SizedBox(
-                  width: 48,
+                  width: 72,
                   child: Text(
                     pts % 1 == 0 ? pts.toInt().toString() : pts.toString(),
                     textAlign: TextAlign.right,

@@ -560,7 +560,12 @@ class TableScreenContentState extends State<TableScreenContent> {
       return;
     }
 
-    if (!background && mounted) {
+    // If we already have rows on screen (from the previous league), leave
+    // them visible and refresh in the background instead of toggling
+    // `isLoading=true` — that toggle is what causes the leaderboard area to
+    // flash skeletonized content during a league switch.
+    final hasExistingRows = _users.isNotEmpty;
+    if (!background && !hasExistingRows && mounted) {
       setState(() => isLoading = true);
     }
 
@@ -901,31 +906,39 @@ class TableScreenContentState extends State<TableScreenContent> {
     return Scaffold(
       backgroundColor: c.pitch,
       appBar: _buildAppBar(context, c),
-      body: Skeletonizer(
-        enabled: isLoading,
-        child: Column(
-          children: [
-            const SizedBox(height: 4),
-            LeagueSelector(
-              userId: currentUserId,
-              currentLeague: league,
-              useToggleButtons: true,
-              onSelectionChanged: (leagueId, index) {
-                updateSelectedIndex(leagueId);
-              },
+      body: Column(
+        children: [
+          // ── Stable chrome (NOT skeletonized) ────────────────────────────
+          // Keeping the league selector and group header outside the
+          // Skeletonizer avoids them flashing / bouncing every time
+          // `isLoading` flips when the user switches leagues with no cached
+          // data for the new league.
+          const SizedBox(height: 4),
+          LeagueSelector(
+            userId: currentUserId,
+            currentLeague: league,
+            useToggleButtons: true,
+            onSelectionChanged: (leagueId, index) {
+              updateSelectedIndex(leagueId);
+            },
+          ),
+          Container(height: 1, color: c.hairline),
+          if (effectivePrivateGroups.isEmpty)
+            Expanded(child: _buildEmptyState(context, c))
+          else ...[
+            if (selectedGroupName.isNotEmpty &&
+                selectedGroupName != 'Public')
+              _buildGroupHeader(context, c),
+            // Only the rows shimmer while we fetch.
+            Expanded(
+              child: Skeletonizer(
+                enabled: isLoading,
+                child: _buildLeaderboard(context, effectiveUsers, c),
+              ),
             ),
-            Container(height: 1, color: c.hairline),
-            if (effectivePrivateGroups.isEmpty)
-              Expanded(child: _buildEmptyState(context, c))
-            else ...[
-              if (selectedGroupName.isNotEmpty &&
-                  selectedGroupName != 'Public')
-                _buildGroupHeader(context, c),
-              Expanded(child: _buildLeaderboard(context, effectiveUsers, c)),
-              _buildFooterActions(context, c),
-            ],
+            _buildFooterActions(context, c),
           ],
-        ),
+        ],
       ),
     );
   }
