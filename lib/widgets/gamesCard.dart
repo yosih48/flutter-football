@@ -62,7 +62,7 @@ class GameWidget extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Material(
         color: c.card,
         borderRadius: BorderRadius.circular(2),
@@ -394,10 +394,10 @@ class _GuessInputState extends State<_GuessInput> {
           },
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Text(':',
               style: EType.display(
-                size: 22,
+                size: 18,
                 color: c.inkDim,
                 letterSpacing: 0,
               )),
@@ -422,7 +422,7 @@ class _GuessInputState extends State<_GuessInput> {
     ValueChanged<String>? onChanged,
   }) {
     return SizedBox(
-      width: 38,
+      width: 32,
       child: TextField(
         controller: controller,
         focusNode: focusNode,
@@ -433,13 +433,13 @@ class _GuessInputState extends State<_GuessInput> {
         cursorColor: c.live,
         cursorWidth: 1.5,
         style: EType.display(
-          size: 22,
+          size: 18,
           color: c.ink,
           letterSpacing: 0,
         ),
         decoration: InputDecoration(
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
           filled: true,
           fillColor: c.terrace,
           border: _border(c.hairline),

@@ -1144,7 +1144,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                 width: 56,
                 child: Text(
                   l.daypoints.toUpperCase(),
-                  textAlign: TextAlign.right,
+                  textAlign: TextAlign.center,
                   style: EType.label(
                       color: c.inkDim,
                       size: 10,
@@ -1155,7 +1155,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                 width: 56,
                 child: Text(
                   l.sumpoints.toUpperCase(),
-                  textAlign: TextAlign.right,
+                  textAlign: TextAlign.center,
                   style: EType.label(
                       color: c.inkDim,
                       size: 10,
@@ -1253,7 +1253,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                         width: 56,
                         child: Text(
                           dayPts,
-                          textAlign: TextAlign.right,
+                          textAlign: TextAlign.center,
                           style: EType.numeric(
                             color: dayPtsNum > 0
                                 ? c.live
@@ -1267,7 +1267,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                         width: 56,
                         child: Text(
                           sumPts,
-                          textAlign: TextAlign.right,
+                          textAlign: TextAlign.center,
                           style: EType.numeric(
                             color: c.ink,
                             size: 15,

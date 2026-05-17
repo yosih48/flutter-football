@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
@@ -19,7 +20,7 @@ import 'package:football/widgets/LineupsWidget.dart';
 import 'package:football/widgets/StatsWidget.dart';
 import 'package:football/widgets/StandingsTableWidget.dart';
 import 'package:football/widgets/teamLinks.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:provider/provider.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -353,54 +354,92 @@ class _GameDetailsState extends State<GameDetails> {
     );
   }
 
+  /// One font size for *both* team names: the largest size (capped at 18)
+  /// that lets the longest single word of either name fit within [width].
+  /// This guarantees word-boundary wrapping only — a word is never split
+  /// mid-letter on narrow phones.
+  double _heroNameFontSize(double width, String home, String away) {
+    const base = 18.0;
+    const minSize = 11.0;
+    double widestWord(String s) {
+      double maxW = 0;
+      for (final w in s.toUpperCase().split(RegExp(r'\s+'))) {
+        if (w.isEmpty) continue;
+        final tp = TextPainter(
+          text: TextSpan(
+            text: w,
+            style: EType.display(size: base, letterSpacing: 0.8),
+          ),
+          textDirection: TextDirection.ltr,
+          maxLines: 1,
+        )..layout();
+        if (tp.width > maxW) maxW = tp.width;
+      }
+      return maxW;
+    }
+
+    final widest = math.max(widestWord(home), widestWord(away));
+    if (widest <= 0 || widest <= width) return base;
+    return (base * (width / widest)).clamp(minSize, base);
+  }
+
   Widget _heroTeam(Team team, {required bool alignEnd, required int maxLines}) {
     final c = context.col;
-    const double nameFontSize = 18;
     const double nameLineHeight = 1.1;
-    final double nameBlockHeight = nameFontSize * nameLineHeight * maxLines;
-    return Column(
-      crossAxisAlignment:
-          alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-      children: [
-        GestureDetector(
-          onTap: () => _openTeamDetails(team),
-          child: Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: c.cardHi,
-              shape: BoxShape.circle,
-            ),
-            padding: const EdgeInsets.all(10),
-            child: Image.network(
-              team.logo,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) =>
-                  Icon(Icons.shield_outlined, color: c.inkDim),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: nameBlockHeight,
-          child: GestureDetector(
-            onTap: () => _openTeamDetails(team),
-            child: Text(
-              team.name.toUpperCase(),
-              textAlign: alignEnd ? TextAlign.right : TextAlign.left,
-              maxLines: maxLines,
-              softWrap: maxLines > 1,
-              overflow: TextOverflow.ellipsis,
-              style: EType.display(
-                size: nameFontSize,
-                color: c.ink,
-                letterSpacing: 0.8,
-                height: nameLineHeight,
+    return LayoutBuilder(
+      builder: (ctx, cons) {
+        final double nameFontSize = _heroNameFontSize(
+          cons.maxWidth,
+          _currentGame.home.name,
+          _currentGame.away.name,
+        );
+        final double nameBlockHeight =
+            nameFontSize * nameLineHeight * maxLines;
+        return Column(
+          crossAxisAlignment:
+              alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: [
+            GestureDetector(
+              onTap: () => _openTeamDetails(team),
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: c.cardHi,
+                  shape: BoxShape.circle,
+                ),
+                padding: const EdgeInsets.all(10),
+                child: Image.network(
+                  team.logo,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) =>
+                      Icon(Icons.shield_outlined, color: c.inkDim),
+                ),
               ),
             ),
-          ),
-        ),
-      ],
+            const SizedBox(height: 12),
+            SizedBox(
+              height: nameBlockHeight,
+              child: GestureDetector(
+                onTap: () => _openTeamDetails(team),
+                child: Text(
+                  team.name.toUpperCase(),
+                  textAlign: alignEnd ? TextAlign.right : TextAlign.left,
+                  maxLines: maxLines,
+                  softWrap: maxLines > 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: EType.display(
+                    size: nameFontSize,
+                    color: c.ink,
+                    letterSpacing: 0.8,
+                    height: nameLineHeight,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -533,20 +572,7 @@ class _GameDetailsState extends State<GameDetails> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _sectionLabel(l.predictionsLabel.toUpperCase()),
-              if (_userGroups.isNotEmpty)
-                Text(
-                  '${_guessesWithNames.length}',
-                  style: EType.numeric(
-                    color: c.inkMute,
-                    size: 12,
-                  ),
-                ),
-            ],
-          ),
+          _sectionLabel(l.predictionsLabel.toUpperCase()),
           const SizedBox(height: 14),
           if (_groupsLoading)
             Padding(
@@ -892,7 +918,7 @@ class _GameDetailsState extends State<GameDetails> {
               SizedBox(
                 width: 72,
                 child: Text(l.sumpoints.toUpperCase(),
-                    textAlign: TextAlign.right,
+                    textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.visible,
                     softWrap: false,
@@ -985,7 +1011,7 @@ class _GameDetailsState extends State<GameDetails> {
                   width: 72,
                   child: Text(
                     pts % 1 == 0 ? pts.toInt().toString() : pts.toString(),
-                    textAlign: TextAlign.right,
+                    textAlign: TextAlign.center,
                     style: EType.numeric(
                       color: pts > 0 ? c.live : c.inkMute,
                       size: 14,
