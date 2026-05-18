@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:football/models/games.dart';
+import 'package:football/resources/league_config_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class GameCacheService {
@@ -218,7 +219,7 @@ class GameCacheService {
   // Used when scrolling up to view past games from cache
   Future<List<Game>> getCachedGamesForDate(DateTime date) async {
     final prefs = await SharedPreferences.getInstance();
-    final allLeagues = [2, 383, 140, 3, 39, 78, 848];
+    final allLeagues = LeagueConfigService().supportedLeagues;
     List<Game> allGames = [];
     final existingIds = <int>{};
 

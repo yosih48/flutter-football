@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/providers/league_data_provider.dart';
 import 'package:football/resources/auth.dart';
+import 'package:football/resources/league_config_service.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
@@ -27,48 +28,24 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
   String userId = '';
   int selectedTab = 0; // 0 = choose leagues, 1 = notifications
 
-  Map<String, bool> notificationStates = {
-    'ליגת אלופות': false,
-    'ליגת העל': false,
-    'ליגה ספרדית': false,
-    'ליגה אירופית': false,
-    'ליגה אנגלית': false,
-    'קונפרנס ליג': false,
-    'גביע מועדונים': false,
+  // Both maps are keyed by league id and driven by the backend config. The DB
+  // stores snetEmail and chosenLeagues id-keyed too, so this is a 1:1 mapping
+  // with no name bridge — any league added in config works with no app update.
+  Map<int, bool> notificationStates = {
+    for (final id in LeagueConfigService().supportedLeagues) id: false,
   };
 
   Map<int, bool> chosenLeagues = {
-    2: true,
-    383: true,
-    140: true,
-    3: true,
-    39: true,
-    848: true,
+    for (final id in LeagueConfigService().supportedLeagues) id: true,
   };
 
   // ── Static league data ─────────────────────────────────────────────────
-  static const _leagueOrder = [2, 383, 140, 3, 39, 848];
+  // League list comes from the backend config (LeagueConfigService) so leagues
+  // can be added/removed by season without an app update.
+  List<int> get _leagueOrder => LeagueConfigService().supportedLeagues;
 
   static const _leagueLogoBase =
       'https://media.api-sports.io/football/leagues/';
-
-  static const _notifKeyToId = {
-    'ליגת אלופות': 2,
-    'ליגת העל': 383,
-    'ליגה ספרדית': 140,
-    'ליגה אירופית': 3,
-    'ליגה אנגלית': 39,
-    'קונפרנס ליג': 848,
-  };
-
-  static const _idToNotifKey = {
-    2: 'ליגת אלופות',
-    383: 'ליגת העל',
-    140: 'ליגה ספרדית',
-    3: 'ליגה אירופית',
-    39: 'ליגה אנגלית',
-    848: 'קונפרנס ליג',
-  };
 
   // ── Lifecycle ──────────────────────────────────────────────────────────
   @override
@@ -100,20 +77,10 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
           Map<String, dynamic>.from(userData['chosenLeagues'] ?? {});
 
       setState(() {
-        notificationStates['ליגת אלופות'] = snetEmail['2'] ?? false;
-        notificationStates['ליגה אירופית'] = snetEmail['3'] ?? false;
-        notificationStates['ליגה ספרדית'] = snetEmail['140'] ?? false;
-        notificationStates['ליגת העל'] = snetEmail['383'] ?? false;
-        notificationStates['ליגה אנגלית'] = snetEmail['39'] ?? false;
-        notificationStates['קונפרנס ליג'] = snetEmail['848'] ?? false;
-
-        chosenLeagues[2] = chosenLeaguesData['2'] ?? true;
-        chosenLeagues[3] = chosenLeaguesData['3'] ?? true;
-        chosenLeagues[140] = chosenLeaguesData['140'] ?? true;
-        chosenLeagues[383] = chosenLeaguesData['383'] ?? true;
-        chosenLeagues[39] = chosenLeaguesData['39'] ?? true;
-        chosenLeagues[848] = chosenLeaguesData['848'] ?? true;
-
+        for (final id in LeagueConfigService().supportedLeagues) {
+          chosenLeagues[id] = chosenLeaguesData[id.toString()] ?? true;
+          notificationStates[id] = snetEmail[id.toString()] == true;
+        }
         isLoading = false;
       });
     } catch (e) {
@@ -122,39 +89,31 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
     }
   }
 
+  // Persists chosenLeagues + snetEmail by id via $set dotted keys on the
+  // generic /users/ endpoint. Only the configured leagues' keys are written,
+  // so nothing is wiped (unlike the old /users/profile path which $set the
+  // whole snetEmail object and silently dropped leagues it didn't send).
+  // No `email` is sent so the backend takes the plain-update branch, not the
+  // group-join branch. name/email kept in the signature for call-site parity.
   Future<void> updateDatabase(String name, String email) async {
-    final url = Uri.parse('$backendUrl/users/profile');
     try {
-      // Sync: disable notifications for disabled leagues.
-      _notifKeyToId.forEach((key, leagueId) {
-        if (notificationStates[key] == true &&
-            chosenLeagues[leagueId] == false) {
-          notificationStates[key] = false;
+      // Sync: disable notifications for leagues that are unchecked.
+      for (final id in LeagueConfigService().supportedLeagues) {
+        if (notificationStates[id] == true && chosenLeagues[id] == false) {
+          notificationStates[id] = false;
         }
-      });
+      }
 
-      final encodableLeagues = chosenLeagues
-          .map((k, v) => MapEntry(k.toString(), v));
+      final set = <String, dynamic>{};
+      for (final id in LeagueConfigService().supportedLeagues) {
+        set['chosenLeagues.$id'] = chosenLeagues[id] ?? true;
+        set['snetEmail.$id'] = notificationStates[id] ?? false;
+      }
 
       await http.put(
-        url,
+        Uri.parse('$backendUrl/users/'),
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
-        body: jsonEncode({
-          'email': email,
-          'displayName': name,
-          'leagueData': {
-            'championsLeague': notificationStates['ליגת אלופות'],
-            'israeliLeague': notificationStates['ליגת העל'],
-            'spanishLeague': notificationStates['ליגה ספרדית'],
-            'europeLeague': notificationStates['ליגה אירופית'],
-            'premierLeague': notificationStates['ליגה אנגלית'],
-            'conferenceLeague': notificationStates['קונפרנס ליג'],
-            'africaLeague': false,
-            'euroLeague': false,
-            'copaLeague': false,
-          },
-          'chosenLeagues': encodableLeagues,
-        }),
+        body: jsonEncode({'_id': userId, '\$set': set}),
       );
       LeagueDataProvider().clearCache();
     } catch (e) {
@@ -163,6 +122,9 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
   }
 
   String _localizedLeagueName(int leagueId) {
+    final remote = LeagueConfigService()
+        .nameFor(leagueId, Localizations.localeOf(context).languageCode);
+    if (remote != null) return remote;
     final l = AppLocalizations.of(context)!;
     switch (leagueId) {
       case 2:   return l.championsleague;
@@ -173,12 +135,6 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       case 848: return l.conferenceleague;
       default:  return '$leagueId';
     }
-  }
-
-  String _localizedLeagueNameFromKey(String key) {
-    final id = _notifKeyToId[key];
-    if (id == null) return key;
-    return _localizedLeagueName(id);
   }
 
   // ── Build ──────────────────────────────────────────────────────────────
@@ -307,8 +263,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                       chosenLeagues[id] = !isSelected;
                       // Disable notification when league is unchecked.
                       if (!chosenLeagues[id]!) {
-                        final key = _idToNotifKey[id];
-                        if (key != null) notificationStates[key] = false;
+                        notificationStates[id] = false;
                       }
                     });
                     updateDatabase(name, userEmail);
@@ -326,18 +281,17 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
   // ── Notifications tab ──────────────────────────────────────────────────
   Widget _buildNotificationsTab(
       String name, String userEmail, AppLocalizations l, EditorialColors c) {
-    final filtered = Map.fromEntries(
-      notificationStates.entries.where((e) {
-        final id = _notifKeyToId[e.key];
-        return id != null && chosenLeagues[id] == true;
-      }),
-    );
+    final enabledIds = LeagueConfigService()
+        .supportedLeagues
+        .where((id) => chosenLeagues[id] == true)
+        .toList();
 
-    if (filtered.isEmpty) {
+    if (enabledIds.isEmpty) {
       return _EmptyNotifs(l: l);
     }
 
-    final allOn = filtered.values.every((v) => v);
+    final allOn =
+        enabledIds.every((id) => notificationStates[id] == true);
 
     return ListView(
       physics: const BouncingScrollPhysics(),
@@ -359,11 +313,9 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
           value: allOn,
           onChanged: (v) {
             setState(() {
-              _notifKeyToId.forEach((key, leagueId) {
-                if (chosenLeagues[leagueId] == true) {
-                  notificationStates[key] = v;
-                }
-              });
+              for (final id in enabledIds) {
+                notificationStates[id] = v;
+              }
             });
             updateDatabase(name, userEmail);
           },
@@ -371,9 +323,8 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         ),
         Container(height: 1, color: c.hairline),
         // ── Individual leagues ──
-        ...filtered.entries.map((entry) {
-          final key = entry.key;
-          final id = _notifKeyToId[key] ?? 0;
+        ...enabledIds.map((id) {
+          final on = notificationStates[id] == true;
           return _NotifRow(
             logoWidget: Container(
               width: 36,
@@ -383,9 +334,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                 color: Colors.white,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: entry.value
-                      ? c.live.withOpacity(0.5)
-                      : c.hairline,
+                  color: on ? c.live.withOpacity(0.5) : c.hairline,
                   width: 1,
                 ),
               ),
@@ -399,10 +348,10 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                 ),
               ),
             ),
-            label: _localizedLeagueNameFromKey(key),
-            value: entry.value,
+            label: _localizedLeagueName(id),
+            value: on,
             onChanged: (v) {
-              setState(() => notificationStates[key] = v);
+              setState(() => notificationStates[id] = v);
               updateDatabase(name, userEmail);
             },
           );

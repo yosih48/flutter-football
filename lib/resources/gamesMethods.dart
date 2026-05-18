@@ -1,4 +1,5 @@
 import 'package:football/models/games.dart';
+import 'package:football/resources/league_config_service.dart';
 import 'package:football/utils/config.dart';
 import 'package:football/utils/game_cache_service.dart';
 import 'package:http/http.dart' as http;
@@ -23,7 +24,7 @@ class GamesMethods {
           onlyTodayGames: onlyTodayGames, selectedDate: selectedDate);
     }
 
-    List<int> allLeagueIds = [2, 3, 383, 140, 39, 848];
+    List<int> allLeagueIds = LeagueConfigService().supportedLeagues;
     List<Game> allGames = [];
     List<int> leaguesToFetch = [];
 

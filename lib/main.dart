@@ -11,6 +11,7 @@ import 'package:football/resources/appUpdates.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/firebase_messaging_service.dart';
 import 'package:football/resources/gamesMethods.dart';
+import 'package:football/resources/league_config_service.dart';
 import 'package:football/resources/remote_config_service.dart';
 import 'package:football/responsive/mobile_screen_layout.dart';
 import 'package:football/responsive/rsponsive_layout_screen.dart';
@@ -46,6 +47,8 @@ void main() async {
   // singleton constructor reads FirebaseRemoteConfig.instance.
   await Firebase.initializeApp();
   await RemoteConfigService().initialize();
+  // Must run after RemoteConfigService — it resolves backendUrl.
+  await LeagueConfigService().initialize();
   await FirebaseMessagingService.initialize();
 
   final authProvider = AuthProvider();

@@ -5,9 +5,11 @@ import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
 import 'package:football/models/users.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
+import 'package:football/providers/league_data_provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/gamesMethods.dart';
 import 'package:football/resources/guessesMethods.dart';
+import 'package:football/resources/league_config_service.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/gameDetails.dart';
 import 'package:football/screens/login_screen.dart';
@@ -87,7 +89,6 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
 
   final ScrollController _scrollController = ScrollController();
 
-  static const List<int> _supportedLeagues = [2, 383, 140, 3, 39, 78, 848];
   static const Set<String> _liveStatuses = {
     '1H', '2H', 'HT', 'ET', 'BT', 'P', 'INT'
   };
@@ -158,7 +159,25 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
 
       final chosenLeagues =
           Map<String, bool>.from(userData['chosenLeagues'] ?? {});
-      final enabled = _supportedLeagues
+
+      // A league newly added to the remote config has no key in this user's
+      // stored chosenLeagues. Default it to ON and persist that once so it's
+      // effective everywhere without the user toggling it. An EXISTING key set
+      // to false is an explicit opt-out and is left untouched — this only
+      // backfills absent keys; the == true filter itself is unchanged.
+      final missing = LeagueConfigService()
+          .supportedLeagues
+          .where((id) => !chosenLeagues.containsKey(id.toString()))
+          .toList();
+      for (final id in missing) {
+        chosenLeagues[id.toString()] = true;
+      }
+      if (missing.isNotEmpty) {
+        _persistDefaultLeagues(missing);
+      }
+
+      final enabled = LeagueConfigService()
+          .supportedLeagues
           .where((id) => chosenLeagues[id.toString()] == true)
           .toList();
 
@@ -184,6 +203,29 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     } catch (e) {
       print('❌ bootstrap failed: $e');
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // Best-effort one-time backfill of newly-added leagues. Uses $set with dotted
+  // keys so only these league flags are written — notification prefs and
+  // displayName are untouched. Mirrors the proven PUT /users/ + $set pattern
+  // used for group join. Failure is non-fatal: the in-memory map already has
+  // the defaults for this session, and the next launch retries.
+  Future<void> _persistDefaultLeagues(List<int> leagueIds) async {
+    try {
+      await http.put(
+        Uri.parse('$backendUrl/users/'),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({
+          '_id': _clientId,
+          '\$set': {
+            for (final id in leagueIds) 'chosenLeagues.$id': true,
+          },
+        }),
+      );
+      LeagueDataProvider().clearCache();
+    } catch (e) {
+      print('❌ default-league backfill failed: $e');
     }
   }
 
@@ -546,6 +588,9 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
   }
 
   String getLocalizedLeagueName(int leagueId, BuildContext context) {
+    final remote = LeagueConfigService()
+        .nameFor(leagueId, Localizations.localeOf(context).languageCode);
+    if (remote != null) return remote;
     final l = AppLocalizations.of(context)!;
     switch (leagueId) {
       case 2:   return l.championsleague;

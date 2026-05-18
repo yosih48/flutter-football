@@ -4,7 +4,7 @@
 import 'package:football/resources/remote_config_service.dart';
 
 //loacl
-// const String backendUrl = 'http://10.0.2.2:5000';
+const String backendUrl = 'http://10.0.2.2:5000';
 const String serverClientId = '319642473794-269lu0hmmfsig13b52p9a127mjbdbrpb.apps.googleusercontent.com';
 //yosi.football
 // const String serverClientId = '319642473794-ka8qllifpa80b7mbta6mcojiq3n4f5v6.apps.googleusercontent.com';
@@ -17,4 +17,4 @@ const String serverClientId = '319642473794-269lu0hmmfsig13b52p9a127mjbdbrpb.app
 
 
 //prod
-String get backendUrl => RemoteConfigService().apiUrl;
+// String get backendUrl => RemoteConfigService().apiUrl;

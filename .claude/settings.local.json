@@ -46,7 +46,17 @@
       "Bash(node --check src/routes/system.js)",
       "Bash(node --check src/controllers/gamesFetcher.js)",
       "Bash(node --check editPoints.js)",
-      "Bash(flutter gen-l10n *)"
+      "Bash(flutter gen-l10n *)",
+      "Bash(findstr /C:\"type\" /C:\"name\")",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('config/leagues.json','utf8'\\)\\); console.log\\('leagues.json OK'\\)\")",
+      "Bash(node -e \"const e=require\\('./lib/l10n/app_en.arb'\\);const h=require\\('./lib/l10n/app_he.arb'\\);for\\(const k of ['championsleague','ligathaal','laliga','europaleague','premierleague','bundesleague','conferenceleague','clubworldcup']\\){console.log\\(k,'| EN:',e[k],'| HE:',h[k]\\)}\")",
+      "Bash(node -e \"const fs=require\\('fs'\\);const d=JSON.parse\\(fs.readFileSync\\('config/leagues.json','utf8'\\)\\);console.log\\('leagues.json OK',d.leagues.length,'leagues'\\);d.leagues.forEach\\(x=>{if\\(!x.nameEn||!x.nameHe\\)throw new Error\\('missing name for '+x.id\\)}\\);console.log\\('all have nameEn+nameHe'\\)\")",
+      "Bash(Select-String -Pattern \"error -|error •\" -CaseSensitive)",
+      "Bash(findstr /C:\"error -\")",
+      "Bash(findstr /R /C:\"error -\" /C:\"_leagueKeys\" /C:\"issues found\")",
+      "Bash(node -e \"const t=require\\('fs'\\).readFileSync\\('analyze_out.txt','utf8'\\);const errs=t.split\\(/\\\\r?\\\\n/\\).filter\\(l=>/\\\\serror\\\\s-\\\\s/.test\\(l\\)\\);console.log\\(errs.length?errs.join\\('\\\\n'\\):'NO ERRORS'\\);const m=t.match\\(/\\\\d+ issues found.*/\\);if\\(m\\)console.log\\(m[0]\\);\")",
+      "Bash(del analyze_out.txt)",
+      "Bash(node -e \"const t=require\\('fs'\\).readFileSync\\('fa.txt','utf8'\\);const e=t.split\\(/\\\\r?\\\\n/\\).filter\\(l=>/\\\\serror\\\\s-\\\\s/.test\\(l\\)\\);console.log\\(e.length?e.join\\('\\\\n'\\):'NO ERRORS'\\);const m=t.match\\(/\\\\d+ issues found.*/\\);if\\(m\\)console.log\\(m[0]\\);\")"
     ]
   }
 }

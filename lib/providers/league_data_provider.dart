@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:football/resources/league_config_service.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/widgets/LeagueSelectorChips.dart';
 import 'package:football/widgets/toggleButton.dart';
@@ -16,18 +17,6 @@ class LeagueDataProvider extends ChangeNotifier {
   DateTime? _lastCacheUpdate;
   static const Duration _cacheExpiry = Duration(minutes: 5);
 
-  // League configuration - maps league ID to its string key
-  static const Map<int, String> _leagueKeys = {
-    2: '2',
-    383: '383',
-    140: '140',
-    3: '3',
-    39: '39',
-    78: '78',
-    848: '848',
-    // 15: '15',
-  };
-
   // Check if cache is valid
   bool _isCacheValid() {
     return _lastCacheUpdate != null &&
@@ -37,6 +26,9 @@ class LeagueDataProvider extends ChangeNotifier {
   // Get localized league name
   String getLocalizedLeagueName(int id, BuildContext context) {
     try {
+      final remote = LeagueConfigService()
+          .nameFor(id, Localizations.localeOf(context).languageCode);
+      if (remote != null) return remote;
       final localizations = AppLocalizations.of(context);
       if (localizations == null) {
         print('AppLocalizations is null, using fallback names');
@@ -157,15 +149,14 @@ class LeagueDataProvider extends ChangeNotifier {
     final options = <String>[];
     final imageUrls = <String>[];
 
-    // Check each league ID to see if it's enabled
-    for (final entry in _leagueKeys.entries) {
-      final leagueId = entry.key;
-      final leagueKey = entry.value;
-
+    // League universe comes from the backend config (LeagueConfigService) so a
+    // new league appears here with no app update. The per-user chosenLeagues
+    // filter below is unchanged.
+    for (final leagueId in LeagueConfigService().supportedLeagues) {
       // Check if this league is chosen (true in chosenLeagues)
-      final isChosen = leaguesMap[leagueKey] == true;
+      final isChosen = leaguesMap[leagueId.toString()] == true;
 
-      print('League $leagueId (key: $leagueKey): $isChosen');
+      print('League $leagueId: $isChosen');
 
       if (isChosen) {
         enabledLeagues.add(leagueId);

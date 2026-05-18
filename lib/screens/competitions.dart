@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:football/resources/auth.dart';
+import 'package:football/resources/league_config_service.dart';
 import 'package:football/responsive/mobile_screen_layout.dart';
 import 'package:football/responsive/rsponsive_layout_screen.dart';
 import 'package:football/responsive/web_screen_layout.dart';
@@ -27,13 +28,10 @@ class Competitions extends StatefulWidget {
 }
 
 class _CompetitionsState extends State<Competitions> {
+  // League list comes from the backend config (LeagueConfigService) so leagues
+  // can be added/removed by season without an app update.
   Map<int, bool> chosenLeagues = {
-    2: false,   // Champions League
-    383: false, // Ligat Ha'al
-    140: false, // La Liga
-    3: false,   // Europa League
-    39: false,  // Premier League
-    848: false, // Conference League
+    for (final id in LeagueConfigService().supportedLeagues) id: false,
   };
 
   static const _leagueLogoBase =
@@ -100,6 +98,15 @@ class _CompetitionsState extends State<Competitions> {
     } catch (e) {
       debugPrint('Error marking first login complete: $e');
     }
+  }
+
+  // Backend-configured name wins (so a brand-new league shows a real name with
+  // no app update); the localized map is the fallback for known leagues.
+  String _leagueName(
+      int id, BuildContext context, Map<int, String> fallback) {
+    final remote = LeagueConfigService()
+        .nameFor(id, Localizations.localeOf(context).languageCode);
+    return remote ?? fallback[id] ?? '$id';
   }
 
   @override
@@ -189,7 +196,7 @@ class _CompetitionsState extends State<Competitions> {
                       chosenLeagues.keys.elementAt(index);
                   final isSelected = chosenLeagues[id]!;
                   return _LeagueCard(
-                    leagueName: leagueNames[id] ?? '$id',
+                    leagueName: _leagueName(id, context, leagueNames),
                     logoUrl: '$_leagueLogoBase$id.png',
                     selected: isSelected,
                     onTap: () => setState(
