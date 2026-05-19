@@ -1293,31 +1293,36 @@ class TableScreenContentState extends State<TableScreenContent> {
           : rank == 2
               ? c.chalk
               : const Color(0xFFCD7F32); // bronze
-      return Container(
-        width: 22,
-        height: 22,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
-          border: Border.all(color: color, width: 1),
-          borderRadius: BorderRadius.circular(2),
-        ),
-        child: Text(
-          rank.toString(),
-          style: EType.numeric(
-            color: color,
-            size: 11,
-            weight: FontWeight.w700,
+      return Center(
+        child: Container(
+          width: 22,
+          height: 22,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.12),
+            border: Border.all(color: color, width: 1),
+            borderRadius: BorderRadius.circular(2),
+          ),
+          child: Text(
+            rank.toString(),
+            style: EType.numeric(
+              color: color,
+              size: 11,
+              weight: FontWeight.w700,
+            ),
           ),
         ),
       );
     }
-    return Text(
-      rank.toString().padLeft(2, '0'),
-      style: EType.numeric(
-        color: c.inkDim,
-        size: 12,
-        weight: FontWeight.w500,
+    return Center(
+      child: Text(
+        rank.toString(),
+        textAlign: TextAlign.center,
+        style: EType.numeric(
+          color: c.inkDim,
+          size: 12,
+          weight: FontWeight.w500,
+        ),
       ),
     );
   }

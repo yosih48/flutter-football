@@ -3,6 +3,8 @@ import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:football/resources/league_config_service.dart';
 import 'package:football/resources/usersMethods.dart';
+import 'package:football/theme/colors.dart';
+import 'package:football/theme/typography.dart';
 import 'package:football/widgets/LeagueSelectorChips.dart';
 import 'package:football/widgets/toggleButton.dart';
 
@@ -234,6 +236,7 @@ class _LeagueSelectorState extends State<LeagueSelector> {
   final LeagueDataProvider _provider = LeagueDataProvider();
   LeagueData? _leagueData;
   bool _isLoading = true;
+  bool _singleNotified = false;
 
   @override
   void initState() {
@@ -290,6 +293,31 @@ class _LeagueSelectorState extends State<LeagueSelector> {
       );
     }
 
+    // Single-league mode (e.g. summer tournament like the World Cup with no
+    // regular season running): drop the selector entirely and show a
+    // full-width headline instead of one lonely toggle button.
+    if (_leagueData!.enabledLeagues.length == 1) {
+      final singleId = _leagueData!.enabledLeagues.first;
+      final name = _leagueData!.options.isNotEmpty
+          ? _leagueData!.options.first
+          : '';
+      final imageUrl = _leagueData!.imageUrls.isNotEmpty
+          ? _leagueData!.imageUrls.first
+          : null;
+
+      // The selector is gone, so there's no tap to propagate the choice —
+      // notify the parent once so the screen loads this league instead of
+      // its default (e.g. table.dart defaults to league 2).
+      if (!_singleNotified && widget.currentLeague != singleId) {
+        _singleNotified = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) widget.onSelectionChanged(singleId, 0);
+        });
+      }
+
+      return SingleLeagueHeadline(name: name, imageUrl: imageUrl);
+    }
+
     final initialIndex = _leagueData!.getInitialIndex(widget.currentLeague);
 
     if (widget.useToggleButtons) {
@@ -312,5 +340,98 @@ class _LeagueSelectorState extends State<LeagueSelector> {
         },
       );
     }
+  }
+}
+
+// Full-width headline shown in place of the league selector when the
+// backend exposes exactly one league. Logo + name, centered, no tap target.
+class SingleLeagueHeadline extends StatelessWidget {
+  const SingleLeagueHeadline({super.key, required this.name, this.imageUrl});
+
+  final String name;
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [c.cardHi, c.card],
+        ),
+        borderRadius: BorderRadius.circular(2),
+        border: Border.all(color: c.hairline, width: 1),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (imageUrl != null)
+            Container(
+              width: 52,
+              height: 52,
+              padding: const EdgeInsets.all(9),
+              decoration: BoxDecoration(
+                color: c.pitch,
+                shape: BoxShape.circle,
+                border: Border.all(color: c.live, width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: c.live.withOpacity(0.18),
+                    blurRadius: 14,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: Image.network(
+                imageUrl!,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => Icon(
+                    Icons.emoji_events_outlined,
+                    size: 22,
+                    color: c.live),
+              ),
+            ),
+          const SizedBox(height: 14),
+          Text(
+            name,
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
+            style: EType.body(
+              color: c.ink,
+              size: 22,
+              weight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Editorial signature accent — short centered rule, flanked by dots.
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 4,
+                height: 4,
+                decoration:
+                    BoxDecoration(color: c.live, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 8),
+              Container(width: 40, height: 2, color: c.live),
+              const SizedBox(width: 8),
+              Container(
+                width: 4,
+                height: 4,
+                decoration:
+                    BoxDecoration(color: c.live, shape: BoxShape.circle),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

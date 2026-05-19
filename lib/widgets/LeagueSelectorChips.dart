@@ -16,19 +16,35 @@ class LeagueSelectorChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const hPad = 20.0;
     return SizedBox(
       height: 38,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: options.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final isSelected = selectedIndex == index;
-          return _EditorialChip(
-            label: options[index],
-            selected: isSelected,
-            onTap: () => onSelectionChanged(index),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final children = <Widget>[];
+          for (int i = 0; i < options.length; i++) {
+            if (i > 0) children.add(const SizedBox(width: 8));
+            children.add(_EditorialChip(
+              label: options[i],
+              selected: selectedIndex == i,
+              onTap: () => onSelectionChanged(i),
+            ));
+          }
+          // Force the row to at least fill the viewport so a small number of
+          // chips centers; when they overflow, the row grows past minWidth
+          // and scrolls horizontally as before.
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: hPad),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minWidth: constraints.maxWidth - hPad * 2,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: children,
+              ),
+            ),
           );
         },
       ),

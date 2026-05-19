@@ -58,77 +58,95 @@ class _ToggleButtonsSampleState extends State<ToggleButtonsSample> {
   @override
   Widget build(BuildContext context) {
     final c = context.col;
+    const hPad = 16.0;
     return SizedBox(
       height: 92,
-      child: ListView.builder(
-        controller: _scrollController,
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: widget.options.length,
-        itemBuilder: (_, i) {
-          final isSelected = i == _selected;
-          return GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              setState(() => _selected = i);
-              widget.onSelectionChanged(i);
-              _scrollTo(i);
-            },
-            child: SizedBox(
-              width: _itemWidth,
-              child: Column(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final items = <Widget>[
+            for (int i = 0; i < widget.options.length; i++) _buildItem(i, c),
+          ];
+          // Center a small number of crests; scroll when they overflow.
+          return SingleChildScrollView(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: hPad),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minWidth: constraints.maxWidth - hPad * 2,
+              ),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                      border: Border.all(
-                        color: isSelected ? c.live : c.hairline,
-                        width: isSelected ? 2 : 1,
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(8),
-                    child: Image.network(
-                      widget.imageUrls[i],
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => Icon(
-                        Icons.shield_outlined,
-                        size: 20,
-                        color: c.inkDim,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 20,
-                    child: Text(
-                      widget.options[i].toUpperCase(),
-                      style: EType.label(
-                        color: isSelected ? c.ink : c.inkDim,
-                        size: 9,
-                        letterSpacing: 1.2,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    width: isSelected ? 22 : 0,
-                    height: 2,
-                    color: c.live,
-                  ),
-                ],
+                children: items,
               ),
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildItem(int i, EditorialColors c) {
+    final isSelected = i == _selected;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        setState(() => _selected = i);
+        widget.onSelectionChanged(i);
+        _scrollTo(i);
+      },
+      child: SizedBox(
+        width: _itemWidth,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+                border: Border.all(
+                  color: isSelected ? c.live : c.hairline,
+                  width: isSelected ? 2 : 1,
+                ),
+              ),
+              padding: const EdgeInsets.all(8),
+              child: Image.network(
+                widget.imageUrls[i],
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => Icon(
+                  Icons.shield_outlined,
+                  size: 20,
+                  color: c.inkDim,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 20,
+              child: Text(
+                widget.options[i].toUpperCase(),
+                style: EType.label(
+                  color: isSelected ? c.ink : c.inkDim,
+                  size: 9,
+                  letterSpacing: 1.2,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 4),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: isSelected ? 22 : 0,
+              height: 2,
+              color: c.live,
+            ),
+          ],
+        ),
       ),
     );
   }
