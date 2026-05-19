@@ -56,7 +56,10 @@
       "Bash(findstr /R /C:\"error -\" /C:\"_leagueKeys\" /C:\"issues found\")",
       "Bash(node -e \"const t=require\\('fs'\\).readFileSync\\('analyze_out.txt','utf8'\\);const errs=t.split\\(/\\\\r?\\\\n/\\).filter\\(l=>/\\\\serror\\\\s-\\\\s/.test\\(l\\)\\);console.log\\(errs.length?errs.join\\('\\\\n'\\):'NO ERRORS'\\);const m=t.match\\(/\\\\d+ issues found.*/\\);if\\(m\\)console.log\\(m[0]\\);\")",
       "Bash(del analyze_out.txt)",
-      "Bash(node -e \"const t=require\\('fs'\\).readFileSync\\('fa.txt','utf8'\\);const e=t.split\\(/\\\\r?\\\\n/\\).filter\\(l=>/\\\\serror\\\\s-\\\\s/.test\\(l\\)\\);console.log\\(e.length?e.join\\('\\\\n'\\):'NO ERRORS'\\);const m=t.match\\(/\\\\d+ issues found.*/\\);if\\(m\\)console.log\\(m[0]\\);\")"
+      "Bash(node -e \"const t=require\\('fs'\\).readFileSync\\('fa.txt','utf8'\\);const e=t.split\\(/\\\\r?\\\\n/\\).filter\\(l=>/\\\\serror\\\\s-\\\\s/.test\\(l\\)\\);console.log\\(e.length?e.join\\('\\\\n'\\):'NO ERRORS'\\);const m=t.match\\(/\\\\d+ issues found.*/\\);if\\(m\\)console.log\\(m[0]\\);\")",
+      "Bash(grep -rn \"topScorerPoints\\\\|calculateTopScorer\\\\|scorerPoints\\\\|topScorer\" C:/worldBackend/src --include=*.js -l)",
+      "Bash(grep -rn \"topScorerPoints\\\\|scorerPoints\\\\|topScorer\" C:/worldBackend/api.js C:/worldBackend/app.js 2>/dev/null | head -50)",
+      "Bash(node -e ' *)"
     ]
   }
 }

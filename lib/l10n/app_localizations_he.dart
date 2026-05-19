@@ -840,7 +840,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statsNotAvailable => 'לא נמצאו סטטיסטיקות';
 
   @override
-  String statsAsOf(String minute) => "נכון לדקה $minute";
+  String statsAsOf(String minute) {
+    return 'נכון לדקה $minute';
+  }
 
   @override
   String get statsAsOfFullTime => 'נכון לסיום המשחק';
@@ -883,4 +885,43 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get noMatchesForTeam => 'אין משחקים להצגה';
+
+  @override
+  String get adminSection => 'ניהול';
+
+  @override
+  String get settleChampionTitle => 'סגירת אלופה';
+
+  @override
+  String get adminLeagueLabel => 'ליגה';
+
+  @override
+  String get adminChampionLabel => 'קבוצה אלופה';
+
+  @override
+  String get adminPreview => 'תצוגה מקדימה';
+
+  @override
+  String get adminConfirmAward => 'אישור וזיכוי';
+
+  @override
+  String get adminForceOverride => 'כפיית עדכון';
+
+  @override
+  String get adminWillAward => 'יזוכו';
+
+  @override
+  String get adminAlreadyAwarded => 'כבר זוכו';
+
+  @override
+  String get adminSettleSuccess => 'ניקוד אלופה זוכה בהצלחה';
+
+  @override
+  String get adminSettleFailed => 'העדכון נכשל';
+
+  @override
+  String get topScorerPointsLabel => 'מלך שערים';
+
+  @override
+  String get championPointsLabel => 'אלופה';
 }

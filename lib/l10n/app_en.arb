@@ -306,5 +306,18 @@
     "matchesTab": "Matches",
     "recentResults": "Recent Results",
     "upcomingMatches": "Upcoming",
-    "noMatchesForTeam": "No matches available"
+    "noMatchesForTeam": "No matches available",
+    "adminSection": "Admin",
+    "settleChampionTitle": "Settle Champion",
+    "adminLeagueLabel": "League",
+    "adminChampionLabel": "Champion team",
+    "adminPreview": "Preview",
+    "adminConfirmAward": "Confirm & Award",
+    "adminForceOverride": "Force override",
+    "adminWillAward": "Will be awarded",
+    "adminAlreadyAwarded": "Already awarded",
+    "adminSettleSuccess": "Champion points awarded",
+    "adminSettleFailed": "Settlement failed",
+    "topScorerPointsLabel": "Top Scorer",
+    "championPointsLabel": "Champion"
 }

@@ -840,7 +840,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsNotAvailable => 'Stats not yet available';
 
   @override
-  String statsAsOf(String minute) => "As of $minute'";
+  String statsAsOf(String minute) {
+    return 'As of $minute\'';
+  }
 
   @override
   String get statsAsOfFullTime => 'As of full time';
@@ -883,4 +885,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noMatchesForTeam => 'No matches available';
+
+  @override
+  String get adminSection => 'Admin';
+
+  @override
+  String get settleChampionTitle => 'Settle Champion';
+
+  @override
+  String get adminLeagueLabel => 'League';
+
+  @override
+  String get adminChampionLabel => 'Champion team';
+
+  @override
+  String get adminPreview => 'Preview';
+
+  @override
+  String get adminConfirmAward => 'Confirm & Award';
+
+  @override
+  String get adminForceOverride => 'Force override';
+
+  @override
+  String get adminWillAward => 'Will be awarded';
+
+  @override
+  String get adminAlreadyAwarded => 'Already awarded';
+
+  @override
+  String get adminSettleSuccess => 'Champion points awarded';
+
+  @override
+  String get adminSettleFailed => 'Settlement failed';
+
+  @override
+  String get topScorerPointsLabel => 'Top Scorer';
+
+  @override
+  String get championPointsLabel => 'Champion';
 }

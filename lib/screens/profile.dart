@@ -5,6 +5,7 @@ import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
+import 'package:football/widgets/adminChampionSettle.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -261,6 +262,34 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
               ),
             ],
           ),
+          if (widget.authProvider.currentUser?.admin == true) ...[
+            const SizedBox(height: 20),
+            GestureDetector(
+              onTap: () => showAdminChampionSettleDialog(context),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: c.card,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: c.hairline),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.admin_panel_settings_outlined,
+                        size: 16, color: c.live),
+                    const SizedBox(width: 8),
+                    Text(
+                      AppLocalizations.of(context)!.settleChampionTitle,
+                      style: EType.label(
+                          color: c.ink, size: 11, letterSpacing: 1.4),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

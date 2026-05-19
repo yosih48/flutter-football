@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:football/models/guesses.dart';
 import 'package:football/resources/guessesMethods.dart';
+import 'package:football/resources/usersMethods.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/l10n/app_localizations.dart';
@@ -19,6 +20,8 @@ class _StatisticsState extends State<Statistics> {
   List<Guess> userGuesses = [];
   List<Guess> directGuesses = [];
   List<Guess> directionGuesses = [];
+  int _topScorerPoints = 0;
+  int _championPoints = 0;
   bool isLoading = true;
 
   @override
@@ -32,14 +35,35 @@ class _StatisticsState extends State<Statistics> {
       final guesses =
           await GuessesMethods().fetchThisUserGuesses(widget.userId);
       final leagueID = widget.leagueId as int;
+      final leagueKey = '$leagueID';
       final filtered =
           guesses.where((g) => g.leagueId == leagueID).toList();
+
+      int leaguePoints(dynamic field) {
+        if (field is Map && field[leagueKey] != null) {
+          return (field[leagueKey] as num).toInt();
+        }
+        return 0;
+      }
+
+      int topScorerPts = 0;
+      int championPts = 0;
+      try {
+        final userData =
+            await UsersMethods().fetchUserById(widget.userId);
+        topScorerPts = leaguePoints(userData['topScorerPoints']);
+        championPts = leaguePoints(userData['championPoints']);
+      } catch (e) {
+        print('Error fetching user points: $e');
+      }
 
       setState(() {
         userGuesses = filtered;
         directGuesses = filtered.where((g) => g.direct == 1).toList();
         directionGuesses =
             filtered.where((g) => g.direction == 1).toList();
+        _topScorerPoints = topScorerPts;
+        _championPoints = championPts;
         isLoading = false;
       });
     } catch (e) {
@@ -211,6 +235,18 @@ class _StatisticsState extends State<Statistics> {
             label: l.directionGuesses,
             value: isLoading ? '—' : fmt(directionPts),
             accent: c.amber,
+          ),
+          Container(height: 1, color: c.hairline),
+          _PointsRow(
+            label: l.topScorerPointsLabel,
+            value: isLoading ? '—' : _topScorerPoints.toString(),
+            accent: c.live,
+          ),
+          Container(height: 1, color: c.hairline),
+          _PointsRow(
+            label: l.championPointsLabel,
+            value: isLoading ? '—' : _championPoints.toString(),
+            accent: c.flag,
           ),
         ],
       ),

@@ -507,5 +507,18 @@
     "matchesTab": "משחקים",
     "recentResults": "תוצאות אחרונות",
     "upcomingMatches": "קרובים",
-    "noMatchesForTeam": "אין משחקים להצגה"
+    "noMatchesForTeam": "אין משחקים להצגה",
+    "adminSection": "ניהול",
+    "settleChampionTitle": "סגירת אלופה",
+    "adminLeagueLabel": "ליגה",
+    "adminChampionLabel": "קבוצה אלופה",
+    "adminPreview": "תצוגה מקדימה",
+    "adminConfirmAward": "אישור וזיכוי",
+    "adminForceOverride": "כפיית עדכון",
+    "adminWillAward": "יזוכו",
+    "adminAlreadyAwarded": "כבר זוכו",
+    "adminSettleSuccess": "ניקוד אלופה זוכה בהצלחה",
+    "adminSettleFailed": "העדכון נכשל",
+    "topScorerPointsLabel": "מלך שערים",
+    "championPointsLabel": "אלופה"
 }

@@ -1188,18 +1188,33 @@ abstract class AppLocalizations {
   String get noGoals;
 
   /// No description provided for @noEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'No events yet'**
   String get noEvents;
 
   /// No description provided for @allEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
   String get allEvents;
 
   /// No description provided for @majorEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Major'**
   String get majorEvents;
 
   /// No description provided for @playerIn.
+  ///
+  /// In en, this message translates to:
+  /// **'In'**
   String get playerIn;
 
   /// No description provided for @playerOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Out'**
   String get playerOut;
 
   /// No description provided for @eventsAppear.
@@ -1807,10 +1822,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Relegation Round'**
   String get relegationRound;
+
+  /// No description provided for @matchesTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Matches'**
   String get matchesTab;
+
+  /// No description provided for @recentResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Results'**
   String get recentResults;
+
+  /// No description provided for @upcomingMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
   String get upcomingMatches;
+
+  /// No description provided for @noMatchesForTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches available'**
   String get noMatchesForTeam;
+
+  /// No description provided for @adminSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get adminSection;
+
+  /// No description provided for @settleChampionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle Champion'**
+  String get settleChampionTitle;
+
+  /// No description provided for @adminLeagueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'League'**
+  String get adminLeagueLabel;
+
+  /// No description provided for @adminChampionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Champion team'**
+  String get adminChampionLabel;
+
+  /// No description provided for @adminPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get adminPreview;
+
+  /// No description provided for @adminConfirmAward.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm & Award'**
+  String get adminConfirmAward;
+
+  /// No description provided for @adminForceOverride.
+  ///
+  /// In en, this message translates to:
+  /// **'Force override'**
+  String get adminForceOverride;
+
+  /// No description provided for @adminWillAward.
+  ///
+  /// In en, this message translates to:
+  /// **'Will be awarded'**
+  String get adminWillAward;
+
+  /// No description provided for @adminAlreadyAwarded.
+  ///
+  /// In en, this message translates to:
+  /// **'Already awarded'**
+  String get adminAlreadyAwarded;
+
+  /// No description provided for @adminSettleSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Champion points awarded'**
+  String get adminSettleSuccess;
+
+  /// No description provided for @adminSettleFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Settlement failed'**
+  String get adminSettleFailed;
+
+  /// No description provided for @topScorerPointsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Scorer'**
+  String get topScorerPointsLabel;
+
+  /// No description provided for @championPointsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Champion'**
+  String get championPointsLabel;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
