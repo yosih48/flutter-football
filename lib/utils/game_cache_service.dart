@@ -9,6 +9,17 @@ class GameCacheService {
   static const String _masterCacheKey = 'leagues_with_games_';
   static const String _lastDailyResetKey = 'games_last_daily_reset';
 
+  // Short stable token derived from the current supported-leagues list. Baked
+  // into every cache key so that adding/removing a league via the backend
+  // config naturally invalidates the old keys — lookups miss with the new
+  // fingerprint and a fresh fetch repopulates. The previous-fingerprint
+  // entries linger in SharedPreferences until the daily noon reset clears
+  // them, which is fine (bounded to one day of stale rows).
+  String _leaguesFingerprint() {
+    final ids = List<int>.from(LeagueConfigService().supportedLeagues)..sort();
+    return ids.join('-').hashCode.toRadixString(36);
+  }
+
   // Cache expiration durations in milliseconds
   static const int _finishedGamesCacheDuration =
       24 * 60 * 60 * 1000; // 24 hours
@@ -46,7 +57,7 @@ class GameCacheService {
     if (date == null) return; // Only track by specific dates
 
     final prefs = await SharedPreferences.getInstance();
-    final masterKey = '$_masterCacheKey${date.year}_${date.month}_${date.day}';
+    final masterKey = _masterKey(date);
 
     // Get existing data
     final existingData = prefs.getString(masterKey);
@@ -70,7 +81,7 @@ class GameCacheService {
     await _performDailyResetIfNeeded(); // ✅ Daily reset check
 
     final prefs = await SharedPreferences.getInstance();
-    final masterKey = '$_masterCacheKey${date.year}_${date.month}_${date.day}';
+    final masterKey = _masterKey(date);
 
     // Check if master cache exists and is valid
     final existingData = prefs.getString(masterKey);
@@ -207,12 +218,19 @@ class GameCacheService {
     return isValid;
   }
 
-  // Generate a unique cache key based on league and date
+  // Generate a unique cache key based on league, date, and the current
+  // supported-leagues fingerprint.
   String _generateCacheKey(int leagueId, DateTime? date) {
+    final fp = _leaguesFingerprint();
     if (date == null) {
-      return '$_cacheKeyPrefix${leagueId}_all';
+      return '$_cacheKeyPrefix${leagueId}_all_$fp';
     }
-    return '$_cacheKeyPrefix${leagueId}_${date.year}_${date.month}_${date.day}';
+    return '$_cacheKeyPrefix${leagueId}_${date.year}_${date.month}_${date.day}_$fp';
+  }
+
+  String _masterKey(DateTime date) {
+    final fp = _leaguesFingerprint();
+    return '$_masterCacheKey${date.year}_${date.month}_${date.day}_$fp';
   }
 
   // Get cached games for a specific date across ALL leagues (ignores expiry)
@@ -249,7 +267,7 @@ class GameCacheService {
 
     // Also try the "all" cache key (no date) and filter
     for (final leagueId in allLeagues) {
-      final cacheKey = '${_cacheKeyPrefix}${leagueId}_all';
+      final cacheKey = _generateCacheKey(leagueId, null);
       final cachedData = prefs.getString(cacheKey);
       if (cachedData == null) continue;
 

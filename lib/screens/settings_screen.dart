@@ -6,7 +6,6 @@ import 'package:football/screens/instructionsb.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:provider/provider.dart';
-import 'package:football/resources/auth.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:football/l10n/app_localizations.dart';
 
@@ -37,11 +36,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // migrating a screen to support both light and dark mode.
     final c = context.col;
     final l = AppLocalizations.of(context)!;
-    final user = Provider.of<AuthProvider>(context).currentUser;
-    final userName = user?.name ?? '';
-    final userEmail = user?.email ?? '';
-    final initial =
-        userName.isNotEmpty ? userName[0].toUpperCase() : '?';
 
     return Scaffold(
       backgroundColor: c.pitch,
@@ -66,66 +60,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           size: 28,
                           color: c.ink,
                           letterSpacing: 1.4)),
-                ],
-              ),
-            ),
-
-            // ── Identity card ─────────────────────────────────────────
-            Container(
-              margin: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: c.card,
-                border: Border(
-                  top: BorderSide(color: c.live, width: 2),
-                  left: BorderSide(color: c.hairline, width: 1),
-                  right: BorderSide(color: c.hairline, width: 1),
-                  bottom: BorderSide(color: c.hairline, width: 1),
-                ),
-                borderRadius: BorderRadius.circular(2),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: c.cardHi,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: c.live, width: 1.5),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      initial,
-                      style: EType.display(
-                          size: 28, color: c.ink, letterSpacing: 0),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          userName.isNotEmpty
-                              ? userName.toUpperCase()
-                              : '—',
-                          overflow: TextOverflow.ellipsis,
-                          style: EType.display(
-                              size: 20,
-                              color: c.ink,
-                              letterSpacing: 0.8),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          userEmail,
-                          overflow: TextOverflow.ellipsis,
-                          style:
-                              EType.body(color: c.inkMute, size: 12),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),
