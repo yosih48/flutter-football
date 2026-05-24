@@ -614,12 +614,15 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     final chipOptions = _enabledLeagues
         .map((id) => getLocalizedLeagueName(id, context))
         .toList();
-    final placeholderOptions = const [
-      'Champions League',
-      'Premier League',
-      'La Liga',
-      'Bundesliga'
-    ];
+    // While bootstrapping, _enabledLeagues is still empty. Derive the
+    // placeholder chips from the (synchronously available) supported-league
+    // config and localize them, so they don't flash in English before the
+    // real Hebrew names arrive.
+    final placeholderOptions = LeagueConfigService()
+        .supportedLeagues
+        .map((id) => getLocalizedLeagueName(id, context))
+        .where((name) => name.isNotEmpty)
+        .toList();
 
     return Scaffold(
       backgroundColor: c.pitch,
@@ -631,12 +634,22 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
         child: Column(
           children: [
             const SizedBox(height: 8),
-            LeagueSelectorChips(
-              options:
-                  chipOptions.isEmpty ? placeholderOptions : chipOptions,
-              selectedIndex: _selectedChipIndex,
-              onSelectionChanged: _onChipChanged,
-            ),
+            // Single-league mode (e.g. World Cup with no regular season):
+            // no chips to toggle — show a full-width headline instead.
+            if (_enabledLeagues.length == 1)
+              SingleLeagueHeadline(
+                name: getLocalizedLeagueName(
+                    _enabledLeagues.first, context),
+                imageUrl: LeagueDataProvider()
+                    .getLeagueImageUrl(_enabledLeagues.first),
+              )
+            else
+              LeagueSelectorChips(
+                options:
+                    chipOptions.isEmpty ? placeholderOptions : chipOptions,
+                selectedIndex: _selectedChipIndex,
+                onSelectionChanged: _onChipChanged,
+              ),
             const SizedBox(height: 12),
             Container(height: 1, color: c.hairline),
             Expanded(
