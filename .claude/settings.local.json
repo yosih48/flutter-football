@@ -60,7 +60,13 @@
       "Bash(grep -rn \"topScorerPoints\\\\|calculateTopScorer\\\\|scorerPoints\\\\|topScorer\" C:/worldBackend/src --include=*.js -l)",
       "Bash(grep -rn \"topScorerPoints\\\\|scorerPoints\\\\|topScorer\" C:/worldBackend/api.js C:/worldBackend/app.js 2>/dev/null | head -50)",
       "Bash(node -e ' *)",
-      "Bash(grep -iv \"//\")"
+      "Bash(grep -iv \"//\")",
+      "Bash(node -e \"const f=require\\('C:/worldBackend/39.json'\\); console.log\\('top keys:', Object.keys\\(f\\).slice\\(0,5\\)\\); console.log\\('first 500 chars:', JSON.stringify\\(f\\).slice\\(0,500\\)\\);\")",
+      "Bash(node scripts/cleanupOldSeasons.js)",
+      "Bash(node scripts/cleanupOldSeasons.js --apply)",
+      "Bash(ls C:/worldBackend 2>&1 | head -30)",
+      "PowerShell(Test-Connection -ComputerName scorecast.yossih.dev -Count 6)",
+      "PowerShell($fmt = \"TTFB %{time_starttransfer}s | total %{time_total}s | %{size_download}B`n\"; Write-Host \"=== /api/games/39 x5 \\(repeated\\) ===\"; 1..5 | ForEach-Object { curl.exe -s -o NUL -w $fmt https://scorecast.yossih.dev/api/games/39 }; Write-Host \"`n=== /api/liveGames ===\"; curl.exe -s -o NUL -w $fmt https://scorecast.yossih.dev/api/liveGames; Write-Host \"=== /api/games/140 ===\"; curl.exe -s -o NUL -w $fmt https://scorecast.yossih.dev/api/games/140; Write-Host \"=== /api/games/2 \\(UCL\\) ===\"; curl.exe -s -o NUL -w $fmt https://scorecast.yossih.dev/api/games/2)"
     ]
   }
 }

@@ -4,9 +4,29 @@ import 'package:football/utils/config.dart';
 import 'package:football/utils/game_cache_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 String _baseUrl = backendUrl;
+
+// Runs in a background isolate via compute(). Takes the raw response body
+// (which contains {games: [...], lastApiCallTimestamp: ...}) and returns a
+// list of parsed Game objects. Keeps the heavy jsonDecode + Game.fromJson
+// work off the UI thread so the app doesn't jank while data lands.
+List<Game> parseGamesPayload(String body) {
+  final decoded = jsonDecode(body);
+  final gamesData = decoded is Map ? decoded['games'] : null;
+  if (gamesData is! List) return const [];
+  return gamesData.map((item) => Game.fromJson(item)).toList();
+}
+
+// Same but the input is a JSON string that is already a list of game objects
+// (the shape we store in SharedPreferences).
+List<Game> parseGamesListJson(String body) {
+  final decoded = jsonDecode(body);
+  if (decoded is! List) return const [];
+  return decoded.map((item) => Game.fromJson(item)).toList();
+}
 
 class GamesMethods {
   final GameCacheService _cacheService = GameCacheService();
@@ -56,16 +76,12 @@ class GamesMethods {
           final cachedGames = entry.value;
 
           if (cachedGames != null) {
-            // If we have cached games, check if any are live
-            if (_cacheService.hasLiveGames(cachedGames)) {
-              print(
-                  '⚡ Found live games in league $id - will fetch fresh data for this league');
-              leaguesToFetch.add(id);
-            } else {
-              // Use the cached games if they're valid and not live
-              print('✅ Using cached games for league $id');
-              allGames.addAll(cachedGames);
-            }
+            // Use cached games even when live games are present — the live-tick
+            // refresh loop in games.dart patches in fresh scores every 30s via
+            // /api/liveGames/:leagueId, which is far cheaper than re-fetching
+            // the full season payload here.
+            print('✅ Using cached games for league $id');
+            allGames.addAll(cachedGames);
           } else {
             // If we don't have cache for this specific league, add it to leagues to fetch
             print(
@@ -109,16 +125,10 @@ class GamesMethods {
         final cachedGames = entry.value;
 
         if (cachedGames != null) {
-          // If we have cached games, check if any are live
-          if (_cacheService.hasLiveGames(cachedGames)) {
-            print(
-                '⚡ Found live games in league $id - will fetch fresh data for this league');
-            leaguesToFetch.add(id);
-          } else {
-            // Use the cached games if they're valid and not live
-            print('✅ Using cached games for league $id');
-            allGames.addAll(cachedGames);
-          }
+          // Use cached games even when live games are present — live scores
+          // get patched in by the 30s tick refresh via /api/liveGames/:leagueId.
+          print('✅ Using cached games for league $id');
+          allGames.addAll(cachedGames);
         } else {
           // If we don't have cache for this specific league, add it to leagues to fetch
           print(
@@ -168,8 +178,10 @@ class GamesMethods {
         await _cacheService.getCachedGames(leagueId, selectedDate);
     print('🔍 Cache check complete for league $leagueId');
 
-    // If we have cached games and none are live, use the cache
-    if (cachedGames != null && !_cacheService.hasLiveGames(cachedGames)) {
+    // If we have cached games, use them — live scores get patched in by the
+    // 30s tick refresh via /api/liveGames/:leagueId, so we don't need to throw
+    // away the cache just because a match is in progress.
+    if (cachedGames != null) {
       print('📦 Using cached data for league $leagueId');
       return cachedGames;
     }
@@ -213,20 +225,15 @@ if(leagueId == -1){
       print('⏱️  API request took: ${requestDuration.inMilliseconds}ms');
 
       if (response.statusCode == 200) {
-      final decodeStartTime = DateTime.now();
-      final responseData = jsonDecode(response.body);
-      final decodeDuration = DateTime.now().difference(decodeStartTime);
-      print('✅ JSON decoded successfully in ${decodeDuration.inMilliseconds}ms');
-      print('🔑 Response keys: ${responseData.keys.toList()}');
-      final gamesData = responseData['games'];
-      print('📊 Games data: ${gamesData?.length ?? 0} items');
-      if (gamesData != null && gamesData is List) {
-        print('🔄 Parsing ${gamesData.length} games...');
-        final parseStartTime = DateTime.now();
-        final List<Game> games =
-            gamesData.map((item) => Game.fromJson(item)).toList();
-        final parseDuration = DateTime.now().difference(parseStartTime);
-        print('✅ Parsed ${games.length} games successfully in ${parseDuration.inMilliseconds}ms');
+      // Decode + Game.fromJson on a background isolate so a fat response
+      // doesn't freeze the UI while it lands. compute() handles the isolate
+      // lifecycle and arg/result marshalling.
+      final parseStartTime = DateTime.now();
+      final List<Game> games = await compute(parseGamesPayload, response.body);
+      final parseDuration = DateTime.now().difference(parseStartTime);
+      final decodeDuration = parseDuration;
+      print('✅ Parsed ${games.length} games (off UI isolate) in ${parseDuration.inMilliseconds}ms');
+      if (games.isNotEmpty) {
 
         // Filter games
         print('🔍 Filtering games...');
@@ -295,7 +302,8 @@ if(leagueId == -1){
 
         return filteredGames;
       } else {
-        throw Exception('Games data is null or not a list');
+        // Empty payload — no games in window, treat as no-data not an error.
+        return const [];
       }
     } else {
       throw Exception('Failed to fetch games with status: ${response.statusCode}');
