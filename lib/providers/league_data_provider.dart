@@ -129,15 +129,10 @@ class LeagueDataProvider extends ChangeNotifier {
       Map<String, dynamic> userData, BuildContext context) {
     final chosenLeagues = userData['chosenLeagues'];
 
-    print('Raw chosenLeagues data: $chosenLeagues');
-    print('chosenLeagues type: ${chosenLeagues.runtimeType}');
-
     if (chosenLeagues == null) {
-      print('chosenLeagues is null');
       return LeagueData(enabledLeagues: [], options: [], imageUrls: []);
     }
 
-    // Convert to Map<String, bool> safely
     Map<String, bool> leaguesMap = {};
     if (chosenLeagues is Map) {
       chosenLeagues.forEach((key, value) {
@@ -145,21 +140,12 @@ class LeagueDataProvider extends ChangeNotifier {
       });
     }
 
-    print('Converted leaguesMap: $leaguesMap');
-
     final enabledLeagues = <int>[];
     final options = <String>[];
     final imageUrls = <String>[];
 
-    // League universe comes from the backend config (LeagueConfigService) so a
-    // new league appears here with no app update. The per-user chosenLeagues
-    // filter below is unchanged.
     for (final leagueId in LeagueConfigService().supportedLeagues) {
-      // Check if this league is chosen (true in chosenLeagues)
       final isChosen = leaguesMap[leagueId.toString()] == true;
-
-      print('League $leagueId: $isChosen');
-
       if (isChosen) {
         enabledLeagues.add(leagueId);
         options.add(getLocalizedLeagueName(leagueId, context));
@@ -167,13 +153,23 @@ class LeagueDataProvider extends ChangeNotifier {
       }
     }
 
-    print('Final enabledLeagues: $enabledLeagues');
-    print('Final options: $options');
-
     return LeagueData(
       enabledLeagues: enabledLeagues,
       options: options,
       imageUrls: imageUrls,
+    );
+  }
+
+  // Synchronous placeholder built from the (already-loaded) supported-leagues
+  // config so a screen can render real-looking chips on the first frame
+  // instead of a spinner while the per-user chosenLeagues fetch is in flight.
+  // Replaced as soon as the real data lands.
+  LeagueData buildPlaceholderLeagueData(BuildContext context) {
+    final ids = LeagueConfigService().supportedLeagues;
+    return LeagueData(
+      enabledLeagues: List<int>.from(ids),
+      options: ids.map((id) => getLocalizedLeagueName(id, context)).toList(),
+      imageUrls: ids.map((id) => getLeagueImageUrl(id)).toList(),
     );
   }
 
@@ -235,13 +231,13 @@ class LeagueSelector extends StatefulWidget {
 class _LeagueSelectorState extends State<LeagueSelector> {
   final LeagueDataProvider _provider = LeagueDataProvider();
   LeagueData? _leagueData;
-  bool _isLoading = true;
   bool _singleNotified = false;
+  bool _placeholderBuilt = false;
 
   @override
   void initState() {
     super.initState();
-     WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadLeagueData();
     });
   }
@@ -252,33 +248,24 @@ class _LeagueSelectorState extends State<LeagueSelector> {
     try {
       final data = await _provider.getUserLeagueData(widget.userId, context);
       if (mounted) {
-        setState(() {
-          _leagueData = data;
-          _isLoading = false;
-        });
+        setState(() => _leagueData = data);
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      // Keep the placeholder visible on failure — better than a "no leagues"
+      // wall while the next bootstrap retries.
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Container(
-        height: 50,
-        child: Center(
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      );
+    // First frame: render placeholder chips (all supported leagues, localized
+    // from the synchronous config) so the selector appears instantly. The
+    // real per-user list swaps in once the fetch completes.
+    if (_leagueData == null) {
+      if (!_placeholderBuilt) {
+        _leagueData = _provider.buildPlaceholderLeagueData(context);
+        _placeholderBuilt = true;
+      }
     }
 
     if (_leagueData == null || _leagueData!.isEmpty) {

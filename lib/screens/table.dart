@@ -469,12 +469,17 @@ class TableScreenContentState extends State<TableScreenContent> {
       final cachedGroupName =
           await SharedPreferencesUtil.getSelectedGroupName();
 
-      final results = await Future.wait([
-        GroupsMethods.fetchDashboardData(currentUserId),
-        GroupsMethods().fetchGroups(),
-      ]);
-      final dashboardData = results[0] as Map<String, dynamic>;
-      final groupsInfo = results[1] as List<Map<String, dynamic>>;
+      final dashboardData =
+          await GroupsMethods.fetchDashboardData(currentUserId);
+      // Dashboard now ships full group docs in `groupsInfo` so we don't need
+      // a second /groups/register round-trip just to know who created the
+      // active group. Falls back to an empty list if the backend hasn't been
+      // updated yet (older deploys won't have the field).
+      final groupsInfo = (dashboardData['groupsInfo'] is List)
+          ? List<Map<String, dynamic>>.from(
+              (dashboardData['groupsInfo'] as List)
+                  .map((g) => Map<String, dynamic>.from(g as Map)))
+          : <Map<String, dynamic>>[];
 
       _TableCache.dashboardUserId = currentUserId;
       _TableCache.dashboard = dashboardData;

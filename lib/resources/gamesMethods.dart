@@ -4,15 +4,10 @@ import 'package:football/utils/config.dart';
 import 'package:football/utils/game_cache_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 String _baseUrl = backendUrl;
 
-// Runs in a background isolate via compute(). Takes the raw response body
-// (which contains {games: [...], lastApiCallTimestamp: ...}) and returns a
-// list of parsed Game objects. Keeps the heavy jsonDecode + Game.fromJson
-// work off the UI thread so the app doesn't jank while data lands.
 List<Game> parseGamesPayload(String body) {
   final decoded = jsonDecode(body);
   final gamesData = decoded is Map ? decoded['games'] : null;
@@ -20,8 +15,6 @@ List<Game> parseGamesPayload(String body) {
   return gamesData.map((item) => Game.fromJson(item)).toList();
 }
 
-// Same but the input is a JSON string that is already a list of game objects
-// (the shape we store in SharedPreferences).
 List<Game> parseGamesListJson(String body) {
   final decoded = jsonDecode(body);
   if (decoded is! List) return const [];
@@ -225,14 +218,11 @@ if(leagueId == -1){
       print('⏱️  API request took: ${requestDuration.inMilliseconds}ms');
 
       if (response.statusCode == 200) {
-      // Decode + Game.fromJson on a background isolate so a fat response
-      // doesn't freeze the UI while it lands. compute() handles the isolate
-      // lifecycle and arg/result marshalling.
       final parseStartTime = DateTime.now();
-      final List<Game> games = await compute(parseGamesPayload, response.body);
+      final List<Game> games = parseGamesPayload(response.body);
       final parseDuration = DateTime.now().difference(parseStartTime);
       final decodeDuration = parseDuration;
-      print('✅ Parsed ${games.length} games (off UI isolate) in ${parseDuration.inMilliseconds}ms');
+      print('✅ Parsed ${games.length} games in ${parseDuration.inMilliseconds}ms');
       if (games.isNotEmpty) {
 
         // Filter games

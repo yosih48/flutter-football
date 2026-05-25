@@ -49,16 +49,20 @@ class _LeagueSelectorChipsState extends State<LeagueSelectorChips> {
   void _updateEdges() {
     if (!mounted || !_controller.hasClients) return;
     final pos = _controller.position;
-    final awayFromStart = pos.pixels > 1;
-    final beforeEnd = pos.pixels < pos.maxScrollExtent - 1;
-    // Map logical scroll position to *visual* left/right (RTL flips them).
-    final isRtl = Directionality.of(context) == TextDirection.rtl;
-    final newLeft = isRtl ? beforeEnd : awayFromStart;
-    final newRight = isRtl ? awayFromStart : beforeEnd;
-    if (newLeft != _moreLeft || newRight != _moreRight) {
+    // Use the scroll position's own axisDirection so the visual mapping is
+    // correct regardless of textDirection. In an RTL horizontal scroll the
+    // axis is AxisDirection.left → pos.pixels=0 sits at the VISUAL right,
+    // so extentBefore lives on the visual right and extentAfter on the
+    // visual left (mirror of LTR).
+    final isReversed = pos.axisDirection == AxisDirection.left;
+    final hiddenBefore = pos.extentBefore > 1;
+    final hiddenAfter = pos.extentAfter > 1;
+    final visualLeftHasMore = isReversed ? hiddenAfter : hiddenBefore;
+    final visualRightHasMore = isReversed ? hiddenBefore : hiddenAfter;
+    if (visualLeftHasMore != _moreLeft || visualRightHasMore != _moreRight) {
       setState(() {
-        _moreLeft = newLeft;
-        _moreRight = newRight;
+        _moreLeft = visualLeftHasMore;
+        _moreRight = visualRightHasMore;
       });
     }
   }
@@ -175,10 +179,16 @@ class _EdgeHint extends StatelessWidget {
               left: alignmentLeft ? 2 : 0,
               right: alignmentLeft ? 0 : 2,
             ),
+            // Force LTR on the icon — chevron_left/chevron_right have
+            // matchTextDirection=true and would auto-mirror in an RTL app,
+            // making the "left" chevron actually point right (and vice
+            // versa). We want the arrows to always point OUTWARD from the
+            // edge they sit on, same in both directionalities.
             child: Icon(
               alignmentLeft ? Icons.chevron_left : Icons.chevron_right,
               size: 16,
               color: color.inkDim,
+              textDirection: TextDirection.ltr,
             ),
           ),
         ),

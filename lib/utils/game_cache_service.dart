@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:football/models/games.dart';
 import 'package:football/resources/league_config_service.dart';
 import 'package:football/resources/gamesMethods.dart' show parseGamesListJson;
@@ -136,11 +135,9 @@ class GameCacheService {
       return null;
     }
 
-    // Parse the cached games on a background isolate so a fat (200-400KB)
-    // SharedPreferences string doesn't freeze the UI thread on cache hits.
     try {
-      print('📝 Parsing cached JSON for league $leagueId (${cachedData.length} bytes) off UI isolate...');
-      final games = await compute(parseGamesListJson, cachedData);
+      print('📝 Parsing cached JSON for league $leagueId (${cachedData.length} bytes)...');
+      final games = parseGamesListJson(cachedData);
       print('✅ Cache parsed successfully: ${games.length} games');
 
       // Check if cache is valid based on game status

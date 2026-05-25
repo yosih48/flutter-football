@@ -32,8 +32,18 @@ class _StatisticsState extends State<Statistics> {
 
   Future<void> _fetchUserGuesses() async {
     try {
-      final guesses =
-          await GuessesMethods().fetchThisUserGuesses(widget.userId);
+      // Guesses + user-doc are independent — fire in parallel so we pay one
+      // round-trip latency instead of two.
+      final results = await Future.wait([
+        GuessesMethods().fetchThisUserGuesses(widget.userId),
+        UsersMethods().fetchUserById(widget.userId).catchError((e) {
+          print('Error fetching user points: $e');
+          return <String, dynamic>{};
+        }),
+      ]);
+      final guesses = results[0] as List<Guess>;
+      final userData = results[1] as Map<String, dynamic>;
+
       final leagueID = widget.leagueId as int;
       final leagueKey = '$leagueID';
       final filtered =
@@ -46,16 +56,8 @@ class _StatisticsState extends State<Statistics> {
         return 0;
       }
 
-      int topScorerPts = 0;
-      int championPts = 0;
-      try {
-        final userData =
-            await UsersMethods().fetchUserById(widget.userId);
-        topScorerPts = leaguePoints(userData['topScorerPoints']);
-        championPts = leaguePoints(userData['championPoints']);
-      } catch (e) {
-        print('Error fetching user points: $e');
-      }
+      final topScorerPts = leaguePoints(userData['topScorerPoints']);
+      final championPts = leaguePoints(userData['championPoints']);
 
       setState(() {
         userGuesses = filtered;
