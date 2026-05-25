@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/resources/auth.dart';
+import 'package:football/resources/league_config_service.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/theme/colors.dart';
@@ -79,7 +80,13 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     }
   }
 
-  static const Set<String> _allowedIds = {'383', '2', '140', '3', '39', '848'};
+  // League universe comes from the backend config (LeagueConfigService) so a
+  // new league can appear here with no app update. Compare as strings because
+  // the user maps are keyed by string ids.
+  Set<String> get _allowedIds => LeagueConfigService()
+      .supportedLeagues
+      .map((id) => id.toString())
+      .toSet();
 
   @override
   Widget build(BuildContext context) {
@@ -356,7 +363,16 @@ class _Tab extends StatelessWidget {
 }
 
 // ── Shared helpers ─────────────────────────────────────────────────────
-String _leagueName(String id, AppLocalizations l) {
+// Resolve the display name via the backend league config first; fall back to
+// the bundled localizations for the historically-known ids so we still show a
+// translated name if the remote config hasn't loaded yet.
+String _leagueName(String id, AppLocalizations l, BuildContext context) {
+  final intId = int.tryParse(id);
+  if (intId != null) {
+    final remote = LeagueConfigService()
+        .nameFor(intId, Localizations.localeOf(context).languageCode);
+    if (remote != null) return remote;
+  }
   switch (id) {
     case '2':
       return l.championsleague;
@@ -408,7 +424,7 @@ class usersWinners extends StatelessWidget {
         final teamName = entry.value;
         return _LeagueRow(
           logoUrl: _leagueLogoUrl(id),
-          leagueName: _leagueName(id, l),
+          leagueName: _leagueName(id, l, context),
           trailing: _BadgeChip(
             icon: Icons.emoji_events_outlined,
             label: teamName,
@@ -457,7 +473,7 @@ class usersTopScorers extends StatelessWidget {
         final pts = userTopScorerPoints[id] ?? 0;
         return _LeagueRow(
           logoUrl: _leagueLogoUrl(id),
-          leagueName: _leagueName(id, l),
+          leagueName: _leagueName(id, l, context),
           trailing: _BadgeChip(
             icon: Icons.sports_soccer_outlined,
             label: scorerName,
