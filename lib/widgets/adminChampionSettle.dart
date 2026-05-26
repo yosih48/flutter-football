@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:football/l10n/app_localizations.dart';
+import 'package:football/resources/league_config_service.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/utils/config.dart';
 import 'package:football/utils/utils.dart';
@@ -44,14 +45,31 @@ class _AdminChampionSettleSheetState extends State<_AdminChampionSettleSheet> {
   bool _force = false;
   String? _resultText;
 
-  List<_LeagueOption> _leagues(AppLocalizations l) => [
-        _LeagueOption('39', l.premierleague),
-        _LeagueOption('140', l.laliga),
-        _LeagueOption('2', l.championsleague),
-        _LeagueOption('3', l.europaleague),
-        _LeagueOption('848', l.conferenceleague),
-        _LeagueOption('383', l.ligathaal),
-      ];
+  // League universe + display names come from the backend config
+  // (LeagueConfigService). Falls back to bundled localizations for the
+  // historically-known ids so labels stay translated if the remote config
+  // hasn't loaded yet.
+  List<_LeagueOption> _leagues(AppLocalizations l, BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
+    String labelFor(int id) {
+      final remote = LeagueConfigService().nameFor(id, lang);
+      if (remote != null) return remote;
+      switch (id) {
+        case 39:  return l.premierleague;
+        case 140: return l.laliga;
+        case 2:   return l.championsleague;
+        case 3:   return l.europaleague;
+        case 848: return l.conferenceleague;
+        case 383: return l.ligathaal;
+        default:  return '$id';
+      }
+    }
+
+    return LeagueConfigService()
+        .supportedLeagues
+        .map((id) => _LeagueOption(id.toString(), labelFor(id)))
+        .toList();
+  }
 
   Future<void> _loadTeams(String leagueId) async {
     setState(() {
@@ -182,7 +200,7 @@ class _AdminChampionSettleSheetState extends State<_AdminChampionSettleSheet> {
             dropdownColor: c.card,
             decoration: _decoration(c),
             style: TextStyle(color: c.ink),
-            items: _leagues(l)
+            items: _leagues(l, context)
                 .map((o) => DropdownMenuItem(
                     value: o.id, child: Text(o.label)))
                 .toList(),

@@ -94,6 +94,17 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     final filteredWinners = _filterById(_userWinners);
     final filteredTopScorers = _filterById(_userTopScorer);
 
+    // Skeleton placeholders: shimmer one row per supported league so the
+    // loading state matches the real league count from the backend config.
+    final placeholderNames = <String, String>{
+      for (final id in LeagueConfigService().supportedLeagues)
+        id.toString(): 'Loading',
+    };
+    final placeholderPoints = <String, int>{
+      for (final id in LeagueConfigService().supportedLeagues)
+        id.toString(): 0,
+    };
+
     return Scaffold(
       backgroundColor: c.pitch,
       body: SafeArea(
@@ -116,23 +127,21 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                     child: _showWinners
                         ? usersWinners(
                             key: const ValueKey('winners'),
-                            userWinners: _isLoading
-                                ? {'2': 'Loading', '39': 'Loading'}
-                                : _userWinners,
+                            userWinners:
+                                _isLoading ? placeholderNames : _userWinners,
                             filteredWinners: _isLoading
-                                ? {'2': 'Loading', '39': 'Loading'}
+                                ? placeholderNames
                                 : filteredWinners,
                           )
                         : usersTopScorers(
                             key: const ValueKey('topScorers'),
-                            userTopScorers: _isLoading
-                                ? {'2': 'Loading', '39': 'Loading'}
-                                : _userTopScorer,
+                            userTopScorers:
+                                _isLoading ? placeholderNames : _userTopScorer,
                             userTopScorerPoints: _isLoading
-                                ? {'2': 10, '39': 20}
+                                ? placeholderPoints
                                 : _userTopScorerPoints,
                             filteredTopScorers: _isLoading
-                                ? {'2': 'Loading', '39': 'Loading'}
+                                ? placeholderNames
                                 : filteredTopScorers,
                           ),
                   ),
