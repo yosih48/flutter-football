@@ -339,6 +339,18 @@ class AppLocalizationsHe extends AppLocalizations {
   String get yourwinners => 'הזוכות שלי';
 
   @override
+  String get pickWinnerTitle => 'בחר את אלופת הליגה';
+
+  @override
+  String get pickTopScorerTitle => 'בחר את מלך השערים';
+
+  @override
+  String get tapToPick => 'בחר';
+
+  @override
+  String get selectionClosed => 'הבחירה סגורה';
+
+  @override
   String get or => 'או';
 
   @override

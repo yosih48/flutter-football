@@ -7,6 +7,7 @@ import 'package:football/screens/login_screen.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/widgets/adminChampionSettle.dart';
+import 'package:football/widgets/seasonPickers.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -45,6 +46,10 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   Map<String, String> _userWinners = {};
   Map<String, String> _userTopScorer = {};
   Map<String, int> _userTopScorerPoints = {};
+  // chosenLeagues[id] from the user record. Missing entries are treated as
+  // opted-in (matches the bootstrap default in games.dart), so a league newly
+  // added to the remote config shows up here without a manual toggle.
+  Map<String, bool> _chosenLeagues = {};
   bool _isLoading = true;
   bool _showWinners = true;
   late String currentUserId;
@@ -70,6 +75,8 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
             Map<String, String>.from(userData['topScorer'] ?? {});
         _userTopScorerPoints =
             Map<String, int>.from(userData['topScorerPoints'] ?? {});
+        _chosenLeagues =
+            Map<String, bool>.from(userData['chosenLeagues'] ?? {});
         _isLoading = false;
       });
       Provider.of<UserProvider>(context, listen: false)
@@ -80,12 +87,14 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     }
   }
 
-  // League universe comes from the backend config (LeagueConfigService) so a
-  // new league can appear here with no app update. Compare as strings because
-  // the user maps are keyed by string ids.
+  // League universe = (supported by backend config) ∩ (opted-in by this user).
+  // Missing chosenLeagues entries default to opted-in to match games.dart
+  // bootstrap behaviour. Comparing as strings because the user maps are
+  // keyed by string ids.
   Set<String> get _allowedIds => LeagueConfigService()
       .supportedLeagues
       .map((id) => id.toString())
+      .where((id) => _chosenLeagues[id] != false)
       .toSet();
 
   @override
@@ -127,22 +136,32 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                     child: _showWinners
                         ? usersWinners(
                             key: const ValueKey('winners'),
-                            userWinners:
-                                _isLoading ? placeholderNames : _userWinners,
                             filteredWinners: _isLoading
                                 ? placeholderNames
                                 : filteredWinners,
+                            leagueIds: _isLoading
+                                ? placeholderNames.keys.toList()
+                                : _allowedIds.toList(),
+                            clientId: currentUserId,
+                            email: currentUserEmail,
+                            isLoading: _isLoading,
+                            onChanged: _fetchPersonalData,
                           )
                         : usersTopScorers(
                             key: const ValueKey('topScorers'),
-                            userTopScorers:
-                                _isLoading ? placeholderNames : _userTopScorer,
                             userTopScorerPoints: _isLoading
                                 ? placeholderPoints
                                 : _userTopScorerPoints,
                             filteredTopScorers: _isLoading
                                 ? placeholderNames
                                 : filteredTopScorers,
+                            leagueIds: _isLoading
+                                ? placeholderNames.keys.toList()
+                                : _allowedIds.toList(),
+                            clientId: currentUserId,
+                            email: currentUserEmail,
+                            isLoading: _isLoading,
+                            onChanged: _fetchPersonalData,
                           ),
                   ),
                 ),
@@ -404,22 +423,36 @@ String _leagueLogoUrl(String id) =>
     'https://media.api-sports.io/football/leagues/$id.png';
 
 // ── Winners list ────────────────────────────────────────────────────────
+// Iterates every supported league so users can see and start a pick even when
+// they haven't chosen yet. Each row probes the pre-season cutoff window via
+// PickAvailability and renders one of: existing pick (PickedChip), empty
+// state (EmptyPickChip, tappable), or closed (ClosedPickChip, not tappable).
 class usersWinners extends StatelessWidget {
   const usersWinners({
     super.key,
-    required Map<String, String> userWinners,
     required this.filteredWinners,
-  }) : _userWinners = userWinners;
+    required this.leagueIds,
+    required this.clientId,
+    required this.email,
+    required this.isLoading,
+    required this.onChanged,
+  });
 
-  final Map<String, String> _userWinners;
   final Map<String, String> filteredWinners;
+  // Pre-filtered to leagues the user has opted into; iteration order is
+  // preserved so the list matches the order the parent computes.
+  final List<String> leagueIds;
+  final String clientId;
+  final String email;
+  final bool isLoading;
+  final VoidCallback onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final c = context.col;
     final l = AppLocalizations.of(context)!;
+    final ids = leagueIds;
 
-    if (_userWinners.isEmpty) {
+    if (ids.isEmpty) {
       return _EmptyCard(
         icon: Icons.emoji_events_outlined,
         title: l.noWinnersYet,
@@ -428,21 +461,17 @@ class usersWinners extends StatelessWidget {
     }
 
     return Column(
-      children: filteredWinners.entries.map((entry) {
-        final id = entry.key;
-        final teamName = entry.value;
-        return _LeagueRow(
-          logoUrl: _leagueLogoUrl(id),
-          leagueName: _leagueName(id, l, context),
-          trailing: _BadgeChip(
-            icon: Icons.emoji_events_outlined,
-            label: teamName,
-          ),
-          subtitle: Text(
-            (l.yourprediction ?? 'Your prediction').toUpperCase(),
-            style: EType.label(
-                color: c.inkDim, size: 10, letterSpacing: 1.6),
-          ),
+      children: ids.map((id) {
+        final pick = filteredWinners[id];
+        return _SeasonPickRow(
+          leagueIdStr: id,
+          pick: pick,
+          icon: Icons.emoji_events_outlined,
+          clientId: clientId,
+          email: email,
+          isLoading: isLoading,
+          onChanged: onChanged,
+          mode: _PickKind.winner,
         );
       }).toList(),
     );
@@ -450,24 +479,35 @@ class usersWinners extends StatelessWidget {
 }
 
 // ── Top scorers list ────────────────────────────────────────────────────
+// Same shape as usersWinners: one row per supported league with availability-
+// aware trailing chip. Points are only shown when the user has actually picked.
 class usersTopScorers extends StatelessWidget {
   const usersTopScorers({
     super.key,
-    required Map<String, String> userTopScorers,
     required this.userTopScorerPoints,
     required this.filteredTopScorers,
-  }) : _userTopScorers = userTopScorers;
+    required this.leagueIds,
+    required this.clientId,
+    required this.email,
+    required this.isLoading,
+    required this.onChanged,
+  });
 
-  final Map<String, String> _userTopScorers;
   final Map<String, int> userTopScorerPoints;
   final Map<String, String> filteredTopScorers;
+  // Same filtered set as usersWinners — only leagues the user opted into.
+  final List<String> leagueIds;
+  final String clientId;
+  final String email;
+  final bool isLoading;
+  final VoidCallback onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final c = context.col;
     final l = AppLocalizations.of(context)!;
+    final ids = leagueIds;
 
-    if (filteredTopScorers.isEmpty) {
+    if (ids.isEmpty) {
       return _EmptyCard(
         icon: Icons.sports_soccer_outlined,
         title: l.noTopScorersYet,
@@ -476,37 +516,189 @@ class usersTopScorers extends StatelessWidget {
     }
 
     return Column(
-      children: filteredTopScorers.entries.map((entry) {
-        final id = entry.key;
-        final scorerName = entry.value;
+      children: ids.map((id) {
+        final pick = filteredTopScorers[id];
         final pts = userTopScorerPoints[id] ?? 0;
-        return _LeagueRow(
-          logoUrl: _leagueLogoUrl(id),
-          leagueName: _leagueName(id, l, context),
-          trailing: _BadgeChip(
-            icon: Icons.sports_soccer_outlined,
-            label: scorerName,
-          ),
-          subtitle: Row(
-            children: [
-              Text(
-                (l.topScorerPoints ?? 'Goals Points').toUpperCase(),
-                style: EType.label(
-                    color: c.inkDim, size: 10, letterSpacing: 1.6),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '$pts ${l.pst}',
-                style: EType.numeric(
-                  color: pts > 0 ? c.live : c.inkDim,
-                  size: 11,
-                  weight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
+        return _SeasonPickRow(
+          leagueIdStr: id,
+          pick: pick,
+          icon: Icons.sports_soccer_outlined,
+          clientId: clientId,
+          email: email,
+          isLoading: isLoading,
+          onChanged: onChanged,
+          mode: _PickKind.topScorer,
+          points: pts,
         );
       }).toList(),
+    );
+  }
+}
+
+// ── Shared per-league row with availability-aware picker ────────────────────
+enum _PickKind { winner, topScorer }
+
+class _SeasonPickRow extends StatefulWidget {
+  const _SeasonPickRow({
+    required this.leagueIdStr,
+    required this.pick,
+    required this.icon,
+    required this.clientId,
+    required this.email,
+    required this.isLoading,
+    required this.onChanged,
+    required this.mode,
+    this.points,
+  });
+
+  final String leagueIdStr;
+  final String? pick;
+  final IconData icon;
+  final String clientId;
+  final String email;
+  final bool isLoading;
+  final VoidCallback onChanged;
+  final _PickKind mode;
+  final int? points;
+
+  @override
+  State<_SeasonPickRow> createState() => _SeasonPickRowState();
+}
+
+class _SeasonPickRowState extends State<_SeasonPickRow> {
+  Future<PickAvailability>? _availability;
+
+  // resolvePickWindow reads AppLocalizations for its error strings, so it
+  // depends on inherited widgets and can't run in initState. Defer to
+  // didChangeDependencies and guard against re-running on every dependency
+  // change (theme/locale flips would otherwise re-trigger a network probe).
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _availability ??= _resolve();
+  }
+
+  @override
+  void didUpdateWidget(_SeasonPickRow old) {
+    super.didUpdateWidget(old);
+    // Re-probe after a save so a row that flipped past the cutoff updates.
+    if (old.pick != widget.pick) {
+      _availability = _resolve();
+    }
+  }
+
+  Future<PickAvailability> _resolve() async {
+    if (widget.isLoading) return const PickAvailability(PickWindow.error);
+    final id = int.tryParse(widget.leagueIdStr);
+    if (id == null) return const PickAvailability(PickWindow.error);
+    return resolvePickWindow(context, id);
+  }
+
+  Future<void> _openPicker() async {
+    final id = int.tryParse(widget.leagueIdStr);
+    if (id == null) return;
+    final l = AppLocalizations.of(context)!;
+    final leagueName = _leagueName(widget.leagueIdStr, l, context);
+    final result = widget.mode == _PickKind.winner
+        ? await openWinnerPicker(
+            context,
+            clientId: widget.clientId,
+            email: widget.email,
+            leagueId: id,
+            leagueName: leagueName,
+            currentPick: widget.pick,
+          )
+        : await openTopScorerPicker(
+            context,
+            clientId: widget.clientId,
+            email: widget.email,
+            leagueId: id,
+            leagueName: leagueName,
+            currentPick: widget.pick,
+          );
+    if (result != null) widget.onChanged();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    final l = AppLocalizations.of(context)!;
+
+    return FutureBuilder<PickAvailability>(
+      future: _availability,
+      builder: (ctx, snap) {
+        final isOpen = snap.data?.canPick ?? false;
+        final hasPick = widget.pick != null && widget.pick!.isNotEmpty;
+
+        final Widget trailing;
+        if (hasPick) {
+          trailing = PickedChip(label: widget.pick!, icon: widget.icon);
+        } else if (isOpen) {
+          trailing = const EmptyPickChip();
+        } else if (snap.connectionState == ConnectionState.waiting) {
+          // Quiet placeholder while the availability probe is in-flight.
+          trailing = SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.5,
+              valueColor: AlwaysStoppedAnimation(c.inkDim),
+            ),
+          );
+        } else {
+          trailing = const ClosedPickChip();
+        }
+
+        final subtitle = _buildSubtitle(c, l, hasPick: hasPick, isOpen: isOpen);
+        final tappable = isOpen; // edits allowed only inside the open window
+
+        return _LeagueRow(
+          logoUrl: _leagueLogoUrl(widget.leagueIdStr),
+          leagueName: _leagueName(widget.leagueIdStr, l, context),
+          trailing: trailing,
+          subtitle: subtitle,
+          onTap: tappable ? _openPicker : null,
+        );
+      },
+    );
+  }
+
+  Widget _buildSubtitle(EditorialColors c, AppLocalizations l,
+      {required bool hasPick, required bool isOpen}) {
+    if (widget.mode == _PickKind.topScorer && hasPick) {
+      final pts = widget.points ?? 0;
+      return Row(
+        children: [
+          Text(
+            (l.topScorerPoints ?? 'Goals Points').toUpperCase(),
+            style:
+                EType.label(color: c.inkDim, size: 10, letterSpacing: 1.6),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '$pts ${l.pst}',
+            style: EType.numeric(
+              color: pts > 0 ? c.live : c.inkDim,
+              size: 11,
+              weight: FontWeight.w600,
+            ),
+          ),
+        ],
+      );
+    }
+    final String text;
+    if (hasPick) {
+      text = l.yourprediction ?? 'Your prediction';
+    } else if (isOpen) {
+      text = widget.mode == _PickKind.winner
+          ? l.taptoselectwinner
+          : l.taptoselecttopscorer;
+    } else {
+      text = l.selectionClosed;
+    }
+    return Text(
+      text.toUpperCase(),
+      style: EType.label(color: c.inkDim, size: 10, letterSpacing: 1.6),
     );
   }
 }
@@ -518,16 +710,18 @@ class _LeagueRow extends StatelessWidget {
     required this.leagueName,
     required this.trailing,
     required this.subtitle,
+    this.onTap,
   });
   final String logoUrl;
   final String leagueName;
   final Widget trailing;
   final Widget subtitle;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final c = context.col;
-    return Container(
+    final row = Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         border: Border(
@@ -579,44 +773,10 @@ class _LeagueRow extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-// ── Pill / badge chip ───────────────────────────────────────────────────
-class _BadgeChip extends StatelessWidget {
-  const _BadgeChip({required this.label, required this.icon});
-  final String label;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.col;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      constraints: const BoxConstraints(maxWidth: 130),
-      decoration: BoxDecoration(
-        color: c.liveSoft,
-        border: Border.all(color: c.live.withOpacity(0.5), width: 1),
-        borderRadius: BorderRadius.circular(2),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: c.live),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              label,
-              overflow: TextOverflow.ellipsis,
-              style: EType.body(
-                color: c.live,
-                size: 12,
-                weight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
+    if (onTap == null) return row;
+    return InkWell(
+      onTap: onTap,
+      child: row,
     );
   }
 }

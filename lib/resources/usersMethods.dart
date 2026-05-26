@@ -85,6 +85,52 @@ Future<Map<String, dynamic>> fetchUserById(String userId) async {
     }
   }
 
+// Persist this user's pick for the league champion. The backend expects the
+// dotted-key shape under `winner` so only the single league slot is written
+// without clobbering other leagues' picks.
+Future<void> updateWinner({
+  required String clientId,
+  required String email,
+  required int leagueId,
+  required String team,
+}) async {
+  final res = await http.put(
+    Uri.parse('$_baseUrl/users/winner'),
+    headers: {'Content-Type': 'application/json; charset=UTF-8'},
+    body: jsonEncode({
+      '_id': clientId,
+      'email': email,
+      'winner': {'winner.$leagueId': team},
+    }),
+  );
+  if (res.statusCode != 200) {
+    throw Exception('Failed to save winner: ${res.statusCode}');
+  }
+}
+
+// Persist this user's top-scorer pick for the league. Mirrors updateWinner —
+// dotted-key under `topScorer` so other leagues are untouched. The player
+// string is already trimmed by the caller (the " (Team)" suffix is dropped).
+Future<void> updateTopScorer({
+  required String clientId,
+  required String email,
+  required int leagueId,
+  required String player,
+}) async {
+  final res = await http.put(
+    Uri.parse('$_baseUrl/users/top-scorer'),
+    headers: {'Content-Type': 'application/json; charset=UTF-8'},
+    body: jsonEncode({
+      '_id': clientId,
+      'email': email,
+      'topScorer': {'topScorer.$leagueId': player},
+    }),
+  );
+  if (res.statusCode != 200) {
+    throw Exception('Failed to save top scorer: ${res.statusCode}');
+  }
+}
+
 Future<String> sendEmail(String email, context) async {
     try {
       print('Sending email to: $email');

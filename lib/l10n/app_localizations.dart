@@ -755,6 +755,30 @@ abstract class AppLocalizations {
   /// **'your winners'**
   String get yourwinners;
 
+  /// No description provided for @pickWinnerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick league winner'**
+  String get pickWinnerTitle;
+
+  /// No description provided for @pickTopScorerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick top scorer'**
+  String get pickTopScorerTitle;
+
+  /// No description provided for @tapToPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get tapToPick;
+
+  /// No description provided for @selectionClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Selection closed'**
+  String get selectionClosed;
+
   /// No description provided for @or.
   ///
   /// In en, this message translates to:

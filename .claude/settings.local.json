@@ -66,7 +66,17 @@
       "Bash(node scripts/cleanupOldSeasons.js --apply)",
       "Bash(ls C:/worldBackend 2>&1 | head -30)",
       "PowerShell(Test-Connection -ComputerName scorecast.yossih.dev -Count 6)",
-      "PowerShell($fmt = \"TTFB %{time_starttransfer}s | total %{time_total}s | %{size_download}B`n\"; Write-Host \"=== /api/games/39 x5 \\(repeated\\) ===\"; 1..5 | ForEach-Object { curl.exe -s -o NUL -w $fmt https://scorecast.yossih.dev/api/games/39 }; Write-Host \"`n=== /api/liveGames ===\"; curl.exe -s -o NUL -w $fmt https://scorecast.yossih.dev/api/liveGames; Write-Host \"=== /api/games/140 ===\"; curl.exe -s -o NUL -w $fmt https://scorecast.yossih.dev/api/games/140; Write-Host \"=== /api/games/2 \\(UCL\\) ===\"; curl.exe -s -o NUL -w $fmt https://scorecast.yossih.dev/api/games/2)"
+      "PowerShell($fmt = \"TTFB %{time_starttransfer}s | total %{time_total}s | %{size_download}B`n\"; Write-Host \"=== /api/games/39 x5 \\(repeated\\) ===\"; 1..5 | ForEach-Object { curl.exe -s -o NUL -w $fmt https://scorecast.yossih.dev/api/games/39 }; Write-Host \"`n=== /api/liveGames ===\"; curl.exe -s -o NUL -w $fmt https://scorecast.yossih.dev/api/liveGames; Write-Host \"=== /api/games/140 ===\"; curl.exe -s -o NUL -w $fmt https://scorecast.yossih.dev/api/games/140; Write-Host \"=== /api/games/2 \\(UCL\\) ===\"; curl.exe -s -o NUL -w $fmt https://scorecast.yossih.dev/api/games/2)",
+      "WebFetch(domain:sportsgameodds.com)",
+      "WebFetch(domain:www.goalserve.com)",
+      "WebFetch(domain:developer.sportradar.com)",
+      "WebFetch(domain:www.bettingodds.com)",
+      "WebFetch(domain:news.williamhill.com)",
+      "WebFetch(domain:skybet.com)",
+      "WebFetch(domain:www.ladbrokes.com)",
+      "WebFetch(domain:news.bet365.com)",
+      "WebFetch(domain:www.squawka.com)",
+      "WebFetch(domain:bettinglounge.co.uk)"
     ]
   }
 }

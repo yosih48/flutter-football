@@ -5,6 +5,38 @@ import 'package:football/utils/config.dart';
 String _baseUrl = backendUrl;
 
 class PlayersMethods {
+  // Returns the raw per-player records from /getTopScorersList so callers can
+  // pick the localized name/team themselves. Each entry has keys: `name`,
+  // `name_english`, `team`, `team_english` (Hebrew variants may be empty).
+  Future<List<Map<String, String>>> fetchPlayersListRaw(
+      dynamic dataToSend) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/getTopScorersList'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'data': dataToSend}),
+      );
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        return [];
+      }
+      final body = jsonDecode(response.body);
+      final players = body['data']?['players'] as List<dynamic>?;
+      if (players == null) return [];
+      return players
+          .whereType<Map>()
+          .map<Map<String, String>>((p) => {
+                'name': p['name']?.toString() ?? '',
+                'name_english': p['name_english']?.toString() ?? '',
+                'team': p['team']?.toString() ?? '',
+                'team_english': p['team_english']?.toString() ?? '',
+              })
+          .toList();
+    } catch (e) {
+      print('Error fetching players: $e');
+      return [];
+    }
+  }
+
   Future<List<String>> fetchPlayersList(dynamic dataToSend) async {
     try {
       final response = await http.post(
