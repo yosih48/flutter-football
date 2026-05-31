@@ -24,26 +24,48 @@ class PickAvailability {
   bool get canPick => window == PickWindow.open;
 }
 
+// How long after the last fixture we still treat the league as "just ended"
+// (and therefore locked for picks). Beyond this, an all-past fixture list is
+// considered stale data for a future season that hasn't been published yet —
+// e.g. World Cup (league=1) served with a cached 2022 schedule when the 2026
+// fixtures aren't in the backend yet — and the window is opened so the user
+// can still pick. Tuned generously because off-seasons for international
+// tournaments can run 3+ years.
+const Duration _staleScheduleThreshold = Duration(days: 180);
+
 Future<PickAvailability> resolvePickWindow(
     BuildContext context, int leagueId) async {
-  // TEMP (testing): force the pick window open for every league regardless of
-  // the season-start / 1-hour cutoff. Remove this short-circuit to restore the
-  // real gating below.
-  
-
-  // ignore: dead_code
   final l = AppLocalizations.of(context)!;
   try {
     final games = await GamesMethods().fetchGamesForLeague(leagueId);
     if (games.isEmpty) {
-      return PickAvailability(PickWindow.noGames, l.selectionnotavailableyet);
+      // No schedule at all — open the window. A user picking with nothing
+      // scheduled yet is the same case as a future tournament without
+      // fixtures: fail-open is the safer UX than locking on no information.
+      return const PickAvailability(PickWindow.open);
     }
     games.sort((a, b) => a.timestamp.compareTo(b.timestamp));
-    final firstGameUtc = games.first.date.toUtc();
     final nowUtc = DateTime.now().toUtc();
-    if (!nowUtc.isBefore(firstGameUtc)) {
+    final firstGameUtc = games.first.date.toUtc();
+    final lastGameUtc = games.last.date.toUtc();
+
+    // Case A: every fixture is in the past. Either the season just ended
+    // (legitimately closed) or the data is stale because a future season
+    // hasn't been published yet (open).
+    if (nowUtc.isAfter(lastGameUtc)) {
+      final age = nowUtc.difference(lastGameUtc);
+      if (age > _staleScheduleThreshold) {
+        return const PickAvailability(PickWindow.open);
+      }
       return PickAvailability(PickWindow.closed, l.selectionClosed);
     }
+
+    // Case B: the season has already begun (some games are past, some future).
+    if (nowUtc.isAfter(firstGameUtc)) {
+      return PickAvailability(PickWindow.closed, l.selectionClosed);
+    }
+
+    // Case C: every fixture is in the future — gate on 1 hour before the first.
     final cutoff = firstGameUtc.subtract(const Duration(hours: 1));
     if (nowUtc.isAfter(cutoff)) {
       return PickAvailability(PickWindow.closed, l.selectiontimeexpired);
