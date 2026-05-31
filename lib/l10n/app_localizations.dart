@@ -1271,6 +1271,12 @@ abstract class AppLocalizations {
   /// **'Finished After ET'**
   String get finishAfterExtraTime;
 
+  /// No description provided for @finishAfterPenalties.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished After Penalties'**
+  String get finishAfterPenalties;
+
   /// No description provided for @extraTime.
   ///
   /// In en, this message translates to:

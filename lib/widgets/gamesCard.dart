@@ -37,8 +37,10 @@ class GameWidget extends StatelessWidget {
   };
 
   bool get _isLive => _liveShort.contains(game.status.short);
+  bool get _isAfterPenalties => game.status.short == 'PEN';
+  bool get _isAfterExtraTime => game.status.short == 'AET';
   bool get _isFinished =>
-      game.status.short == 'FT' || game.status.short == 'AET';
+      game.status.short == 'FT' || _isAfterExtraTime || _isAfterPenalties;
   bool get _isHalftime => game.status.short == 'HT';
   bool get _isUpcoming => game.status.long == 'Not Started';
   bool get _kickoffPassed => DateTime.now().isAfter(game.date.toLocal());
@@ -156,6 +158,16 @@ class GameWidget extends StatelessWidget {
       return Text('HALF TIME',
           style: EType.label(
               color: c.amber, size: 10, letterSpacing: 1.8));
+    }
+    if (_isAfterPenalties) {
+      return Text('AFTER PENALTIES',
+          style: EType.label(
+              color: c.inkMute, size: 10, letterSpacing: 1.8));
+    }
+    if (_isAfterExtraTime) {
+      return Text('AFTER EXTRA TIME',
+          style: EType.label(
+              color: c.inkMute, size: 10, letterSpacing: 1.8));
     }
     if (_isFinished) {
       return Text('FULL TIME',

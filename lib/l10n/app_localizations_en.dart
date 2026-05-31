@@ -597,6 +597,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get finishAfterExtraTime => 'Finished After ET';
 
   @override
+  String get finishAfterPenalties => 'Finished After Penalties';
+
+  @override
   String get extraTime => 'Extra Time';
 
   @override

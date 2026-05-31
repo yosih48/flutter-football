@@ -597,6 +597,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get finishAfterExtraTime => 'סיום לאחר הארכה';
 
   @override
+  String get finishAfterPenalties => 'סיום לאחר פנדלים';
+
+  @override
   String get extraTime => 'הארכה';
 
   @override

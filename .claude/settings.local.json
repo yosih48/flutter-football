@@ -76,7 +76,8 @@
       "WebFetch(domain:www.ladbrokes.com)",
       "WebFetch(domain:news.bet365.com)",
       "WebFetch(domain:www.squawka.com)",
-      "WebFetch(domain:bettinglounge.co.uk)"
+      "WebFetch(domain:bettinglounge.co.uk)",
+      "Bash(node --check liveFetcher.js)"
     ]
   }
 }

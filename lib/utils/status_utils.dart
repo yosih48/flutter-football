@@ -47,6 +47,11 @@ class StatusUtils {
           "color": Colors.green,
           "text": AppLocalizations.of(context)!.finishAfterExtraTime
         };
+      case "PEN":
+        return {
+          "color": Colors.green,
+          "text": AppLocalizations.of(context)!.finishAfterPenalties
+        };
       case "TBD":
         return {"color": Colors.yellow, "text": "To Be Decided"};
       default:
