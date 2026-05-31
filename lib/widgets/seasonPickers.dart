@@ -29,7 +29,7 @@ Future<PickAvailability> resolvePickWindow(
   // TEMP (testing): force the pick window open for every league regardless of
   // the season-start / 1-hour cutoff. Remove this short-circuit to restore the
   // real gating below.
-  return const PickAvailability(PickWindow.open);
+  
 
   // ignore: dead_code
   final l = AppLocalizations.of(context)!;

@@ -101,22 +101,22 @@ class _StatsWidgetState extends State<StatsWidget> {
     for (final s in home.statistics) allTypes.add(s.type);
     for (final s in away.statistics) allTypes.add(s.type);
 
-    final asOf = _asOfLabel(l);
+    // final asOf = _asOfLabel(l);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (asOf != null) ...[
-            Center(
-              child: Text(
-                asOf.toUpperCase(),
-                style: EType.label(color: c.inkDim, size: 9, letterSpacing: 1.6),
-              ),
-            ),
-            const SizedBox(height: 10),
-          ],
+          // if (asOf != null) ...[
+          //   Center(
+          //     child: Text(
+          //       asOf.toUpperCase(),
+          //       style: EType.label(color: c.inkDim, size: 9, letterSpacing: 1.6),
+          //     ),
+          //   ),
+          //   const SizedBox(height: 10),
+          // ],
           _teamHeader(home.teamLogo, away.teamLogo),
           const SizedBox(height: 14),
           ...allTypes.map((type) => _statRow(type, home, away)),
@@ -125,15 +125,15 @@ class _StatsWidgetState extends State<StatsWidget> {
     );
   }
 
-  String? _asOfLabel(AppLocalizations l) {
-    final status = _statsAsOfStatus;
-    if (status == 'FT' || status == 'AET' || status == 'PEN') {
-      return l.statsAsOfFullTime;
-    }
-    final minute = _statsAsOfMinute;
-    if (minute == null || minute <= 0) return null;
-    return l.statsAsOf(minute.toString());
-  }
+  // String? _asOfLabel(AppLocalizations l) {
+  //   final status = _statsAsOfStatus;
+  //   if (status == 'FT' || status == 'AET' || status == 'PEN') {
+  //     return l.statsAsOfFullTime;
+  //   }
+  //   final minute = _statsAsOfMinute;
+  //   if (minute == null || minute <= 0) return null;
+  //   return l.statsAsOf(minute.toString());
+  // }
 
   Widget _teamHeader(String homeLogo, String awayLogo) {
     return Row(
