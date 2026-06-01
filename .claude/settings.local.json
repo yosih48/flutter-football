@@ -77,7 +77,13 @@
       "WebFetch(domain:news.bet365.com)",
       "WebFetch(domain:www.squawka.com)",
       "WebFetch(domain:bettinglounge.co.uk)",
-      "Bash(node --check liveFetcher.js)"
+      "Bash(node --check liveFetcher.js)",
+      "Bash(node --check src/models/bracketModel.js)",
+      "Bash(node --check src/controllers/bracketClass.js)",
+      "Bash(node --check src/routes/brackets.js)",
+      "Bash(node --check src/config/bracketConfig.js)",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('config/worldCupBracket.json','utf8'\\)\\); JSON.parse\\(require\\('fs'\\).readFileSync\\('config/leagues.json','utf8'\\)\\); console.log\\('json ok'\\)\")",
+      "WebFetch(domain:en.wikipedia.org)"
     ]
   }
 }

@@ -939,4 +939,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get championPointsLabel => 'Champion';
+
+  @override
+  String get bracketTitle => 'World Cup Bracket';
+
+  @override
+  String get bracketEntrySubtitle => 'Predict groups, knockouts & champion';
+
+  @override
+  String get bracketPointsLabel => 'Bracket Points';
+
+  @override
+  String get bracketMyBracketTab => 'My Bracket';
+
+  @override
+  String get bracketRankingTab => 'Ranking';
+
+  @override
+  String get bracketGroupStage => 'Group Stage';
+
+  @override
+  String get bracketGroupHint => 'Tap to pick who finishes 1st and 2nd';
+
+  @override
+  String get bracketGroupWord => 'Group';
+
+  @override
+  String get bracketChampionLabel => 'Champion';
+
+  @override
+  String get bracketChampionHint => 'Tap to pick the tournament winner';
+
+  @override
+  String get bracketSelectTeamTitle => 'Select team';
+
+  @override
+  String get bracketLockedLabel => 'Locked';
+
+  @override
+  String get bracketAdvanceLabel => 'To advance';
+
+  @override
+  String get bracketThirdPlace => '3rd place';
+
+  @override
+  String get bracketPickThird => 'Pick a 3rd-placed team';
+
+  @override
+  String get bracketTBD => 'To be decided';
+
+  @override
+  String get bracketPickPrevious => 'Pick the previous round first';
+
+  @override
+  String get bracketSave => 'Save';
+
+  @override
+  String get bracketSaved => 'Saved';
+
+  @override
+  String get bracketSaveFailed => 'Could not save';
+
+  @override
+  String get bracketNoTeamsTitle => 'Not available yet';
+
+  @override
+  String get bracketNoTeamsHint =>
+      'The group draw hasn\'t loaded yet. Check back closer to the tournament.';
+
+  @override
+  String get bracketRankingEmptyTitle => 'No points yet';
+
+  @override
+  String get bracketRankingEmptyHint =>
+      'Bracket points appear once rounds are settled.';
 }

@@ -939,4 +939,77 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get championPointsLabel => 'אלופה';
+
+  @override
+  String get bracketTitle => 'טבלת גביע העולם';
+
+  @override
+  String get bracketEntrySubtitle => 'נחשו בתים, נוקאאוט ואלופה';
+
+  @override
+  String get bracketPointsLabel => 'נקודות טבלה';
+
+  @override
+  String get bracketMyBracketTab => 'הטבלה שלי';
+
+  @override
+  String get bracketRankingTab => 'דירוג';
+
+  @override
+  String get bracketGroupStage => 'שלב הבתים';
+
+  @override
+  String get bracketGroupHint => 'הקישו לבחירת המקום הראשון והשני';
+
+  @override
+  String get bracketGroupWord => 'בית';
+
+  @override
+  String get bracketChampionLabel => 'אלופה';
+
+  @override
+  String get bracketChampionHint => 'הקישו לבחירת אלופת הטורניר';
+
+  @override
+  String get bracketSelectTeamTitle => 'בחירת קבוצה';
+
+  @override
+  String get bracketLockedLabel => 'נעול';
+
+  @override
+  String get bracketAdvanceLabel => 'מעפילות';
+
+  @override
+  String get bracketThirdPlace => 'מקום שלישי';
+
+  @override
+  String get bracketPickThird => 'בחרו נבחרת ממקום שלישי';
+
+  @override
+  String get bracketTBD => 'טרם נקבע';
+
+  @override
+  String get bracketPickPrevious => 'בחרו קודם את הסיבוב הקודם';
+
+  @override
+  String get bracketSave => 'שמירה';
+
+  @override
+  String get bracketSaved => 'נשמר';
+
+  @override
+  String get bracketSaveFailed => 'השמירה נכשלה';
+
+  @override
+  String get bracketNoTeamsTitle => 'עדיין לא זמין';
+
+  @override
+  String get bracketNoTeamsHint =>
+      'הגרלת הבתים עדיין לא נטענה. בדקו שוב קרוב לטורניר.';
+
+  @override
+  String get bracketRankingEmptyTitle => 'אין עדיין נקודות';
+
+  @override
+  String get bracketRankingEmptyHint => 'נקודות הטבלה יופיעו לאחר חישוב הסיבובים.';
 }

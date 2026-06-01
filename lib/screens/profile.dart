@@ -3,6 +3,7 @@ import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/league_config_service.dart';
 import 'package:football/resources/usersMethods.dart';
+import 'package:football/screens/bracket.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
@@ -122,6 +123,9 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
             // ── Hero (fixed at top) ──────────────────────────────────
             _buildHero(context, c),
 
+            // ── Bracket entry (tournament leagues only) ──────────────
+            _buildBracketEntry(context, c),
+
             // ── Tab strip (pinned) ───────────────────────────────────
             _buildTabStrip(context, c),
 
@@ -200,6 +204,67 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
             onTap: () => setState(() => _showWinners = false),
           ),
         ],
+      ),
+    );
+  }
+
+  // Tournament leagues (hasBracket) the user has opted into get a tappable
+  // entry into the bracket-prediction game. Hidden entirely for ordinary
+  // leagues so the profile stays unchanged for them.
+  Widget _buildBracketEntry(BuildContext context, EditorialColors c) {
+    if (_isLoading) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context)!;
+    final bracketIds = _allowedIds
+        .where((id) {
+          final n = int.tryParse(id);
+          return n != null && LeagueConfigService().hasBracket(n);
+        })
+        .toList();
+    if (bracketIds.isEmpty) return const SizedBox.shrink();
+    final id = int.parse(bracketIds.first);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
+      child: GestureDetector(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => BracketScreen(
+              leagueId: id,
+              userId: currentUserId,
+              email: currentUserEmail,
+              userName: currentUserName,
+            ),
+          ),
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          decoration: BoxDecoration(
+            color: c.card,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: c.live, width: 1.5),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.account_tree_outlined, size: 20, color: c.live),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l.bracketTitle.toUpperCase(),
+                        style: EType.label(
+                            color: c.ink, size: 12, letterSpacing: 1.6)),
+                    const SizedBox(height: 3),
+                    Text(l.bracketEntrySubtitle.toUpperCase(),
+                        style: EType.label(
+                            color: c.inkDim, size: 9, letterSpacing: 1.2)),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, size: 20, color: c.inkDim),
+            ],
+          ),
+        ),
       ),
     );
   }

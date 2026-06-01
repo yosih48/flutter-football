@@ -30,6 +30,10 @@ class LeagueConfigService {
   // id -> { 'en': ..., 'he': ... }. Empty until cache/network populates it.
   final Map<int, Map<String, String>> _names = {};
 
+  // Ids flagged hasBracket:true in the backend config — tournament leagues that
+  // offer the bracket-prediction game on top of per-game guessing.
+  final Set<int> _bracketLeagues = {};
+
   Future<void> initialize() async {
     // 1. Last-known-good cache first, so an offline launch still gets the most
     //    recent list/names instead of the (possibly stale) compiled defaults.
@@ -78,6 +82,10 @@ class LeagueConfigService {
     return null;
   }
 
+  // True if this league offers the tournament bracket game (hasBracket in the
+  // backend config). False for ordinary leagues and before config loads.
+  bool hasBracket(int id) => _bracketLeagues.contains(id);
+
   // Parses the server shape [{id,nameEn,nameHe}, ...] or a bare [2,383,...]
   // list (older cache form). Order preserved, dupes/invalid entries dropped.
   // Returns false if nothing usable was found (caller keeps current state).
@@ -85,10 +93,12 @@ class LeagueConfigService {
     if (raw is! List) return false;
     final ids = <int>[];
     final names = <int, Map<String, String>>{};
+    final brackets = <int>{};
     for (final item in raw) {
       int? id;
       String? en;
       String? he;
+      bool bracket = false;
       if (item is int) {
         id = item;
       } else if (item is Map) {
@@ -97,9 +107,11 @@ class LeagueConfigService {
         final h = item['nameHe'];
         if (e is String && e.trim().isNotEmpty) en = e.trim();
         if (h is String && h.trim().isNotEmpty) he = h.trim();
+        bracket = item['hasBracket'] == true;
       }
       if (id == null || ids.contains(id)) continue;
       ids.add(id);
+      if (bracket) brackets.add(id);
       if (en != null || he != null) {
         names[id] = {
           if (en != null) 'en': en,
@@ -112,6 +124,9 @@ class LeagueConfigService {
     _names
       ..clear()
       ..addAll(names);
+    _bracketLeagues
+      ..clear()
+      ..addAll(brackets);
     return true;
   }
 }

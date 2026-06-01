@@ -1954,6 +1954,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Champion'**
   String get championPointsLabel;
+
+  /// No description provided for @bracketTitle.
+  String get bracketTitle;
+
+  /// No description provided for @bracketEntrySubtitle.
+  String get bracketEntrySubtitle;
+
+  /// No description provided for @bracketPointsLabel.
+  String get bracketPointsLabel;
+
+  /// No description provided for @bracketMyBracketTab.
+  String get bracketMyBracketTab;
+
+  /// No description provided for @bracketRankingTab.
+  String get bracketRankingTab;
+
+  /// No description provided for @bracketGroupStage.
+  String get bracketGroupStage;
+
+  /// No description provided for @bracketGroupHint.
+  String get bracketGroupHint;
+
+  /// No description provided for @bracketGroupWord.
+  String get bracketGroupWord;
+
+  /// No description provided for @bracketChampionLabel.
+  String get bracketChampionLabel;
+
+  /// No description provided for @bracketChampionHint.
+  String get bracketChampionHint;
+
+  /// No description provided for @bracketSelectTeamTitle.
+  String get bracketSelectTeamTitle;
+
+  /// No description provided for @bracketLockedLabel.
+  String get bracketLockedLabel;
+
+  /// No description provided for @bracketAdvanceLabel.
+  String get bracketAdvanceLabel;
+
+  /// No description provided for @bracketThirdPlace.
+  String get bracketThirdPlace;
+
+  /// No description provided for @bracketPickThird.
+  String get bracketPickThird;
+
+  /// No description provided for @bracketTBD.
+  String get bracketTBD;
+
+  /// No description provided for @bracketPickPrevious.
+  String get bracketPickPrevious;
+
+  /// No description provided for @bracketSave.
+  String get bracketSave;
+
+  /// No description provided for @bracketSaved.
+  String get bracketSaved;
+
+  /// No description provided for @bracketSaveFailed.
+  String get bracketSaveFailed;
+
+  /// No description provided for @bracketNoTeamsTitle.
+  String get bracketNoTeamsTitle;
+
+  /// No description provided for @bracketNoTeamsHint.
+  String get bracketNoTeamsHint;
+
+  /// No description provided for @bracketRankingEmptyTitle.
+  String get bracketRankingEmptyTitle;
+
+  /// No description provided for @bracketRankingEmptyHint.
+  String get bracketRankingEmptyHint;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
