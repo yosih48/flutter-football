@@ -935,6 +935,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminSettleFailed => 'Settlement failed';
 
   @override
+  String get settleBracketTitle => 'Settle Bracket';
+
+  @override
+  String get adminStageLabel => 'Stage';
+
+  @override
+  String get adminAutoSettleAllStages => 'All stages (auto-sweep)';
+
+  @override
+  String get adminBracketSettleSuccess => 'Bracket points awarded';
+
+  @override
   String get topScorerPointsLabel => 'Top Scorer';
 
   @override

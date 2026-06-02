@@ -8,6 +8,7 @@ import 'package:football/screens/login_screen.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/widgets/adminChampionSettle.dart';
+import 'package:football/widgets/adminBracketSettle.dart';
 import 'package:football/widgets/seasonPickers.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -364,30 +365,21 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
           ),
           if (widget.authProvider.currentUser?.admin == true) ...[
             const SizedBox(height: 20),
-            GestureDetector(
-              onTap: () => showAdminChampionSettleDialog(context),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: c.card,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: c.hairline),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _AdminActionChip(
+                  icon: Icons.admin_panel_settings_outlined,
+                  label: AppLocalizations.of(context)!.settleChampionTitle,
+                  onTap: () => showAdminChampionSettleDialog(context),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.admin_panel_settings_outlined,
-                        size: 16, color: c.live),
-                    const SizedBox(width: 8),
-                    Text(
-                      AppLocalizations.of(context)!.settleChampionTitle,
-                      style: EType.label(
-                          color: c.ink, size: 11, letterSpacing: 1.4),
-                    ),
-                  ],
+                _AdminActionChip(
+                  icon: Icons.account_tree_outlined,
+                  label: AppLocalizations.of(context)!.settleBracketTitle,
+                  onTap: () => showAdminBracketSettleDialog(context),
                 ),
-              ),
+              ],
             ),
           ],
         ],
@@ -396,6 +388,45 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   }
 }
 
+
+// Compact admin action button used in the profile header (admins only).
+class _AdminActionChip extends StatelessWidget {
+  const _AdminActionChip({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: c.card,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: c.hairline),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: c.live),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: EType.label(color: c.ink, size: 11, letterSpacing: 1.4),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _Tab extends StatelessWidget {
   const _Tab({

@@ -1943,6 +1943,30 @@ abstract class AppLocalizations {
   /// **'Settlement failed'**
   String get adminSettleFailed;
 
+  /// No description provided for @settleBracketTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle Bracket'**
+  String get settleBracketTitle;
+
+  /// No description provided for @adminStageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage'**
+  String get adminStageLabel;
+
+  /// No description provided for @adminAutoSettleAllStages.
+  ///
+  /// In en, this message translates to:
+  /// **'All stages (auto-sweep)'**
+  String get adminAutoSettleAllStages;
+
+  /// No description provided for @adminBracketSettleSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Bracket points awarded'**
+  String get adminBracketSettleSuccess;
+
   /// No description provided for @topScorerPointsLabel.
   ///
   /// In en, this message translates to:

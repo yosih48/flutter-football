@@ -935,6 +935,18 @@ class AppLocalizationsHe extends AppLocalizations {
   String get adminSettleFailed => 'העדכון נכשל';
 
   @override
+  String get settleBracketTitle => 'יישוב טבלת ניחוש';
+
+  @override
+  String get adminStageLabel => 'שלב';
+
+  @override
+  String get adminAutoSettleAllStages => 'כל השלבים (סריקה אוטומטית)';
+
+  @override
+  String get adminBracketSettleSuccess => 'נקודות טבלה חולקו';
+
+  @override
   String get topScorerPointsLabel => 'מלך שערים';
 
   @override
