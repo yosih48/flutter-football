@@ -2,17 +2,17 @@
 // shapes: GET /brackets/structure/:leagueId (static config from
 // worldCupBracket.json) and GET /brackets/:userId/:leagueId (a user's picks).
 
-// One stage of the tournament (group stage, a knockout round, or champion).
+// One stage of the tournament (group stage or a knockout round).
 class BracketStage {
-  final String key; // groups | R32 | R16 | QF | SF | F | champion
+  final String key; // groups | R32 | R16 | QF | SF | F
   final String labelEn;
   final String labelHe;
-  final String kind; // groups | knockout | champion
+  final String kind; // groups | knockout
   final String? advanceTo; // groups -> "R32"
   final int? advancers; // knockout: teams that reach the next round
   final int qualifierPoints; // groups
   final int orderBonus; // groups
-  final int points; // knockout / champion flat award
+  final int points; // knockout flat award
   final DateTime? lockAt; // null = not locked
 
   BracketStage({
@@ -103,7 +103,7 @@ class BracketStructure {
     return null;
   }
 
-  // The ordered knockout stages (excludes groups + champion).
+  // The ordered knockout stages (excludes groups).
   List<BracketStage> get knockoutStages =>
       stages.where((s) => s.kind == 'knockout').toList();
 }
@@ -121,8 +121,6 @@ class UserBracket {
   // stage key -> teams predicted to advance to the next round.
   final Map<String, List<String>> advancePicks;
 
-  final String? champion;
-
   // stage key -> points awarded (settlement-filled, display only).
   final Map<String, int> stagePoints;
 
@@ -132,7 +130,6 @@ class UserBracket {
     required this.season,
     required this.groupPicks,
     required this.advancePicks,
-    this.champion,
     required this.stagePoints,
   });
 
@@ -143,9 +140,6 @@ class UserBracket {
       season: (j['season'] as num?)?.toInt() ?? 0,
       groupPicks: _strListMap(j['groupPicks']),
       advancePicks: _strListMap(j['advancePicks']),
-      champion: (j['champion'] as String?)?.isNotEmpty == true
-          ? j['champion'] as String
-          : null,
       stagePoints: _intMap(j['stagePoints']),
     );
   }

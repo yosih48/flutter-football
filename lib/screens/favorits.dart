@@ -259,6 +259,21 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                   logoUrl: '$_leagueLogoBase$id.png',
                   selected: isSelected,
                   onTap: () {
+                    // Block unchecking the last remaining league — the user
+                    // must always keep at least one league selected.
+                    final selectedCount = LeagueConfigService()
+                        .supportedLeagues
+                        .where((lid) => chosenLeagues[lid] == true)
+                        .length;
+                    if (isSelected && selectedCount <= 1) {
+                      ScaffoldMessenger.of(context)
+                        ..hideCurrentSnackBar()
+                        ..showSnackBar(SnackBar(
+                          content: Text(l.atLeastOneLeague),
+                          behavior: SnackBarBehavior.floating,
+                        ));
+                      return;
+                    }
                     setState(() {
                       chosenLeagues[id] = !isSelected;
                       // Disable notification when league is unchecked.

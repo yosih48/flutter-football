@@ -339,18 +339,6 @@ class AppLocalizationsHe extends AppLocalizations {
   String get yourwinners => 'הזוכות שלי';
 
   @override
-  String get pickWinnerTitle => 'בחר את אלופת הליגה';
-
-  @override
-  String get pickTopScorerTitle => 'בחר את מלך השערים';
-
-  @override
-  String get tapToPick => 'בחר';
-
-  @override
-  String get selectionClosed => 'הבחירה סגורה';
-
-  @override
   String get or => 'או';
 
   @override
@@ -472,6 +460,18 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get pleaseSelectplayerFirst => 'אנא בחר שחקן תחילה';
+
+  @override
+  String get pickWinnerTitle => 'בחר את אלופת הליגה';
+
+  @override
+  String get pickTopScorerTitle => 'בחר את מלך השערים';
+
+  @override
+  String get tapToPick => 'בחר';
+
+  @override
+  String get selectionClosed => 'הבחירה סגורה';
 
   @override
   String get monday => 'יום שני';
@@ -1010,6 +1010,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get bracketTBD => 'טרם נקבע';
 
   @override
+  String get bracketViewFull => 'צפייה בטבלה המלאה';
+
+  @override
+  String get bracketViewerTitle => 'טבלת הניחושים';
+
+  @override
   String get bracketPickPrevious => 'בחרו קודם את הסיבוב הקודם';
 
   @override
@@ -1022,15 +1028,149 @@ class AppLocalizationsHe extends AppLocalizations {
   String get bracketSaveFailed => 'השמירה נכשלה';
 
   @override
+  String get atLeastOneLeague => 'חובה להשאיר לפחות ליגה אחת מסומנת.';
+
+  @override
+  String get bracketViewerEmptyTitle => 'עדיין אין ניחושים';
+
+  @override
+  String get bracketViewerEmptyHint => 'השחקן הזה עדיין לא מילא את טבלת הניחושים.';
+
+  @override
   String get bracketNoTeamsTitle => 'עדיין לא זמין';
 
   @override
-  String get bracketNoTeamsHint =>
-      'הגרלת הבתים עדיין לא נטענה. בדקו שוב קרוב לטורניר.';
+  String get bracketNoTeamsHint => 'הגרלת הבתים עדיין לא נטענה. בדקו שוב קרוב לטורניר.';
 
   @override
   String get bracketRankingEmptyTitle => 'אין עדיין נקודות';
 
   @override
   String get bracketRankingEmptyHint => 'נקודות הטבלה יופיעו לאחר חישוב הסיבובים.';
+
+  @override
+  String get save => 'שמירה';
+
+  @override
+  String get confirm => 'אישור';
+
+  @override
+  String get bracketLeaguesTab => 'ליגות';
+
+  @override
+  String get bracketGlobalTab => 'טבלת מובילים';
+
+  @override
+  String get bracketLeagueCreate => 'פתח';
+
+  @override
+  String get bracketLeagueJoin => 'הצטרף';
+
+  @override
+  String get bracketLeaguesEmptyTitle => 'אין עדיין ליגות';
+
+  @override
+  String get bracketLeaguesEmptyHint => 'פתחו ליגה ושתפו את קוד ההזמנה, או הצטרפו לליגה עם קוד.';
+
+  @override
+  String get bracketLeagueMembers => 'חברים';
+
+  @override
+  String get bracketLeagueCreateTitle => 'פתיחת ליגה';
+
+  @override
+  String get bracketLeagueNameHint => 'שם הליגה';
+
+  @override
+  String get bracketLeagueJoinTitle => 'הצטרפות לליגה';
+
+  @override
+  String get bracketLeagueCodeHint => 'קוד הזמנה';
+
+  @override
+  String get bracketLeagueCreated => 'הליגה נוצרה';
+
+  @override
+  String get bracketLeagueActionFailed => 'משהו השתבש';
+
+  @override
+  String get bracketLeagueAlreadyMember => 'אתה כבר חבר בליגה זו';
+
+  @override
+  String get bracketLeagueJoined => 'הצטרפת לליגה';
+
+  @override
+  String get bracketLeagueCodeCopied => 'קוד ההזמנה הועתק';
+
+  @override
+  String get bracketLeagueLeave => 'עזיבה';
+
+  @override
+  String get bracketLeagueLeaveConfirm => 'לעזוב את הליגה? אפשר לחזור מאוחר יותר עם קוד ההזמנה.';
+
+  @override
+  String get bracketLeagueDelete => 'מחיקה';
+
+  @override
+  String get bracketLeagueDeleteConfirm => 'למחוק את הליגה לכולם? לא ניתן לבטל פעולה זו.';
+
+  @override
+  String get bracketLeagueRename => 'שינוי שם';
+
+  @override
+  String get bracketLeagueStandingsTab => 'טבלה';
+
+  @override
+  String get bracketLeagueMembersTab => 'חברים';
+
+  @override
+  String get bracketHelpTitle => 'איך זה עובד';
+
+  @override
+  String get bracketHelpIntro => 'נחשו איך הטורניר יתפתח — משלב הבתים ועד לאלופה — וצברו נקודות על כל ניחוש נכון.';
+
+  @override
+  String get bracketHelpGroupsTitle => 'שלב הבתים';
+
+  @override
+  String get bracketHelpGroupsBody => 'בכל בית, הקישו על הקבוצות כדי לבחור מי תסיים ראשונה ומי שנייה. ההקשה הראשונה היא המנצחת, השנייה היא סגנית האלופה.';
+
+  @override
+  String get bracketHelpThirdsTitle => 'הקבוצות הטובות במקום השלישי';
+
+  @override
+  String get bracketHelpThirdsBody => 'סמנו את הקבוצות שסיימו במקום השלישי שלדעתכם יעפילו הלאה. אפשר לבחור עד 8 — לכל היותר אחת מכל בית — והן ימלאו את משבצות הנוקאאוט הנוספות.';
+
+  @override
+  String get bracketHelpKnockoutTitle => 'שלבי הנוקאאוט';
+
+  @override
+  String get bracketHelpKnockoutBody => 'ככל שתבחרו את המעפילות מהבתים, העץ יתמלא. הקישו על הקבוצה שלדעתכם תעפיל בכל משחק, סיבוב אחר סיבוב, עד הגמר.';
+
+  @override
+  String get bracketHelpChampionTitle => 'אלופה';
+
+  @override
+  String get bracketHelpChampionBody => 'בחרו את הקבוצה שלדעתכם תרים את הגביע — זה שווה הכי הרבה נקודות.';
+
+  @override
+  String get bracketHelpPointsTitle => 'איך הנקודות עובדות';
+
+  @override
+  String get bracketHelpPointsBody => 'כל שלב מעניק נקודות על כל ניחוש נכון. שלבים מתקדמים שווים יותר, והאלופה שווה הכי הרבה. מספר הנקודות לכל חלק מוצג ליד הכותרת שלו. הנקודות מתווספות אוטומטית ברגע שתוצאות הסיבוב סופיות.';
+
+  @override
+  String get bracketHelpLockTitle => 'נעילה';
+
+  @override
+  String get bracketHelpLockBody => 'כל שלב ננעל עם תחילת המשחקים שלו. לאחר מכן לא ניתן לשנות את הניחושים, אז כדאי להזין אותם מוקדם.';
+
+  @override
+  String get bracketHelpLeaguesTitle => 'ליגות';
+
+  @override
+  String get bracketHelpLeaguesBody => 'התחרו בטבלת המובילים הגלובלית, או פתחו ליגה פרטית והזמינו חברים עם קוד כדי לראות מי מכיר את הטורניר הכי טוב.';
+
+  @override
+  String get bracketHelpGotIt => 'הבנתי';
 }

@@ -143,10 +143,10 @@ class AccountScreen extends StatelessWidget {
               const SizedBox(height: 32),
 
               // ── Section label ──────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child: _sectionLabel(l.dangerZoneLabel.toUpperCase(), c),
-              ),
+              // Padding(
+              //   padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+              //   child: _sectionLabel(l.dangerZoneLabel.toUpperCase(), c),
+              // ),
 
               // ── Sign Out row ───────────────────────────────────────
               Padding(

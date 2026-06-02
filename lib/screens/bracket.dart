@@ -1,17 +1,23 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:football/models/bracket.dart';
 import 'package:football/resources/bracketMethods.dart';
 import 'package:football/resources/league_config_service.dart';
 import 'package:football/resources/standings_service.dart';
+import 'package:football/screens/bracketLeague.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
+import 'package:football/utils/bracket_template.dart';
+import 'package:football/utils/utils.dart';
+import 'package:football/widgets/bracketLeaderboard.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 // World Cup bracket-prediction screen. Layered on top of the per-game guessing
-// game: users predict group qualifiers (1st/2nd per group), who advances each
-// knockout round, and the tournament champion. Bracket points live in their
-// own leaderboard, kept separate from the matchday `points` ranking.
+// game: users predict group qualifiers (1st/2nd per group) and who advances
+// each knockout round up to the final. Bracket points live in their own
+// leaderboard, kept separate from the matchday `points` ranking.
 class BracketScreen extends StatefulWidget {
   const BracketScreen({
     super.key,
@@ -34,6 +40,8 @@ class _BracketScreenState extends State<BracketScreen> {
   final _api = BracketMethods();
   final _standingsApi = StandingsService();
 
+  static const String _kHelpSeenKey = 'bracketHelpSeen';
+
   bool _loading = true;
   bool _showRanking = false;
 
@@ -44,11 +52,14 @@ class _BracketScreenState extends State<BracketScreen> {
   final Map<String, List<String>> _groupRosters = {};
   // team name -> crest url, for chip logos.
   final Map<String, String> _logos = {};
-  List<String> _allTeams = [];
 
   List<BracketStanding> _ranking = [];
-  // Ranking rows expanded to show their per-stage points breakdown.
-  final Set<int> _expandedRanks = {};
+
+  // Ranking sub-view: private leagues (default, like the reference design) vs
+  // the global board.
+  bool _showLeagues = true;
+  List<BracketLeagueInfo> _myLeagues = [];
+  bool _leaguesBusy = false;
 
   // Local editable selections (seeded from _bracket on load).
   final Map<String, List<String>> _groupSel = {};
@@ -58,7 +69,6 @@ class _BracketScreenState extends State<BracketScreen> {
   final List<String> _thirdQual = [];
   // Derived: which qualified third fills each R32 third slot (matchId -> team).
   Map<String, String> _thirdAssign = {};
-  String? _championSel;
 
   @override
   void initState() {
@@ -73,6 +83,7 @@ class _BracketScreenState extends State<BracketScreen> {
       _api.fetchUserBracket(widget.userId, widget.leagueId, season: season),
       _standingsApi.getLeagueStandings(widget.leagueId),
       _api.fetchLeaderboard(widget.leagueId),
+      _api.fetchMyLeagues(widget.userId, widget.leagueId),
     ]);
     if (!mounted) return;
 
@@ -80,11 +91,22 @@ class _BracketScreenState extends State<BracketScreen> {
     _bracket = results[1] as UserBracket?;
     final standings = results[2] as List<StandingRow>?;
     _ranking = results[3] as List<BracketStanding>;
+    _myLeagues = results[4] as List<BracketLeagueInfo>;
 
     _ingestStandings(standings);
     _seedSelections();
 
     setState(() => _loading = false);
+    _maybeShowFirstTimeHelp();
+  }
+
+  // First open ever → surface the how-it-works sheet once, then remember.
+  Future<void> _maybeShowFirstTimeHelp() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_kHelpSeenKey) == true) return;
+    if (!mounted) return;
+    await _showHelpSheet();
+    await prefs.setBool(_kHelpSeenKey, true);
   }
 
   int _seasonGuess() => _structure?.season ?? 2026;
@@ -94,17 +116,14 @@ class _BracketScreenState extends State<BracketScreen> {
   void _ingestStandings(List<StandingRow>? rows) {
     _groupRosters.clear();
     _logos.clear();
-    final all = <String>[];
     for (final r in rows ?? []) {
       if (r.teamName.isEmpty) continue;
       if (r.teamLogo.isNotEmpty) _logos[r.teamName] = r.teamLogo;
-      if (!all.contains(r.teamName)) all.add(r.teamName);
       final letter = _groupLetter(r.group);
       if (letter != null) {
         (_groupRosters[letter] ??= []).add(r.teamName);
       }
     }
-    _allTeams = all;
   }
 
   String? _groupLetter(String? group) {
@@ -129,7 +148,6 @@ class _BracketScreenState extends State<BracketScreen> {
         for (final t in (gp['thirds'] ?? const <String>[]))
           if (!_thirdQual.contains(t)) t
       ]);
-    _championSel = _bracket?.champion;
     _recomputeThirds();
     _seedTree();
   }
@@ -215,6 +233,14 @@ class _BracketScreenState extends State<BracketScreen> {
         backgroundColor: c.pitch,
         surfaceTintColor: Colors.transparent,
         iconTheme: IconThemeData(color: c.ink),
+        actions: [
+          IconButton(
+            tooltip: AppLocalizations.of(context)!.bracketHelpTitle,
+            icon: Icon(Icons.help_outline,
+                color: c.ink, textDirection: TextDirection.ltr),
+            onPressed: _showHelpSheet,
+          ),
+        ],
       ),
       body: SafeArea(
         top: false,
@@ -335,7 +361,6 @@ class _BracketScreenState extends State<BracketScreen> {
         children: [
           _buildGroupSection(c, s, now),
           _buildThirdsSection(c, s, now),
-          _buildChampionSection(c, s, now),
           for (final stage in s.knockoutStages)
             _buildKnockoutSection(c, s, stage, now),
         ],
@@ -355,6 +380,7 @@ class _BracketScreenState extends State<BracketScreen> {
     return _Section(
       title: groupStage?.label(_langCode(context)) ?? l.bracketGroupStage,
       hint: locked ? l.bracketLockedLabel : l.bracketGroupHint,
+      points: groupStage?.points,
       locked: locked,
       child: !hasRosters
           ? _InlineNote(text: l.bracketNoTeamsHint)
@@ -452,7 +478,7 @@ class _BracketScreenState extends State<BracketScreen> {
       title: l.bracketThirdsTitle,
       hint: locked
           ? l.bracketLockedLabel
-          : '${l.bracketThirdsHint} · ${_thirdQual.length}/8',
+          : '${l.bracketThirdsHint} ֲ· ${_thirdQual.length}/8',
       locked: locked,
       initiallyExpanded: false,
       child: !hasRosters
@@ -548,69 +574,6 @@ class _BracketScreenState extends State<BracketScreen> {
 
   Future<void> _saveThirds() => _save('groups', {'thirds': _thirdQual});
 
-  // ── Champion ──────────────────────────────────────────────────────────
-
-  Widget _buildChampionSection(
-      EditorialColors c, BracketStructure s, DateTime now) {
-    final l = AppLocalizations.of(context)!;
-    final stage = s.stage('champion');
-    final locked = stage?.isLocked(now) ?? false;
-    final pts = stage?.points ?? 0;
-
-    return _Section(
-      title: stage?.label(_langCode(context)) ?? l.bracketChampionLabel,
-      hint: locked ? l.bracketLockedLabel : '${l.bracketChampionHint} · +$pts ${l.pst}',
-      locked: locked,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-        child: GestureDetector(
-          onTap: (locked || _allTeams.isEmpty) ? null : _openChampionPicker,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            decoration: BoxDecoration(
-              color: c.card,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: _championSel != null ? c.live : c.hairline,
-                width: _championSel != null ? 1.5 : 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.emoji_events_outlined,
-                    size: 20, color: _championSel != null ? c.live : c.inkDim),
-                const SizedBox(width: 12),
-                if (_championSel != null) ...[
-                  _Crest(url: _logoFor(_championSel!), size: 24),
-                  const SizedBox(width: 10),
-                ],
-                Expanded(
-                  child: Text(
-                    (_championSel ?? l.bracketSelectTeamTitle).toUpperCase(),
-                    style: EType.display(
-                        size: 18,
-                        color: _championSel != null ? c.ink : c.inkDim,
-                        letterSpacing: 0.6),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (!locked)
-                  Icon(Icons.chevron_right, size: 20, color: c.inkDim),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _openChampionPicker() async {
-    final picked = await _showTeamPicker(_allTeams, _championSel);
-    if (picked == null) return;
-    setState(() => _championSel = picked);
-    await _save('champion', picked);
-  }
-
   // ── Knockout rounds (FIFA slot-template match tree) ─────────────────────
 
   Widget _buildKnockoutSection(
@@ -631,8 +594,9 @@ class _BracketScreenState extends State<BracketScreen> {
       hint: locked
           ? l.bracketLockedLabel
           : anyReady
-              ? '${l.bracketAdvanceLabel}  ${winners.length}/$cap · +${stage.points} ${l.pst}'
+              ? '${l.bracketAdvanceLabel}  ${winners.length}/$cap'
               : l.bracketPickPrevious,
+      points: stage.points,
       locked: locked || !anyReady,
       initiallyExpanded: false,
       child: !anyReady
@@ -655,8 +619,7 @@ class _BracketScreenState extends State<BracketScreen> {
     );
   }
 
-  List<_Match> _matchesFor(String stage) =>
-      _kBracketTemplate.where((m) => m.stage == stage).toList();
+  List<BracketMatch> _matchesFor(String stage) => matchesForStage(stage);
 
   // Winners the user has tapped for a stage = the advance set the backend
   // scores (set-based scoring is unchanged by the match-tree UI).
@@ -664,8 +627,6 @@ class _BracketScreenState extends State<BracketScreen> {
       .map((m) => _winSel[m.id])
       .whereType<String>()
       .toList();
-
-  bool _isThird(_Slot s) => s.kind == 'third';
 
   String? _groupOf(String team) {
     for (final e in _groupRosters.entries) {
@@ -676,95 +637,21 @@ class _BracketScreenState extends State<BracketScreen> {
 
   // Resolve the concrete team filling one side of a match, or null if still
   // undetermined (group not picked, third not chosen, feeding match open).
-  String? _matchParticipant(_Match m, bool sideA) {
-    final s = sideA ? m.a : m.b;
-    switch (s.kind) {
-      case 'gw':
-        final p = _groupSel[s.group] ?? const [];
-        return p.isNotEmpty ? p[0] : null;
-      case 'ru':
-        final p = _groupSel[s.group] ?? const [];
-        return p.length > 1 ? p[1] : null;
-      case 'third':
-        return _thirdAssign[m.id];
-      case 'win':
-        return _winSel[s.src];
-      default:
-        return null;
-    }
-  }
+  String? _matchParticipant(BracketMatch m, bool sideA) => resolveParticipant(
+        m,
+        sideA,
+        groupSel: _groupSel,
+        thirdAssign: _thirdAssign,
+        winSel: _winSel,
+      );
 
-  // Assign the user's qualified thirds onto the R32 third slots. Each slot
-  // accepts a third only from its FIFA candidate groups; bipartite (Kuhn)
-  // matching finds a consistent placement that fills as many slots as possible.
+  // Assign the user's qualified thirds onto the R32 third slots via the shared
+  // FIFA Annex-C lookup (or bipartite fallback for a partial selection).
   void _recomputeThirds() {
-    _thirdAssign = {};
-    final thirds = List<String>.from(_thirdQual);
-    if (thirds.isEmpty) return;
-
-    // Group -> team for the picked thirds (≤1 per group is enforced on pick).
-    final byGroup = <String, String>{};
-    for (final t in thirds) {
-      final g = _groupOf(t);
-      if (g != null) byGroup[g] = t;
-    }
-
-    // Official FIFA 2026 Annex C: once all eight best thirds are decided, the
-    // group→slot allocation is a fixed lookup keyed by the set of eight groups.
-    if (byGroup.length == 8) {
-      final key = (byGroup.keys.toList()..sort()).join();
-      final row = _kAnnexC[key];
-      if (row != null) {
-        // Column order in Annex C: 1A 1B 1D 1E 1G 1I 1K 1L.
-        const slotMatch = ['m79', 'm85', 'm81', 'm74', 'm82', 'm77', 'm87', 'm80'];
-        for (var i = 0; i < slotMatch.length; i++) {
-          final team = byGroup[row[i]];
-          if (team != null) _thirdAssign[slotMatch[i]] = team;
-        }
-        return;
-      }
-    }
-
-    // Partial selection (fewer than eight) — fall back to a valid bipartite
-    // match so the bracket can preview as picks come in.
-    final slots = _matchesFor('R32')
-        .where((m) => _isThird(m.a) || _isThird(m.b))
-        .toList();
-    if (slots.isEmpty) return;
-
-    final adj = <List<int>>[]; // slot index -> eligible third indices
-    for (final m in slots) {
-      final slot = _isThird(m.a) ? m.a : m.b;
-      final list = <int>[];
-      for (var j = 0; j < thirds.length; j++) {
-        final g = _groupOf(thirds[j]);
-        if (g != null && slot.thirdGroups.contains(g)) list.add(j);
-      }
-      adj.add(list);
-    }
-
-    final thirdToSlot = List<int>.filled(thirds.length, -1);
-    bool augment(int slot, List<bool> seen) {
-      for (final j in adj[slot]) {
-        if (seen[j]) continue;
-        seen[j] = true;
-        if (thirdToSlot[j] == -1 || augment(thirdToSlot[j], seen)) {
-          thirdToSlot[j] = slot;
-          return true;
-        }
-      }
-      return false;
-    }
-
-    for (var s = 0; s < slots.length; s++) {
-      augment(s, List<bool>.filled(thirds.length, false));
-    }
-    for (var j = 0; j < thirds.length; j++) {
-      if (thirdToSlot[j] != -1) _thirdAssign[slots[thirdToSlot[j]].id] = thirds[j];
-    }
+    _thirdAssign = assignThirds(_thirdQual, _groupRosters);
   }
 
-  void _tapSide(_Match m, bool sideA) {
+  void _tapSide(BracketMatch m, bool sideA) {
     final team = _matchParticipant(m, sideA);
     if (team == null) return; // participant not resolved yet
     setState(() => _setWinner(m, team));
@@ -772,7 +659,7 @@ class _BracketScreenState extends State<BracketScreen> {
 
   // Toggle the winner of a match, then re-validate downstream rounds so any
   // pick that referenced a now-changed winner is dropped.
-  void _setWinner(_Match m, String team) {
+  void _setWinner(BracketMatch m, String team) {
     if (_winSel[m.id] == team) {
       _winSel.remove(m.id);
     } else {
@@ -799,7 +686,7 @@ class _BracketScreenState extends State<BracketScreen> {
     }
   }
 
-  Widget _buildMatchCard(EditorialColors c, _Match m, bool locked) {
+  Widget _buildMatchCard(EditorialColors c, BracketMatch m, bool locked) {
     final aTeam = _matchParticipant(m, true);
     final bTeam = _matchParticipant(m, false);
     final win = _winSel[m.id];
@@ -822,7 +709,7 @@ class _BracketScreenState extends State<BracketScreen> {
     );
   }
 
-  Widget _buildMatchRow(EditorialColors c, _Match m, bool sideA, String? team,
+  Widget _buildMatchRow(EditorialColors c, BracketMatch m, bool sideA, String? team,
       bool isWinner, bool locked) {
     final slot = sideA ? m.a : m.b;
     final resolved = team != null;
@@ -861,7 +748,7 @@ class _BracketScreenState extends State<BracketScreen> {
     );
   }
 
-  String _slotLabel(_Slot s) {
+  String _slotLabel(BracketSlot s) {
     final l = AppLocalizations.of(context)!;
     switch (s.kind) {
       case 'gw':
@@ -869,7 +756,7 @@ class _BracketScreenState extends State<BracketScreen> {
       case 'ru':
         return '2${s.group}';
       case 'third':
-        return '${l.bracketThirdPlace} · ${s.thirdGroups.join('/')}';
+        return '${l.bracketThirdPlace} ֲ· ${s.thirdGroups.join('/')}';
       case 'win':
         return l.bracketTBD;
       default:
@@ -880,6 +767,62 @@ class _BracketScreenState extends State<BracketScreen> {
   // ── Ranking ──────────────────────────────────────────────────────────
 
   Widget _buildRanking(EditorialColors c) {
+    return Column(
+      children: [
+        _buildRankSubTabs(c),
+        Expanded(
+          child: _showLeagues ? _buildLeaguesList(c) : _buildGlobalBoard(c),
+        ),
+      ],
+    );
+  }
+
+  // Leagues | Global board sub-toggle inside the Ranking tab.
+  Widget _buildRankSubTabs(EditorialColors c) {
+    final l = AppLocalizations.of(context)!;
+    Widget chip(String label, bool active, VoidCallback onTap) => Expanded(
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              margin: const EdgeInsets.all(3),
+              padding: const EdgeInsets.symmetric(vertical: 9),
+              decoration: BoxDecoration(
+                color: active ? c.card : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                label.toUpperCase(),
+                textAlign: TextAlign.center,
+                style: EType.label(
+                    color: active ? c.ink : c.inkDim,
+                    size: 11,
+                    letterSpacing: 1.2),
+              ),
+            ),
+          ),
+        );
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+      decoration: BoxDecoration(
+        color: c.terrace,
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: c.hairline),
+      ),
+      child: Row(
+        children: [
+          chip(l.bracketLeaguesTab, _showLeagues,
+              () => setState(() => _showLeagues = true)),
+          chip(l.bracketGlobalTab, !_showLeagues,
+              () => setState(() => _showLeagues = false)),
+        ],
+      ),
+    );
+  }
+
+  // ── Global board ───────────────────────────────────────────────────────
+
+  Widget _buildGlobalBoard(EditorialColors c) {
     final l = AppLocalizations.of(context)!;
     if (!_loading && _ranking.isEmpty) {
       return _Empty(
@@ -888,145 +831,159 @@ class _BracketScreenState extends State<BracketScreen> {
         subtitle: l.bracketRankingEmptyHint,
       );
     }
-    final rows = _loading
-        ? List.generate(
-            6, (i) => BracketStanding(name: 'Loading', points: 0))
-        : _ranking;
-    return ListView.builder(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: rows.length,
-      itemBuilder: (ctx, i) {
-        final r = rows[i];
-        final isMe = r.name == widget.userName;
-        final hasBreakdown = !_loading && r.stages.isNotEmpty;
-        final expanded = _expandedRanks.contains(i);
-        return Container(
-          decoration: BoxDecoration(
-            color: isMe ? c.liveSoft : null,
-            border: Border(bottom: BorderSide(color: c.hairline, width: 1)),
-          ),
-          child: Column(
-            children: [
-              InkWell(
-                onTap: hasBreakdown
-                    ? () => setState(() => expanded
-                        ? _expandedRanks.remove(i)
-                        : _expandedRanks.add(i))
-                    : null,
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 28,
-                        child: Text('${i + 1}',
-                            style: EType.numeric(
-                                color: i < 3 ? c.live : c.inkDim,
-                                size: 14,
-                                weight: FontWeight.w700)),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(r.name.toUpperCase(),
-                            style: EType.display(
-                                size: 17,
-                                color: isMe ? c.live : c.ink,
-                                letterSpacing: 0.6),
-                            overflow: TextOverflow.ellipsis),
-                      ),
-                      Text('${r.points}',
-                          style: EType.numeric(
-                              color: c.ink, size: 15, weight: FontWeight.w600)),
-                      const SizedBox(width: 6),
-                      Text(l.pst,
-                          style: EType.label(
-                              color: c.inkDim, size: 9, letterSpacing: 1)),
-                      if (hasBreakdown) ...[
-                        const SizedBox(width: 6),
-                        Icon(
-                          expanded
-                              ? Icons.keyboard_arrow_up
-                              : Icons.keyboard_arrow_down,
-                          size: 18,
-                          color: c.inkDim,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-              if (expanded) _buildRankBreakdown(c, r),
-            ],
-          ),
-        );
-      },
+    return BracketLeaderboardList(
+      rows: _ranking,
+      structure: _structure,
+      highlightName: widget.userName,
+      loading: _loading,
     );
   }
 
-  // Per-stage points chips, shown when a leaderboard row is expanded. Stages
-  // are listed in the structure's canonical order.
-  Widget _buildRankBreakdown(EditorialColors c, BracketStanding r) {
-    final lang = _langCode(context);
-    final order = _structure?.stages
-            .map((s) => s.key)
-            .where((k) => r.stages.containsKey(k))
-            .toList() ??
-        r.stages.keys.toList();
+  // ── Private leagues ──────────────────────────────────────────────────────
+
+  Widget _buildLeaguesList(EditorialColors c) {
+    final l = AppLocalizations.of(context)!;
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: _LeagueActionBtn(
+                  icon: Icons.add,
+                  label: l.bracketLeagueCreate,
+                  filled: true,
+                  onTap: _leaguesBusy ? null : _showCreateDialog,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _LeagueActionBtn(
+                  icon: Icons.login,
+                  label: l.bracketLeagueJoin,
+                  filled: false,
+                  onTap: _leaguesBusy ? null : _showJoinDialog,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: (!_loading && _myLeagues.isEmpty)
+              ? _Empty(
+                  icon: Icons.groups_outlined,
+                  title: l.bracketLeaguesEmptyTitle,
+                  subtitle: l.bracketLeaguesEmptyHint,
+                )
+              : ListView.builder(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+                  itemCount: _myLeagues.length,
+                  itemBuilder: (ctx, i) => _leagueCard(c, l, _myLeagues[i]),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _leagueCard(EditorialColors c, AppLocalizations l, BracketLeagueInfo lg) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          for (final k in order)
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: c.card,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: c.hairline, width: 1),
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: c.hairline),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => _openLeague(lg),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(lg.name.toUpperCase(),
+                              style: EType.display(
+                                  size: 18, color: c.ink, letterSpacing: 0.6),
+                              overflow: TextOverflow.ellipsis),
+                        ),
+                        if (lg.isOwner) ...[
+                          const SizedBox(width: 6),
+                          Icon(Icons.star, size: 14, color: c.live),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(Icons.group_outlined, size: 14, color: c.inkDim),
+                        const SizedBox(width: 5),
+                        Text('${lg.memberCount} ${l.bracketLeagueMembers}',
+                            style: EType.body(color: c.inkDim, size: 12)),
+                        const SizedBox(width: 12),
+                        Icon(Icons.tag, size: 14, color: c.inkDim),
+                        const SizedBox(width: 3),
+                        Flexible(
+                          child: Text(lg.code,
+                              style: EType.numeric(color: c.inkMute, size: 12),
+                              overflow: TextOverflow.ellipsis),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    (_structure?.stage(k)?.label(lang) ?? k).toUpperCase(),
-                    style: EType.label(
-                        color: c.inkDim, size: 9, letterSpacing: 1),
-                  ),
-                  const SizedBox(width: 6),
-                  Text('${r.stages[k]}',
-                      style: EType.numeric(
-                          color: c.ink, size: 12, weight: FontWeight.w700)),
-                ],
-              ),
-            ),
-        ],
+              Icon(Icons.chevron_right, color: c.inkDim),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  // ── Team picker dialog ──────────────────────────────────────────────────
+  Future<void> _openLeague(BracketLeagueInfo lg) async {
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => BracketLeagueScreen(
+          league: lg,
+          userId: widget.userId,
+          userName: widget.userName,
+          structure: _structure,
+        ),
+      ),
+    );
+    if (changed == true) _reloadLeagues();
+  }
 
-  Future<String?> _showTeamPicker(List<String> teams, String? current) {
+  Future<void> _reloadLeagues() async {
+    final leagues = await _api.fetchMyLeagues(widget.userId, widget.leagueId);
+    if (mounted) setState(() => _myLeagues = leagues);
+  }
+
+  // ── How-it-works help sheet ─────────────────────────────────────────────
+  Future<void> _showHelpSheet() {
     final c = context.col;
     final l = AppLocalizations.of(context)!;
-    return showModalBottomSheet<String>(
+    return showModalBottomSheet<void>(
       context: context,
-      backgroundColor: c.terrace,
+      backgroundColor: c.pitch,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(2)),
       ),
       builder: (ctx) {
         return DraggableScrollableSheet(
           expand: false,
-          initialChildSize: 0.7,
-          maxChildSize: 0.9,
+          initialChildSize: 0.85,
+          maxChildSize: 0.95,
+          minChildSize: 0.5,
           builder: (ctx, scroll) => Column(
             children: [
               const SizedBox(height: 12),
@@ -1039,51 +996,65 @@ class _BracketScreenState extends State<BracketScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Text(l.bracketSelectTeamTitle.toUpperCase(),
-                      style: EType.label(
-                          color: c.ink, size: 12, letterSpacing: 2)),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                child: Row(
+                  children: [
+                    Container(width: 18, height: 1, color: c.live),
+                    const SizedBox(width: 10),
+                    Text(l.bracketHelpTitle.toUpperCase(),
+                        style: EType.label(
+                            color: c.ink, size: 12, letterSpacing: 2.4)),
+                  ],
                 ),
               ),
               Expanded(
-                child: ListView.builder(
+                child: ListView(
                   controller: scroll,
-                  itemCount: teams.length,
-                  itemBuilder: (ctx, i) {
-                    final team = teams[i];
-                    final selected = team == current;
-                    return InkWell(
-                      onTap: () => Navigator.of(ctx).pop(team),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 14),
-                        decoration: BoxDecoration(
-                          border: Border(
-                              bottom:
-                                  BorderSide(color: c.hairline, width: 1)),
-                        ),
-                        child: Row(
-                          children: [
-                            _Crest(url: _logoFor(team), size: 26),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(team,
-                                  style: EType.body(
-                                      color: selected ? c.live : c.ink,
-                                      size: 14,
-                                      weight: selected
-                                          ? FontWeight.w700
-                                          : FontWeight.w400)),
-                            ),
-                            if (selected)
-                              Icon(Icons.check, size: 18, color: c.live),
-                          ],
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                  physics: const BouncingScrollPhysics(),
+                  children: [
+                    Text(l.bracketHelpIntro,
+                        style: EType.body(color: c.inkMute, size: 14)),
+                    const SizedBox(height: 8),
+                    _helpEntry(c, Icons.grid_view_outlined,
+                        l.bracketHelpGroupsTitle, l.bracketHelpGroupsBody),
+                    _helpEntry(c, Icons.looks_3_outlined,
+                        l.bracketHelpThirdsTitle, l.bracketHelpThirdsBody),
+                    _helpEntry(c, Icons.account_tree_outlined,
+                        l.bracketHelpKnockoutTitle, l.bracketHelpKnockoutBody),
+                    _helpEntry(c, Icons.star_outline,
+                        l.bracketHelpPointsTitle, l.bracketHelpPointsBody),
+                    _helpEntry(c, Icons.lock_clock_outlined,
+                        l.bracketHelpLockTitle, l.bracketHelpLockBody),
+                    _helpEntry(c, Icons.groups_outlined,
+                        l.bracketHelpLeaguesTitle, l.bracketHelpLeaguesBody),
+                  ],
+                ),
+              ),
+              SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Material(
+                      color: c.live,
+                      borderRadius: BorderRadius.circular(2),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(2),
+                        onTap: () => Navigator.of(ctx).pop(),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          child: Text(
+                            l.bracketHelpGotIt.toUpperCase(),
+                            textAlign: TextAlign.center,
+                            style: EType.label(
+                                color: c.pitch, size: 12, letterSpacing: 1.8),
+                          ),
                         ),
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -1092,6 +1063,238 @@ class _BracketScreenState extends State<BracketScreen> {
       },
     );
   }
+
+  Widget _helpEntry(
+      EditorialColors c, IconData icon, String title, String body) {
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: c.hairline),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: c.live),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title.toUpperCase(),
+                    style: EType.label(
+                        color: c.ink, size: 11, letterSpacing: 1.6)),
+                const SizedBox(height: 6),
+                Text(body,
+                    style: EType.body(color: c.inkMute, size: 13, height: 1.4)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Editorial dialog scaffolding (matches lib/screens/table.dart) ────────
+  Widget _editorialDialog({
+    required String title,
+    required Widget body,
+    required List<Widget> actions,
+  }) {
+    final c = context.col;
+    return Dialog(
+      backgroundColor: c.card,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(2),
+        side: BorderSide(color: c.hairline, width: 1),
+      ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(width: 18, height: 1, color: c.live),
+                const SizedBox(width: 10),
+                Text(title.toUpperCase(),
+                    style: EType.label(
+                        color: c.ink, size: 11, letterSpacing: 2.4)),
+              ],
+            ),
+            const SizedBox(height: 18),
+            body,
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: actions,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _editorialField({
+    required TextEditingController controller,
+    required String label,
+    int? maxLength,
+    TextCapitalization textCapitalization = TextCapitalization.none,
+    List<TextInputFormatter>? inputFormatters,
+  }) {
+    final c = context.col;
+    return TextField(
+      controller: controller,
+      autofocus: true,
+      cursorColor: c.live,
+      cursorWidth: 1.5,
+      maxLength: maxLength,
+      textCapitalization: textCapitalization,
+      inputFormatters: inputFormatters,
+      style: EType.body(color: c.ink, size: 14),
+      decoration: InputDecoration(
+        labelText: label,
+        counterText: '',
+        labelStyle:
+            EType.label(color: c.inkDim, size: 11, letterSpacing: 1.6),
+        floatingLabelStyle:
+            EType.label(color: c.live, size: 11, letterSpacing: 1.6),
+        filled: true,
+        fillColor: c.terrace,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(2),
+          borderSide: BorderSide(color: c.hairline, width: 1),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(2),
+          borderSide: BorderSide(color: c.hairline, width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(2),
+          borderSide: BorderSide(color: c.live, width: 1),
+        ),
+      ),
+    );
+  }
+
+  Widget _ghostBtn(String label, VoidCallback onPressed, {Color? color}) {
+    final c = context.col;
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
+      ),
+      child: Text(
+        label.toUpperCase(),
+        style: EType.label(
+            color: color ?? c.inkMute, size: 11, letterSpacing: 1.8),
+      ),
+    );
+  }
+
+  Widget _solidBtn(String label, VoidCallback onPressed) {
+    final c = context.col;
+    return Material(
+      color: c.live,
+      borderRadius: BorderRadius.circular(2),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(2),
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          child: Text(
+            label.toUpperCase(),
+            style: EType.label(color: c.pitch, size: 11, letterSpacing: 1.8),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showCreateDialog() async {
+    final l = AppLocalizations.of(context)!;
+    final ctrl = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => _editorialDialog(
+        title: l.bracketLeagueCreateTitle,
+        body: _editorialField(
+          controller: ctrl,
+          label: l.bracketLeagueNameHint,
+          maxLength: 40,
+        ),
+        actions: [
+          _ghostBtn(l.cancel, () => Navigator.pop(ctx)),
+          const SizedBox(width: 8),
+          _solidBtn(l.bracketLeagueCreate,
+              () => Navigator.pop(ctx, ctrl.text.trim())),
+        ],
+      ),
+    );
+    if (name == null || name.length < 2) return;
+    setState(() => _leaguesBusy = true);
+    final res = await _api.createLeague(
+        name: name, leagueId: widget.leagueId, ownerUserId: widget.userId);
+    if (!mounted) return;
+    setState(() => _leaguesBusy = false);
+    if (res.league != null) {
+      setState(() => _myLeagues = [..._myLeagues, res.league!]);
+      showSnackBar(context, l.bracketLeagueCreated, tone: SnackTone.success);
+    } else {
+      showSnackBar(context, res.error ?? l.bracketLeagueActionFailed,
+          tone: SnackTone.error);
+    }
+  }
+
+  Future<void> _showJoinDialog() async {
+    final l = AppLocalizations.of(context)!;
+    final ctrl = TextEditingController();
+    final code = await showDialog<String>(
+      context: context,
+      builder: (ctx) => _editorialDialog(
+        title: l.bracketLeagueJoinTitle,
+        body: _editorialField(
+          controller: ctrl,
+          label: l.bracketLeagueCodeHint,
+          textCapitalization: TextCapitalization.characters,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp('[a-zA-Z0-9]')),
+          ],
+        ),
+        actions: [
+          _ghostBtn(l.cancel, () => Navigator.pop(ctx)),
+          const SizedBox(width: 8),
+          _solidBtn(l.bracketLeagueJoin,
+              () => Navigator.pop(ctx, ctrl.text.trim())),
+        ],
+      ),
+    );
+    if (code == null || code.isEmpty) return;
+    setState(() => _leaguesBusy = true);
+    final res = await _api.joinLeague(userId: widget.userId, code: code);
+    if (!mounted) return;
+    setState(() => _leaguesBusy = false);
+    if (res.league != null) {
+      if (res.alreadyMember) {
+        showSnackBar(context, l.bracketLeagueAlreadyMember,
+            tone: SnackTone.warning);
+      } else {
+        showSnackBar(context, l.bracketLeagueJoined, tone: SnackTone.success);
+      }
+      _reloadLeagues();
+    } else {
+      showSnackBar(context, res.error ?? l.bracketLeagueActionFailed,
+          tone: SnackTone.error);
+    }
+  }
+
 }
 
 // ── Reusable pieces ─────────────────────────────────────────────────────
@@ -1146,8 +1349,52 @@ class _Tab extends StatelessWidget {
   }
 }
 
+// Create / Join buttons atop the private-leagues list.
+class _LeagueActionBtn extends StatelessWidget {
+  const _LeagueActionBtn({
+    required this.icon,
+    required this.label,
+    required this.filled,
+    required this.onTap,
+  });
+  final IconData icon;
+  final String label;
+  final bool filled;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    final fg = filled ? Colors.black : c.ink;
+    return Opacity(
+      opacity: onTap == null ? 0.5 : 1,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: filled ? c.live : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            border: filled ? null : Border.all(color: c.hairline),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 16, color: fg),
+              const SizedBox(width: 8),
+              Text(label.toUpperCase(),
+                  style: EType.label(color: fg, size: 11, letterSpacing: 1.2)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // Collapsible section. The header is tappable to hide/show its content so the
-// long list of stages (groups + champion + 5 knockout rounds) doesn't force a
+// long list of stages (groups + thirds + 5 knockout rounds) doesn't force a
 // lot of scrolling to reach the next one.
 class _Section extends StatefulWidget {
   const _Section({
@@ -1156,12 +1403,15 @@ class _Section extends StatefulWidget {
     required this.child,
     this.locked = false,
     this.initiallyExpanded = true,
+    this.points,
   });
   final String title;
   final String hint;
   final Widget child;
   final bool locked;
   final bool initiallyExpanded;
+  // Points awarded per correct pick in this stage; rendered as a +N badge.
+  final int? points;
 
   @override
   State<_Section> createState() => _SectionState();
@@ -1193,9 +1443,23 @@ class _SectionState extends State<_Section> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(widget.title.toUpperCase(),
-                            style: EType.label(
-                                color: c.ink, size: 12, letterSpacing: 2)),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(widget.title.toUpperCase(),
+                                  style: EType.label(
+                                      color: c.ink,
+                                      size: 12,
+                                      letterSpacing: 2),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis),
+                            ),
+                            if (widget.points != null && widget.points! > 0) ...[
+                              const SizedBox(width: 8),
+                              _PointsBadge(points: widget.points!, locked: widget.locked),
+                            ],
+                          ],
+                        ),
                         const SizedBox(height: 3),
                         Text(widget.hint.toUpperCase(),
                             style: EType.label(
@@ -1231,6 +1495,30 @@ class _SectionState extends State<_Section> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// "+N" points badge shown beside a section title.
+class _PointsBadge extends StatelessWidget {
+  const _PointsBadge({required this.points, this.locked = false});
+  final int points;
+  final bool locked;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    final color = locked ? c.inkDim : c.live;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        border: Border.all(color: color, width: 1),
+        borderRadius: BorderRadius.circular(2),
+      ),
+      child: Text('+$points',
+          style: EType.numeric(
+              color: color, size: 10, weight: FontWeight.w700)),
     );
   }
 }
@@ -1435,573 +1723,3 @@ class _Empty extends StatelessWidget {
     );
   }
 }
-
-// ── FIFA 2026 knockout bracket template ──────────────────────────────────
-//
-// One side of a match. Resolves to a concrete team via the user's picks:
-//   gw/ru   → 1st / 2nd of a group (from groupPicks)
-//   third   → one of the listed groups' 3rd-placed teams (user-chosen)
-//   win     → the winner the user tapped in the referenced match
-class _Slot {
-  final String kind; // 'gw' | 'ru' | 'third' | 'win'
-  final String? group;
-  final List<String> thirdGroups;
-  final String? src; // referenced match id, for 'win'
-  const _Slot._(this.kind, this.group, this.thirdGroups, this.src);
-  const _Slot.gw(String g) : this._('gw', g, const [], null);
-  const _Slot.ru(String g) : this._('ru', g, const [], null);
-  const _Slot.third(List<String> g) : this._('third', null, g, null);
-  const _Slot.win(String s) : this._('win', null, const [], s);
-}
-
-class _Match {
-  final String id;
-  final String stage;
-  final _Slot a;
-  final _Slot b;
-  const _Match(this.id, this.stage, this.a, this.b);
-}
-
-// Fixed FIFA 2026 bracket (match numbers 73–104). R32 slots come from the
-// published position template; later rounds chain on the winners of two
-// feeding matches. Match order within a stage is bracket (top-to-bottom) order.
-const List<_Match> _kBracketTemplate = [
-  // Round of 32
-  _Match('m73', 'R32', _Slot.ru('A'), _Slot.ru('B')),
-  _Match('m74', 'R32', _Slot.gw('E'), _Slot.third(['A', 'B', 'C', 'D', 'F'])),
-  _Match('m75', 'R32', _Slot.gw('F'), _Slot.ru('C')),
-  _Match('m76', 'R32', _Slot.gw('C'), _Slot.ru('F')),
-  _Match('m77', 'R32', _Slot.gw('I'), _Slot.third(['C', 'D', 'F', 'G', 'H'])),
-  _Match('m78', 'R32', _Slot.ru('E'), _Slot.ru('I')),
-  _Match('m79', 'R32', _Slot.gw('A'), _Slot.third(['C', 'E', 'F', 'H', 'I'])),
-  _Match('m80', 'R32', _Slot.gw('L'), _Slot.third(['E', 'H', 'I', 'J', 'K'])),
-  _Match('m81', 'R32', _Slot.gw('D'), _Slot.third(['B', 'E', 'F', 'I', 'J'])),
-  _Match('m82', 'R32', _Slot.gw('G'), _Slot.third(['A', 'E', 'H', 'I', 'J'])),
-  _Match('m83', 'R32', _Slot.ru('K'), _Slot.ru('L')),
-  _Match('m84', 'R32', _Slot.gw('H'), _Slot.ru('J')),
-  _Match('m85', 'R32', _Slot.gw('B'), _Slot.third(['E', 'F', 'G', 'I', 'J'])),
-  _Match('m86', 'R32', _Slot.gw('J'), _Slot.ru('H')),
-  _Match('m87', 'R32', _Slot.gw('K'), _Slot.third(['D', 'E', 'I', 'J', 'L'])),
-  _Match('m88', 'R32', _Slot.ru('D'), _Slot.ru('G')),
-  // Round of 16
-  _Match('m89', 'R16', _Slot.win('m74'), _Slot.win('m77')),
-  _Match('m90', 'R16', _Slot.win('m73'), _Slot.win('m75')),
-  _Match('m91', 'R16', _Slot.win('m76'), _Slot.win('m78')),
-  _Match('m92', 'R16', _Slot.win('m79'), _Slot.win('m80')),
-  _Match('m93', 'R16', _Slot.win('m83'), _Slot.win('m84')),
-  _Match('m94', 'R16', _Slot.win('m81'), _Slot.win('m82')),
-  _Match('m95', 'R16', _Slot.win('m86'), _Slot.win('m88')),
-  _Match('m96', 'R16', _Slot.win('m85'), _Slot.win('m87')),
-  // Quarter-finals
-  _Match('m97', 'QF', _Slot.win('m89'), _Slot.win('m90')),
-  _Match('m98', 'QF', _Slot.win('m93'), _Slot.win('m94')),
-  _Match('m99', 'QF', _Slot.win('m91'), _Slot.win('m92')),
-  _Match('m100', 'QF', _Slot.win('m95'), _Slot.win('m96')),
-  // Semi-finals
-  _Match('m101', 'SF', _Slot.win('m97'), _Slot.win('m98')),
-  _Match('m102', 'SF', _Slot.win('m99'), _Slot.win('m100')),
-  // Final
-  _Match('m104', 'F', _Slot.win('m101'), _Slot.win('m102')),
-];
-
-/// Official FIFA World Cup 2026 Annex C allocation of the eight best
-/// third-placed teams. Key = the eight qualifying groups, sorted and joined
-/// (e.g. "EFGHIJKL"). Value = the group assigned to each of the eight winner
-/// slots in column order 1A 1B 1D 1E 1G 1I 1K 1L.
-const Map<String, String> _kAnnexC = {
-    'EFGHIJKL': 'EJIFHGLK',
-    'DFGHIJKL': 'HGIDJFLK',
-    'DEGHIJKL': 'EJIDHGLK',
-    'DEFHIJKL': 'EJIDHFLK',
-    'DEFGIJKL': 'EGIDJFLK',
-    'DEFGHJKL': 'EGJDHFLK',
-    'DEFGHIKL': 'EGIDHFLK',
-    'DEFGHIJL': 'EGJDHFLI',
-    'DEFGHIJK': 'EGJDHFIK',
-    'CFGHIJKL': 'HGICJFLK',
-    'CEGHIJKL': 'EJICHGLK',
-    'CEFHIJKL': 'EJICHFLK',
-    'CEFGIJKL': 'EGICJFLK',
-    'CEFGHJKL': 'EGJCHFLK',
-    'CEFGHIKL': 'EGICHFLK',
-    'CEFGHIJL': 'EGJCHFLI',
-    'CEFGHIJK': 'EGJCHFIK',
-    'CDGHIJKL': 'HGICJDLK',
-    'CDFHIJKL': 'CJIDHFLK',
-    'CDFGIJKL': 'CGIDJFLK',
-    'CDFGHJKL': 'CGJDHFLK',
-    'CDFGHIKL': 'CGIDHFLK',
-    'CDFGHIJL': 'CGJDHFLI',
-    'CDFGHIJK': 'CGJDHFIK',
-    'CDEHIJKL': 'EJICHDLK',
-    'CDEGIJKL': 'EGICJDLK',
-    'CDEGHJKL': 'EGJCHDLK',
-    'CDEGHIKL': 'EGICHDLK',
-    'CDEGHIJL': 'EGJCHDLI',
-    'CDEGHIJK': 'EGJCHDIK',
-    'CDEFIJKL': 'CJEDIFLK',
-    'CDEFHJKL': 'CJEDHFLK',
-    'CDEFHIKL': 'CEIDHFLK',
-    'CDEFHIJL': 'CJEDHFLI',
-    'CDEFHIJK': 'CJEDHFIK',
-    'CDEFGJKL': 'CGEDJFLK',
-    'CDEFGIKL': 'CGEDIFLK',
-    'CDEFGIJL': 'CGEDJFLI',
-    'CDEFGIJK': 'CGEDJFIK',
-    'CDEFGHKL': 'CGEDHFLK',
-    'CDEFGHJL': 'CGJDHFLE',
-    'CDEFGHJK': 'CGJDHFEK',
-    'CDEFGHIL': 'CGEDHFLI',
-    'CDEFGHIK': 'CGEDHFIK',
-    'CDEFGHIJ': 'CGJDHFEI',
-    'BFGHIJKL': 'HJBFIGLK',
-    'BEGHIJKL': 'EJIBHGLK',
-    'BEFHIJKL': 'EJBFIHLK',
-    'BEFGIJKL': 'EJBFIGLK',
-    'BEFGHJKL': 'EJBFHGLK',
-    'BEFGHIKL': 'EGBFIHLK',
-    'BEFGHIJL': 'EJBFHGLI',
-    'BEFGHIJK': 'EJBFHGIK',
-    'BDGHIJKL': 'HJBDIGLK',
-    'BDFHIJKL': 'HJBDIFLK',
-    'BDFGIJKL': 'IGBDJFLK',
-    'BDFGHJKL': 'HGBDJFLK',
-    'BDFGHIKL': 'HGBDIFLK',
-    'BDFGHIJL': 'HGBDJFLI',
-    'BDFGHIJK': 'HGBDJFIK',
-    'BDEHIJKL': 'EJBDIHLK',
-    'BDEGIJKL': 'EJBDIGLK',
-    'BDEGHJKL': 'EJBDHGLK',
-    'BDEGHIKL': 'EGBDIHLK',
-    'BDEGHIJL': 'EJBDHGLI',
-    'BDEGHIJK': 'EJBDHGIK',
-    'BDEFIJKL': 'EJBDIFLK',
-    'BDEFHJKL': 'EJBDHFLK',
-    'BDEFHIKL': 'EIBDHFLK',
-    'BDEFHIJL': 'EJBDHFLI',
-    'BDEFHIJK': 'EJBDHFIK',
-    'BDEFGJKL': 'EGBDJFLK',
-    'BDEFGIKL': 'EGBDIFLK',
-    'BDEFGIJL': 'EGBDJFLI',
-    'BDEFGIJK': 'EGBDJFIK',
-    'BDEFGHKL': 'EGBDHFLK',
-    'BDEFGHJL': 'HGBDJFLE',
-    'BDEFGHJK': 'HGBDJFEK',
-    'BDEFGHIL': 'EGBDHFLI',
-    'BDEFGHIK': 'EGBDHFIK',
-    'BDEFGHIJ': 'HGBDJFEI',
-    'BCGHIJKL': 'HJBCIGLK',
-    'BCFHIJKL': 'HJBCIFLK',
-    'BCFGIJKL': 'IGBCJFLK',
-    'BCFGHJKL': 'HGBCJFLK',
-    'BCFGHIKL': 'HGBCIFLK',
-    'BCFGHIJL': 'HGBCJFLI',
-    'BCFGHIJK': 'HGBCJFIK',
-    'BCEHIJKL': 'EJBCIHLK',
-    'BCEGIJKL': 'EJBCIGLK',
-    'BCEGHJKL': 'EJBCHGLK',
-    'BCEGHIKL': 'EGBCIHLK',
-    'BCEGHIJL': 'EJBCHGLI',
-    'BCEGHIJK': 'EJBCHGIK',
-    'BCEFIJKL': 'EJBCIFLK',
-    'BCEFHJKL': 'EJBCHFLK',
-    'BCEFHIKL': 'EIBCHFLK',
-    'BCEFHIJL': 'EJBCHFLI',
-    'BCEFHIJK': 'EJBCHFIK',
-    'BCEFGJKL': 'EGBCJFLK',
-    'BCEFGIKL': 'EGBCIFLK',
-    'BCEFGIJL': 'EGBCJFLI',
-    'BCEFGIJK': 'EGBCJFIK',
-    'BCEFGHKL': 'EGBCHFLK',
-    'BCEFGHJL': 'HGBCJFLE',
-    'BCEFGHJK': 'HGBCJFEK',
-    'BCEFGHIL': 'EGBCHFLI',
-    'BCEFGHIK': 'EGBCHFIK',
-    'BCEFGHIJ': 'HGBCJFEI',
-    'BCDHIJKL': 'HJBCIDLK',
-    'BCDGIJKL': 'IGBCJDLK',
-    'BCDGHJKL': 'HGBCJDLK',
-    'BCDGHIKL': 'HGBCIDLK',
-    'BCDGHIJL': 'HGBCJDLI',
-    'BCDGHIJK': 'HGBCJDIK',
-    'BCDFIJKL': 'CJBDIFLK',
-    'BCDFHJKL': 'CJBDHFLK',
-    'BCDFHIKL': 'CIBDHFLK',
-    'BCDFHIJL': 'CJBDHFLI',
-    'BCDFHIJK': 'CJBDHFIK',
-    'BCDFGJKL': 'CGBDJFLK',
-    'BCDFGIKL': 'CGBDIFLK',
-    'BCDFGIJL': 'CGBDJFLI',
-    'BCDFGIJK': 'CGBDJFIK',
-    'BCDFGHKL': 'CGBDHFLK',
-    'BCDFGHJL': 'CGBDHFLJ',
-    'BCDFGHJK': 'HGBCJFDK',
-    'BCDFGHIL': 'CGBDHFLI',
-    'BCDFGHIK': 'CGBDHFIK',
-    'BCDFGHIJ': 'HGBCJFDI',
-    'BCDEIJKL': 'EJBCIDLK',
-    'BCDEHJKL': 'EJBCHDLK',
-    'BCDEHIKL': 'EIBCHDLK',
-    'BCDEHIJL': 'EJBCHDLI',
-    'BCDEHIJK': 'EJBCHDIK',
-    'BCDEGJKL': 'EGBCJDLK',
-    'BCDEGIKL': 'EGBCIDLK',
-    'BCDEGIJL': 'EGBCJDLI',
-    'BCDEGIJK': 'EGBCJDIK',
-    'BCDEGHKL': 'EGBCHDLK',
-    'BCDEGHJL': 'HGBCJDLE',
-    'BCDEGHJK': 'HGBCJDEK',
-    'BCDEGHIL': 'EGBCHDLI',
-    'BCDEGHIK': 'EGBCHDIK',
-    'BCDEGHIJ': 'HGBCJDEI',
-    'BCDEFJKL': 'CJBDEFLK',
-    'BCDEFIKL': 'CEBDIFLK',
-    'BCDEFIJL': 'CJBDEFLI',
-    'BCDEFIJK': 'CJBDEFIK',
-    'BCDEFHKL': 'CEBDHFLK',
-    'BCDEFHJL': 'CJBDHFLE',
-    'BCDEFHJK': 'CJBDHFEK',
-    'BCDEFHIL': 'CEBDHFLI',
-    'BCDEFHIK': 'CEBDHFIK',
-    'BCDEFHIJ': 'CJBDHFEI',
-    'BCDEFGKL': 'CGBDEFLK',
-    'BCDEFGJL': 'CGBDJFLE',
-    'BCDEFGJK': 'CGBDJFEK',
-    'BCDEFGIL': 'CGBDEFLI',
-    'BCDEFGIK': 'CGBDEFIK',
-    'BCDEFGIJ': 'CGBDJFEI',
-    'BCDEFGHL': 'CGBDHFLE',
-    'BCDEFGHK': 'CGBDHFEK',
-    'BCDEFGHJ': 'HGBCJFDE',
-    'BCDEFGHI': 'CGBDHFEI',
-    'AFGHIJKL': 'HJIFAGLK',
-    'AEGHIJKL': 'EJIAHGLK',
-    'AEFHIJKL': 'EJIFAHLK',
-    'AEFGIJKL': 'EJIFAGLK',
-    'AEFGHJKL': 'EGJFAHLK',
-    'AEFGHIKL': 'EGIFAHLK',
-    'AEFGHIJL': 'EGJFAHLI',
-    'AEFGHIJK': 'EGJFAHIK',
-    'ADGHIJKL': 'HJIDAGLK',
-    'ADFHIJKL': 'HJIDAFLK',
-    'ADFGIJKL': 'IGJDAFLK',
-    'ADFGHJKL': 'HGJDAFLK',
-    'ADFGHIKL': 'HGIDAFLK',
-    'ADFGHIJL': 'HGJDAFLI',
-    'ADFGHIJK': 'HGJDAFIK',
-    'ADEHIJKL': 'EJIDAHLK',
-    'ADEGIJKL': 'EJIDAGLK',
-    'ADEGHJKL': 'EGJDAHLK',
-    'ADEGHIKL': 'EGIDAHLK',
-    'ADEGHIJL': 'EGJDAHLI',
-    'ADEGHIJK': 'EGJDAHIK',
-    'ADEFIJKL': 'EJIDAFLK',
-    'ADEFHJKL': 'HJEDAFLK',
-    'ADEFHIKL': 'HEIDAFLK',
-    'ADEFHIJL': 'HJEDAFLI',
-    'ADEFHIJK': 'HJEDAFIK',
-    'ADEFGJKL': 'EGJDAFLK',
-    'ADEFGIKL': 'EGIDAFLK',
-    'ADEFGIJL': 'EGJDAFLI',
-    'ADEFGIJK': 'EGJDAFIK',
-    'ADEFGHKL': 'HGEDAFLK',
-    'ADEFGHJL': 'HGJDAFLE',
-    'ADEFGHJK': 'HGJDAFEK',
-    'ADEFGHIL': 'HGEDAFLI',
-    'ADEFGHIK': 'HGEDAFIK',
-    'ADEFGHIJ': 'HGJDAFEI',
-    'ACGHIJKL': 'HJICAGLK',
-    'ACFHIJKL': 'HJICAFLK',
-    'ACFGIJKL': 'IGJCAFLK',
-    'ACFGHJKL': 'HGJCAFLK',
-    'ACFGHIKL': 'HGICAFLK',
-    'ACFGHIJL': 'HGJCAFLI',
-    'ACFGHIJK': 'HGJCAFIK',
-    'ACEHIJKL': 'EJICAHLK',
-    'ACEGIJKL': 'EJICAGLK',
-    'ACEGHJKL': 'EGJCAHLK',
-    'ACEGHIKL': 'EGICAHLK',
-    'ACEGHIJL': 'EGJCAHLI',
-    'ACEGHIJK': 'EGJCAHIK',
-    'ACEFIJKL': 'EJICAFLK',
-    'ACEFHJKL': 'HJECAFLK',
-    'ACEFHIKL': 'HEICAFLK',
-    'ACEFHIJL': 'HJECAFLI',
-    'ACEFHIJK': 'HJECAFIK',
-    'ACEFGJKL': 'EGJCAFLK',
-    'ACEFGIKL': 'EGICAFLK',
-    'ACEFGIJL': 'EGJCAFLI',
-    'ACEFGIJK': 'EGJCAFIK',
-    'ACEFGHKL': 'HGECAFLK',
-    'ACEFGHJL': 'HGJCAFLE',
-    'ACEFGHJK': 'HGJCAFEK',
-    'ACEFGHIL': 'HGECAFLI',
-    'ACEFGHIK': 'HGECAFIK',
-    'ACEFGHIJ': 'HGJCAFEI',
-    'ACDHIJKL': 'HJICADLK',
-    'ACDGIJKL': 'IGJCADLK',
-    'ACDGHJKL': 'HGJCADLK',
-    'ACDGHIKL': 'HGICADLK',
-    'ACDGHIJL': 'HGJCADLI',
-    'ACDGHIJK': 'HGJCADIK',
-    'ACDFIJKL': 'CJIDAFLK',
-    'ACDFHJKL': 'HJFCADLK',
-    'ACDFHIKL': 'HFICADLK',
-    'ACDFHIJL': 'HJFCADLI',
-    'ACDFHIJK': 'HJFCADIK',
-    'ACDFGJKL': 'CGJDAFLK',
-    'ACDFGIKL': 'CGIDAFLK',
-    'ACDFGIJL': 'CGJDAFLI',
-    'ACDFGIJK': 'CGJDAFIK',
-    'ACDFGHKL': 'HGFCADLK',
-    'ACDFGHJL': 'CGJDAFLH',
-    'ACDFGHJK': 'HGJCAFDK',
-    'ACDFGHIL': 'HGFCADLI',
-    'ACDFGHIK': 'HGFCADIK',
-    'ACDFGHIJ': 'HGJCAFDI',
-    'ACDEIJKL': 'EJICADLK',
-    'ACDEHJKL': 'HJECADLK',
-    'ACDEHIKL': 'HEICADLK',
-    'ACDEHIJL': 'HJECADLI',
-    'ACDEHIJK': 'HJECADIK',
-    'ACDEGJKL': 'EGJCADLK',
-    'ACDEGIKL': 'EGICADLK',
-    'ACDEGIJL': 'EGJCADLI',
-    'ACDEGIJK': 'EGJCADIK',
-    'ACDEGHKL': 'HGECADLK',
-    'ACDEGHJL': 'HGJCADLE',
-    'ACDEGHJK': 'HGJCADEK',
-    'ACDEGHIL': 'HGECADLI',
-    'ACDEGHIK': 'HGECADIK',
-    'ACDEGHIJ': 'HGJCADEI',
-    'ACDEFJKL': 'CJEDAFLK',
-    'ACDEFIKL': 'CEIDAFLK',
-    'ACDEFIJL': 'CJEDAFLI',
-    'ACDEFIJK': 'CJEDAFIK',
-    'ACDEFHKL': 'HEFCADLK',
-    'ACDEFHJL': 'HJFCADLE',
-    'ACDEFHJK': 'HJECAFDK',
-    'ACDEFHIL': 'HEFCADLI',
-    'ACDEFHIK': 'HEFCADIK',
-    'ACDEFHIJ': 'HJECAFDI',
-    'ACDEFGKL': 'CGEDAFLK',
-    'ACDEFGJL': 'CGJDAFLE',
-    'ACDEFGJK': 'CGJDAFEK',
-    'ACDEFGIL': 'CGEDAFLI',
-    'ACDEFGIK': 'CGEDAFIK',
-    'ACDEFGIJ': 'CGJDAFEI',
-    'ACDEFGHL': 'HGFCADLE',
-    'ACDEFGHK': 'HGECAFDK',
-    'ACDEFGHJ': 'HGJCAFDE',
-    'ACDEFGHI': 'HGECAFDI',
-    'ABGHIJKL': 'HJBAIGLK',
-    'ABFHIJKL': 'HJBAIFLK',
-    'ABFGIJKL': 'IJBFAGLK',
-    'ABFGHJKL': 'HJBFAGLK',
-    'ABFGHIKL': 'HGBAIFLK',
-    'ABFGHIJL': 'HJBFAGLI',
-    'ABFGHIJK': 'HJBFAGIK',
-    'ABEHIJKL': 'EJBAIHLK',
-    'ABEGIJKL': 'EJBAIGLK',
-    'ABEGHJKL': 'EJBAHGLK',
-    'ABEGHIKL': 'EGBAIHLK',
-    'ABEGHIJL': 'EJBAHGLI',
-    'ABEGHIJK': 'EJBAHGIK',
-    'ABEFIJKL': 'EJBAIFLK',
-    'ABEFHJKL': 'EJBFAHLK',
-    'ABEFHIKL': 'EIBFAHLK',
-    'ABEFHIJL': 'EJBFAHLI',
-    'ABEFHIJK': 'EJBFAHIK',
-    'ABEFGJKL': 'EJBFAGLK',
-    'ABEFGIKL': 'EGBAIFLK',
-    'ABEFGIJL': 'EJBFAGLI',
-    'ABEFGIJK': 'EJBFAGIK',
-    'ABEFGHKL': 'EGBFAHLK',
-    'ABEFGHJL': 'HJBFAGLE',
-    'ABEFGHJK': 'HJBFAGEK',
-    'ABEFGHIL': 'EGBFAHLI',
-    'ABEFGHIK': 'EGBFAHIK',
-    'ABEFGHIJ': 'HJBFAGEI',
-    'ABDHIJKL': 'IJBDAHLK',
-    'ABDGIJKL': 'IJBDAGLK',
-    'ABDGHJKL': 'HJBDAGLK',
-    'ABDGHIKL': 'IGBDAHLK',
-    'ABDGHIJL': 'HJBDAGLI',
-    'ABDGHIJK': 'HJBDAGIK',
-    'ABDFIJKL': 'IJBDAFLK',
-    'ABDFHJKL': 'HJBDAFLK',
-    'ABDFHIKL': 'HIBDAFLK',
-    'ABDFHIJL': 'HJBDAFLI',
-    'ABDFHIJK': 'HJBDAFIK',
-    'ABDFGJKL': 'FJBDAGLK',
-    'ABDFGIKL': 'IGBDAFLK',
-    'ABDFGIJL': 'FJBDAGLI',
-    'ABDFGIJK': 'FJBDAGIK',
-    'ABDFGHKL': 'HGBDAFLK',
-    'ABDFGHJL': 'HGBDAFLJ',
-    'ABDFGHJK': 'HGBDAFJK',
-    'ABDFGHIL': 'HGBDAFLI',
-    'ABDFGHIK': 'HGBDAFIK',
-    'ABDFGHIJ': 'HGBDAFIJ',
-    'ABDEIJKL': 'EJBAIDLK',
-    'ABDEHJKL': 'EJBDAHLK',
-    'ABDEHIKL': 'EIBDAHLK',
-    'ABDEHIJL': 'EJBDAHLI',
-    'ABDEHIJK': 'EJBDAHIK',
-    'ABDEGJKL': 'EJBDAGLK',
-    'ABDEGIKL': 'EGBAIDLK',
-    'ABDEGIJL': 'EJBDAGLI',
-    'ABDEGIJK': 'EJBDAGIK',
-    'ABDEGHKL': 'EGBDAHLK',
-    'ABDEGHJL': 'HJBDAGLE',
-    'ABDEGHJK': 'HJBDAGEK',
-    'ABDEGHIL': 'EGBDAHLI',
-    'ABDEGHIK': 'EGBDAHIK',
-    'ABDEGHIJ': 'HJBDAGEI',
-    'ABDEFJKL': 'EJBDAFLK',
-    'ABDEFIKL': 'EIBDAFLK',
-    'ABDEFIJL': 'EJBDAFLI',
-    'ABDEFIJK': 'EJBDAFIK',
-    'ABDEFHKL': 'HEBDAFLK',
-    'ABDEFHJL': 'HJBDAFLE',
-    'ABDEFHJK': 'HJBDAFEK',
-    'ABDEFHIL': 'HEBDAFLI',
-    'ABDEFHIK': 'HEBDAFIK',
-    'ABDEFHIJ': 'HJBDAFEI',
-    'ABDEFGKL': 'EGBDAFLK',
-    'ABDEFGJL': 'EGBDAFLJ',
-    'ABDEFGJK': 'EGBDAFJK',
-    'ABDEFGIL': 'EGBDAFLI',
-    'ABDEFGIK': 'EGBDAFIK',
-    'ABDEFGIJ': 'EGBDAFIJ',
-    'ABDEFGHL': 'HGBDAFLE',
-    'ABDEFGHK': 'HGBDAFEK',
-    'ABDEFGHJ': 'HGBDAFEJ',
-    'ABDEFGHI': 'HGBDAFEI',
-    'ABCHIJKL': 'IJBCAHLK',
-    'ABCGIJKL': 'IJBCAGLK',
-    'ABCGHJKL': 'HJBCAGLK',
-    'ABCGHIKL': 'IGBCAHLK',
-    'ABCGHIJL': 'HJBCAGLI',
-    'ABCGHIJK': 'HJBCAGIK',
-    'ABCFIJKL': 'IJBCAFLK',
-    'ABCFHJKL': 'HJBCAFLK',
-    'ABCFHIKL': 'HIBCAFLK',
-    'ABCFHIJL': 'HJBCAFLI',
-    'ABCFHIJK': 'HJBCAFIK',
-    'ABCFGJKL': 'CJBFAGLK',
-    'ABCFGIKL': 'IGBCAFLK',
-    'ABCFGIJL': 'CJBFAGLI',
-    'ABCFGIJK': 'CJBFAGIK',
-    'ABCFGHKL': 'HGBCAFLK',
-    'ABCFGHJL': 'HGBCAFLJ',
-    'ABCFGHJK': 'HGBCAFJK',
-    'ABCFGHIL': 'HGBCAFLI',
-    'ABCFGHIK': 'HGBCAFIK',
-    'ABCFGHIJ': 'HGBCAFIJ',
-    'ABCEIJKL': 'EJBAICLK',
-    'ABCEHJKL': 'EJBCAHLK',
-    'ABCEHIKL': 'EIBCAHLK',
-    'ABCEHIJL': 'EJBCAHLI',
-    'ABCEHIJK': 'EJBCAHIK',
-    'ABCEGJKL': 'EJBCAGLK',
-    'ABCEGIKL': 'EGBAICLK',
-    'ABCEGIJL': 'EJBCAGLI',
-    'ABCEGIJK': 'EJBCAGIK',
-    'ABCEGHKL': 'EGBCAHLK',
-    'ABCEGHJL': 'HJBCAGLE',
-    'ABCEGHJK': 'HJBCAGEK',
-    'ABCEGHIL': 'EGBCAHLI',
-    'ABCEGHIK': 'EGBCAHIK',
-    'ABCEGHIJ': 'HJBCAGEI',
-    'ABCEFJKL': 'EJBCAFLK',
-    'ABCEFIKL': 'EIBCAFLK',
-    'ABCEFIJL': 'EJBCAFLI',
-    'ABCEFIJK': 'EJBCAFIK',
-    'ABCEFHKL': 'HEBCAFLK',
-    'ABCEFHJL': 'HJBCAFLE',
-    'ABCEFHJK': 'HJBCAFEK',
-    'ABCEFHIL': 'HEBCAFLI',
-    'ABCEFHIK': 'HEBCAFIK',
-    'ABCEFHIJ': 'HJBCAFEI',
-    'ABCEFGKL': 'EGBCAFLK',
-    'ABCEFGJL': 'EGBCAFLJ',
-    'ABCEFGJK': 'EGBCAFJK',
-    'ABCEFGIL': 'EGBCAFLI',
-    'ABCEFGIK': 'EGBCAFIK',
-    'ABCEFGIJ': 'EGBCAFIJ',
-    'ABCEFGHL': 'HGBCAFLE',
-    'ABCEFGHK': 'HGBCAFEK',
-    'ABCEFGHJ': 'HGBCAFEJ',
-    'ABCEFGHI': 'HGBCAFEI',
-    'ABCDIJKL': 'IJBCADLK',
-    'ABCDHJKL': 'HJBCADLK',
-    'ABCDHIKL': 'HIBCADLK',
-    'ABCDHIJL': 'HJBCADLI',
-    'ABCDHIJK': 'HJBCADIK',
-    'ABCDGJKL': 'CJBDAGLK',
-    'ABCDGIKL': 'IGBCADLK',
-    'ABCDGIJL': 'CJBDAGLI',
-    'ABCDGIJK': 'CJBDAGIK',
-    'ABCDGHKL': 'HGBCADLK',
-    'ABCDGHJL': 'HGBCADLJ',
-    'ABCDGHJK': 'HGBCADJK',
-    'ABCDGHIL': 'HGBCADLI',
-    'ABCDGHIK': 'HGBCADIK',
-    'ABCDGHIJ': 'HGBCADIJ',
-    'ABCDFJKL': 'CJBDAFLK',
-    'ABCDFIKL': 'CIBDAFLK',
-    'ABCDFIJL': 'CJBDAFLI',
-    'ABCDFIJK': 'CJBDAFIK',
-    'ABCDFHKL': 'HFBCADLK',
-    'ABCDFHJL': 'CJBDAFLH',
-    'ABCDFHJK': 'HJBCAFDK',
-    'ABCDFHIL': 'HFBCADLI',
-    'ABCDFHIK': 'HFBCADIK',
-    'ABCDFHIJ': 'HJBCAFDI',
-    'ABCDFGKL': 'CGBDAFLK',
-    'ABCDFGJL': 'CGBDAFLJ',
-    'ABCDFGJK': 'CGBDAFJK',
-    'ABCDFGIL': 'CGBDAFLI',
-    'ABCDFGIK': 'CGBDAFIK',
-    'ABCDFGIJ': 'CGBDAFIJ',
-    'ABCDFGHL': 'CGBDAFLH',
-    'ABCDFGHK': 'HGBCAFDK',
-    'ABCDFGHJ': 'HGBCAFDJ',
-    'ABCDFGHI': 'HGBCAFDI',
-    'ABCDEJKL': 'EJBCADLK',
-    'ABCDEIKL': 'EIBCADLK',
-    'ABCDEIJL': 'EJBCADLI',
-    'ABCDEIJK': 'EJBCADIK',
-    'ABCDEHKL': 'HEBCADLK',
-    'ABCDEHJL': 'HJBCADLE',
-    'ABCDEHJK': 'HJBCADEK',
-    'ABCDEHIL': 'HEBCADLI',
-    'ABCDEHIK': 'HEBCADIK',
-    'ABCDEHIJ': 'HJBCADEI',
-    'ABCDEGKL': 'EGBCADLK',
-    'ABCDEGJL': 'EGBCADLJ',
-    'ABCDEGJK': 'EGBCADJK',
-    'ABCDEGIL': 'EGBCADLI',
-    'ABCDEGIK': 'EGBCADIK',
-    'ABCDEGIJ': 'EGBCADIJ',
-    'ABCDEGHL': 'HGBCADLE',
-    'ABCDEGHK': 'HGBCADEK',
-    'ABCDEGHJ': 'HGBCADEJ',
-    'ABCDEGHI': 'HGBCADEI',
-    'ABCDEFKL': 'CEBDAFLK',
-    'ABCDEFJL': 'CJBDAFLE',
-    'ABCDEFJK': 'CJBDAFEK',
-    'ABCDEFIL': 'CEBDAFLI',
-    'ABCDEFIK': 'CEBDAFIK',
-    'ABCDEFIJ': 'CJBDAFEI',
-    'ABCDEFHL': 'HFBCADLE',
-    'ABCDEFHK': 'HEBCAFDK',
-    'ABCDEFHJ': 'HJBCAFDE',
-    'ABCDEFHI': 'HEBCAFDI',
-    'ABCDEFGL': 'CGBDAFLE',
-    'ABCDEFGK': 'CGBDAFEK',
-    'ABCDEFGJ': 'CGBDAFEJ',
-    'ABCDEFGI': 'CGBDAFEI',
-    'ABCDEFGH': 'HGBCAFDE',
-};

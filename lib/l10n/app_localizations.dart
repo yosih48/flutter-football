@@ -755,30 +755,6 @@ abstract class AppLocalizations {
   /// **'your winners'**
   String get yourwinners;
 
-  /// No description provided for @pickWinnerTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Pick league winner'**
-  String get pickWinnerTitle;
-
-  /// No description provided for @pickTopScorerTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Pick top scorer'**
-  String get pickTopScorerTitle;
-
-  /// No description provided for @tapToPick.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose'**
-  String get tapToPick;
-
-  /// No description provided for @selectionClosed.
-  ///
-  /// In en, this message translates to:
-  /// **'Selection closed'**
-  String get selectionClosed;
-
   /// No description provided for @or.
   ///
   /// In en, this message translates to:
@@ -1024,6 +1000,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please select a player first'**
   String get pleaseSelectplayerFirst;
+
+  /// No description provided for @pickWinnerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick league winner'**
+  String get pickWinnerTitle;
+
+  /// No description provided for @pickTopScorerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick top scorer'**
+  String get pickTopScorerTitle;
+
+  /// No description provided for @tapToPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get tapToPick;
+
+  /// No description provided for @selectionClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Selection closed'**
+  String get selectionClosed;
 
   /// No description provided for @monday.
   ///
@@ -1980,85 +1980,448 @@ abstract class AppLocalizations {
   String get championPointsLabel;
 
   /// No description provided for @bracketTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'World Cup Bracket'**
   String get bracketTitle;
 
   /// No description provided for @bracketEntrySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Predict groups, knockouts & champion'**
   String get bracketEntrySubtitle;
 
   /// No description provided for @bracketPointsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bracket Points'**
   String get bracketPointsLabel;
 
   /// No description provided for @bracketMyBracketTab.
+  ///
+  /// In en, this message translates to:
+  /// **'My Bracket'**
   String get bracketMyBracketTab;
 
   /// No description provided for @bracketRankingTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Ranking'**
   String get bracketRankingTab;
 
   /// No description provided for @bracketGroupStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Group Stage'**
   String get bracketGroupStage;
 
   /// No description provided for @bracketGroupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to pick who finishes 1st and 2nd'**
   String get bracketGroupHint;
 
   /// No description provided for @bracketGroupWord.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
   String get bracketGroupWord;
 
   /// No description provided for @bracketChampionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Champion'**
   String get bracketChampionLabel;
 
   /// No description provided for @bracketChampionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to pick the tournament winner'**
   String get bracketChampionHint;
 
   /// No description provided for @bracketSelectTeamTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select team'**
   String get bracketSelectTeamTitle;
 
   /// No description provided for @bracketLockedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
   String get bracketLockedLabel;
 
   /// No description provided for @bracketAdvanceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'To advance'**
   String get bracketAdvanceLabel;
 
   /// No description provided for @bracketThirdPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'3rd place'**
   String get bracketThirdPlace;
 
   /// No description provided for @bracketPickThird.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a 3rd-placed team'**
   String get bracketPickThird;
 
   /// No description provided for @bracketThirdsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Third place qualifiers'**
   String get bracketThirdsTitle;
 
   /// No description provided for @bracketThirdsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the 8 best third-placed teams'**
   String get bracketThirdsHint;
 
   /// No description provided for @bracketThirdsFull.
+  ///
+  /// In en, this message translates to:
+  /// **'All 8 third-place spots are taken'**
   String get bracketThirdsFull;
 
   /// No description provided for @bracketTBD.
+  ///
+  /// In en, this message translates to:
+  /// **'To be decided'**
   String get bracketTBD;
 
+  /// No description provided for @bracketViewFull.
+  ///
+  /// In en, this message translates to:
+  /// **'View full bracket'**
+  String get bracketViewFull;
+
+  /// No description provided for @bracketViewerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bracket'**
+  String get bracketViewerTitle;
+
   /// No description provided for @bracketPickPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the previous round first'**
   String get bracketPickPrevious;
 
   /// No description provided for @bracketSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
   String get bracketSave;
 
   /// No description provided for @bracketSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
   String get bracketSaved;
 
   /// No description provided for @bracketSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save'**
   String get bracketSaveFailed;
 
+  /// No description provided for @atLeastOneLeague.
+  ///
+  /// In en, this message translates to:
+  /// **'You must keep at least one league selected.'**
+  String get atLeastOneLeague;
+
+  /// No description provided for @bracketViewerEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No predictions yet'**
+  String get bracketViewerEmptyTitle;
+
+  /// No description provided for @bracketViewerEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This player hasn\'t filled out their bracket.'**
+  String get bracketViewerEmptyHint;
+
   /// No description provided for @bracketNoTeamsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available yet'**
   String get bracketNoTeamsTitle;
 
   /// No description provided for @bracketNoTeamsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The group draw hasn\'t loaded yet. Check back closer to the tournament.'**
   String get bracketNoTeamsHint;
 
   /// No description provided for @bracketRankingEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No points yet'**
   String get bracketRankingEmptyTitle;
 
   /// No description provided for @bracketRankingEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Bracket points appear once rounds are settled.'**
   String get bracketRankingEmptyHint;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @bracketLeaguesTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Leagues'**
+  String get bracketLeaguesTab;
+
+  /// No description provided for @bracketGlobalTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaderboard'**
+  String get bracketGlobalTab;
+
+  /// No description provided for @bracketLeagueCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get bracketLeagueCreate;
+
+  /// No description provided for @bracketLeagueJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get bracketLeagueJoin;
+
+  /// No description provided for @bracketLeaguesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No leagues yet'**
+  String get bracketLeaguesEmptyTitle;
+
+  /// No description provided for @bracketLeaguesEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a league and share the invite code, or join one with a code.'**
+  String get bracketLeaguesEmptyHint;
+
+  /// No description provided for @bracketLeagueMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'members'**
+  String get bracketLeagueMembers;
+
+  /// No description provided for @bracketLeagueCreateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create league'**
+  String get bracketLeagueCreateTitle;
+
+  /// No description provided for @bracketLeagueNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'League name'**
+  String get bracketLeagueNameHint;
+
+  /// No description provided for @bracketLeagueJoinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Join a league'**
+  String get bracketLeagueJoinTitle;
+
+  /// No description provided for @bracketLeagueCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite code'**
+  String get bracketLeagueCodeHint;
+
+  /// No description provided for @bracketLeagueCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'League created'**
+  String get bracketLeagueCreated;
+
+  /// No description provided for @bracketLeagueActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get bracketLeagueActionFailed;
+
+  /// No description provided for @bracketLeagueAlreadyMember.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re already in this league'**
+  String get bracketLeagueAlreadyMember;
+
+  /// No description provided for @bracketLeagueJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined the league'**
+  String get bracketLeagueJoined;
+
+  /// No description provided for @bracketLeagueCodeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite code copied'**
+  String get bracketLeagueCodeCopied;
+
+  /// No description provided for @bracketLeagueLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get bracketLeagueLeave;
+
+  /// No description provided for @bracketLeagueLeaveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave this league? You can rejoin later with the invite code.'**
+  String get bracketLeagueLeaveConfirm;
+
+  /// No description provided for @bracketLeagueDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get bracketLeagueDelete;
+
+  /// No description provided for @bracketLeagueDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this league for everyone? This can\'t be undone.'**
+  String get bracketLeagueDeleteConfirm;
+
+  /// No description provided for @bracketLeagueRename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get bracketLeagueRename;
+
+  /// No description provided for @bracketLeagueStandingsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Standings'**
+  String get bracketLeagueStandingsTab;
+
+  /// No description provided for @bracketLeagueMembersTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get bracketLeagueMembersTab;
+
+  /// No description provided for @bracketHelpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How it works'**
+  String get bracketHelpTitle;
+
+  /// No description provided for @bracketHelpIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Predict how the tournament unfolds — from the group stage all the way to the champion — and earn points for every correct call.'**
+  String get bracketHelpIntro;
+
+  /// No description provided for @bracketHelpGroupsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Group stage'**
+  String get bracketHelpGroupsTitle;
+
+  /// No description provided for @bracketHelpGroupsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'In each group, tap teams to pick who finishes 1st and 2nd. Your first tap is the winner, the second is the runner-up.'**
+  String get bracketHelpGroupsBody;
+
+  /// No description provided for @bracketHelpThirdsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Best third-placed teams'**
+  String get bracketHelpThirdsTitle;
+
+  /// No description provided for @bracketHelpThirdsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark the third-placed teams you think will survive the cut. You can pick up to 8 — at most one per group — and they fill the extra knockout slots.'**
+  String get bracketHelpThirdsBody;
+
+  /// No description provided for @bracketHelpKnockoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Knockout rounds'**
+  String get bracketHelpKnockoutTitle;
+
+  /// No description provided for @bracketHelpKnockoutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'As you pick group qualifiers, the bracket fills in. Tap the team you think advances in each match, round by round, up to the final.'**
+  String get bracketHelpKnockoutBody;
+
+  /// No description provided for @bracketHelpChampionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Champion'**
+  String get bracketHelpChampionTitle;
+
+  /// No description provided for @bracketHelpChampionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the team you think lifts the trophy — this is worth the most points.'**
+  String get bracketHelpChampionBody;
+
+  /// No description provided for @bracketHelpPointsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How points work'**
+  String get bracketHelpPointsTitle;
+
+  /// No description provided for @bracketHelpPointsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every stage awards points for each correct pick. Later rounds are worth more, and the champion is worth the most. The points for each section are shown next to its title (the +N badge). Points are added automatically once a round\'s results are final.'**
+  String get bracketHelpPointsBody;
+
+  /// No description provided for @bracketHelpLockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Locking'**
+  String get bracketHelpLockTitle;
+
+  /// No description provided for @bracketHelpLockBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Each stage locks when its matches kick off. After that you can\'t change those picks, so get them in early.'**
+  String get bracketHelpLockBody;
+
+  /// No description provided for @bracketHelpLeaguesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leagues'**
+  String get bracketHelpLeaguesTitle;
+
+  /// No description provided for @bracketHelpLeaguesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Compete on the global leaderboard, or create a private league and invite friends with a code to see who knows the tournament best.'**
+  String get bracketHelpLeaguesBody;
+
+  /// No description provided for @bracketHelpGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get bracketHelpGotIt;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

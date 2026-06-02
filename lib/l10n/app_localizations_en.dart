@@ -339,18 +339,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yourwinners => 'your winners';
 
   @override
-  String get pickWinnerTitle => 'Pick league winner';
-
-  @override
-  String get pickTopScorerTitle => 'Pick top scorer';
-
-  @override
-  String get tapToPick => 'Choose';
-
-  @override
-  String get selectionClosed => 'Selection closed';
-
-  @override
   String get or => 'or';
 
   @override
@@ -472,6 +460,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pleaseSelectplayerFirst => 'Please select a player first';
+
+  @override
+  String get pickWinnerTitle => 'Pick league winner';
+
+  @override
+  String get pickTopScorerTitle => 'Pick top scorer';
+
+  @override
+  String get tapToPick => 'Choose';
+
+  @override
+  String get selectionClosed => 'Selection closed';
 
   @override
   String get monday => 'Monday';
@@ -1010,6 +1010,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bracketTBD => 'To be decided';
 
   @override
+  String get bracketViewFull => 'View full bracket';
+
+  @override
+  String get bracketViewerTitle => 'Bracket';
+
+  @override
   String get bracketPickPrevious => 'Pick the previous round first';
 
   @override
@@ -1022,16 +1028,149 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bracketSaveFailed => 'Could not save';
 
   @override
+  String get atLeastOneLeague => 'You must keep at least one league selected.';
+
+  @override
+  String get bracketViewerEmptyTitle => 'No predictions yet';
+
+  @override
+  String get bracketViewerEmptyHint => 'This player hasn\'t filled out their bracket.';
+
+  @override
   String get bracketNoTeamsTitle => 'Not available yet';
 
   @override
-  String get bracketNoTeamsHint =>
-      'The group draw hasn\'t loaded yet. Check back closer to the tournament.';
+  String get bracketNoTeamsHint => 'The group draw hasn\'t loaded yet. Check back closer to the tournament.';
 
   @override
   String get bracketRankingEmptyTitle => 'No points yet';
 
   @override
-  String get bracketRankingEmptyHint =>
-      'Bracket points appear once rounds are settled.';
+  String get bracketRankingEmptyHint => 'Bracket points appear once rounds are settled.';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get bracketLeaguesTab => 'Leagues';
+
+  @override
+  String get bracketGlobalTab => 'Leaderboard';
+
+  @override
+  String get bracketLeagueCreate => 'Create';
+
+  @override
+  String get bracketLeagueJoin => 'Join';
+
+  @override
+  String get bracketLeaguesEmptyTitle => 'No leagues yet';
+
+  @override
+  String get bracketLeaguesEmptyHint => 'Create a league and share the invite code, or join one with a code.';
+
+  @override
+  String get bracketLeagueMembers => 'members';
+
+  @override
+  String get bracketLeagueCreateTitle => 'Create league';
+
+  @override
+  String get bracketLeagueNameHint => 'League name';
+
+  @override
+  String get bracketLeagueJoinTitle => 'Join a league';
+
+  @override
+  String get bracketLeagueCodeHint => 'Invite code';
+
+  @override
+  String get bracketLeagueCreated => 'League created';
+
+  @override
+  String get bracketLeagueActionFailed => 'Something went wrong';
+
+  @override
+  String get bracketLeagueAlreadyMember => 'You\'re already in this league';
+
+  @override
+  String get bracketLeagueJoined => 'Joined the league';
+
+  @override
+  String get bracketLeagueCodeCopied => 'Invite code copied';
+
+  @override
+  String get bracketLeagueLeave => 'Leave';
+
+  @override
+  String get bracketLeagueLeaveConfirm => 'Leave this league? You can rejoin later with the invite code.';
+
+  @override
+  String get bracketLeagueDelete => 'Delete';
+
+  @override
+  String get bracketLeagueDeleteConfirm => 'Delete this league for everyone? This can\'t be undone.';
+
+  @override
+  String get bracketLeagueRename => 'Rename';
+
+  @override
+  String get bracketLeagueStandingsTab => 'Standings';
+
+  @override
+  String get bracketLeagueMembersTab => 'Members';
+
+  @override
+  String get bracketHelpTitle => 'How it works';
+
+  @override
+  String get bracketHelpIntro => 'Predict how the tournament unfolds — from the group stage all the way to the champion — and earn points for every correct call.';
+
+  @override
+  String get bracketHelpGroupsTitle => 'Group stage';
+
+  @override
+  String get bracketHelpGroupsBody => 'In each group, tap teams to pick who finishes 1st and 2nd. Your first tap is the winner, the second is the runner-up.';
+
+  @override
+  String get bracketHelpThirdsTitle => 'Best third-placed teams';
+
+  @override
+  String get bracketHelpThirdsBody => 'Mark the third-placed teams you think will survive the cut. You can pick up to 8 — at most one per group — and they fill the extra knockout slots.';
+
+  @override
+  String get bracketHelpKnockoutTitle => 'Knockout rounds';
+
+  @override
+  String get bracketHelpKnockoutBody => 'As you pick group qualifiers, the bracket fills in. Tap the team you think advances in each match, round by round, up to the final.';
+
+  @override
+  String get bracketHelpChampionTitle => 'Champion';
+
+  @override
+  String get bracketHelpChampionBody => 'Choose the team you think lifts the trophy — this is worth the most points.';
+
+  @override
+  String get bracketHelpPointsTitle => 'How points work';
+
+  @override
+  String get bracketHelpPointsBody => 'Every stage awards points for each correct pick. Later rounds are worth more, and the champion is worth the most. The points for each section are shown next to its title (the +N badge). Points are added automatically once a round\'s results are final.';
+
+  @override
+  String get bracketHelpLockTitle => 'Locking';
+
+  @override
+  String get bracketHelpLockBody => 'Each stage locks when its matches kick off. After that you can\'t change those picks, so get them in early.';
+
+  @override
+  String get bracketHelpLeaguesTitle => 'Leagues';
+
+  @override
+  String get bracketHelpLeaguesBody => 'Compete on the global leaderboard, or create a private league and invite friends with a code to see who knows the tournament best.';
+
+  @override
+  String get bracketHelpGotIt => 'Got it';
 }

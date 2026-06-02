@@ -83,7 +83,25 @@
       "Bash(node --check src/routes/brackets.js)",
       "Bash(node --check src/config/bracketConfig.js)",
       "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('config/worldCupBracket.json','utf8'\\)\\); JSON.parse\\(require\\('fs'\\).readFileSync\\('config/leagues.json','utf8'\\)\\); console.log\\('json ok'\\)\")",
-      "WebFetch(domain:en.wikipedia.org)"
+      "WebFetch(domain:en.wikipedia.org)",
+      "WebFetch(domain:worldcuplocaltime.com)",
+      "Read(//c/tmp/**)",
+      "Bash(python3 -c ' *)",
+      "Bash(pdftotext -layout fwc2026.pdf fwc.txt)",
+      "Bash(awk 'NR>=2566 && NR<=3200 && /^[[:space:]]*[0-9]+[[:space:]]+3[A-L]/' /tmp/fwc.txt)",
+      "Bash(awk 'NR>=2566 && NR<=3300 && match\\($0,/^[[:space:]]*\\([0-9]+\\)[[:space:]]+3[A-L]/,m\\){print m[1]}' /tmp/fwc.txt)",
+      "Bash(awk 'NR>=2566 && NR<=3300 && /^[[:space:]]*[0-9]+[[:space:]]+3[A-L][[:space:]]+3[A-L]/' /tmp/fwc.txt)",
+      "Bash(awk 'match\\($0,/^[[:space:]]*\\([0-9]+\\)[[:space:]]+3[A-L][[:space:]]+3[A-L]/,m\\){print m[1]}' /tmp/fwc.txt)",
+      "Bash(awk '{n=split\\($0,a,\" \"\\); s=\"\"; for\\(i=1;i<=n;i++\\) s=s a[i]; split\\(s,c,\"\"\\); asort\\(c\\); k=\"\"; for\\(i=1;i<=length\\(s\\);i++\\) k=k c[i]; print k}' /tmp/annexc.txt)",
+      "Bash(awk '{n=split\\($0,a,\" \"\\); s=\"\"; for\\(i=1;i<=n;i++\\) s=s a[i]; split\\(s,c,\"\"\\); for\\(i=1;i<=8;i++\\) tmp[i]=c[i]; for\\(i=1;i<8;i++\\)for\\(j=i+1;j<=8;j++\\) if\\(tmp[i]>tmp[j]\\){t=tmp[i];tmp[i]=tmp[j];tmp[j]=t} k=\"\"; for\\(i=1;i<=8;i++\\) k=k tmp[i]; print \"    '\"'\"'\" k \"'\"'\"': '\"'\"'\" s \"'\"'\"',\" }' /tmp/annexc.txt > /tmp/annexc_dart.txt; wc -l /tmp/annexc_dart.txt; head -3 /tmp/annexc_dart.txt)",
+      "Bash(awk ' *)",
+      "Bash(node --check src/controllers/bracketSettlement.js)",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('config/worldCupBracket.json','utf8'\\)\\); console.log\\('json ok'\\)\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(cd /c/worldBackend && grep -n \"scheduleTopScorerReminders\\\\|scheduleTeamWinnerReminders\\\\|app.use.*reminder\\\\|app.use\\(\\\\\"/api\\\\\"\\\\|reminders\" app.js)",
+      "Bash(node -e \"import\\('./src/controllers/bracketClass.js'\\).then\\(\\(\\)=>console.log\\('import ok'\\)\\).catch\\(e=>{console.error\\('IMPORT FAIL:',e.message\\);process.exit\\(1\\)}\\)\")",
+      "Bash(cd /c/flutter-football && grep -nE \"String get \\(cancel|save|confirm|pst|bracketRankingTab|bracketMyBracketTab\\)\\\\b\" lib/l10n/app_localizations.dart)"
     ]
   }
 }
