@@ -82,15 +82,14 @@ class BracketMethods {
     }
   }
 
-  // Bracket leaderboard for a league: every user with a bracketPoints entry,
-  // ranked by their points for this league. Reads the shared users list and
-  // projects the bracketPoints.{leagueId} field. Kept SEPARATE from the
-  // matchday `points` leaderboard by design.
+  // Bracket leaderboard for a league: every user who has scored bracket points,
+  // ranked high→low, each with the per-stage breakdown. Kept SEPARATE from the
+  // matchday `points` leaderboard by design. Backed by the dedicated
+  // GET /brackets/leaderboard/:leagueId endpoint.
   Future<List<BracketStanding>> fetchLeaderboard(int leagueId) async {
-    final key = leagueId.toString();
     try {
       final res = await http
-          .get(Uri.parse('$_base/users/register'))
+          .get(Uri.parse('$_base/brackets/leaderboard/$leagueId'))
           .timeout(const Duration(seconds: 15));
       if (res.statusCode != 200) return [];
       final decoded = jsonDecode(res.body);
@@ -98,16 +97,22 @@ class BracketMethods {
       final rows = <BracketStanding>[];
       for (final u in decoded) {
         if (u is! Map) continue;
-        final bp = u['bracketPoints'];
-        final pts = (bp is Map && bp[key] is num)
-            ? (bp[key] as num).toInt()
-            : 0;
-        if (pts <= 0) continue; // only show users who have scored
+        final pts = (u['points'] is num) ? (u['points'] as num).toInt() : 0;
+        if (pts <= 0) continue;
+        final stages = <String, int>{};
+        final raw = u['stages'];
+        if (raw is Map) {
+          raw.forEach((k, v) {
+            if (v is num) stages[k.toString()] = v.toInt();
+          });
+        }
         rows.add(BracketStanding(
-          name: u['displayName']?.toString() ?? '—',
+          name: u['name']?.toString() ?? '—',
           points: pts,
+          stages: stages,
         ));
       }
+      // Backend already sorts, but guard the order client-side too.
       rows.sort((a, b) => b.points.compareTo(a.points));
       return rows;
     } catch (e) {
@@ -120,5 +125,11 @@ class BracketMethods {
 class BracketStanding {
   final String name;
   final int points;
-  BracketStanding({required this.name, required this.points});
+  // stage key (groups|champion|R32|R16|QF|SF|F) -> points earned there.
+  final Map<String, int> stages;
+  BracketStanding({
+    required this.name,
+    required this.points,
+    this.stages = const {},
+  });
 }

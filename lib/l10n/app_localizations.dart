@@ -2000,6 +2000,15 @@ abstract class AppLocalizations {
   /// No description provided for @bracketPickThird.
   String get bracketPickThird;
 
+  /// No description provided for @bracketThirdsTitle.
+  String get bracketThirdsTitle;
+
+  /// No description provided for @bracketThirdsHint.
+  String get bracketThirdsHint;
+
+  /// No description provided for @bracketThirdsFull.
+  String get bracketThirdsFull;
+
   /// No description provided for @bracketTBD.
   String get bracketTBD;
 

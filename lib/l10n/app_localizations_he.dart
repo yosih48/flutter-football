@@ -986,6 +986,15 @@ class AppLocalizationsHe extends AppLocalizations {
   String get bracketPickThird => 'בחרו נבחרת ממקום שלישי';
 
   @override
+  String get bracketThirdsTitle => 'מעפילות ממקום שלישי';
+
+  @override
+  String get bracketThirdsHint => 'בחרו את 8 הנבחרות הטובות ממקום שלישי';
+
+  @override
+  String get bracketThirdsFull => 'כל 8 המקומות תפוסים';
+
+  @override
   String get bracketTBD => 'טרם נקבע';
 
   @override

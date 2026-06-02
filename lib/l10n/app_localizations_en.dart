@@ -986,6 +986,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bracketPickThird => 'Pick a 3rd-placed team';
 
   @override
+  String get bracketThirdsTitle => 'Third place qualifiers';
+
+  @override
+  String get bracketThirdsHint => 'Pick the 8 best third-placed teams';
+
+  @override
+  String get bracketThirdsFull => 'All 8 third-place spots are taken';
+
+  @override
   String get bracketTBD => 'To be decided';
 
   @override

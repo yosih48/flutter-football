@@ -47,13 +47,17 @@ class _BracketScreenState extends State<BracketScreen> {
   List<String> _allTeams = [];
 
   List<BracketStanding> _ranking = [];
+  // Ranking rows expanded to show their per-stage points breakdown.
+  final Set<int> _expandedRanks = {};
 
   // Local editable selections (seeded from _bracket on load).
   final Map<String, List<String>> _groupSel = {};
   // Knockout match tree: matchId -> winning team the user tapped.
   final Map<String, String> _winSel = {};
-  // Third-place R32 slots the user filled: matchId -> chosen team name.
-  final Map<String, String> _thirdSel = {};
+  // Predicted best third-placed qualifiers (≤ 8 teams, ≤ 1 per group).
+  final List<String> _thirdQual = [];
+  // Derived: which qualified third fills each R32 third slot (matchId -> team).
+  Map<String, String> _thirdAssign = {};
   String? _championSel;
 
   @override
@@ -110,10 +114,23 @@ class _BracketScreenState extends State<BracketScreen> {
   }
 
   void _seedSelections() {
+    final gp = _bracket?.groupPicks ?? const {};
+    // The 'thirds' key is the predicted best-third qualifiers, stored alongside
+    // the real group picks (A–L) — the backend ignores it during scoring.
     _groupSel
       ..clear()
-      ..addAll(_bracket?.groupPicks.map((k, v) => MapEntry(k, [...v])) ?? {});
+      ..addAll({
+        for (final e in gp.entries)
+          if (e.key != 'thirds') e.key: List<String>.from(e.value)
+      });
+    _thirdQual
+      ..clear()
+      ..addAll([
+        for (final t in (gp['thirds'] ?? const <String>[]))
+          if (!_thirdQual.contains(t)) t
+      ]);
     _championSel = _bracket?.champion;
+    _recomputeThirds();
     _seedTree();
   }
 
@@ -121,46 +138,11 @@ class _BracketScreenState extends State<BracketScreen> {
   // per-stage SET of winner names; we map each winner back onto its match in
   // bracket order so the tree shows the user's prior state. Stages are walked
   // top-down so each round's resolved winners feed the next round's slots.
+  // Third-place slots are already resolved via _thirdAssign before this runs.
   void _seedTree() {
     _winSel.clear();
-    _thirdSel.clear();
     final ap = _bracket?.advancePicks ?? const {};
-
-    // R32: 24 of the 32 slots resolve from group picks; the other 8 are
-    // third-placed teams the user can't pick directly, so we recover them by
-    // matching any saved winner whose group is an eligible third for that slot.
-    final pool = List<String>.from(ap['R32'] ?? const []);
-    for (final m in _matchesFor('R32')) {
-      final a = _matchParticipant(m, true);
-      final b = _matchParticipant(m, false);
-      String? winner;
-      if (a != null && pool.contains(a)) {
-        winner = a;
-      } else if (b != null && pool.contains(b)) {
-        winner = b;
-      }
-      if (winner != null) {
-        _winSel[m.id] = winner;
-        pool.remove(winner);
-        continue;
-      }
-      final thirdGroups = _isThird(m.a)
-          ? m.a.thirdGroups
-          : (_isThird(m.b) ? m.b.thirdGroups : const <String>[]);
-      if (thirdGroups.isNotEmpty) {
-        for (final t in pool) {
-          final g = _groupOf(t);
-          if (g != null && thirdGroups.contains(g)) {
-            _thirdSel[m.id] = t;
-            _winSel[m.id] = t;
-            pool.remove(t);
-            break;
-          }
-        }
-      }
-    }
-
-    for (final stage in const ['R16', 'QF', 'SF', 'F']) {
+    for (final stage in const ['R32', 'R16', 'QF', 'SF', 'F']) {
       final winners = {...(ap[stage] ?? const [])};
       for (final m in _matchesFor(stage)) {
         final a = _matchParticipant(m, true);
@@ -352,6 +334,7 @@ class _BracketScreenState extends State<BracketScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildGroupSection(c, s, now),
+          _buildThirdsSection(c, s, now),
           _buildChampionSection(c, s, now),
           for (final stage in s.knockoutStages)
             _buildKnockoutSection(c, s, stage, now),
@@ -450,6 +433,120 @@ class _BracketScreenState extends State<BracketScreen> {
       _revalidateChain();
     });
   }
+
+  // ── Third-place qualifiers ───────────────────────────────────────────────
+  //
+  // The 8 best third-placed teams join the R32 between the group stage and the
+  // bracket. The user marks, per group, the team they think finishes 3rd AND
+  // survives the best-thirds cut (≤ 8 total). Those picks feed the R32 third
+  // slots via the FIFA candidate-group template.
+
+  Widget _buildThirdsSection(
+      EditorialColors c, BracketStructure s, DateTime now) {
+    final l = AppLocalizations.of(context)!;
+    // Stored under the groups stage, so it locks with the group picks.
+    final locked = s.stage('groups')?.isLocked(now) ?? false;
+    final hasRosters = _groupRosters.isNotEmpty;
+
+    return _Section(
+      title: l.bracketThirdsTitle,
+      hint: locked
+          ? l.bracketLockedLabel
+          : '${l.bracketThirdsHint} · ${_thirdQual.length}/8',
+      locked: locked,
+      initiallyExpanded: false,
+      child: !hasRosters
+          ? _InlineNote(text: l.bracketNoTeamsHint)
+          : Column(
+              children: [
+                for (final letter in _orderedGroupLetters(s))
+                  _buildThirdGroupCard(c, letter, locked),
+                const SizedBox(height: 12),
+                if (!locked)
+                  _SaveButton(label: l.bracketSave, onTap: _saveThirds),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildThirdGroupCard(EditorialColors c, String letter, bool locked) {
+    final l = AppLocalizations.of(context)!;
+    final roster = _groupRosters[letter] ?? const [];
+    final picks = _groupSel[letter] ?? const [];
+    // Only the teams not already predicted to finish 1st/2nd can be a third.
+    final leftovers = roster.where((t) => !picks.contains(t)).toList();
+    if (leftovers.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: c.hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('${l.bracketGroupWord} $letter'.toUpperCase(),
+              style: EType.label(color: c.inkMute, size: 11, letterSpacing: 2)),
+          const SizedBox(height: 10),
+          for (final team in leftovers)
+            InkWell(
+              onTap: locked ? null : () => _toggleThird(letter, team),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    _ThirdBadge(selected: _thirdQual.contains(team)),
+                    const SizedBox(width: 10),
+                    _Crest(url: _logoFor(team), size: 22),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(team,
+                          style: EType.body(
+                              color: _thirdQual.contains(team)
+                                  ? c.ink
+                                  : c.inkMute,
+                              size: 14,
+                              weight: _thirdQual.contains(team)
+                                  ? FontWeight.w600
+                                  : FontWeight.w400),
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _toggleThird(String group, String team) {
+    final l = AppLocalizations.of(context)!;
+    if (!_thirdQual.contains(team)) {
+      final sameGroup =
+          _thirdQual.where((t) => _groupOf(t) == group).length;
+      // A new pick in a fresh group would exceed the 8 best-third cap.
+      if (sameGroup == 0 && _thirdQual.length >= 8) {
+        _toast(l.bracketThirdsFull, context.col.amber);
+        return;
+      }
+    }
+    setState(() {
+      if (_thirdQual.contains(team)) {
+        _thirdQual.remove(team);
+      } else {
+        // At most one third per group.
+        _thirdQual.removeWhere((t) => _groupOf(t) == group);
+        _thirdQual.add(team);
+      }
+      _revalidateChain();
+    });
+  }
+
+  Future<void> _saveThirds() => _save('groups', {'thirds': _thirdQual});
 
   // ── Champion ──────────────────────────────────────────────────────────
 
@@ -589,7 +686,7 @@ class _BracketScreenState extends State<BracketScreen> {
         final p = _groupSel[s.group] ?? const [];
         return p.length > 1 ? p[1] : null;
       case 'third':
-        return _thirdSel[m.id];
+        return _thirdAssign[m.id];
       case 'win':
         return _winSel[s.src];
       default:
@@ -597,52 +694,79 @@ class _BracketScreenState extends State<BracketScreen> {
     }
   }
 
-  // Teams eligible to fill a third-place slot: roster members of the slot's
-  // candidate groups that the user did NOT pick 1st/2nd, minus thirds already
-  // assigned to other matches.
-  List<String> _eligibleThirds(_Match m) {
-    final slot = _isThird(m.a) ? m.a : m.b;
-    final usedElsewhere = {
-      for (final e in _thirdSel.entries)
-        if (e.key != m.id) e.value
-    };
-    final out = <String>[];
-    for (final g in slot.thirdGroups) {
-      final roster = _groupRosters[g] ?? const [];
-      final picks = _groupSel[g] ?? const [];
-      for (final t in roster) {
-        if (!picks.contains(t) &&
-            !usedElsewhere.contains(t) &&
-            !out.contains(t)) {
-          out.add(t);
-        }
-      }
-    }
-    return out;
-  }
+  // Assign the user's qualified thirds onto the R32 third slots. Each slot
+  // accepts a third only from its FIFA candidate groups; bipartite (Kuhn)
+  // matching finds a consistent placement that fills as many slots as possible.
+  void _recomputeThirds() {
+    _thirdAssign = {};
+    final thirds = List<String>.from(_thirdQual);
+    if (thirds.isEmpty) return;
 
-  Future<void> _tapSide(_Match m, bool sideA) async {
-    final slot = sideA ? m.a : m.b;
-    if (_isThird(slot)) {
-      final current = _thirdSel[m.id];
-      if (current == null) {
-        final picked = await _showTeamPicker(
-          _eligibleThirds(m),
-          null,
-          title: AppLocalizations.of(context)!.bracketPickThird,
-        );
-        if (picked == null || !mounted) return;
-        setState(() {
-          _thirdSel[m.id] = picked;
-          _setWinner(m, picked);
-        });
+    // Group -> team for the picked thirds (≤1 per group is enforced on pick).
+    final byGroup = <String, String>{};
+    for (final t in thirds) {
+      final g = _groupOf(t);
+      if (g != null) byGroup[g] = t;
+    }
+
+    // Official FIFA 2026 Annex C: once all eight best thirds are decided, the
+    // group→slot allocation is a fixed lookup keyed by the set of eight groups.
+    if (byGroup.length == 8) {
+      final key = (byGroup.keys.toList()..sort()).join();
+      final row = _kAnnexC[key];
+      if (row != null) {
+        // Column order in Annex C: 1A 1B 1D 1E 1G 1I 1K 1L.
+        const slotMatch = ['m79', 'm85', 'm81', 'm74', 'm82', 'm77', 'm87', 'm80'];
+        for (var i = 0; i < slotMatch.length; i++) {
+          final team = byGroup[row[i]];
+          if (team != null) _thirdAssign[slotMatch[i]] = team;
+        }
         return;
       }
-      setState(() => _setWinner(m, current));
-      return;
     }
+
+    // Partial selection (fewer than eight) — fall back to a valid bipartite
+    // match so the bracket can preview as picks come in.
+    final slots = _matchesFor('R32')
+        .where((m) => _isThird(m.a) || _isThird(m.b))
+        .toList();
+    if (slots.isEmpty) return;
+
+    final adj = <List<int>>[]; // slot index -> eligible third indices
+    for (final m in slots) {
+      final slot = _isThird(m.a) ? m.a : m.b;
+      final list = <int>[];
+      for (var j = 0; j < thirds.length; j++) {
+        final g = _groupOf(thirds[j]);
+        if (g != null && slot.thirdGroups.contains(g)) list.add(j);
+      }
+      adj.add(list);
+    }
+
+    final thirdToSlot = List<int>.filled(thirds.length, -1);
+    bool augment(int slot, List<bool> seen) {
+      for (final j in adj[slot]) {
+        if (seen[j]) continue;
+        seen[j] = true;
+        if (thirdToSlot[j] == -1 || augment(thirdToSlot[j], seen)) {
+          thirdToSlot[j] = slot;
+          return true;
+        }
+      }
+      return false;
+    }
+
+    for (var s = 0; s < slots.length; s++) {
+      augment(s, List<bool>.filled(thirds.length, false));
+    }
+    for (var j = 0; j < thirds.length; j++) {
+      if (thirdToSlot[j] != -1) _thirdAssign[slots[thirdToSlot[j]].id] = thirds[j];
+    }
+  }
+
+  void _tapSide(_Match m, bool sideA) {
     final team = _matchParticipant(m, sideA);
-    if (team == null) return; // opponent/participant not resolved yet
+    if (team == null) return; // participant not resolved yet
     setState(() => _setWinner(m, team));
   }
 
@@ -657,18 +781,13 @@ class _BracketScreenState extends State<BracketScreen> {
     _revalidateChain();
   }
 
-  // Drop selections that are no longer consistent: a third no longer eligible
-  // (got promoted to a group pick), or a match winner that is no longer one of
-  // the (re-resolved) participants. Walks stages top-down so each round sees
-  // the corrected winners feeding it.
+  // Drop selections that are no longer consistent: a qualified third that got
+  // promoted to a group pick, then re-derive the slot assignment, then any
+  // match winner that is no longer one of the (re-resolved) participants. Walks
+  // stages top-down so each round sees the corrected winners feeding it.
   void _revalidateChain() {
-    for (final m in _matchesFor('R32')) {
-      final t = _thirdSel[m.id];
-      if (t != null && _groupSel.values.any((p) => p.contains(t))) {
-        _thirdSel.remove(m.id);
-        if (_winSel[m.id] == t) _winSel.remove(m.id);
-      }
-    }
+    _thirdQual.removeWhere((t) => _groupSel.values.any((p) => p.contains(t)));
+    _recomputeThirds();
     for (final stage in const ['R32', 'R16', 'QF', 'SF', 'F']) {
       for (final m in _matchesFor(stage)) {
         final w = _winSel[m.id];
@@ -706,9 +825,8 @@ class _BracketScreenState extends State<BracketScreen> {
   Widget _buildMatchRow(EditorialColors c, _Match m, bool sideA, String? team,
       bool isWinner, bool locked) {
     final slot = sideA ? m.a : m.b;
-    final isThird = _isThird(slot);
     final resolved = team != null;
-    final tappable = !locked && (resolved || isThird);
+    final tappable = !locked && resolved;
     return InkWell(
       onTap: tappable ? () => _tapSide(m, sideA) : null,
       child: Container(
@@ -733,9 +851,7 @@ class _BracketScreenState extends State<BracketScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            if (isThird && !resolved && !locked)
-              Icon(Icons.add_circle_outline, size: 18, color: c.inkDim)
-            else if (isWinner)
+            if (isWinner)
               Icon(Icons.check_circle, size: 18, color: c.live)
             else if (resolved && !locked)
               Icon(Icons.radio_button_unchecked, size: 16, color: c.hairlineHi),
@@ -783,37 +899,65 @@ class _BracketScreenState extends State<BracketScreen> {
       itemBuilder: (ctx, i) {
         final r = rows[i];
         final isMe = r.name == widget.userName;
+        final hasBreakdown = !_loading && r.stages.isNotEmpty;
+        final expanded = _expandedRanks.contains(i);
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           decoration: BoxDecoration(
             color: isMe ? c.liveSoft : null,
             border: Border(bottom: BorderSide(color: c.hairline, width: 1)),
           ),
-          child: Row(
+          child: Column(
             children: [
-              SizedBox(
-                width: 28,
-                child: Text('${i + 1}',
-                    style: EType.numeric(
-                        color: i < 3 ? c.live : c.inkDim,
-                        size: 14,
-                        weight: FontWeight.w700)),
+              InkWell(
+                onTap: hasBreakdown
+                    ? () => setState(() => expanded
+                        ? _expandedRanks.remove(i)
+                        : _expandedRanks.add(i))
+                    : null,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 28,
+                        child: Text('${i + 1}',
+                            style: EType.numeric(
+                                color: i < 3 ? c.live : c.inkDim,
+                                size: 14,
+                                weight: FontWeight.w700)),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(r.name.toUpperCase(),
+                            style: EType.display(
+                                size: 17,
+                                color: isMe ? c.live : c.ink,
+                                letterSpacing: 0.6),
+                            overflow: TextOverflow.ellipsis),
+                      ),
+                      Text('${r.points}',
+                          style: EType.numeric(
+                              color: c.ink, size: 15, weight: FontWeight.w600)),
+                      const SizedBox(width: 6),
+                      Text(l.pst,
+                          style: EType.label(
+                              color: c.inkDim, size: 9, letterSpacing: 1)),
+                      if (hasBreakdown) ...[
+                        const SizedBox(width: 6),
+                        Icon(
+                          expanded
+                              ? Icons.keyboard_arrow_up
+                              : Icons.keyboard_arrow_down,
+                          size: 18,
+                          color: c.inkDim,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(r.name.toUpperCase(),
-                    style: EType.display(
-                        size: 17,
-                        color: isMe ? c.live : c.ink,
-                        letterSpacing: 0.6),
-                    overflow: TextOverflow.ellipsis),
-              ),
-              Text('${r.points}',
-                  style: EType.numeric(
-                      color: c.ink, size: 15, weight: FontWeight.w600)),
-              const SizedBox(width: 6),
-              Text(l.pst,
-                  style: EType.label(color: c.inkDim, size: 9, letterSpacing: 1)),
+              if (expanded) _buildRankBreakdown(c, r),
             ],
           ),
         );
@@ -821,10 +965,54 @@ class _BracketScreenState extends State<BracketScreen> {
     );
   }
 
+  // Per-stage points chips, shown when a leaderboard row is expanded. Stages
+  // are listed in the structure's canonical order.
+  Widget _buildRankBreakdown(EditorialColors c, BracketStanding r) {
+    final lang = _langCode(context);
+    final order = _structure?.stages
+            .map((s) => s.key)
+            .where((k) => r.stages.containsKey(k))
+            .toList() ??
+        r.stages.keys.toList();
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final k in order)
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: c.card,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: c.hairline, width: 1),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    (_structure?.stage(k)?.label(lang) ?? k).toUpperCase(),
+                    style: EType.label(
+                        color: c.inkDim, size: 9, letterSpacing: 1),
+                  ),
+                  const SizedBox(width: 6),
+                  Text('${r.stages[k]}',
+                      style: EType.numeric(
+                          color: c.ink, size: 12, weight: FontWeight.w700)),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   // ── Team picker dialog ──────────────────────────────────────────────────
 
-  Future<String?> _showTeamPicker(List<String> teams, String? current,
-      {String? title}) {
+  Future<String?> _showTeamPicker(List<String> teams, String? current) {
     final c = context.col;
     final l = AppLocalizations.of(context)!;
     return showModalBottomSheet<String>(
@@ -854,7 +1042,7 @@ class _BracketScreenState extends State<BracketScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
                 child: Align(
                   alignment: AlignmentDirectional.centerStart,
-                  child: Text((title ?? l.bracketSelectTeamTitle).toUpperCase(),
+                  child: Text(l.bracketSelectTeamTitle.toUpperCase(),
                       style: EType.label(
                           color: c.ink, size: 12, letterSpacing: 2)),
                 ),
@@ -1116,6 +1304,28 @@ class _OrderBadge extends StatelessWidget {
   }
 }
 
+class _ThirdBadge extends StatelessWidget {
+  const _ThirdBadge({required this.selected});
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    return Container(
+      width: 22,
+      height: 22,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: selected ? c.live : Colors.transparent,
+        border:
+            Border.all(color: selected ? c.live : c.hairlineHi, width: 1.5),
+      ),
+      child: selected ? Icon(Icons.check, size: 13, color: c.pitch) : null,
+    );
+  }
+}
+
 class _Crest extends StatelessWidget {
   const _Crest({required this.url, this.size = 22});
   final String? url;
@@ -1293,3 +1503,505 @@ const List<_Match> _kBracketTemplate = [
   // Final
   _Match('m104', 'F', _Slot.win('m101'), _Slot.win('m102')),
 ];
+
+/// Official FIFA World Cup 2026 Annex C allocation of the eight best
+/// third-placed teams. Key = the eight qualifying groups, sorted and joined
+/// (e.g. "EFGHIJKL"). Value = the group assigned to each of the eight winner
+/// slots in column order 1A 1B 1D 1E 1G 1I 1K 1L.
+const Map<String, String> _kAnnexC = {
+    'EFGHIJKL': 'EJIFHGLK',
+    'DFGHIJKL': 'HGIDJFLK',
+    'DEGHIJKL': 'EJIDHGLK',
+    'DEFHIJKL': 'EJIDHFLK',
+    'DEFGIJKL': 'EGIDJFLK',
+    'DEFGHJKL': 'EGJDHFLK',
+    'DEFGHIKL': 'EGIDHFLK',
+    'DEFGHIJL': 'EGJDHFLI',
+    'DEFGHIJK': 'EGJDHFIK',
+    'CFGHIJKL': 'HGICJFLK',
+    'CEGHIJKL': 'EJICHGLK',
+    'CEFHIJKL': 'EJICHFLK',
+    'CEFGIJKL': 'EGICJFLK',
+    'CEFGHJKL': 'EGJCHFLK',
+    'CEFGHIKL': 'EGICHFLK',
+    'CEFGHIJL': 'EGJCHFLI',
+    'CEFGHIJK': 'EGJCHFIK',
+    'CDGHIJKL': 'HGICJDLK',
+    'CDFHIJKL': 'CJIDHFLK',
+    'CDFGIJKL': 'CGIDJFLK',
+    'CDFGHJKL': 'CGJDHFLK',
+    'CDFGHIKL': 'CGIDHFLK',
+    'CDFGHIJL': 'CGJDHFLI',
+    'CDFGHIJK': 'CGJDHFIK',
+    'CDEHIJKL': 'EJICHDLK',
+    'CDEGIJKL': 'EGICJDLK',
+    'CDEGHJKL': 'EGJCHDLK',
+    'CDEGHIKL': 'EGICHDLK',
+    'CDEGHIJL': 'EGJCHDLI',
+    'CDEGHIJK': 'EGJCHDIK',
+    'CDEFIJKL': 'CJEDIFLK',
+    'CDEFHJKL': 'CJEDHFLK',
+    'CDEFHIKL': 'CEIDHFLK',
+    'CDEFHIJL': 'CJEDHFLI',
+    'CDEFHIJK': 'CJEDHFIK',
+    'CDEFGJKL': 'CGEDJFLK',
+    'CDEFGIKL': 'CGEDIFLK',
+    'CDEFGIJL': 'CGEDJFLI',
+    'CDEFGIJK': 'CGEDJFIK',
+    'CDEFGHKL': 'CGEDHFLK',
+    'CDEFGHJL': 'CGJDHFLE',
+    'CDEFGHJK': 'CGJDHFEK',
+    'CDEFGHIL': 'CGEDHFLI',
+    'CDEFGHIK': 'CGEDHFIK',
+    'CDEFGHIJ': 'CGJDHFEI',
+    'BFGHIJKL': 'HJBFIGLK',
+    'BEGHIJKL': 'EJIBHGLK',
+    'BEFHIJKL': 'EJBFIHLK',
+    'BEFGIJKL': 'EJBFIGLK',
+    'BEFGHJKL': 'EJBFHGLK',
+    'BEFGHIKL': 'EGBFIHLK',
+    'BEFGHIJL': 'EJBFHGLI',
+    'BEFGHIJK': 'EJBFHGIK',
+    'BDGHIJKL': 'HJBDIGLK',
+    'BDFHIJKL': 'HJBDIFLK',
+    'BDFGIJKL': 'IGBDJFLK',
+    'BDFGHJKL': 'HGBDJFLK',
+    'BDFGHIKL': 'HGBDIFLK',
+    'BDFGHIJL': 'HGBDJFLI',
+    'BDFGHIJK': 'HGBDJFIK',
+    'BDEHIJKL': 'EJBDIHLK',
+    'BDEGIJKL': 'EJBDIGLK',
+    'BDEGHJKL': 'EJBDHGLK',
+    'BDEGHIKL': 'EGBDIHLK',
+    'BDEGHIJL': 'EJBDHGLI',
+    'BDEGHIJK': 'EJBDHGIK',
+    'BDEFIJKL': 'EJBDIFLK',
+    'BDEFHJKL': 'EJBDHFLK',
+    'BDEFHIKL': 'EIBDHFLK',
+    'BDEFHIJL': 'EJBDHFLI',
+    'BDEFHIJK': 'EJBDHFIK',
+    'BDEFGJKL': 'EGBDJFLK',
+    'BDEFGIKL': 'EGBDIFLK',
+    'BDEFGIJL': 'EGBDJFLI',
+    'BDEFGIJK': 'EGBDJFIK',
+    'BDEFGHKL': 'EGBDHFLK',
+    'BDEFGHJL': 'HGBDJFLE',
+    'BDEFGHJK': 'HGBDJFEK',
+    'BDEFGHIL': 'EGBDHFLI',
+    'BDEFGHIK': 'EGBDHFIK',
+    'BDEFGHIJ': 'HGBDJFEI',
+    'BCGHIJKL': 'HJBCIGLK',
+    'BCFHIJKL': 'HJBCIFLK',
+    'BCFGIJKL': 'IGBCJFLK',
+    'BCFGHJKL': 'HGBCJFLK',
+    'BCFGHIKL': 'HGBCIFLK',
+    'BCFGHIJL': 'HGBCJFLI',
+    'BCFGHIJK': 'HGBCJFIK',
+    'BCEHIJKL': 'EJBCIHLK',
+    'BCEGIJKL': 'EJBCIGLK',
+    'BCEGHJKL': 'EJBCHGLK',
+    'BCEGHIKL': 'EGBCIHLK',
+    'BCEGHIJL': 'EJBCHGLI',
+    'BCEGHIJK': 'EJBCHGIK',
+    'BCEFIJKL': 'EJBCIFLK',
+    'BCEFHJKL': 'EJBCHFLK',
+    'BCEFHIKL': 'EIBCHFLK',
+    'BCEFHIJL': 'EJBCHFLI',
+    'BCEFHIJK': 'EJBCHFIK',
+    'BCEFGJKL': 'EGBCJFLK',
+    'BCEFGIKL': 'EGBCIFLK',
+    'BCEFGIJL': 'EGBCJFLI',
+    'BCEFGIJK': 'EGBCJFIK',
+    'BCEFGHKL': 'EGBCHFLK',
+    'BCEFGHJL': 'HGBCJFLE',
+    'BCEFGHJK': 'HGBCJFEK',
+    'BCEFGHIL': 'EGBCHFLI',
+    'BCEFGHIK': 'EGBCHFIK',
+    'BCEFGHIJ': 'HGBCJFEI',
+    'BCDHIJKL': 'HJBCIDLK',
+    'BCDGIJKL': 'IGBCJDLK',
+    'BCDGHJKL': 'HGBCJDLK',
+    'BCDGHIKL': 'HGBCIDLK',
+    'BCDGHIJL': 'HGBCJDLI',
+    'BCDGHIJK': 'HGBCJDIK',
+    'BCDFIJKL': 'CJBDIFLK',
+    'BCDFHJKL': 'CJBDHFLK',
+    'BCDFHIKL': 'CIBDHFLK',
+    'BCDFHIJL': 'CJBDHFLI',
+    'BCDFHIJK': 'CJBDHFIK',
+    'BCDFGJKL': 'CGBDJFLK',
+    'BCDFGIKL': 'CGBDIFLK',
+    'BCDFGIJL': 'CGBDJFLI',
+    'BCDFGIJK': 'CGBDJFIK',
+    'BCDFGHKL': 'CGBDHFLK',
+    'BCDFGHJL': 'CGBDHFLJ',
+    'BCDFGHJK': 'HGBCJFDK',
+    'BCDFGHIL': 'CGBDHFLI',
+    'BCDFGHIK': 'CGBDHFIK',
+    'BCDFGHIJ': 'HGBCJFDI',
+    'BCDEIJKL': 'EJBCIDLK',
+    'BCDEHJKL': 'EJBCHDLK',
+    'BCDEHIKL': 'EIBCHDLK',
+    'BCDEHIJL': 'EJBCHDLI',
+    'BCDEHIJK': 'EJBCHDIK',
+    'BCDEGJKL': 'EGBCJDLK',
+    'BCDEGIKL': 'EGBCIDLK',
+    'BCDEGIJL': 'EGBCJDLI',
+    'BCDEGIJK': 'EGBCJDIK',
+    'BCDEGHKL': 'EGBCHDLK',
+    'BCDEGHJL': 'HGBCJDLE',
+    'BCDEGHJK': 'HGBCJDEK',
+    'BCDEGHIL': 'EGBCHDLI',
+    'BCDEGHIK': 'EGBCHDIK',
+    'BCDEGHIJ': 'HGBCJDEI',
+    'BCDEFJKL': 'CJBDEFLK',
+    'BCDEFIKL': 'CEBDIFLK',
+    'BCDEFIJL': 'CJBDEFLI',
+    'BCDEFIJK': 'CJBDEFIK',
+    'BCDEFHKL': 'CEBDHFLK',
+    'BCDEFHJL': 'CJBDHFLE',
+    'BCDEFHJK': 'CJBDHFEK',
+    'BCDEFHIL': 'CEBDHFLI',
+    'BCDEFHIK': 'CEBDHFIK',
+    'BCDEFHIJ': 'CJBDHFEI',
+    'BCDEFGKL': 'CGBDEFLK',
+    'BCDEFGJL': 'CGBDJFLE',
+    'BCDEFGJK': 'CGBDJFEK',
+    'BCDEFGIL': 'CGBDEFLI',
+    'BCDEFGIK': 'CGBDEFIK',
+    'BCDEFGIJ': 'CGBDJFEI',
+    'BCDEFGHL': 'CGBDHFLE',
+    'BCDEFGHK': 'CGBDHFEK',
+    'BCDEFGHJ': 'HGBCJFDE',
+    'BCDEFGHI': 'CGBDHFEI',
+    'AFGHIJKL': 'HJIFAGLK',
+    'AEGHIJKL': 'EJIAHGLK',
+    'AEFHIJKL': 'EJIFAHLK',
+    'AEFGIJKL': 'EJIFAGLK',
+    'AEFGHJKL': 'EGJFAHLK',
+    'AEFGHIKL': 'EGIFAHLK',
+    'AEFGHIJL': 'EGJFAHLI',
+    'AEFGHIJK': 'EGJFAHIK',
+    'ADGHIJKL': 'HJIDAGLK',
+    'ADFHIJKL': 'HJIDAFLK',
+    'ADFGIJKL': 'IGJDAFLK',
+    'ADFGHJKL': 'HGJDAFLK',
+    'ADFGHIKL': 'HGIDAFLK',
+    'ADFGHIJL': 'HGJDAFLI',
+    'ADFGHIJK': 'HGJDAFIK',
+    'ADEHIJKL': 'EJIDAHLK',
+    'ADEGIJKL': 'EJIDAGLK',
+    'ADEGHJKL': 'EGJDAHLK',
+    'ADEGHIKL': 'EGIDAHLK',
+    'ADEGHIJL': 'EGJDAHLI',
+    'ADEGHIJK': 'EGJDAHIK',
+    'ADEFIJKL': 'EJIDAFLK',
+    'ADEFHJKL': 'HJEDAFLK',
+    'ADEFHIKL': 'HEIDAFLK',
+    'ADEFHIJL': 'HJEDAFLI',
+    'ADEFHIJK': 'HJEDAFIK',
+    'ADEFGJKL': 'EGJDAFLK',
+    'ADEFGIKL': 'EGIDAFLK',
+    'ADEFGIJL': 'EGJDAFLI',
+    'ADEFGIJK': 'EGJDAFIK',
+    'ADEFGHKL': 'HGEDAFLK',
+    'ADEFGHJL': 'HGJDAFLE',
+    'ADEFGHJK': 'HGJDAFEK',
+    'ADEFGHIL': 'HGEDAFLI',
+    'ADEFGHIK': 'HGEDAFIK',
+    'ADEFGHIJ': 'HGJDAFEI',
+    'ACGHIJKL': 'HJICAGLK',
+    'ACFHIJKL': 'HJICAFLK',
+    'ACFGIJKL': 'IGJCAFLK',
+    'ACFGHJKL': 'HGJCAFLK',
+    'ACFGHIKL': 'HGICAFLK',
+    'ACFGHIJL': 'HGJCAFLI',
+    'ACFGHIJK': 'HGJCAFIK',
+    'ACEHIJKL': 'EJICAHLK',
+    'ACEGIJKL': 'EJICAGLK',
+    'ACEGHJKL': 'EGJCAHLK',
+    'ACEGHIKL': 'EGICAHLK',
+    'ACEGHIJL': 'EGJCAHLI',
+    'ACEGHIJK': 'EGJCAHIK',
+    'ACEFIJKL': 'EJICAFLK',
+    'ACEFHJKL': 'HJECAFLK',
+    'ACEFHIKL': 'HEICAFLK',
+    'ACEFHIJL': 'HJECAFLI',
+    'ACEFHIJK': 'HJECAFIK',
+    'ACEFGJKL': 'EGJCAFLK',
+    'ACEFGIKL': 'EGICAFLK',
+    'ACEFGIJL': 'EGJCAFLI',
+    'ACEFGIJK': 'EGJCAFIK',
+    'ACEFGHKL': 'HGECAFLK',
+    'ACEFGHJL': 'HGJCAFLE',
+    'ACEFGHJK': 'HGJCAFEK',
+    'ACEFGHIL': 'HGECAFLI',
+    'ACEFGHIK': 'HGECAFIK',
+    'ACEFGHIJ': 'HGJCAFEI',
+    'ACDHIJKL': 'HJICADLK',
+    'ACDGIJKL': 'IGJCADLK',
+    'ACDGHJKL': 'HGJCADLK',
+    'ACDGHIKL': 'HGICADLK',
+    'ACDGHIJL': 'HGJCADLI',
+    'ACDGHIJK': 'HGJCADIK',
+    'ACDFIJKL': 'CJIDAFLK',
+    'ACDFHJKL': 'HJFCADLK',
+    'ACDFHIKL': 'HFICADLK',
+    'ACDFHIJL': 'HJFCADLI',
+    'ACDFHIJK': 'HJFCADIK',
+    'ACDFGJKL': 'CGJDAFLK',
+    'ACDFGIKL': 'CGIDAFLK',
+    'ACDFGIJL': 'CGJDAFLI',
+    'ACDFGIJK': 'CGJDAFIK',
+    'ACDFGHKL': 'HGFCADLK',
+    'ACDFGHJL': 'CGJDAFLH',
+    'ACDFGHJK': 'HGJCAFDK',
+    'ACDFGHIL': 'HGFCADLI',
+    'ACDFGHIK': 'HGFCADIK',
+    'ACDFGHIJ': 'HGJCAFDI',
+    'ACDEIJKL': 'EJICADLK',
+    'ACDEHJKL': 'HJECADLK',
+    'ACDEHIKL': 'HEICADLK',
+    'ACDEHIJL': 'HJECADLI',
+    'ACDEHIJK': 'HJECADIK',
+    'ACDEGJKL': 'EGJCADLK',
+    'ACDEGIKL': 'EGICADLK',
+    'ACDEGIJL': 'EGJCADLI',
+    'ACDEGIJK': 'EGJCADIK',
+    'ACDEGHKL': 'HGECADLK',
+    'ACDEGHJL': 'HGJCADLE',
+    'ACDEGHJK': 'HGJCADEK',
+    'ACDEGHIL': 'HGECADLI',
+    'ACDEGHIK': 'HGECADIK',
+    'ACDEGHIJ': 'HGJCADEI',
+    'ACDEFJKL': 'CJEDAFLK',
+    'ACDEFIKL': 'CEIDAFLK',
+    'ACDEFIJL': 'CJEDAFLI',
+    'ACDEFIJK': 'CJEDAFIK',
+    'ACDEFHKL': 'HEFCADLK',
+    'ACDEFHJL': 'HJFCADLE',
+    'ACDEFHJK': 'HJECAFDK',
+    'ACDEFHIL': 'HEFCADLI',
+    'ACDEFHIK': 'HEFCADIK',
+    'ACDEFHIJ': 'HJECAFDI',
+    'ACDEFGKL': 'CGEDAFLK',
+    'ACDEFGJL': 'CGJDAFLE',
+    'ACDEFGJK': 'CGJDAFEK',
+    'ACDEFGIL': 'CGEDAFLI',
+    'ACDEFGIK': 'CGEDAFIK',
+    'ACDEFGIJ': 'CGJDAFEI',
+    'ACDEFGHL': 'HGFCADLE',
+    'ACDEFGHK': 'HGECAFDK',
+    'ACDEFGHJ': 'HGJCAFDE',
+    'ACDEFGHI': 'HGECAFDI',
+    'ABGHIJKL': 'HJBAIGLK',
+    'ABFHIJKL': 'HJBAIFLK',
+    'ABFGIJKL': 'IJBFAGLK',
+    'ABFGHJKL': 'HJBFAGLK',
+    'ABFGHIKL': 'HGBAIFLK',
+    'ABFGHIJL': 'HJBFAGLI',
+    'ABFGHIJK': 'HJBFAGIK',
+    'ABEHIJKL': 'EJBAIHLK',
+    'ABEGIJKL': 'EJBAIGLK',
+    'ABEGHJKL': 'EJBAHGLK',
+    'ABEGHIKL': 'EGBAIHLK',
+    'ABEGHIJL': 'EJBAHGLI',
+    'ABEGHIJK': 'EJBAHGIK',
+    'ABEFIJKL': 'EJBAIFLK',
+    'ABEFHJKL': 'EJBFAHLK',
+    'ABEFHIKL': 'EIBFAHLK',
+    'ABEFHIJL': 'EJBFAHLI',
+    'ABEFHIJK': 'EJBFAHIK',
+    'ABEFGJKL': 'EJBFAGLK',
+    'ABEFGIKL': 'EGBAIFLK',
+    'ABEFGIJL': 'EJBFAGLI',
+    'ABEFGIJK': 'EJBFAGIK',
+    'ABEFGHKL': 'EGBFAHLK',
+    'ABEFGHJL': 'HJBFAGLE',
+    'ABEFGHJK': 'HJBFAGEK',
+    'ABEFGHIL': 'EGBFAHLI',
+    'ABEFGHIK': 'EGBFAHIK',
+    'ABEFGHIJ': 'HJBFAGEI',
+    'ABDHIJKL': 'IJBDAHLK',
+    'ABDGIJKL': 'IJBDAGLK',
+    'ABDGHJKL': 'HJBDAGLK',
+    'ABDGHIKL': 'IGBDAHLK',
+    'ABDGHIJL': 'HJBDAGLI',
+    'ABDGHIJK': 'HJBDAGIK',
+    'ABDFIJKL': 'IJBDAFLK',
+    'ABDFHJKL': 'HJBDAFLK',
+    'ABDFHIKL': 'HIBDAFLK',
+    'ABDFHIJL': 'HJBDAFLI',
+    'ABDFHIJK': 'HJBDAFIK',
+    'ABDFGJKL': 'FJBDAGLK',
+    'ABDFGIKL': 'IGBDAFLK',
+    'ABDFGIJL': 'FJBDAGLI',
+    'ABDFGIJK': 'FJBDAGIK',
+    'ABDFGHKL': 'HGBDAFLK',
+    'ABDFGHJL': 'HGBDAFLJ',
+    'ABDFGHJK': 'HGBDAFJK',
+    'ABDFGHIL': 'HGBDAFLI',
+    'ABDFGHIK': 'HGBDAFIK',
+    'ABDFGHIJ': 'HGBDAFIJ',
+    'ABDEIJKL': 'EJBAIDLK',
+    'ABDEHJKL': 'EJBDAHLK',
+    'ABDEHIKL': 'EIBDAHLK',
+    'ABDEHIJL': 'EJBDAHLI',
+    'ABDEHIJK': 'EJBDAHIK',
+    'ABDEGJKL': 'EJBDAGLK',
+    'ABDEGIKL': 'EGBAIDLK',
+    'ABDEGIJL': 'EJBDAGLI',
+    'ABDEGIJK': 'EJBDAGIK',
+    'ABDEGHKL': 'EGBDAHLK',
+    'ABDEGHJL': 'HJBDAGLE',
+    'ABDEGHJK': 'HJBDAGEK',
+    'ABDEGHIL': 'EGBDAHLI',
+    'ABDEGHIK': 'EGBDAHIK',
+    'ABDEGHIJ': 'HJBDAGEI',
+    'ABDEFJKL': 'EJBDAFLK',
+    'ABDEFIKL': 'EIBDAFLK',
+    'ABDEFIJL': 'EJBDAFLI',
+    'ABDEFIJK': 'EJBDAFIK',
+    'ABDEFHKL': 'HEBDAFLK',
+    'ABDEFHJL': 'HJBDAFLE',
+    'ABDEFHJK': 'HJBDAFEK',
+    'ABDEFHIL': 'HEBDAFLI',
+    'ABDEFHIK': 'HEBDAFIK',
+    'ABDEFHIJ': 'HJBDAFEI',
+    'ABDEFGKL': 'EGBDAFLK',
+    'ABDEFGJL': 'EGBDAFLJ',
+    'ABDEFGJK': 'EGBDAFJK',
+    'ABDEFGIL': 'EGBDAFLI',
+    'ABDEFGIK': 'EGBDAFIK',
+    'ABDEFGIJ': 'EGBDAFIJ',
+    'ABDEFGHL': 'HGBDAFLE',
+    'ABDEFGHK': 'HGBDAFEK',
+    'ABDEFGHJ': 'HGBDAFEJ',
+    'ABDEFGHI': 'HGBDAFEI',
+    'ABCHIJKL': 'IJBCAHLK',
+    'ABCGIJKL': 'IJBCAGLK',
+    'ABCGHJKL': 'HJBCAGLK',
+    'ABCGHIKL': 'IGBCAHLK',
+    'ABCGHIJL': 'HJBCAGLI',
+    'ABCGHIJK': 'HJBCAGIK',
+    'ABCFIJKL': 'IJBCAFLK',
+    'ABCFHJKL': 'HJBCAFLK',
+    'ABCFHIKL': 'HIBCAFLK',
+    'ABCFHIJL': 'HJBCAFLI',
+    'ABCFHIJK': 'HJBCAFIK',
+    'ABCFGJKL': 'CJBFAGLK',
+    'ABCFGIKL': 'IGBCAFLK',
+    'ABCFGIJL': 'CJBFAGLI',
+    'ABCFGIJK': 'CJBFAGIK',
+    'ABCFGHKL': 'HGBCAFLK',
+    'ABCFGHJL': 'HGBCAFLJ',
+    'ABCFGHJK': 'HGBCAFJK',
+    'ABCFGHIL': 'HGBCAFLI',
+    'ABCFGHIK': 'HGBCAFIK',
+    'ABCFGHIJ': 'HGBCAFIJ',
+    'ABCEIJKL': 'EJBAICLK',
+    'ABCEHJKL': 'EJBCAHLK',
+    'ABCEHIKL': 'EIBCAHLK',
+    'ABCEHIJL': 'EJBCAHLI',
+    'ABCEHIJK': 'EJBCAHIK',
+    'ABCEGJKL': 'EJBCAGLK',
+    'ABCEGIKL': 'EGBAICLK',
+    'ABCEGIJL': 'EJBCAGLI',
+    'ABCEGIJK': 'EJBCAGIK',
+    'ABCEGHKL': 'EGBCAHLK',
+    'ABCEGHJL': 'HJBCAGLE',
+    'ABCEGHJK': 'HJBCAGEK',
+    'ABCEGHIL': 'EGBCAHLI',
+    'ABCEGHIK': 'EGBCAHIK',
+    'ABCEGHIJ': 'HJBCAGEI',
+    'ABCEFJKL': 'EJBCAFLK',
+    'ABCEFIKL': 'EIBCAFLK',
+    'ABCEFIJL': 'EJBCAFLI',
+    'ABCEFIJK': 'EJBCAFIK',
+    'ABCEFHKL': 'HEBCAFLK',
+    'ABCEFHJL': 'HJBCAFLE',
+    'ABCEFHJK': 'HJBCAFEK',
+    'ABCEFHIL': 'HEBCAFLI',
+    'ABCEFHIK': 'HEBCAFIK',
+    'ABCEFHIJ': 'HJBCAFEI',
+    'ABCEFGKL': 'EGBCAFLK',
+    'ABCEFGJL': 'EGBCAFLJ',
+    'ABCEFGJK': 'EGBCAFJK',
+    'ABCEFGIL': 'EGBCAFLI',
+    'ABCEFGIK': 'EGBCAFIK',
+    'ABCEFGIJ': 'EGBCAFIJ',
+    'ABCEFGHL': 'HGBCAFLE',
+    'ABCEFGHK': 'HGBCAFEK',
+    'ABCEFGHJ': 'HGBCAFEJ',
+    'ABCEFGHI': 'HGBCAFEI',
+    'ABCDIJKL': 'IJBCADLK',
+    'ABCDHJKL': 'HJBCADLK',
+    'ABCDHIKL': 'HIBCADLK',
+    'ABCDHIJL': 'HJBCADLI',
+    'ABCDHIJK': 'HJBCADIK',
+    'ABCDGJKL': 'CJBDAGLK',
+    'ABCDGIKL': 'IGBCADLK',
+    'ABCDGIJL': 'CJBDAGLI',
+    'ABCDGIJK': 'CJBDAGIK',
+    'ABCDGHKL': 'HGBCADLK',
+    'ABCDGHJL': 'HGBCADLJ',
+    'ABCDGHJK': 'HGBCADJK',
+    'ABCDGHIL': 'HGBCADLI',
+    'ABCDGHIK': 'HGBCADIK',
+    'ABCDGHIJ': 'HGBCADIJ',
+    'ABCDFJKL': 'CJBDAFLK',
+    'ABCDFIKL': 'CIBDAFLK',
+    'ABCDFIJL': 'CJBDAFLI',
+    'ABCDFIJK': 'CJBDAFIK',
+    'ABCDFHKL': 'HFBCADLK',
+    'ABCDFHJL': 'CJBDAFLH',
+    'ABCDFHJK': 'HJBCAFDK',
+    'ABCDFHIL': 'HFBCADLI',
+    'ABCDFHIK': 'HFBCADIK',
+    'ABCDFHIJ': 'HJBCAFDI',
+    'ABCDFGKL': 'CGBDAFLK',
+    'ABCDFGJL': 'CGBDAFLJ',
+    'ABCDFGJK': 'CGBDAFJK',
+    'ABCDFGIL': 'CGBDAFLI',
+    'ABCDFGIK': 'CGBDAFIK',
+    'ABCDFGIJ': 'CGBDAFIJ',
+    'ABCDFGHL': 'CGBDAFLH',
+    'ABCDFGHK': 'HGBCAFDK',
+    'ABCDFGHJ': 'HGBCAFDJ',
+    'ABCDFGHI': 'HGBCAFDI',
+    'ABCDEJKL': 'EJBCADLK',
+    'ABCDEIKL': 'EIBCADLK',
+    'ABCDEIJL': 'EJBCADLI',
+    'ABCDEIJK': 'EJBCADIK',
+    'ABCDEHKL': 'HEBCADLK',
+    'ABCDEHJL': 'HJBCADLE',
+    'ABCDEHJK': 'HJBCADEK',
+    'ABCDEHIL': 'HEBCADLI',
+    'ABCDEHIK': 'HEBCADIK',
+    'ABCDEHIJ': 'HJBCADEI',
+    'ABCDEGKL': 'EGBCADLK',
+    'ABCDEGJL': 'EGBCADLJ',
+    'ABCDEGJK': 'EGBCADJK',
+    'ABCDEGIL': 'EGBCADLI',
+    'ABCDEGIK': 'EGBCADIK',
+    'ABCDEGIJ': 'EGBCADIJ',
+    'ABCDEGHL': 'HGBCADLE',
+    'ABCDEGHK': 'HGBCADEK',
+    'ABCDEGHJ': 'HGBCADEJ',
+    'ABCDEGHI': 'HGBCADEI',
+    'ABCDEFKL': 'CEBDAFLK',
+    'ABCDEFJL': 'CJBDAFLE',
+    'ABCDEFJK': 'CJBDAFEK',
+    'ABCDEFIL': 'CEBDAFLI',
+    'ABCDEFIK': 'CEBDAFIK',
+    'ABCDEFIJ': 'CJBDAFEI',
+    'ABCDEFHL': 'HFBCADLE',
+    'ABCDEFHK': 'HEBCAFDK',
+    'ABCDEFHJ': 'HJBCAFDE',
+    'ABCDEFHI': 'HEBCAFDI',
+    'ABCDEFGL': 'CGBDAFLE',
+    'ABCDEFGK': 'CGBDAFEK',
+    'ABCDEFGJ': 'CGBDAFEJ',
+    'ABCDEFGI': 'CGBDAFEI',
+    'ABCDEFGH': 'HGBCAFDE',
+};
