@@ -11,6 +11,7 @@ import 'package:football/theme/typography.dart';
 import 'package:football/utils/bracket_template.dart';
 import 'package:football/utils/utils.dart';
 import 'package:football/widgets/bracketLeaderboard.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -236,8 +237,11 @@ class _BracketScreenState extends State<BracketScreen> {
         actions: [
           IconButton(
             tooltip: AppLocalizations.of(context)!.bracketHelpTitle,
-            icon: Icon(Icons.help_outline,
-                color: c.ink, textDirection: TextDirection.ltr),
+            icon: const Directionality(
+              textDirection: TextDirection.ltr,
+              child: Icon(Icons.help_outline),
+            ),
+            color: c.ink,
             onPressed: _showHelpSheet,
           ),
         ],
@@ -298,6 +302,42 @@ class _BracketScreenState extends State<BracketScreen> {
                 ],
               ),
             ],
+          ),
+          _buildDeadline(c),
+        ],
+      ),
+    );
+  }
+
+  // Single tournament-wide deadline (all stages lock at the opener). Shown in
+  // the user's local time — lockAt is stored UTC, .toLocal() handles the zone.
+  Widget _buildDeadline(EditorialColors c) {
+    final lockAt = _structure?.stages
+        .map((s) => s.lockAt)
+        .firstWhere((d) => d != null, orElse: () => null);
+    if (lockAt == null) return const SizedBox.shrink();
+
+    final l = AppLocalizations.of(context)!;
+    final local = lockAt.toLocal();
+    final passed = DateTime.now().isAfter(local);
+    // Locale-neutral numeric format so we don't depend on per-locale date
+    // symbol data being initialized. toLocal() already applies the user's zone.
+    final when = DateFormat('dd/MM/yyyy, HH:mm').format(local);
+    final color = passed ? c.inkDim : c.live;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Row(
+        children: [
+          Icon(passed ? Icons.lock_outline : Icons.schedule,
+              size: 13, color: color),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              '${(passed ? l.bracketLockedLabel : l.bracketDeadline).toUpperCase()}  ·  $when',
+              style: EType.label(color: color, size: 10, letterSpacing: 1.2),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),

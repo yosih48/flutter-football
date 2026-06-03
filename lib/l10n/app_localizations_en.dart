@@ -992,6 +992,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bracketLockedLabel => 'Locked';
 
   @override
+  String get bracketDeadline => 'Predictions close';
+
+  @override
   String get bracketAdvanceLabel => 'To advance';
 
   @override

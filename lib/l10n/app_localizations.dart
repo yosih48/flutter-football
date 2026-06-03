@@ -2057,6 +2057,12 @@ abstract class AppLocalizations {
   /// **'Locked'**
   String get bracketLockedLabel;
 
+  /// No description provided for @bracketDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Predictions close'**
+  String get bracketDeadline;
+
   /// No description provided for @bracketAdvanceLabel.
   ///
   /// In en, this message translates to:
