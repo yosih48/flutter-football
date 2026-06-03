@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:football/resources/auth.dart';
+import 'package:football/utils/league_logos.dart';
 import 'package:football/resources/league_config_service.dart';
 import 'package:football/responsive/mobile_screen_layout.dart';
 import 'package:football/responsive/rsponsive_layout_screen.dart';
@@ -301,8 +302,8 @@ class _LeagueCard extends StatelessWidget {
                       width: 1.5,
                     ),
                   ),
-                  child: Image.network(
-                    logoUrl,
+                  child: Image(
+                    image: leagueLogoProviderForUrl(logoUrl),
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) => Icon(
                       Icons.shield_outlined,

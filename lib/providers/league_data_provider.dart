@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:football/resources/league_config_service.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
+import 'package:football/utils/league_logos.dart';
 import 'package:football/widgets/LeagueSelectorChips.dart';
 import 'package:football/widgets/toggleButton.dart';
 
@@ -344,38 +346,34 @@ class SingleLeagueHeadline extends StatelessWidget {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
           colors: [c.cardHi, c.card],
         ),
         borderRadius: BorderRadius.circular(2),
         border: Border.all(color: c.hairline, width: 1),
       ),
-      child: Column(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if (imageUrl != null)
+          if (imageUrl != null) ...[
+            // Light rounded backplate so any logo (dark or transparent) stays
+            // legible against the dark card background.
             Container(
-              width: 52,
-              height: 52,
-              padding: const EdgeInsets.all(9),
-              decoration: BoxDecoration(
-                color: c.pitch,
+              width: 46,
+              height: 46,
+              padding: const EdgeInsets.all(6),
+              decoration: const BoxDecoration(
+                color: Colors.white,
                 shape: BoxShape.circle,
-                border: Border.all(color: c.live, width: 1.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: c.live.withOpacity(0.18),
-                    blurRadius: 14,
-                    spreadRadius: 1,
-                  ),
-                ],
               ),
-              child: Image.network(
-                imageUrl!,
+              child: Image(
+                image: leagueLogoProviderForUrl(imageUrl!),
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => Icon(
                     Icons.emoji_events_outlined,
@@ -383,39 +381,22 @@ class SingleLeagueHeadline extends StatelessWidget {
                     color: c.live),
               ),
             ),
-          const SizedBox(height: 14),
-          Text(
-            name,
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
-            maxLines: 2,
-            style: EType.body(
-              color: c.ink,
-              size: 22,
-              weight: FontWeight.w700,
+            const SizedBox(width: 11),
+          ],
+          Flexible(
+            child: Text(
+              name,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: GoogleFonts.rubik(
+                color: c.ink,
+                fontSize: 19,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2,
+                height: 1.0,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          // Editorial signature accent — short centered rule, flanked by dots.
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 4,
-                height: 4,
-                decoration:
-                    BoxDecoration(color: c.live, shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 8),
-              Container(width: 40, height: 2, color: c.live),
-              const SizedBox(width: 8),
-              Container(
-                width: 4,
-                height: 4,
-                decoration:
-                    BoxDecoration(color: c.live, shape: BoxShape.circle),
-              ),
-            ],
           ),
         ],
       ),

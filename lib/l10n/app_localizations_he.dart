@@ -953,7 +953,10 @@ class AppLocalizationsHe extends AppLocalizations {
   String get championPointsLabel => 'אלופה';
 
   @override
-  String get bracketTitle => 'טבלת גביע העולם';
+  String get bracketTitle => 'ספיישל מונדיאל';
+
+  @override
+  String get bracketShort => 'מונדיאל';
 
   @override
   String get bracketEntrySubtitle => 'נחשו בתים, נוקאאוט ואלופה';

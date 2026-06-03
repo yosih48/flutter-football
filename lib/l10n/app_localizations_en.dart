@@ -956,6 +956,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bracketTitle => 'World Cup Bracket';
 
   @override
+  String get bracketShort => 'World Cup';
+
+  @override
   String get bracketEntrySubtitle => 'Predict groups, knockouts & champion';
 
   @override

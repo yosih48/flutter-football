@@ -330,6 +330,7 @@
     "topScorerPointsLabel": "Top Scorer",
     "championPointsLabel": "Champion",
     "bracketTitle": "World Cup Bracket",
+    "bracketShort": "World Cup",
     "bracketEntrySubtitle": "Predict groups, knockouts & champion",
     "bracketPointsLabel": "Bracket Points",
     "bracketMyBracketTab": "My Bracket",

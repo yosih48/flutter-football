@@ -61,7 +61,12 @@ class _BracketLeaderboardListState extends State<BracketLeaderboardList> {
       itemBuilder: (ctx, i) {
         final r = rows[i];
         final isMe = !widget.loading && _isMe(r);
-        final hasBreakdown = !widget.loading && r.stages.isNotEmpty;
+        // Expandable when there's a per-stage breakdown to show, OR the player
+        // has a viewable bracket (so the "View full bracket" action is reachable
+        // even for players with 0 points / no scored stages).
+        final canView = widget.structure != null && r.userID != null;
+        final hasBreakdown =
+            !widget.loading && (r.stages.isNotEmpty || canView);
         final expanded = _expanded.contains(i);
         return Container(
           decoration: BoxDecoration(
@@ -140,10 +145,10 @@ class _BracketLeaderboardListState extends State<BracketLeaderboardList> {
   // Per-stage points chips, in the structure's canonical stage order.
   Widget _breakdown(EditorialColors c, BracketStanding r) {
     final lang = _lang(context);
-    final order = widget.structure?.stages
-            .map((s) => s.key)
-            .where((k) => r.stages.containsKey(k))
-            .toList() ??
+    // Show every tournament stage (from the structure) so the breakdown looks
+    // identical for all players — even ones the backend hasn't scored yet,
+    // whose stages map is empty. Missing stages default to 0 below.
+    final order = widget.structure?.stages.map((s) => s.key).toList() ??
         r.stages.keys.toList();
     final l = AppLocalizations.of(context)!;
     final canView = widget.structure != null && r.userID != null;
@@ -176,7 +181,7 @@ class _BracketLeaderboardListState extends State<BracketLeaderboardList> {
                             color: c.inkDim, size: 9, letterSpacing: 1),
                       ),
                       const SizedBox(width: 6),
-                      Text('${r.stages[k]}',
+                      Text('${r.stages[k] ?? 0}',
                           style: EType.numeric(
                               color: c.ink, size: 12, weight: FontWeight.w700)),
                     ],

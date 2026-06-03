@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
+import 'package:football/utils/league_logos.dart';
 
 /// Editorial league rail — horizontally scrolling crests with an
 /// underline indicator on the active league. API-compatible with the
@@ -113,8 +114,8 @@ class _ToggleButtonsSampleState extends State<ToggleButtonsSample> {
                 ),
               ),
               padding: const EdgeInsets.all(8),
-              child: Image.network(
-                widget.imageUrls[i],
+              child: Image(
+                image: leagueLogoProviderForUrl(widget.imageUrls[i]),
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => Icon(
                   Icons.shield_outlined,

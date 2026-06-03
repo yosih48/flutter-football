@@ -97,6 +97,7 @@ flutter:
     - assets/googleimage.png
     - assets/fake_games.json
     - assets/icons/champ.jpg
+    - assets/icons/world_cup_2026.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/league_config_service.dart';
+import 'package:football/utils/league_logos.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/bracket.dart';
 import 'package:football/screens/login_screen.dart';
@@ -246,7 +247,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
           ),
           child: Row(
             children: [
-              Icon(Icons.account_tree_outlined, size: 20, color: c.live),
+              Icon(Icons.emoji_events, size: 20, color: c.live),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -836,8 +837,8 @@ class _LeagueRow extends StatelessWidget {
               shape: BoxShape.circle,
               border: Border.all(color: c.hairline, width: 1),
             ),
-            child: Image.network(
-              logoUrl,
+            child: Image(
+              image: leagueLogoProviderForUrl(logoUrl),
               fit: BoxFit.contain,
               errorBuilder: (_, __, ___) =>
                   Icon(Icons.shield_outlined, size: 16, color: c.inkDim),

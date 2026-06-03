@@ -1985,6 +1985,12 @@ abstract class AppLocalizations {
   /// **'World Cup Bracket'**
   String get bracketTitle;
 
+  /// No description provided for @bracketShort.
+  ///
+  /// In en, this message translates to:
+  /// **'World Cup'**
+  String get bracketShort;
+
   /// No description provided for @bracketEntrySubtitle.
   ///
   /// In en, this message translates to:

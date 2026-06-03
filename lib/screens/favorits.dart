@@ -9,6 +9,7 @@ import 'package:football/resources/usersMethods.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/utils/config.dart';
+import 'package:football/utils/league_logos.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:football/l10n/app_localizations.dart';
@@ -353,8 +354,8 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                   width: 1,
                 ),
               ),
-              child: Image.network(
-                '$_leagueLogoBase$id.png',
+              child: Image(
+                image: leagueLogoProvider(id),
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => Icon(
                   Icons.shield_outlined,
@@ -484,8 +485,8 @@ class _LeagueCard extends StatelessWidget {
                       width: 1.5,
                     ),
                   ),
-                  child: Image.network(
-                    logoUrl,
+                  child: Image(
+                    image: leagueLogoProvider(leagueId),
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) => Icon(
                       Icons.shield_outlined,
