@@ -8,6 +8,7 @@ import 'package:football/resources/usersMethods.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/utils/config.dart';
+import 'package:football/utils/localized_team_name.dart';
 import 'package:football/utils/utils.dart';
 import 'package:http/http.dart' as http;
 
@@ -387,7 +388,7 @@ Future<String?> _openPicker(
                                         const SizedBox(width: 10),
                                         Expanded(
                                           child: Text(
-                                            opt.label,
+                                            localizedTeamName(ctx, opt.label),
                                             overflow: TextOverflow.ellipsis,
                                             style: EType.body(
                                                 color: c.ink, size: 14),
@@ -416,7 +417,8 @@ Future<String?> _openPicker(
                     const SizedBox(height: 8),
                     Align(
                       alignment: AlignmentDirectional.centerStart,
-                      child: PickedChip(label: selected!, icon: icon),
+                      child: PickedChip(
+                          label: localizedTeamName(ctx, selected!), icon: icon),
                     ),
                   ],
 

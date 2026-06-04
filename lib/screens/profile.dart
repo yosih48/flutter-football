@@ -3,6 +3,7 @@ import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/league_config_service.dart';
 import 'package:football/utils/league_logos.dart';
+import 'package:football/utils/localized_team_name.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/bracket.dart';
 import 'package:football/screens/login_screen.dart';
@@ -729,7 +730,8 @@ class _SeasonPickRowState extends State<_SeasonPickRow> {
 
         final Widget trailing;
         if (hasPick) {
-          trailing = PickedChip(label: widget.pick!, icon: widget.icon);
+          trailing = PickedChip(
+              label: localizedTeamName(context, widget.pick!), icon: widget.icon);
         } else if (isOpen) {
           trailing = const EmptyPickChip();
         } else if (snap.connectionState == ConnectionState.waiting) {
