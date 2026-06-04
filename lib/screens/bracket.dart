@@ -9,6 +9,7 @@ import 'package:football/screens/bracketLeague.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/utils/bracket_template.dart';
+import 'package:football/utils/localized_team_name.dart';
 import 'package:football/utils/utils.dart';
 import 'package:football/widgets/bracketLeaderboard.dart';
 import 'package:intl/intl.dart' hide TextDirection;
@@ -569,7 +570,7 @@ class _BracketScreenState extends State<BracketScreen> {
                     _Crest(url: _logoFor(team), size: 22),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(team,
+                      child: Text(localizedTeamName(context, team),
                           style: EType.body(
                               color: _thirdQual.contains(team)
                                   ? c.ink
@@ -765,7 +766,7 @@ class _BracketScreenState extends State<BracketScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                resolved ? team : _slotLabel(slot),
+                resolved ? localizedTeamName(context, team) : _slotLabel(slot),
                 style: EType.body(
                   color: isWinner
                       ? c.live
@@ -1592,7 +1593,7 @@ class _GroupTeamRow extends StatelessWidget {
             _Crest(url: logo, size: 22),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(team,
+              child: Text(localizedTeamName(context, team),
                   style: EType.body(
                       color: picked ? c.ink : c.inkMute,
                       size: 14,

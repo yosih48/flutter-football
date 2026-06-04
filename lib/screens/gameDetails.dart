@@ -13,6 +13,7 @@ import 'package:football/screens/table.dart';
 import 'package:football/screens/teamDetails.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
+import 'package:football/utils/localized_team_name.dart';
 import 'package:football/utils/status_utils.dart';
 import 'package:football/widgets/FixtureEventsWidget.dart';
 import 'package:football/widgets/SharedPreferences.dart';
@@ -423,16 +424,17 @@ class _GameDetailsState extends State<GameDetails> {
               child: GestureDetector(
                 onTap: () => _openTeamDetails(team),
                 child: Text(
-                  team.name.toUpperCase(),
+                  localizedTeamName(context, team.name).toUpperCase(),
                   textAlign: alignEnd ? TextAlign.right : TextAlign.left,
                   maxLines: maxLines,
                   softWrap: maxLines > 1,
                   overflow: TextOverflow.ellipsis,
-                  style: EType.display(
+                  style: EType.teamNameDisplay(
                     size: nameFontSize,
                     color: c.ink,
                     letterSpacing: 0.8,
                     height: nameLineHeight,
+                    hebrew: localizedTeamName(context, team.name) != team.name,
                   ),
                 ),
               ),

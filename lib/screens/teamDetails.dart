@@ -4,6 +4,7 @@ import 'package:football/models/games.dart';
 import 'package:football/screens/gameDetails.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
+import 'package:football/utils/localized_team_name.dart';
 import 'package:football/widgets/StandingsTableWidget.dart';
 import 'package:intl/intl.dart';
 
@@ -48,7 +49,7 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
         surfaceTintColor: Colors.transparent,
         iconTheme: IconThemeData(color: c.ink, size: 20),
         title: Text(
-          widget.team.name.toUpperCase(),
+          localizedTeamName(context, widget.team.name).toUpperCase(),
           style: EType.label(color: c.ink, size: 12, letterSpacing: 2),
         ),
       ),
@@ -95,13 +96,15 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
           ),
           const SizedBox(height: 18),
           Text(
-            widget.team.name.toUpperCase(),
+            localizedTeamName(context, widget.team.name).toUpperCase(),
             textAlign: TextAlign.center,
-            style: EType.display(
+            style: EType.teamNameDisplay(
               size: 24,
               color: c.ink,
               letterSpacing: 1.2,
               height: 1.1,
+              hebrew: localizedTeamName(context, widget.team.name) !=
+                  widget.team.name,
             ),
           ),
           const SizedBox(height: 12),
@@ -445,7 +448,7 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
         const SizedBox(width: 10),
         Expanded(
           child: Text(
-            team.name,
+            localizedTeamName(context, team.name),
             overflow: TextOverflow.ellipsis,
             style: EType.body(
               color: c.ink,

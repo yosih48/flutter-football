@@ -6,6 +6,7 @@ import 'package:football/resources/standings_service.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/utils/bracket_template.dart';
+import 'package:football/utils/localized_team_name.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 // Read-only view of another player's World Cup bracket. Renders the same
@@ -414,7 +415,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              resolved ? team : _slotLabel(slot, l),
+              resolved ? localizedTeamName(context, team) : _slotLabel(slot, l),
               style: EType.body(
                 color: isWinner ? c.live : (resolved ? c.ink : c.inkDim),
                 size: 14,
@@ -484,18 +485,23 @@ class _ViewerSectionState extends State<_ViewerSection> {
                 children: [
                   Container(width: 18, height: 1, color: c.live),
                   const SizedBox(width: 10),
-                  Flexible(
-                    child: Text(widget.title.toUpperCase(),
-                        style: EType.label(
-                            color: c.ink, size: 12, letterSpacing: 2),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(widget.title.toUpperCase(),
+                              style: EType.label(
+                                  color: c.ink, size: 12, letterSpacing: 2),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis),
+                        ),
+                        if (widget.points != null && widget.points! > 0) ...[
+                          const SizedBox(width: 8),
+                          _PointsBadge(points: widget.points!),
+                        ],
+                      ],
+                    ),
                   ),
-                  if (widget.points != null && widget.points! > 0) ...[
-                    const SizedBox(width: 8),
-                    _PointsBadge(points: widget.points!),
-                  ],
-                  const Spacer(),
                   AnimatedRotation(
                     turns: _expanded ? 0.5 : 0.0,
                     duration: const Duration(milliseconds: 180),
@@ -570,7 +576,7 @@ class _TeamRow extends StatelessWidget {
           _Crest(url: logo, size: 22),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(team,
+            child: Text(localizedTeamName(context, team),
                 style: EType.body(
                     color: c.ink, size: 14, weight: FontWeight.w600),
                 overflow: TextOverflow.ellipsis),

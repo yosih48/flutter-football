@@ -4,6 +4,7 @@ import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
+import 'package:football/utils/localized_team_name.dart';
 import 'package:football/utils/status_utils.dart';
 import 'package:football/widgets/teamLInks.dart';
 
@@ -87,7 +88,7 @@ class GameWidget extends StatelessWidget {
                       children: [
                         _buildMeta(info, c),
                         const SizedBox(height: 14),
-                        _buildMatchRow(c),
+                        _buildMatchRow(context, c),
                         if (_isUpcoming) ...[
                           const SizedBox(height: 14),
                           _buildOddsRow(c),
@@ -180,15 +181,19 @@ class GameWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildMatchRow(EditorialColors c) {
+  Widget _buildMatchRow(BuildContext context, EditorialColors c) {
     // Keep both team labels on a single line by default; only wrap to two
-    // lines when at least one name is multi-word (and never mid-word).
-    final bool anyMultiWord = game.home.name.trim().contains(' ') ||
-        game.away.name.trim().contains(' ');
+    // lines when at least one name is multi-word (and never mid-word). Use the
+    // localized (display) name for the wrap heuristic too, so Hebrew names size
+    // consistently.
+    final homeDisplay = localizedTeamName(context, game.home.name);
+    final awayDisplay = localizedTeamName(context, game.away.name);
+    final bool anyMultiWord = homeDisplay.trim().contains(' ') ||
+        awayDisplay.trim().contains(' ');
     final int nameMaxLines = anyMultiWord ? 2 : 1;
     return Row(
       children: [
-        Expanded(child: _buildTeamSide(game.home, alignEnd: true, c: c, maxLines: nameMaxLines)),
+        Expanded(child: _buildTeamSide(context, game.home, alignEnd: true, c: c, maxLines: nameMaxLines)),
         const SizedBox(width: 10),
         _buildTeamCrest(game.home, c),
         const SizedBox(width: 10),
@@ -196,27 +201,30 @@ class GameWidget extends StatelessWidget {
         const SizedBox(width: 10),
         _buildTeamCrest(game.away, c),
         const SizedBox(width: 10),
-        Expanded(child: _buildTeamSide(game.away, alignEnd: false, c: c, maxLines: nameMaxLines)),
+        Expanded(child: _buildTeamSide(context, game.away, alignEnd: false, c: c, maxLines: nameMaxLines)),
       ],
     );
   }
 
-  Widget _buildTeamSide(Team team, {required bool alignEnd, required EditorialColors c, required int maxLines}) {
+  Widget _buildTeamSide(BuildContext context, Team team, {required bool alignEnd, required EditorialColors c, required int maxLines}) {
+    final display = localizedTeamName(context, team.name);
+    final heName = display != team.name;
     return GestureDetector(
       onTap: () => onTeamTap != null
           ? onTeamTap!(team)
           : TeamLinkHandler.linkToTeam(team.name),
       child: Text(
-        team.name.toUpperCase(),
+        display.toUpperCase(),
         textAlign: alignEnd ? TextAlign.right : TextAlign.left,
         maxLines: maxLines,
         softWrap: maxLines > 1,
         overflow: TextOverflow.ellipsis,
-        style: EType.display(
+        style: EType.teamNameDisplay(
           size: 16,
           letterSpacing: 0.6,
           height: 1.05,
           color: c.ink,
+          hebrew: heName,
         ),
       ),
     );

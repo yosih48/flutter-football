@@ -25,6 +25,34 @@ class EType {
         fontWeight: FontWeight.w400,
       );
 
+  // Team / national-team name in a "display" slot (match cards, hero headers).
+  // Latin → Bebas Neue, matching the editorial display voice. Hebrew → Rubik
+  // bold: Bebas Neue ships no Hebrew glyphs, so without this Hebrew names fall
+  // back to an inconsistent, thin system font. Rubik keeps the heft/weight
+  // visually aligned with the Latin display across every screen.
+  static TextStyle teamNameDisplay({
+    double size = 16,
+    Color color = Editorial.ink,
+    double letterSpacing = 0.6,
+    double height = 1.05,
+    bool hebrew = false,
+  }) =>
+      hebrew
+          ? GoogleFonts.rubik(
+              fontSize: size,
+              color: color,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0,
+              height: height,
+            )
+          : GoogleFonts.bebasNeue(
+              fontSize: size,
+              color: color,
+              letterSpacing: letterSpacing,
+              height: height,
+              fontWeight: FontWeight.w400,
+            );
+
   // Editorial small-caps label, e.g. "MATCH EVENTS", "PREDICTIONS".
   static TextStyle label({
     Color color = Editorial.inkMute,

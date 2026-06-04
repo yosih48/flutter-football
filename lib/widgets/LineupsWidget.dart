@@ -5,6 +5,7 @@ import 'package:football/models/lineup.dart';
 import 'package:football/resources/lineup_service.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
+import 'package:football/utils/localized_team_name.dart';
 
 // ── Fixed pitch colours — independent of light/dark theme ─────────────────
 const Color _kHome  = Color(0xFF4B7BF5); // vivid blue  (home XI)
@@ -570,7 +571,7 @@ class _SubList extends StatelessWidget {
                 ? [
                     Flexible(
                       child: Text(
-                        lineup!.team.name.toUpperCase(),
+                        localizedTeamName(context, lineup!.team.name).toUpperCase(),
                         textAlign: TextAlign.right,
                         overflow: TextOverflow.ellipsis,
                         style: EType.label(
@@ -585,7 +586,7 @@ class _SubList extends StatelessWidget {
                     const SizedBox(width: 5),
                     Flexible(
                       child: Text(
-                        lineup!.team.name.toUpperCase(),
+                        localizedTeamName(context, lineup!.team.name).toUpperCase(),
                         overflow: TextOverflow.ellipsis,
                         style: EType.label(
                             color: c.inkMute, size: 9, letterSpacing: 1.4),

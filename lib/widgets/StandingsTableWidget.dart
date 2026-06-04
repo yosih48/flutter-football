@@ -4,6 +4,7 @@ import 'package:football/models/games.dart';
 import 'package:football/resources/standings_service.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
+import 'package:football/utils/localized_team_name.dart';
 
 class StandingsTableWidget extends StatefulWidget {
   final int leagueId;
@@ -339,7 +340,7 @@ class _StandingsTableWidgetState extends State<StandingsTableWidget> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    row.teamName,
+                    localizedTeamName(context, row.teamName),
                     overflow: TextOverflow.ellipsis,
                     style: EType.body(
                       color: c.ink,
