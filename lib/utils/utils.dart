@@ -5,6 +5,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:football/models/games.dart';
 import 'package:football/theme/colors.dart';
+import 'package:football/theme/typography.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:football/l10n/app_localizations.dart';
 
@@ -216,21 +217,84 @@ void showForceUpdateDialog(BuildContext context) {
   showDialog(
     context: context,
     barrierDismissible: false, // אי אפשר לסגור בלחיצה בצד
+    barrierColor: Colors.black.withOpacity(0.72),
     builder: (BuildContext context) {
+      final c = context.col;
+      final l = AppLocalizations.of(context)!;
       // WillPopScope (או PopScope בגרסאות חדשות) מונע לחיצה על כפתור "חזור" במכשיר
       return WillPopScope(
-        onWillPop: () async => false, 
-        child: AlertDialog(
-          title: Text(AppLocalizations.of(context)!.forceUpdateTitle),
-          content: Text(AppLocalizations.of(context)!.forceUpdateContent),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                _launchStore();
-              },
-              child: Text(AppLocalizations.of(context)!.forceUpdateButton),
+        onWillPop: () async => false,
+        child: Dialog(
+          backgroundColor: c.card,
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4),
+            side: BorderSide(color: c.hairline, width: 1),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 22),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Accent icon badge
+                Container(
+                  width: 66,
+                  height: 66,
+                  decoration: BoxDecoration(
+                    color: c.liveSoft,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: c.live, width: 1.5),
+                  ),
+                  child: Icon(Icons.rocket_launch_outlined,
+                      size: 30, color: c.live),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  l.forceUpdateTitle,
+                  textAlign: TextAlign.center,
+                  style: EType.display(
+                      size: 26, color: c.ink, letterSpacing: 0.8),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  l.forceUpdateContent,
+                  textAlign: TextAlign.center,
+                  style: EType.body(color: c.inkMute, size: 14, height: 1.5),
+                ),
+                const SizedBox(height: 26),
+                SizedBox(
+                  width: double.infinity,
+                  child: Material(
+                    color: c.live,
+                    borderRadius: BorderRadius.circular(2),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(2),
+                      onTap: _launchStore,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.system_update,
+                                size: 18, color: c.pitch),
+                            const SizedBox(width: 8),
+                            Text(
+                              l.forceUpdateButton.toUpperCase(),
+                              style: EType.label(
+                                  color: c.pitch,
+                                  size: 12,
+                                  letterSpacing: 1.6),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       );
     },

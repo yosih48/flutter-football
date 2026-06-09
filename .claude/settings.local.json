@@ -101,7 +101,9 @@
       "Bash(git commit -m ' *)",
       "Bash(cd /c/worldBackend && grep -n \"scheduleTopScorerReminders\\\\|scheduleTeamWinnerReminders\\\\|app.use.*reminder\\\\|app.use\\(\\\\\"/api\\\\\"\\\\|reminders\" app.js)",
       "Bash(node -e \"import\\('./src/controllers/bracketClass.js'\\).then\\(\\(\\)=>console.log\\('import ok'\\)\\).catch\\(e=>{console.error\\('IMPORT FAIL:',e.message\\);process.exit\\(1\\)}\\)\")",
-      "Bash(cd /c/flutter-football && grep -nE \"String get \\(cancel|save|confirm|pst|bracketRankingTab|bracketMyBracketTab\\)\\\\b\" lib/l10n/app_localizations.dart)"
+      "Bash(cd /c/flutter-football && grep -nE \"String get \\(cancel|save|confirm|pst|bracketRankingTab|bracketMyBracketTab\\)\\\\b\" lib/l10n/app_localizations.dart)",
+      "Bash(git commit -q -m 'Initial commit: Bookmark Organizer \\(Supabase + n8n + React PWA\\) *)",
+      "Bash(node _patch.cjs)"
     ]
   }
 }

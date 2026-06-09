@@ -729,13 +729,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get continueButton => 'Continue';
 
   @override
-  String get forceUpdateTitle => 'Update Required! 🚀';
+  String get forceUpdateTitle => 'Time to update 🚀';
 
   @override
-  String get forceUpdateContent => 'Your version is too old and is no longer supported.\nTo continue playing, you must download the new version.';
+  String get forceUpdateContent => 'You\'re on an older version that\'s no longer supported. Grab the latest update to keep predicting, following live scores, and playing the World Cup bracket.';
 
   @override
-  String get forceUpdateButton => 'Update Now';
+  String get forceUpdateButton => 'Update now';
 
   @override
   String get backToToday => 'Today';
@@ -1169,7 +1169,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bracketHelpLockTitle => 'Locking';
 
   @override
-  String get bracketHelpLockBody => 'Each stage locks when its matches kick off. After that you can\'t change those picks, so get them in early.';
+  String get bracketHelpLockBody => 'Your whole bracket — group stage through the final — locks when the tournament kicks off. After that nothing can be changed, so complete all your picks before the opening match.';
 
   @override
   String get bracketHelpLeaguesTitle => 'Leagues';

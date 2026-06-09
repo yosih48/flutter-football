@@ -729,13 +729,13 @@ class AppLocalizationsHe extends AppLocalizations {
   String get continueButton => 'המשך';
 
   @override
-  String get forceUpdateTitle => 'חייבים לעדכן! 🚀';
+  String get forceUpdateTitle => 'הגיע הזמן לעדכן 🚀';
 
   @override
-  String get forceUpdateContent => 'הגרסה שלך מיושנת מדי וכבר לא נתמכת.\nכדי להמשיך לשחק, חייבים להוריד את הגרסה החדשה.';
+  String get forceUpdateContent => 'אתם בגרסה ישנה שכבר לא נתמכת. עדכנו לגרסה האחרונה כדי להמשיך לנחש, לעקוב אחרי תוצאות חיות ולשחק בטבלת המונדיאל.';
 
   @override
-  String get forceUpdateButton => 'עדכן עכשיו';
+  String get forceUpdateButton => 'עדכנו עכשיו';
 
   @override
   String get backToToday => 'היום';
@@ -1169,7 +1169,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get bracketHelpLockTitle => 'נעילה';
 
   @override
-  String get bracketHelpLockBody => 'כל שלב ננעל עם תחילת המשחקים שלו. לאחר מכן לא ניתן לשנות את הניחושים, אז כדאי להזין אותם מוקדם.';
+  String get bracketHelpLockBody => 'כל הטבלה שלך — משלב הבתים ועד הגמר — ננעלת עם פתיחת הטורניר. לאחר מכן לא ניתן לשנות דבר, אז יש להשלים את כל הניחושים לפני משחק הפתיחה.';
 
   @override
   String get bracketHelpLeaguesTitle => 'ליגות';

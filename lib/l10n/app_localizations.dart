@@ -2414,7 +2414,7 @@ abstract class AppLocalizations {
   /// No description provided for @bracketHelpLockBody.
   ///
   /// In en, this message translates to:
-  /// **'Each stage locks when its matches kick off. After that you can\'t change those picks, so get them in early.'**
+  /// **'Your whole bracket — group stage through the final — locks when the tournament kicks off. After that nothing can be changed, so complete all your picks before the opening match.'**
   String get bracketHelpLockBody;
 
   /// No description provided for @bracketHelpLeaguesTitle.
