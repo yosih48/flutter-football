@@ -971,67 +971,25 @@ class TableScreenContentState extends State<TableScreenContent> {
         ],
       ),
       actions: [
-        PopupMenuButton<String>(
-          tooltip: '',
-          position: PopupMenuPosition.under,
-          color: c.cardHi,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(2),
-            side: BorderSide(color: c.hairline, width: 1),
-          ),
-          onSelected: (v) {
-            if (v == 'create') _showCreateGroupDialog();
-            if (v == 'join') _showJoinGroupDialog();
-          },
-          itemBuilder: (ctx) {
-            final mc = ctx.col;
-            return [
-              PopupMenuItem<String>(
-                value: 'create',
-                child: Row(
-                  children: [
-                    Icon(Icons.add, color: mc.live, size: 16),
-                    const SizedBox(width: 12),
-                    Text(
-                      AppLocalizations.of(ctx)!
-                          .createnewgroup
-                          .toUpperCase(),
-                      style: EType.label(
-                          color: mc.ink,
-                          size: 11,
-                          letterSpacing: 1.6),
-                    ),
-                  ],
-                ),
+        Padding(
+          padding: const EdgeInsetsDirectional.only(end: 16),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _HeaderActionButton(
+                label: AppLocalizations.of(context)!.join,
+                icon: Icons.login,
+                primary: false,
+                onTap: _showJoinGroupDialog,
               ),
-              PopupMenuItem<String>(
-                value: 'join',
-                child: Row(
-                  children: [
-                    Icon(Icons.group_add_outlined,
-                        color: mc.live, size: 16),
-                    const SizedBox(width: 12),
-                    Text(
-                      AppLocalizations.of(ctx)!.joingroup.toUpperCase(),
-                      style: EType.label(
-                          color: mc.ink,
-                          size: 11,
-                          letterSpacing: 1.6),
-                    ),
-                  ],
-                ),
+              const SizedBox(width: 8),
+              _HeaderActionButton(
+                label: AppLocalizations.of(context)!.create,
+                icon: Icons.add,
+                primary: true,
+                onTap: _showCreateGroupDialog,
               ),
-            ];
-          },
-          child: Container(
-            margin: const EdgeInsetsDirectional.only(end: 20),
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              border: Border.all(color: c.hairline, width: 1),
-              borderRadius: BorderRadius.circular(2),
-            ),
-            child: Icon(Icons.add, color: c.ink, size: 18),
+            ],
           ),
         ),
       ],
