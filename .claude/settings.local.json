@@ -103,7 +103,9 @@
       "Bash(node -e \"import\\('./src/controllers/bracketClass.js'\\).then\\(\\(\\)=>console.log\\('import ok'\\)\\).catch\\(e=>{console.error\\('IMPORT FAIL:',e.message\\);process.exit\\(1\\)}\\)\")",
       "Bash(cd /c/flutter-football && grep -nE \"String get \\(cancel|save|confirm|pst|bracketRankingTab|bracketMyBracketTab\\)\\\\b\" lib/l10n/app_localizations.dart)",
       "Bash(git commit -q -m 'Initial commit: Bookmark Organizer \\(Supabase + n8n + React PWA\\) *)",
-      "Bash(node _patch.cjs)"
+      "Bash(node _patch.cjs)",
+      "Bash(cd /c/world-front/src && find . -type f \\\\\\( -name \"*.vue\" -o -name \"*.js\" -o -name \"*.scss\" -o -name \"*.css\" \\\\\\) | head -100 && echo \"---TOTAL---\" && find . -type f -name \"*.vue\" | wc -l)",
+      "Bash(git checkout *)"
     ]
   }
 }
