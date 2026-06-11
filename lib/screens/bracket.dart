@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:football/models/bracket.dart';
 import 'package:football/resources/bracketMethods.dart';
+import 'package:football/resources/groupsMethods.dart';
+import 'package:football/resources/usersMethods.dart';
 import 'package:football/resources/league_config_service.dart';
 import 'package:football/resources/standings_service.dart';
 import 'package:football/screens/bracketLeague.dart';
@@ -85,7 +87,7 @@ class _BracketScreenState extends State<BracketScreen> {
       _api.fetchUserBracket(widget.userId, widget.leagueId, season: season),
       _standingsApi.getLeagueStandings(widget.leagueId),
       _api.fetchLeaderboard(widget.leagueId),
-      _api.fetchMyLeagues(widget.userId, widget.leagueId),
+      _loadNormalLeagues(), // bracket competes inside the normal friend-leagues
     ]);
     if (!mounted) return;
 
@@ -1004,8 +1006,60 @@ class _BracketScreenState extends State<BracketScreen> {
   }
 
   Future<void> _reloadLeagues() async {
-    final leagues = await _api.fetchMyLeagues(widget.userId, widget.leagueId);
+    final leagues = await _loadNormalLeagues();
     if (mounted) setState(() => _myLeagues = leagues);
+  }
+
+  // Build the league list from the SHARED normal-guesses leagues: the user's
+  // groups (users.groupID) ranked nowhere here — just listed. The per-league
+  // board (BracketLeagueScreen) ranks members by their bracket points.
+  Future<List<BracketLeagueInfo>> _loadNormalLeagues() async {
+    try {
+      final results = await Future.wait([
+        GroupsMethods().fetchGroups(),
+        UsersMethods().fetchAllUsers(),
+        UsersMethods().fetchUserById(widget.userId),
+      ]);
+      final groups = results[0] as List<Map<String, dynamic>>;
+      final allUsers = results[1] as List<Map<String, dynamic>>;
+      final me = results[2] as Map<String, dynamic>;
+
+      final groupID = Map<String, dynamic>.from(me['groupID'] ?? {});
+      final myNames = groupID.values
+          .map((v) => v.toString())
+          .where((n) => n.toLowerCase() != 'public')
+          .toSet();
+      final season = _seasonGuess();
+
+      bool isMember(Map<String, dynamic> u, String name) {
+        final gid = u['groupID'];
+        return gid is Map &&
+            gid.values.map((v) => v.toString()).contains(name);
+      }
+
+      final list = <BracketLeagueInfo>[];
+      for (final g in groups) {
+        final name = (g['name'] ?? '').toString();
+        if (name.isEmpty ||
+            name.toLowerCase() == 'public' ||
+            !myNames.contains(name)) continue;
+        final createdBy = (g['createdBy'] ?? '').toString();
+        list.add(BracketLeagueInfo(
+          id: (g['_id'] ?? '').toString(),
+          name: name,
+          code: (g['_id'] ?? '').toString(),
+          leagueId: widget.leagueId,
+          season: season,
+          ownerUserId: createdBy,
+          memberCount: allUsers.where((u) => isMember(u, name)).length,
+          isOwner: createdBy == widget.userId,
+        ));
+      }
+      return list;
+    } catch (e) {
+      print('loadNormalLeagues error: $e');
+      return [];
+    }
   }
 
   // ── How-it-works help sheet ─────────────────────────────────────────────
@@ -1281,17 +1335,21 @@ class _BracketScreenState extends State<BracketScreen> {
     );
     if (name == null || name.length < 2) return;
     setState(() => _leaguesBusy = true);
-    final res = await _api.createLeague(
-        name: name, leagueId: widget.leagueId, ownerUserId: widget.userId);
+    // Create a normal league (group) and auto-join the creator — same flow as
+    // the guessing game, so the bracket shares the league.
+    final group = await GroupsMethods().createGroup(name, widget.userId);
     if (!mounted) return;
-    setState(() => _leaguesBusy = false);
-    if (res.league != null) {
-      setState(() => _myLeagues = [..._myLeagues, res.league!]);
-      showSnackBar(context, l.bracketLeagueCreated, tone: SnackTone.success);
+    if (group != null) {
+      await GroupsMethods()
+          .addGroupToUser(group['_id'].toString(), widget.userId, context);
+      await _reloadLeagues();
+      if (mounted) {
+        showSnackBar(context, l.bracketLeagueCreated, tone: SnackTone.success);
+      }
     } else {
-      showSnackBar(context, res.error ?? l.bracketLeagueActionFailed,
-          tone: SnackTone.error);
+      showSnackBar(context, l.bracketLeagueActionFailed, tone: SnackTone.error);
     }
+    if (mounted) setState(() => _leaguesBusy = false);
   }
 
   Future<void> _showJoinDialog() async {
@@ -1319,21 +1377,12 @@ class _BracketScreenState extends State<BracketScreen> {
     );
     if (code == null || code.isEmpty) return;
     setState(() => _leaguesBusy = true);
-    final res = await _api.joinLeague(userId: widget.userId, code: code);
+    // Join a normal league by its code (group _id). addGroupToUser shows the
+    // joined / already-member feedback itself.
+    await GroupsMethods().addGroupToUser(code, widget.userId, context);
     if (!mounted) return;
-    setState(() => _leaguesBusy = false);
-    if (res.league != null) {
-      if (res.alreadyMember) {
-        showSnackBar(context, l.bracketLeagueAlreadyMember,
-            tone: SnackTone.warning);
-      } else {
-        showSnackBar(context, l.bracketLeagueJoined, tone: SnackTone.success);
-      }
-      _reloadLeagues();
-    } else {
-      showSnackBar(context, res.error ?? l.bracketLeagueActionFailed,
-          tone: SnackTone.error);
-    }
+    await _reloadLeagues();
+    if (mounted) setState(() => _leaguesBusy = false);
   }
 
 }

@@ -105,7 +105,8 @@
       "Bash(git commit -q -m 'Initial commit: Bookmark Organizer \\(Supabase + n8n + React PWA\\) *)",
       "Bash(node _patch.cjs)",
       "Bash(cd /c/world-front/src && find . -type f \\\\\\( -name \"*.vue\" -o -name \"*.js\" -o -name \"*.scss\" -o -name \"*.css\" \\\\\\) | head -100 && echo \"---TOTAL---\" && find . -type f -name \"*.vue\" | wc -l)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(curl -s --max-time 30 https://leagues.onrender.com/groups/register -o groups_tmp.json)"
     ]
   }
 }

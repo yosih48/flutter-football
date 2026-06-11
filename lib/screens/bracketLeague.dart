@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:football/models/bracket.dart';
 import 'package:football/resources/bracketMethods.dart';
+import 'package:football/resources/groupsMethods.dart';
+import 'package:football/resources/usersMethods.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/utils/utils.dart';
@@ -30,8 +32,6 @@ class BracketLeagueScreen extends StatefulWidget {
 }
 
 class _BracketLeagueScreenState extends State<BracketLeagueScreen> {
-  final _api = BracketMethods();
-
   late BracketLeagueInfo _league;
   bool _loading = true;
   // True if anything changed that the parent list should reflect on pop.
@@ -46,13 +46,41 @@ class _BracketLeagueScreenState extends State<BracketLeagueScreen> {
     _load();
   }
 
+  // Rank this league's members by their BRACKET points, read from the same
+  // user docs the normal leaderboard uses (no separate bracket-league store).
   Future<void> _load() async {
     setState(() => _loading = true);
-    final lb =
-        await _api.fetchLeagueLeaderboard(_league.id, userId: widget.userId);
+    final allUsers = await UsersMethods().fetchAllUsers();
     if (!mounted) return;
-    _rows = lb.rows;
-    if (lb.league != null) _league = lb.league!;
+    final name = _league.name;
+    final lid = '${_league.leagueId}';
+
+    bool isMember(Map<String, dynamic> u) {
+      final gid = u['groupID'];
+      return gid is Map && gid.values.map((v) => v.toString()).contains(name);
+    }
+
+    final rows = allUsers.where(isMember).map((u) {
+      final bp = u['bracketPoints'];
+      final sp = u['bracketStagePoints'];
+      final pts = (bp is Map && bp[lid] is num) ? (bp[lid] as num).toInt() : 0;
+      final stages = <String, int>{};
+      if (sp is Map && sp[lid] is Map) {
+        (sp[lid] as Map).forEach((k, v) {
+          if (v is num) stages[k.toString()] = v.toInt();
+        });
+      }
+      return BracketStanding(
+        userID: u['_id']?.toString(),
+        name: (u['displayName'] ?? '—').toString(),
+        points: pts,
+        stages: stages,
+        isOwner: u['_id']?.toString() == _league.ownerUserId,
+      );
+    }).toList()
+      ..sort((a, b) => b.points.compareTo(a.points));
+
+    _rows = rows;
     setState(() => _loading = false);
   }
 
@@ -67,13 +95,14 @@ class _BracketLeagueScreenState extends State<BracketLeagueScreen> {
     final l = AppLocalizations.of(context)!;
     final ok = await _confirm(l.bracketLeagueLeave, l.bracketLeagueLeaveConfirm);
     if (ok != true) return;
-    final err = await _api.leaveLeague(userId: widget.userId, id: _league.id);
+    final success =
+        await GroupsMethods().leaveGroup(widget.userId, _league.name);
     if (!mounted) return;
-    if (err == null) {
+    if (success) {
       _changed = true;
       Navigator.of(context).pop(true);
     } else {
-      showSnackBar(context, err, tone: SnackTone.error);
+      showSnackBar(context, l.bracketLeagueActionFailed, tone: SnackTone.error);
     }
   }
 
@@ -82,14 +111,14 @@ class _BracketLeagueScreenState extends State<BracketLeagueScreen> {
     final ok =
         await _confirm(l.bracketLeagueDelete, l.bracketLeagueDeleteConfirm);
     if (ok != true) return;
-    final err =
-        await _api.deleteLeague(id: _league.id, ownerUserId: widget.userId);
+    final success =
+        await GroupsMethods().deleteGroup(_league.id, _league.name);
     if (!mounted) return;
-    if (err == null) {
+    if (success) {
       _changed = true;
       Navigator.of(context).pop(true);
     } else {
-      showSnackBar(context, err, tone: SnackTone.error);
+      showSnackBar(context, l.bracketLeagueActionFailed, tone: SnackTone.error);
     }
   }
 

@@ -189,4 +189,70 @@ class GroupsMethods {
       // Show error snackbar
     }
   }
+
+  // ── Shared with the bracket: create / leave / delete a normal league ──
+  // Same endpoints the normal leaderboard (table.dart) uses, so the bracket
+  // competes inside the very same friend-leagues.
+
+  // Create a private league (group). Returns the created group map, or null.
+  Future<Map<String, dynamic>?> createGroup(String name, String userId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/groups/add'),
+        headers: {'Content-type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({
+          'name': name,
+          'createdBy': userId,
+          'type': 'private',
+          'code': DateTime.now().millisecondsSinceEpoch,
+        }),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data is Map && data['error'] == false) {
+        return Map<String, dynamic>.from(data['msg']);
+      }
+      return null;
+    } catch (e) {
+      print('createGroup error: $e');
+      return null;
+    }
+  }
+
+  // Leave a league: drop the matching key from the user's groupID map and PUT.
+  Future<bool> leaveGroup(String userId, String groupName) async {
+    try {
+      final user = await UsersMethods().fetchUserById(userId);
+      final groupID = Map<String, dynamic>.from(user['groupID'] ?? {});
+      final key = groupID.entries
+          .firstWhere((e) => e.value == groupName,
+              orElse: () => const MapEntry('', ''))
+          .key;
+      if (key.isEmpty) return false;
+      groupID.remove(key);
+      final res = await http.put(
+        Uri.parse('$_baseUrl/users/'),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({'_id': userId, 'groupID': groupID}),
+      );
+      return res.statusCode == 200;
+    } catch (e) {
+      print('leaveGroup error: $e');
+      return false;
+    }
+  }
+
+  // Owner deletes a league.
+  Future<bool> deleteGroup(String groupId, String name) async {
+    try {
+      final res = await http.delete(
+        Uri.parse('$_baseUrl/groups/'),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({'groupId': groupId, 'name': name}),
+      );
+      return res.statusCode == 200;
+    } catch (e) {
+      print('deleteGroup error: $e');
+      return false;
+    }
+  }
 }

@@ -34,7 +34,7 @@ class ThemeProvider with ChangeNotifier {
   void _loadTheme() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool isDark = prefs.getBool('isDarkMode') ??
-        true; // Default to dark since your original was dark
+        false; // Default to LIGHT mode on a fresh install
     _themeData = isDark ? darkTheme : lightTheme;
     notifyListeners();
   }
