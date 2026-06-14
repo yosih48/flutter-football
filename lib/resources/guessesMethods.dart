@@ -80,6 +80,88 @@ class GuessesMethods {
     }
   }
 
+  /// One round-trip replacement for `fetchAllUsersGuesses` + per-user
+  /// `getGuessWithNames` fan-out. Backend joins guesses with each user's
+  /// displayName + groupID and (optionally) filters by group membership
+  /// server-side. See `/guesses/gameOriginal/:id/with-users`.
+  ///
+  /// Returns an empty list on 404 / non-list responses to match the legacy
+  /// flow's tolerance for missing data.
+  Future<List<GuessWithNames>> fetchGuessesWithUsers(
+      int gameId, {
+      String? groupName,
+      }) async {
+    final qs = (groupName != null && groupName.isNotEmpty)
+        ? '?group=${Uri.encodeQueryComponent(groupName)}'
+        : '';
+    final url =
+        Uri.parse('$_baseUrl/guesses/gameOriginal/$gameId/with-users$qs');
+
+    try {
+      final response = await http.get(url);
+      // 404 = backend doesn't have the new bulk endpoint yet. Fall back to
+      // the legacy 1 + N×2 path so the client works against old deployments.
+      if (response.statusCode == 404) {
+        print(
+            'fetchGuessesWithUsers: bulk endpoint not deployed yet, falling back');
+        return _fetchGuessesWithUsersLegacy(gameId, groupName: groupName);
+      }
+      if (response.statusCode != 200) {
+        print('fetchGuessesWithUsers: HTTP ${response.statusCode}');
+        return <GuessWithNames>[];
+      }
+      final body = jsonDecode(response.body);
+      if (body is! List) return <GuessWithNames>[];
+
+      return body.map<GuessWithNames>((row) {
+        final map = Map<String, dynamic>.from(row as Map);
+        final guess = Guess.fromJson(Map<String, dynamic>.from(map['guess']));
+        final userName = (map['userName'] ?? '').toString();
+        final userGroups = Map<String, String>.from(
+            (map['userGroups'] as Map?)?.map(
+                  (k, v) => MapEntry(k.toString(), v.toString()),
+                ) ??
+                {});
+        return GuessWithNames(guess, userName, userGroups);
+      }).toList();
+    } catch (e) {
+      print('Error fetchGuessesWithUsers (falling back to legacy): $e');
+      // Network/parse errors → try legacy path too. Worst case, that also
+      // fails and we return an empty list as before.
+      try {
+        return await _fetchGuessesWithUsersLegacy(gameId, groupName: groupName);
+      } catch (_) {
+        return <GuessWithNames>[];
+      }
+    }
+  }
+
+  /// Legacy path: fetch the guess list, then fan out per-user name+groups.
+  /// Used as a fallback when the bulk `/with-users` endpoint isn't present
+  /// (older backend deployments) so the client keeps working during rollout.
+  Future<List<GuessWithNames>> _fetchGuessesWithUsersLegacy(
+      int gameId, {
+      String? groupName,
+      }) async {
+    final guesses = await fetchAllUsersGuesses(gameId);
+    final callService = CallService();
+    final results = await Future.wait(
+      guesses.map((g) async {
+        try {
+          return await callService.getGuessWithNames(g);
+        } catch (e) {
+          print('Skipping guess due to error: $e');
+          return null;
+        }
+      }),
+    );
+    final list = results.whereType<GuessWithNames>().toList();
+    if (groupName == null || groupName.isEmpty) return list;
+    return list
+        .where((g) => g.userGroups.values.contains(groupName))
+        .toList();
+  }
+
   Future<String> fetchUserName(String userId) async {
     final response = await http.get(Uri.parse('$_baseUrl/users/${userId}'));
 

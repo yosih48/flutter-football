@@ -65,6 +65,8 @@ class _GameDetailsState extends State<GameDetails> {
 
   static const Set<String> _liveShort = {'1H', '2H', 'H1', 'H2', 'ET', 'BT', 'P', 'INT'};
 
+  String _guessesCacheKey(int gameId, String group) => '$gameId|$group';
+
   @override
   void initState() {
     super.initState();
@@ -76,21 +78,114 @@ class _GameDetailsState extends State<GameDetails> {
     currentUserId = widget.userId;
     currentGameId = widget.gameOriginalId;
 
-    // _fetchUserGroups is enough — it kicks off _fetchGuesses with the right
-    // group name once it has it. A bare _fetchGuesses("") call here would
-    // just be wasted work that always returns nothing.
-    _fetchUserGroups();
+    // Seed the default-group cache from prefs once. Fires in parallel with
+    // the first fetch; if it lands before the user picks a group, we use it
+    // as the source of truth for the active group. Cheap (SharedPreferences
+    // read, no network) so it never gates the UI.
+    _ensureDefaultGroupLoaded();
+
+    final hydratedGroups = _hydrateUserGroupsFromCache();
+    // Kick off groups + guesses in parallel so we don't waterfall.
+    _fetchUserGroups(background: hydratedGroups);
+    // If we already know which group to show, also try to hydrate + revalidate
+    // the predictions for this game synchronously.
+    if (hydratedGroups && selectedGroupName.isNotEmpty) {
+      _hydrateGuessesFromCache(currentGameId, selectedGroupName);
+      _fetchGuesses(selectedGroupName, background: _guessesWithNames.isNotEmpty);
+    }
+  }
+
+  Future<void> _ensureDefaultGroupLoaded() async {
+    if (_GuessesCache.defaultGroupName != null) return;
+    try {
+      final saved = await SharedPreferencesUtil.getSelectedGroupName();
+      _GuessesCache.defaultGroupName = saved ?? '';
+      // If groups already arrived and the resolver would now pick a different
+      // group than what we settled on, re-resolve and refetch.
+      if (mounted && _userGroups.isNotEmpty) {
+        final better = _resolveActiveGroup(_userGroups);
+        if (better.isNotEmpty && better != selectedGroupName) {
+          setState(() {
+            selectedGroupName = better;
+            isLoading = _GuessesCache
+                    .guesses[_guessesCacheKey(currentGameId, better)] ==
+                null;
+            final cached = _GuessesCache
+                .guesses[_guessesCacheKey(currentGameId, better)];
+            if (cached != null) _guessesWithNames = cached;
+          });
+          _fetchGuesses(better, background: _guessesWithNames.isNotEmpty);
+        }
+      }
+    } catch (e) {
+      print('Failed to read default group from prefs: $e');
+      _GuessesCache.defaultGroupName = '';
+    }
+  }
+
+  /// Resolution order for which group's predictions to show:
+  ///   1. User's persisted default (the "starred" group in TableScreen) —
+  ///      if it's a group they're still a member of.
+  ///   2. UserProvider.selectedGroupName (last active group this session),
+  ///      again only if it's in their group map and not 'public'.
+  ///   3. First group in their groupID map.
+  ///   4. Empty (no groups → show join-group callout).
+  String _resolveActiveGroup(Map<String, String> groups) {
+    if (groups.isEmpty) return '';
+    final values = groups.values.toSet();
+
+    final def = _GuessesCache.defaultGroupName;
+    if (def != null && def.isNotEmpty && def != 'public' && values.contains(def)) {
+      return def;
+    }
+
+    final fromProvider =
+        Provider.of<UserProvider>(context, listen: false).selectedGroupName;
+    if (fromProvider.isNotEmpty &&
+        fromProvider != 'public' &&
+        values.contains(fromProvider)) {
+      return fromProvider;
+    }
+
+    return groups.values.first;
+  }
+
+  bool _hydrateUserGroupsFromCache() {
+    final cached = _GuessesCache.userGroups[currentUserId];
+    if (cached == null) return false;
+    _userGroups = cached;
+    _groupsLoading = false;
+    selectedGroupName = _resolveActiveGroup(cached);
+    return true;
+  }
+
+  bool _hydrateGuessesFromCache(int gameId, String group) {
+    final cached = _GuessesCache.guesses[_guessesCacheKey(gameId, group)];
+    if (cached == null) return false;
+    _guessesWithNames = cached;
+    isLoading = false;
+    return true;
   }
 
   void _navigateToGame(int newIndex) {
     if (newIndex >= 0 && newIndex < widget.games.length) {
+      final newGameId = widget.games[newIndex].fixtureId;
+      final cached = selectedGroupName.isNotEmpty
+          ? _GuessesCache.guesses[_guessesCacheKey(newGameId, selectedGroupName)]
+          : null;
       setState(() {
         _currentIndex = newIndex;
         _currentGame = widget.games[newIndex];
-        isLoading = true;
-        currentGameId = widget.games[newIndex].fixtureId;
+        currentGameId = newGameId;
+        if (cached != null) {
+          _guessesWithNames = cached;
+          isLoading = false;
+        } else {
+          isLoading = true;
+        }
       });
-      _fetchGuesses(selectedGroupName);
+      // Cache hit → background revalidate. Cache miss → foreground fetch.
+      _fetchGuesses(selectedGroupName, background: cached != null);
     }
   }
 
@@ -131,8 +226,7 @@ class _GameDetailsState extends State<GameDetails> {
           child: Column(
             children: [
               _buildHeroCard(),
-              const SizedBox(height: 8),
-              _buildTabsBlock(),
+              if (_selectedTab != null) _buildTabContent(),
               const SizedBox(height: 8),
               if (_currentGame.status.long != 'Not Started') ...[
                 _buildPredictionsBlock(),
@@ -173,19 +267,24 @@ class _GameDetailsState extends State<GameDetails> {
               bottom: BorderSide(color: c.hairline, width: 1),
             ),
           ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 22, 16, 22),
-          child: Column(
-            children: [
-              _buildHeroMeta(),
-              const SizedBox(height: 28),
-              _buildScoreboard(hasPrev: hasPrev, hasNext: hasNext),
-              const SizedBox(height: 24),
-              Container(height: 1, color: c.hairline),
-              const SizedBox(height: 12),
-              _buildLeagueStrip(),
-            ],
-          ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 22, 16, 18),
+              child: Column(
+                children: [
+                  _buildHeroMeta(),
+                  const SizedBox(height: 28),
+                  _buildScoreboard(hasPrev: hasPrev, hasNext: hasNext),
+                  const SizedBox(height: 24),
+                  Container(height: 1, color: c.hairline),
+                  const SizedBox(height: 12),
+                  _buildLeagueStrip(),
+                ],
+              ),
+            ),
+            _buildTabBar(),
+          ],
         ),
       ),
     );
@@ -290,8 +389,12 @@ class _GameDetailsState extends State<GameDetails> {
     // Reserve 2 lines for both teams only if at least one name has multiple
     // words; otherwise keep it to a single line. This keeps the two sides
     // symmetric and never splits a word mid-letter.
-    final bool anyMultiWord = _currentGame.home.name.trim().contains(' ') ||
-        _currentGame.away.name.trim().contains(' ');
+    // Use localized names so translated multi-word names (e.g. "ארצות הברית")
+    // are detected even when the API name is a single word (e.g. "USA").
+    final localHome = localizedTeamName(context, _currentGame.home.name);
+    final localAway = localizedTeamName(context, _currentGame.away.name);
+    final bool anyMultiWord = localHome.trim().contains(' ') ||
+        localAway.trim().contains(' ');
     final int nameMaxLines = anyMultiWord ? 2 : 1;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -397,8 +500,7 @@ class _GameDetailsState extends State<GameDetails> {
         final double nameBlockHeight =
             nameFontSize * nameLineHeight * maxLines;
         return Column(
-          crossAxisAlignment:
-              alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             GestureDetector(
               onTap: () => _openTeamDetails(team),
@@ -425,7 +527,7 @@ class _GameDetailsState extends State<GameDetails> {
                 onTap: () => _openTeamDetails(team),
                 child: Text(
                   localizedTeamName(context, team.name).toUpperCase(),
-                  textAlign: alignEnd ? TextAlign.right : TextAlign.left,
+                  textAlign: TextAlign.center,
                   maxLines: maxLines,
                   softWrap: maxLines > 1,
                   overflow: TextOverflow.ellipsis,
@@ -446,7 +548,8 @@ class _GameDetailsState extends State<GameDetails> {
   }
 
   // ── Tabbed block: Timeline / Lineups / Table / Stats ───────────────────
-  Widget _buildTabsBlock() {
+  /// Tab bar row – lives inside the hero card.
+  Widget _buildTabBar() {
     final c = context.col;
     final l = AppLocalizations.of(context)!;
 
@@ -457,58 +560,59 @@ class _GameDetailsState extends State<GameDetails> {
       l.statsTab.toUpperCase(),
     ];
 
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+      child: Row(
+        children: List.generate(tabs.length, (i) {
+          final isActive = i == _selectedTab;
+          return Expanded(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => setState(() {
+                _selectedTab = _selectedTab == i ? null : i;
+              }),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: isActive ? c.live : Colors.transparent,
+                      width: 2,
+                    ),
+                  ),
+                ),
+                child: Text(
+                  tabs[i],
+                  textAlign: TextAlign.center,
+                  style: EType.label(
+                    color: isActive ? c.live : c.inkMute,
+                    size: 11,
+                    letterSpacing: 1.6,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  /// Tab content panel – rendered directly below the hero card.
+  Widget _buildTabContent() {
+    final c = context.col;
     return Container(
       decoration: BoxDecoration(
         color: c.card,
         border: Border(
-          top: BorderSide(color: c.hairline, width: 1),
           bottom: BorderSide(color: c.hairline, width: 1),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Tab bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
-            child: Row(
-              children: List.generate(tabs.length, (i) {
-                final isActive = i == _selectedTab;
-                return Expanded(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => setState(() {
-                      _selectedTab = _selectedTab == i ? null : i;
-                    }),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            color: isActive ? c.live : Colors.transparent,
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                      child: Text(
-                        tabs[i],
-                        textAlign: TextAlign.center,
-                        style: EType.label(
-                          color: isActive ? c.live : c.inkMute,
-                          size: 11,
-                          letterSpacing: 1.6,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-          if (_selectedTab != null) ...[
-            Container(height: 1, color: c.hairline),
-            _buildTabBody(),
-          ],
+          Container(height: 1, color: c.hairline),
+          _buildTabBody(),
         ],
       ),
     );
@@ -1055,80 +1159,110 @@ class _GameDetailsState extends State<GameDetails> {
     );
   }
 
-  Future<void> _fetchUserGroups() async {
+  Future<void> _fetchUserGroups({bool background = false}) async {
     try {
       Map<String, dynamic> userData =
           await UsersMethods().fetchUserById(currentUserId);
       if (!mounted) return;
-      setState(() {
-        Map<String, String> tempGroups =
-            Map<String, String>.from(userData['groupID'] ?? {});
 
-        tempGroups.removeWhere((key, value) => value.toLowerCase() == 'public');
+      Map<String, String> tempGroups =
+          Map<String, String>.from(userData['groupID'] ?? {});
+      tempGroups.removeWhere((key, value) => value.toLowerCase() == 'public');
+      _GuessesCache.userGroups[currentUserId] = tempGroups;
+
+      // Single source of truth — same resolver used by the hydrate path so
+      // the user's persisted default-group choice from TableScreen wins.
+      final nextGroup = _resolveActiveGroup(tempGroups);
+      final groupChanged = nextGroup != selectedGroupName;
+
+      setState(() {
         _userGroups = tempGroups;
         _groupsLoading = false;
-
-        final userProvider = Provider.of<UserProvider>(context, listen: false);
-        if (_userGroups.isNotEmpty &&
-            userProvider.selectedGroupName != 'public') {
-          selectedGroupName = userProvider.selectedGroupName;
-          _fetchGuesses(selectedGroupName);
-        } else if (_userGroups.isNotEmpty) {
-          selectedGroupName = _userGroups.values.first;
-          _fetchGuesses(selectedGroupName);
-        } else {
+        selectedGroupName = nextGroup;
+        if (tempGroups.isEmpty) {
           isLoading = false;
         }
       });
+
+      // Only kick off a guesses fetch from here in the non-background path
+      // (cold start) or when groups changed (different active group). In the
+      // background revalidation path the cached _fetchGuesses call from
+      // initState is already in flight.
+      if (nextGroup.isNotEmpty && (!background || groupChanged)) {
+        _fetchGuesses(nextGroup,
+            background: background && _guessesWithNames.isNotEmpty);
+      }
     } catch (e) {
       print('Failed to fetch user groups: $e');
       if (!mounted) return;
-      setState(() {
-        _groupsLoading = false;
-        isLoading = false;
-      });
+      if (!background) {
+        setState(() {
+          _groupsLoading = false;
+          isLoading = false;
+        });
+      }
     }
   }
 
-  Future<void> _fetchGuesses(groupName) async {
+  Future<void> _fetchGuesses(groupName, {bool background = false}) async {
+    final gameIdAtCall = currentGameId;
+
+    // Cache hit? Paint instantly, then revalidate in background. We do this
+    // even when caller passes background=false — re-entering this screen for a
+    // game we've already seen should never show a spinner.
+    if (!background) {
+      final cached =
+          _GuessesCache.guesses[_guessesCacheKey(gameIdAtCall, groupName)];
+      if (cached != null) {
+        setState(() {
+          _guessesWithNames = cached;
+          isLoading = false;
+        });
+        // Recurse into background revalidation.
+        _fetchGuesses(groupName, background: true);
+        return;
+      }
+    }
+
     try {
-      final guesses =
-          await GuessesMethods().fetchAllUsersGuesses(currentGameId);
-      final callService = CallService();
+      // One bulk endpoint replaces:
+      //   1× fetchAllUsersGuesses + N× getGuessWithNames (2 calls each)
+      // The backend joins users and applies the group filter server-side.
+      final filteredGuesses = await GuessesMethods()
+          .fetchGuessesWithUsers(gameIdAtCall, groupName: groupName);
 
-      // Parallelize the per-guess name lookups instead of awaiting them in
-      // series. With ~10 users in a group this turns 10 sequential round-trips
-      // into 10 concurrent ones — typically 3-5× faster end-to-end.
-      final results = await Future.wait(
-        guesses.map((g) async {
-          try {
-            return await callService.getGuessWithNames(g);
-          } catch (e) {
-            print('Skipping guess due to error: $e');
-            return null;
-          }
-        }),
-      );
-      final guessesWithNames = results.whereType<GuessWithNames>().toList();
-
-      final filteredGuesses = guessesWithNames.where((guessWithName) {
-        return guessWithName.userGroups != null &&
-            guessWithName.userGroups.values.contains(groupName);
-      }).toList();
+      _GuessesCache.guesses[_guessesCacheKey(gameIdAtCall, groupName)] =
+          filteredGuesses;
 
       if (!mounted) return;
-      setState(() {
-        _guessesWithNames = filteredGuesses;
-        isLoading = false;
-      });
+      // Only swap into UI if the user is still on the same game + group.
+      if (currentGameId == gameIdAtCall && selectedGroupName == groupName) {
+        setState(() {
+          _guessesWithNames = filteredGuesses;
+          isLoading = false;
+        });
+      }
     } catch (e, stackTrace) {
       print('Failed to fetch guesses: $e');
       print('Stack trace: $stackTrace');
       if (!mounted) return;
-      setState(() {
-        isLoading = false;
-      });
+      if (!background) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
+}
+
+class _GuessesCache {
+  // Per-user cache of the groupID map (already filtered: 'public' removed).
+  static final Map<String, Map<String, String>> userGroups = {};
+  // Per-(gameId, groupName) cache of the predictions list.
+  static final Map<String, List<GuessWithNames>> guesses = {};
+  // Default group name picked by the user in TableScreen (the starred one).
+  // Read from SharedPreferences once and shared across re-entries so the
+  // initial hydrate path doesn't need an async await before it can paint.
+  static String? defaultGroupName;
 }
 
