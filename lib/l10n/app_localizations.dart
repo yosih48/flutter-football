@@ -1763,6 +1763,12 @@ abstract class AppLocalizations {
   /// **'Lineups not yet available'**
   String get lineupsNotAvailable;
 
+  /// No description provided for @predictedLineup.
+  ///
+  /// In en, this message translates to:
+  /// **'Predicted lineup'**
+  String get predictedLineup;
+
   /// No description provided for @timeline.
   ///
   /// In en, this message translates to:

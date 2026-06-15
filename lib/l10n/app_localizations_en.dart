@@ -843,6 +843,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lineupsNotAvailable => 'Lineups not yet available';
 
   @override
+  String get predictedLineup => 'Predicted lineup';
+
+  @override
   String get timeline => 'Timeline';
 
   @override

@@ -843,6 +843,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get lineupsNotAvailable => 'לא נמצאו הרכבים';
 
   @override
+  String get predictedLineup => 'הרכב משוער';
+
+  @override
   String get timeline => 'אירועים';
 
   @override

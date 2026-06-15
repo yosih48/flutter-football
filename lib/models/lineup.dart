@@ -3,6 +3,7 @@ class LineupResponse {
   final String fixtureId;
   final List<TeamLineup>? lineups;
   final bool available;
+  final bool predicted;
   final String? message;
 
   LineupResponse({
@@ -10,6 +11,7 @@ class LineupResponse {
     required this.fixtureId,
     this.lineups,
     this.available = true,
+    this.predicted = false,
     this.message,
   });
 
@@ -26,6 +28,7 @@ class LineupResponse {
       fixtureId: (json['fixtureId'] ?? '').toString(),
       lineups: lineups,
       available: json['available'] ?? (lineups != null && lineups.isNotEmpty),
+      predicted: json['predicted'] == true,
       message: json['message'],
     );
   }
@@ -86,6 +89,8 @@ class LineupPlayer {
   final int number;
   final String? pos;
   final String? grid;
+  final double? rating;
+  final bool captain;
 
   LineupPlayer({
     required this.id,
@@ -93,6 +98,8 @@ class LineupPlayer {
     required this.number,
     this.pos,
     this.grid,
+    this.rating,
+    this.captain = false,
   });
 
   factory LineupPlayer.fromJson(Map<String, dynamic> json) {
@@ -102,6 +109,8 @@ class LineupPlayer {
       number: json['number'] ?? 0,
       pos: json['pos'],
       grid: json['grid'],
+      rating: (json['rating'] as num?)?.toDouble(),
+      captain: json['captain'] == true,
     );
   }
 }

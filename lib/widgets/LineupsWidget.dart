@@ -1,22 +1,25 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:football/l10n/app_localizations.dart';
+import 'package:football/models/FixtureEvent.dart';
 import 'package:football/models/lineup.dart';
+import 'package:football/resources/FixtureEventsService.dart';
 import 'package:football/resources/lineup_service.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
+import 'package:football/utils/lineup_event_marks.dart';
 import 'package:football/utils/localized_team_name.dart';
 
 // ── Fixed pitch colours — independent of light/dark theme ─────────────────
-const Color _kHome  = Color(0xFF4B7BF5); // vivid blue  (home XI)
-const Color _kAway  = Color(0xFF28A96C); // vivid green (away XI)
-const Color _kPitchDark  = Color(0xFF1A5C38);
-const Color _kPitchLight = Color(0xFF1E6842);
-const Color _kLine  = Color(0x52FFFFFF); // white @ 32%
+const Color _kHome  = Color(0xFF4B7BF5); // vivid blue  (home XI ring)
+const Color _kAway  = Color(0xFF2BC48A); // vivid green (away XI ring)
+const Color _kPitchDark  = Color(0xFF14532D); // deep green base
+const Color _kPitchLight = Color(0xFF18603A); // subtle band
+const Color _kLine  = Color(0x3DFFFFFF); // white @ 24% — fainter lines
 
 // ── Player dot geometry ───────────────────────────────────────────────────
-const double _kDia      = 34.0; // circle diameter
-const double _kLabelW   = 64.0; // total width incl. name
+const double _kDia      = 40.0; // avatar diameter
+const double _kLabelW   = 70.0; // total width incl. name
 
 class LineupsWidget extends StatefulWidget {
   final int fixtureId;
@@ -39,6 +42,7 @@ class LineupsWidget extends StatefulWidget {
 class _LineupsWidgetState extends State<LineupsWidget> {
   final LineupService _lineupService = LineupService();
   LineupResponse? _lineupResponse;
+  List<FixtureEvent> _events = const [];
   bool _isLoading = true;
   bool _hasError   = false;
 
@@ -57,14 +61,22 @@ class _LineupsWidgetState extends State<LineupsWidget> {
   Future<void> _fetchLineups() async {
     setState(() { _isLoading = true; _hasError = false; });
 
-    final response = await _lineupService.getFixtureLineups(
-      widget.fixtureId,
-      matchDate: widget.matchDate,
-    );
+    // Lineups (AllSports) and events (API-Football) are independent endpoints —
+    // fetch in parallel. Events power the goal/card/sub marks on the pitch.
+    final results = await Future.wait([
+      _lineupService.getFixtureLineups(
+        widget.fixtureId,
+        matchDate: widget.matchDate,
+      ),
+      FixtureEventsService().getFixtureEvents(widget.fixtureId),
+    ]);
 
     if (!mounted) return;
+    final response = results[0] as LineupResponse?;
+    final eventsResp = results[1] as FixtureEventsResponse?;
     setState(() {
       _lineupResponse = response;
+      _events = eventsResp?.events ?? const [];
       _isLoading = false;
       _hasError   = response == null;
     });
@@ -123,21 +135,78 @@ class _LineupsWidgetState extends State<LineupsWidget> {
     final home    = lineups[0];
     final away    = lineups.length > 1 ? lineups[1] : null;
 
+    // Distil events into per-player marks, scoped to each side by team name so a
+    // surname shared across both teams can't cross-match.
+    final homeMarks = buildPlayerMarks(_events, home.team.name);
+    final awayMarks =
+        away != null ? buildPlayerMarks(_events, away.team.name) : <String, PlayerMarks>{};
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // ── Predicted-lineup banner ────────────────────────────────
+        if (_lineupResponse!.predicted) ...[
+          _PredictedBanner(label: l.predictedLineup),
+          const SizedBox(height: 10),
+        ],
+
         // ── Tactical pitch ─────────────────────────────────────────
         ClipRRect(
           borderRadius: BorderRadius.circular(2),
-          child: _TacticalPitch(home: home, away: away),
+          child: _TacticalPitch(
+            home: home,
+            away: away,
+            homeMarks: homeMarks,
+            awayMarks: awayMarks,
+          ),
         ),
 
         // ── Substitutes ────────────────────────────────────────────
         if (home.substitutes.isNotEmpty || (away?.substitutes.isNotEmpty ?? false)) ...[
           const SizedBox(height: 20),
-          _SubstitutesSection(home: home, away: away, l: l),
+          _SubstitutesSection(
+            home: home,
+            away: away,
+            homeMarks: homeMarks,
+            awayMarks: awayMarks,
+            l: l,
+          ),
         ],
       ],
+    );
+  }
+}
+
+// ── Predicted-lineup banner ─────────────────────────────────────────────────
+
+class _PredictedBanner extends StatelessWidget {
+  final String label;
+  const _PredictedBanner({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: c.liveSoft,
+        borderRadius: BorderRadius.circular(2),
+        border: Border.all(color: c.live.withOpacity(0.4), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.lightbulb_outline, color: c.live, size: 15),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              label.toUpperCase(),
+              style: EType.label(color: c.live, size: 10, letterSpacing: 1.6),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -147,20 +216,39 @@ class _LineupsWidgetState extends State<LineupsWidget> {
 class _TacticalPitch extends StatelessWidget {
   final TeamLineup  home;
   final TeamLineup? away;
-  const _TacticalPitch({required this.home, this.away});
+  final Map<String, PlayerMarks> homeMarks;
+  final Map<String, PlayerMarks> awayMarks;
+  const _TacticalPitch({
+    required this.home,
+    this.away,
+    required this.homeMarks,
+    required this.awayMarks,
+  });
+
+  // Each formation row gets its own fixed-height slot, so the pitch grows with
+  // the line-up instead of squeezing 22 players into one screen. This is what
+  // gives ScoreQuest its airy, uncrowded look — rows never collide at the
+  // centre line and dense back-fours get room to breathe.
+  static const double _kRowH = 82.0;
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 0.59, // portrait pitch — height ≈ 1.69 × width
+    final homeRows = _orderedRows(home.startXI);
+    final awayRows = away != null ? _orderedRows(away!.startXI) : const <List<LineupPlayer>>[];
+
+    // Both teams share an equal half; size the half to the denser side so the
+    // tighter formation still gets a full slot per row. Centre line stays at 0.5.
+    final maxRows = max(homeRows.length, awayRows.length);
+    final halfH = (maxRows < 1 ? 1 : maxRows) * _kRowH;
+    final h = halfH * 2;
+
+    return SizedBox(
+      height: h,
       child: LayoutBuilder(
         builder: (_, constraints) {
-          final w     = constraints.maxWidth;
-          final h     = constraints.maxHeight;
-          final halfH = h / 2;
-
+          final w = constraints.maxWidth;
           return Stack(
-            clipBehavior: Clip.hardEdge,
+            clipBehavior: Clip.none,
             children: [
               // ── Pitch background ──────────────────────────────
               Positioned.fill(
@@ -182,17 +270,11 @@ class _TacticalPitch extends StatelessWidget {
                 ),
 
               // ── Home XI — top half, GK at top ─────────────────
-              ..._buildTeam(
-                home.startXI, w, halfH,
-                yOffset: 0, isHome: true,
-              ),
+              ..._placeTeam(homeRows, w, halfH, isHome: true, marks: homeMarks),
 
               // ── Away XI — bottom half, GK at bottom ───────────
               if (away != null)
-                ..._buildTeam(
-                  away!.startXI, w, halfH,
-                  yOffset: halfH, isHome: false,
-                ),
+                ..._placeTeam(awayRows, w, halfH, isHome: false, marks: awayMarks),
             ],
           );
         },
@@ -200,46 +282,40 @@ class _TacticalPitch extends StatelessWidget {
     );
   }
 
-  // ── Position calculation ─────────────────────────────────────────────────
-  List<Widget> _buildTeam(
-    List<LineupPlayer> players,
-    double w,
-    double halfH, {
-    required double yOffset,
-    required bool   isHome,
-  }) {
-    // Group players by formation row (from grid field, fallback to pos).
+  // Group a starting XI into formation rows (grid field, fallback to position),
+  // ordered GK→forwards, each row left→right by grid column.
+  List<List<LineupPlayer>> _orderedRows(List<LineupPlayer> players) {
     final Map<int, List<LineupPlayer>> byRow = {};
     for (final p in players) {
       final row = _gridRow(p.grid) ?? _posToRow(p.pos);
       byRow.putIfAbsent(row, () => []).add(p);
     }
-    if (byRow.isEmpty) return [];
+    final keys = byRow.keys.toList()..sort();
+    return keys.map((k) {
+      return List<LineupPlayer>.from(byRow[k]!)
+        ..sort((a, b) => (_gridCol(a.grid) ?? 1).compareTo(_gridCol(b.grid) ?? 1));
+    }).toList();
+  }
 
-    final sortedRows = byRow.keys.toList()..sort();
-    final n = sortedRows.length;
-
-    // Leave 14% at pitch edge (circle + name ≈ 50 px must fit),
-    // 9% at centre line → 77% usable span.
-    const edgePad  = 0.14;
-    const centPad  = 0.09;
-    const usable   = 1.0 - edgePad - centPad;
+  // ── Position calculation ─────────────────────────────────────────────────
+  List<Widget> _placeTeam(
+    List<List<LineupPlayer>> rows,
+    double w,
+    double halfH, {
+    required bool isHome,
+    required Map<String, PlayerMarks> marks,
+  }) {
+    final n = rows.length;
+    if (n == 0) return const [];
 
     final List<Widget> out = [];
-
     for (int ri = 0; ri < n; ri++) {
-      final rowPlayers = List<LineupPlayer>.from(byRow[sortedRows[ri]]!)
-        ..sort((a, b) =>
-            (_gridCol(a.grid) ?? 1).compareTo(_gridCol(b.grid) ?? 1));
+      final rowPlayers = rows[ri];
 
-      // Fraction of halfH from the edge (0 = edge, ~0.92 = centre line)
-      final frac = n == 1 ? 0.5 : edgePad + ri * usable / (n - 1);
-
-      // For home: row 0 (GK) sits near the top, last row near centre.
-      // For away: mirrored — row 0 (GK) sits near the bottom.
-      final y = isHome
-          ? yOffset + halfH * frac
-          : yOffset + halfH * (1.0 - frac);
+      // Centre each row in its equal band: GK band near the goal line, last
+      // outfield band leaves a half-band gap before the centre line.
+      final frac = (ri + 0.5) / n; // 0..1 within this team's half
+      final y = isHome ? halfH * frac : halfH * 2 - halfH * frac;
 
       final np = rowPlayers.length;
       for (int ci = 0; ci < np; ci++) {
@@ -248,6 +324,7 @@ class _TacticalPitch extends StatelessWidget {
           x: w * (ci + 1) / (np + 1),
           y: y,
           color: isHome ? _kHome : _kAway,
+          marks: marks.forPlayer(rowPlayers[ci]),
         ));
       }
     }
@@ -286,12 +363,12 @@ class _PitchPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // ── Alternating vertical stripes ──────────────────────────────
-    const stripes = 8;
-    final sw = w / stripes;
-    for (int i = 0; i < stripes; i++) {
+    // ── Alternating horizontal bands (mow pattern, like ScoreQuest) ─
+    const bands = 12;
+    final bh = h / bands;
+    for (int i = 0; i < bands; i++) {
       canvas.drawRect(
-        Rect.fromLTWH(i * sw, 0, sw, h),
+        Rect.fromLTWH(0, i * bh, w, bh),
         Paint()..color = i.isEven ? _kPitchDark : _kPitchLight,
       );
     }
@@ -390,18 +467,22 @@ class _PlayerDot extends StatelessWidget {
   final double x;
   final double y;
   final Color  color;
+  final PlayerMarks? marks;
 
   const _PlayerDot({
     required this.player,
     required this.x,
     required this.y,
     required this.color,
+    this.marks,
   });
 
   @override
   Widget build(BuildContext context) {
+    final m = marks;
+    final subOff = m?.subOffMin != null;
     return Positioned(
-      // Centre the label column horizontally on x, circle top at y - r.
+      // Centre the label column horizontally on x, avatar top at y - r.
       left: x - _kLabelW / 2,
       top:  y - _kDia   / 2,
       child: SizedBox(
@@ -409,65 +490,86 @@ class _PlayerDot extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // ── Jersey circle ─────────────────────────────────
-            Container(
-              width:  _kDia,
-              height: _kDia,
-              margin: EdgeInsets.symmetric(
-                horizontal: (_kLabelW - _kDia) / 2,
-              ),
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: const Alignment(-0.2, -0.3),
-                  radius: 0.95,
-                  colors: [
-                    Color.lerp(color, Colors.white, 0.18)!,
-                    color,
-                    Color.lerp(color, Colors.black, 0.18)!,
-                  ],
-                  stops: const [0.0, 0.55, 1.0],
-                ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.45),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
+            // ── Avatar + event badges ─────────────────────────
+            // Badges spill outside the avatar bounds, so don't clip.
+            SizedBox(
+              width:  _kLabelW,
+              height: _kDia + 4,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.topCenter,
+                children: [
+                  // Dim a subbed-off player's avatar, like ScoreQuest.
+                  Opacity(
+                    opacity: subOff ? 0.55 : 1.0,
+                    child: _PlayerAvatar(
+                      number: player.number,
+                      color: color,
+                      // photoUrl: player.photo,  ← drop-in once the image
+                      // proxy lands; falls back to the number automatically.
+                      photoUrl: null,
+                    ),
                   ),
+
+                  // Goal(s) — top-left ball
+                  if (m != null && (m.goals > 0 || m.ownGoals > 0))
+                    Positioned(
+                      left: (_kLabelW - _kDia) / 2 - 7,
+                      top: -3,
+                      child: _GoalBadge(
+                        count: m.goals + m.ownGoals,
+                        own: m.goals == 0 && m.ownGoals > 0,
+                      ),
+                    ),
+
+                  // Card — top-right
+                  if (m != null && (m.yellow > 0 || m.red > 0))
+                    Positioned(
+                      right: (_kLabelW - _kDia) / 2 - 5,
+                      top: -3,
+                      child: _CardBadge(red: m.red > 0),
+                    ),
+
+                  // Subbed off — bottom-right red down-arrow
+                  if (subOff)
+                    Positioned(
+                      right: (_kLabelW - _kDia) / 2 - 6,
+                      bottom: -1,
+                      child: const _SubArrowBadge(off: true),
+                    ),
+
+                  // Captain armband — bottom-left "C"
+                  if (player.captain)
+                    Positioned(
+                      left: (_kLabelW - _kDia) / 2 - 6,
+                      bottom: -1,
+                      child: const _CaptainBadge(),
+                    ),
                 ],
-              ),
-              child: Center(
-                child: Text(
-                  '${player.number}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    height: 1.0,
-                  ),
-                ),
               ),
             ),
 
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
 
-            // ── Name tag ──────────────────────────────────────
+            // ── Rating pill (live/finished only) ──────────────
+            if (player.rating != null) ...[
+              _RatingPill(rating: player.rating!),
+              const SizedBox(height: 2),
+            ],
+
+            // ── Name (number is shown inside the coloured circle) ──
             Text(
               _abbrev(player.name),
               textAlign: TextAlign.center,
-              maxLines: 1,
+              textDirection: TextDirection.ltr,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: Colors.white.withOpacity(0.95),
                 fontSize: 9.5,
+                height: 1.15,
                 fontWeight: FontWeight.w600,
-                height: 1.1,
-                shadows: const [
-                  Shadow(
-                    color: Color(0xCC000000),
-                    blurRadius: 4,
-                  ),
-                ],
+                shadows: const [Shadow(color: Color(0xCC000000), blurRadius: 4)],
               ),
             ),
           ],
@@ -483,16 +585,244 @@ class _PlayerDot extends StatelessWidget {
   }
 }
 
+// Circular player avatar with a team-coloured ring. Shows a real headshot when
+// [photoUrl] is provided (falls back to the jersey number on load error), or
+// the number placeholder when it's null — so photos drop in with no layout
+// change once the image proxy is wired up.
+class _PlayerAvatar extends StatelessWidget {
+  final int number;
+  final Color color;
+  final String? photoUrl;
+
+  const _PlayerAvatar({
+    required this.number,
+    required this.color,
+    this.photoUrl,
+  });
+
+  Widget _numberFallback() => DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          // Coloured circle background (home blue / away green).
+          gradient: RadialGradient(
+            center: const Alignment(-0.2, -0.3),
+            radius: 0.95,
+            colors: [
+              Color.lerp(color, Colors.white, 0.18)!,
+              color,
+              Color.lerp(color, Colors.black, 0.18)!,
+            ],
+            stops: const [0.0, 0.55, 1.0],
+          ),
+        ),
+        child: Center(
+          child: Text(
+            '$number',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              height: 1.0,
+            ),
+          ),
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: _kDia,
+      height: _kDia,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.4),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipOval(
+        child: (photoUrl != null && photoUrl!.isNotEmpty)
+            ? Image.network(
+                photoUrl!,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _numberFallback(),
+              )
+            : _numberFallback(),
+      ),
+    );
+  }
+}
+
+// ── Event badges ────────────────────────────────────────────────────────────
+
+Color _ratingColor(double r) {
+  if (r >= 8.0) return const Color(0xFF1D9BF0); // blue — outstanding
+  if (r >= 7.0) return const Color(0xFF12B886); // green — good
+  if (r >= 6.0) return const Color(0xFFF59F00); // amber — average
+  return const Color(0xFFE03131);               // red — poor
+}
+
+class _RatingPill extends StatelessWidget {
+  final double rating;
+  const _RatingPill({required this.rating});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+      decoration: BoxDecoration(
+        color: _ratingColor(rating),
+        borderRadius: BorderRadius.circular(3),
+      ),
+      child: Text(
+        rating.toStringAsFixed(1),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+          height: 1.0,
+        ),
+      ),
+    );
+  }
+}
+
+class _GoalBadge extends StatelessWidget {
+  final int count;
+  final bool own;
+  const _GoalBadge({required this.count, this.own = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 15,
+      height: 15,
+      decoration: BoxDecoration(
+        color: own ? const Color(0xFFE03131) : Colors.white,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.black26, width: 0.5),
+      ),
+      child: count > 1
+          ? Center(
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  color: own ? Colors.white : Colors.black,
+                  fontSize: 8,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            )
+          : Icon(Icons.sports_soccer,
+              size: 11, color: own ? Colors.white : Colors.black87),
+    );
+  }
+}
+
+class _CardBadge extends StatelessWidget {
+  final bool red;
+  const _CardBadge({required this.red});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 9,
+      height: 13,
+      decoration: BoxDecoration(
+        color: red ? const Color(0xFFE03131) : const Color(0xFFFACC15),
+        borderRadius: BorderRadius.circular(1.5),
+        border: Border.all(color: Colors.black26, width: 0.5),
+      ),
+    );
+  }
+}
+
+class _SubArrowBadge extends StatelessWidget {
+  final bool off;
+  const _SubArrowBadge({required this.off});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 14,
+      height: 14,
+      decoration: BoxDecoration(
+        color: off ? const Color(0xFFE03131) : const Color(0xFF12B886),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 1),
+      ),
+      child: Icon(
+        off ? Icons.arrow_downward : Icons.arrow_upward,
+        size: 9,
+        color: Colors.white,
+      ),
+    );
+  }
+}
+
+class _CaptainBadge extends StatelessWidget {
+  const _CaptainBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 13,
+      height: 13,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1A),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white70, width: 0.5),
+      ),
+      child: const Text(
+        'C',
+        style: TextStyle(
+          color: Colors.amber,
+          fontSize: 8,
+          fontWeight: FontWeight.w900,
+          height: 1.0,
+        ),
+      ),
+    );
+  }
+}
+
+// Inline marks shown next to a substitute's name: came-on arrow, goals, cards,
+// and rating. Returns [] when the bench player had no involvement.
+List<Widget> _subMarkers(PlayerMarks? m) {
+  if (m == null) return const [];
+  final out = <Widget>[];
+  if (m.subOnMin != null) {
+    out.add(const _SubArrowBadge(off: false));
+  }
+  if (m.goals > 0 || m.ownGoals > 0) {
+    out.add(const SizedBox(width: 3));
+    out.add(_GoalBadge(count: m.goals + m.ownGoals, own: m.goals == 0 && m.ownGoals > 0));
+  }
+  if (m.yellow > 0 || m.red > 0) {
+    out.add(const SizedBox(width: 3));
+    out.add(_CardBadge(red: m.red > 0));
+  }
+  return out;
+}
+
 // ── Substitutes section ────────────────────────────────────────────────────
 
 class _SubstitutesSection extends StatelessWidget {
   final TeamLineup  home;
   final TeamLineup? away;
+  final Map<String, PlayerMarks> homeMarks;
+  final Map<String, PlayerMarks> awayMarks;
   final AppLocalizations l;
 
   const _SubstitutesSection({
     required this.home,
     this.away,
+    required this.homeMarks,
+    required this.awayMarks,
     required this.l,
   });
 
@@ -522,11 +852,13 @@ class _SubstitutesSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                child: _SubList(lineup: home, color: _kHome, c: c, mirror: false),
+                child: _SubList(
+                    lineup: home, color: _kHome, c: c, mirror: false, marks: homeMarks),
               ),
               Container(width: 1, color: c.hairline),
               Expanded(
-                child: _SubList(lineup: away, color: _kAway, c: c, mirror: true),
+                child: _SubList(
+                    lineup: away, color: _kAway, c: c, mirror: true, marks: awayMarks),
               ),
             ],
           ),
@@ -541,12 +873,14 @@ class _SubList extends StatelessWidget {
   final Color       color;
   final EditorialColors c;
   final bool        mirror; // true = away side (right-aligned)
+  final Map<String, PlayerMarks> marks;
 
   const _SubList({
     required this.lineup,
     required this.color,
     required this.c,
     required this.mirror,
+    required this.marks,
   });
 
   @override
@@ -597,37 +931,35 @@ class _SubList extends StatelessWidget {
           const SizedBox(height: 8),
 
           // ── Player rows ───────────────────────────────────
-          ...subs.map((p) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3.5),
-                child: Row(
-                  mainAxisAlignment:
-                      mirror ? MainAxisAlignment.end : MainAxisAlignment.start,
-                  children: mirror
-                      ? [
-                          Flexible(
-                            child: Text(
-                              p.name,
-                              textAlign: TextAlign.right,
-                              overflow: TextOverflow.ellipsis,
-                              style: EType.body(color: c.ink, size: 12),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          _NumChip(number: p.number, color: color),
-                        ]
-                      : [
-                          _NumChip(number: p.number, color: color),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              p.name,
-                              overflow: TextOverflow.ellipsis,
-                              style: EType.body(color: c.ink, size: 12),
-                            ),
-                          ),
-                        ],
-                ),
-              )),
+          ...subs.map((p) {
+            final m = marks.forPlayer(p);
+            final nameWidget = Flexible(
+              child: Text(
+                p.name,
+                textAlign: mirror ? TextAlign.right : TextAlign.left,
+                overflow: TextOverflow.ellipsis,
+                style: EType.body(color: c.ink, size: 12),
+              ),
+            );
+            final markers = _subMarkers(m);
+            final children = <Widget>[
+              _NumChip(number: p.number, color: color),
+              const SizedBox(width: 6),
+              nameWidget,
+              if (markers.isNotEmpty) ...[
+                const SizedBox(width: 6),
+                ...markers,
+              ],
+            ];
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3.5),
+              child: Row(
+                mainAxisAlignment:
+                    mirror ? MainAxisAlignment.end : MainAxisAlignment.start,
+                children: mirror ? children.reversed.toList() : children,
+              ),
+            );
+          }),
         ],
       ),
     );
