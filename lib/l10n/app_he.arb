@@ -194,7 +194,7 @@
   "failedToLoadLineUp": "נכשל בטעינת הרכבים",
   "retry": "נסה שוב",
   "noGoals": "לא נמצאו אירועים",
-  "noEvents": "אין אירועים עדיין",
+  "noEvents": "אירועים יהיו זמינים אחרי תחילת המשחק",
   "allEvents": "הכל",
   "majorEvents": "עיקריים",
   "playerIn": "נכנס",
@@ -500,7 +500,7 @@
     "timeline": "אירועים",
     "tableTab": "טבלה",
     "statsTab": "סטטיסטיקה",
-    "statsNotAvailable": "לא נמצאו סטטיסטיקות",
+    "statsNotAvailable": "סטטיסטיקה תהיה זמינה אחרי תחילת המשחק",
     "statsAsOf": "נכון לדקה {minute}",
     "@statsAsOf": {
       "placeholders": { "minute": { "type": "String" } }

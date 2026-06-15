@@ -567,7 +567,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get noGoals => 'אין שערים עדיין';
 
   @override
-  String get noEvents => 'אין אירועים עדיין';
+  String get noEvents => 'אירועים יהיו זמינים אחרי תחילת המשחק';
 
   @override
   String get allEvents => 'הכל';
@@ -855,7 +855,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statsTab => 'סטטיסטיקה';
 
   @override
-  String get statsNotAvailable => 'לא נמצאו סטטיסטיקות';
+  String get statsNotAvailable => 'סטטיסטיקה תהיה זמינה אחרי תחילת המשחק';
 
   @override
   String statsAsOf(String minute) {

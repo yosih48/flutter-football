@@ -1538,19 +1538,19 @@ abstract class AppLocalizations {
   /// No description provided for @forceUpdateTitle.
   ///
   /// In en, this message translates to:
-  /// **'Update Required! 🚀'**
+  /// **'Time to update 🚀'**
   String get forceUpdateTitle;
 
   /// No description provided for @forceUpdateContent.
   ///
   /// In en, this message translates to:
-  /// **'Your version is too old and is no longer supported.\nTo continue playing, you must download the new version.'**
+  /// **'You\'re on an older version that\'s no longer supported. Grab the latest update to keep predicting, following live scores, and playing the World Cup bracket.'**
   String get forceUpdateContent;
 
   /// No description provided for @forceUpdateButton.
   ///
   /// In en, this message translates to:
-  /// **'Update Now'**
+  /// **'Update now'**
   String get forceUpdateButton;
 
   /// No description provided for @backToToday.
