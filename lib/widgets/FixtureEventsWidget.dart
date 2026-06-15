@@ -6,6 +6,7 @@ import 'package:football/theme/typography.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:football/utils/he_player_name.dart';
 
 class FixtureEventsWidget extends StatefulWidget {
   final int fixtureId;
@@ -377,7 +378,7 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          event.player,
+          localizedPlayerName(context, event.player),
           style: EType.body(
             color: c.ink,
             size: 13,
@@ -400,7 +401,7 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
           ),
         if (event.assist != null && event.assist!.isNotEmpty)
           Text(
-            "${l.assist} ${event.assist}",
+            "${l.assist} ${localizedPlayerName(context, event.assist!)}",
             style: EType.body(
               color: c.inkDim,
               size: 10,
@@ -427,7 +428,7 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
       const SizedBox(width: 6),
       Flexible(
         child: Text(
-          name,
+          localizedPlayerName(context, name),
           style: EType.body(color: c.ink, size: 12, weight: FontWeight.w500),
           maxLines: 2,
           softWrap: true,

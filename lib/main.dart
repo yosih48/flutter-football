@@ -13,6 +13,7 @@ import 'package:football/resources/firebase_messaging_service.dart';
 import 'package:football/resources/gamesMethods.dart';
 import 'package:football/resources/league_config_service.dart';
 import 'package:football/resources/remote_config_service.dart';
+import 'package:football/utils/player_names_he.dart';
 import 'package:football/responsive/mobile_screen_layout.dart';
 import 'package:football/responsive/rsponsive_layout_screen.dart';
 import 'package:football/responsive/web_screen_layout.dart';
@@ -50,6 +51,9 @@ void main() async {
   // Must run after RemoteConfigService — it resolves backendUrl.
   await LeagueConfigService().initialize();
   await FirebaseMessagingService.initialize();
+  // Curated Hebrew player names (bundled asset) — loaded once so lineup/event
+  // names resolve on first frame; falls back to transliteration if absent.
+  await PlayerNamesHe.load();
 
   final authProvider = AuthProvider();
   await authProvider.initializeApp();

@@ -7,6 +7,7 @@ import 'package:football/resources/FixtureEventsService.dart';
 import 'package:football/resources/lineup_service.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
+import 'package:football/utils/he_player_name.dart';
 import 'package:football/utils/lineup_event_marks.dart';
 import 'package:football/utils/localized_team_name.dart';
 
@@ -559,9 +560,8 @@ class _PlayerDot extends StatelessWidget {
 
             // ── Name (number is shown inside the coloured circle) ──
             Text(
-              _abbrev(player.name),
+              localizedPlayerName(context, player.name, abbreviate: true),
               textAlign: TextAlign.center,
-              textDirection: TextDirection.ltr,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
@@ -576,12 +576,6 @@ class _PlayerDot extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  static String _abbrev(String name) {
-    final parts = name.trim().split(' ');
-    if (parts.length <= 1) return name;
-    return '${parts.first[0]}. ${parts.sublist(1).join(' ')}';
   }
 }
 
@@ -935,7 +929,7 @@ class _SubList extends StatelessWidget {
             final m = marks.forPlayer(p);
             final nameWidget = Flexible(
               child: Text(
-                p.name,
+                localizedPlayerName(context, p.name),
                 textAlign: mirror ? TextAlign.right : TextAlign.left,
                 overflow: TextOverflow.ellipsis,
                 style: EType.body(color: c.ink, size: 12),
