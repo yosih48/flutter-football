@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
+import 'package:football/resources/gamesMethods.dart';
 import 'package:football/resources/guessesMethods.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/theme/colors.dart';
@@ -32,22 +34,41 @@ class _StatisticsState extends State<Statistics> {
 
   Future<void> _fetchUserGuesses() async {
     try {
-      // Guesses + user-doc are independent — fire in parallel so we pay one
-      // round-trip latency instead of two.
+      final leagueID = widget.leagueId as int;
+
+      // Guesses + user-doc + league games are independent — fire in parallel so
+      // we pay one round-trip latency instead of three.
       final results = await Future.wait([
         GuessesMethods().fetchThisUserGuesses(widget.userId),
         UsersMethods().fetchUserById(widget.userId).catchError((e) {
           print('Error fetching user points: $e');
           return <String, dynamic>{};
         }),
+        GamesMethods().fetchGamesForLeague(leagueID).catchError((e) {
+          print('Error fetching league games: $e');
+          return <Game>[];
+        }),
       ]);
       final guesses = results[0] as List<Guess>;
       final userData = results[1] as Map<String, dynamic>;
+      final games = results[2] as List<Game>;
 
-      final leagueID = widget.leagueId as int;
       final leagueKey = '$leagueID';
-      final filtered =
-          guesses.where((g) => g.leagueId == leagueID).toList();
+
+      // Only games whose kickoff has already passed count toward stats — so the
+      // accuracy percentage reflects only games that have actually started/played,
+      // not pending guesses for upcoming fixtures. `timestamp` is epoch seconds.
+      final nowSecs = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      final startedFixtureIds = games
+          .where((g) => g.timestamp <= nowSecs)
+          .map((g) => g.fixtureId)
+          .toSet();
+
+      final filtered = guesses
+          .where((g) =>
+              g.leagueId == leagueID &&
+              startedFixtureIds.contains(g.gameOriginalId))
+          .toList();
 
       int leaguePoints(dynamic field) {
         if (field is Map && field[leagueKey] != null) {
@@ -101,7 +122,7 @@ class _StatisticsState extends State<Statistics> {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('PLAYER',
+            Text(l.playerLabel.toUpperCase(),
                 style: EType.label(
                     color: c.inkDim, size: 10, letterSpacing: 3)),
             const SizedBox(height: 2),
@@ -120,7 +141,7 @@ class _StatisticsState extends State<Statistics> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Section label ───────────────────────────────────────
-              _sectionLabel('OVERVIEW', c),
+              _sectionLabel(l.statisticsOverview.toUpperCase(), c),
               const SizedBox(height: 16),
 
               // ── Big number trio ─────────────────────────────────────
@@ -165,7 +186,7 @@ class _StatisticsState extends State<Statistics> {
               const SizedBox(height: 24),
 
               // ── Accuracy section ────────────────────────────────────
-              _sectionLabel('ACCURACY', c),
+              _sectionLabel(l.statisticsAccuracy.toUpperCase(), c),
               const SizedBox(height: 20),
 
               _AccuracyBar(
@@ -191,7 +212,7 @@ class _StatisticsState extends State<Statistics> {
               const SizedBox(height: 24),
 
               // ── Points breakdown ─────────────────────────────────────
-              _sectionLabel('POINTS', c),
+              _sectionLabel(l.statisticsPoints.toUpperCase(), c),
               const SizedBox(height: 16),
               _buildPointsBreakdown(context, l, c),
             ],

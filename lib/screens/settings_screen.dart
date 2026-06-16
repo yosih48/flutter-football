@@ -49,7 +49,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('APP',
+                  Text(l.appLabel.toUpperCase(),
                       style: EType.label(
                           color: c.inkDim,
                           size: 10,
@@ -70,7 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding:
                     const EdgeInsets.fromLTRB(20, 16, 20, 24),
                 children: [
-                  _sectionLabel('ACCOUNT', c),
+                  _sectionLabel(l.account.toUpperCase(), c),
                   const SizedBox(height: 12),
 
                   _SettingsRow(
@@ -85,7 +85,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
 
                   const SizedBox(height: 20),
-                  _sectionLabel('APP', c),
+                  _sectionLabel(l.appLabel.toUpperCase(), c),
                   const SizedBox(height: 12),
 
                   _SettingsRow(

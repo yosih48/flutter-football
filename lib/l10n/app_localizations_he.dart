@@ -1182,4 +1182,16 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get bracketHelpGotIt => 'הבנתי';
+
+  @override
+  String get statisticsOverview => 'סקירה כללית';
+
+  @override
+  String get statisticsAccuracy => 'דיוק';
+
+  @override
+  String get statisticsPoints => 'נקודות';
+
+  @override
+  String get playerLabel => 'שחקן';
 }

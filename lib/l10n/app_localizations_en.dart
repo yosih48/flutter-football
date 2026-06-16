@@ -1182,4 +1182,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bracketHelpGotIt => 'Got it';
+
+  @override
+  String get statisticsOverview => 'Overview';
+
+  @override
+  String get statisticsAccuracy => 'Accuracy';
+
+  @override
+  String get statisticsPoints => 'Points';
+
+  @override
+  String get playerLabel => 'Player';
 }

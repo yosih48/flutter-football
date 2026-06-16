@@ -2440,6 +2440,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Got it'**
   String get bracketHelpGotIt;
+
+  String get statisticsOverview;
+  String get statisticsAccuracy;
+  String get statisticsPoints;
+
+  String get playerLabel;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

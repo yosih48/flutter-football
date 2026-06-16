@@ -611,5 +611,9 @@
     "bracketHelpLockBody": "כל הטבלה שלך — משלב הבתים ועד הגמר — ננעלת עם פתיחת הטורניר. לאחר מכן לא ניתן לשנות דבר, אז יש להשלים את כל הניחושים לפני משחק הפתיחה.",
     "bracketHelpLeaguesTitle": "ליגות",
     "bracketHelpLeaguesBody": "התחרו בטבלת המובילים הגלובלית, או פתחו ליגה פרטית והזמינו חברים עם קוד כדי לראות מי מכיר את הטורניר הכי טוב.",
-    "bracketHelpGotIt": "הבנתי"
+    "bracketHelpGotIt": "הבנתי",
+    "statisticsOverview": "סקירה כללית",
+    "statisticsAccuracy": "דיוק",
+    "statisticsPoints": "נקודות",
+    "playerLabel": "שחקן"
 }
