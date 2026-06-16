@@ -152,13 +152,18 @@ class _LineupsWidgetState extends State<LineupsWidget> {
         ],
 
         // ── Tactical pitch ─────────────────────────────────────────
-        ClipRRect(
-          borderRadius: BorderRadius.circular(2),
-          child: _TacticalPitch(
-            home: home,
-            away: away,
-            homeMarks: homeMarks,
-            awayMarks: awayMarks,
+        // Isolate the pitch as its own layer: it's a tall, static stack of
+        // gradient avatars + shadows, so caching it lets the outer scroll just
+        // composite it instead of re-rasterizing all the blurs every frame.
+        RepaintBoundary(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(2),
+            child: _TacticalPitch(
+              home: home,
+              away: away,
+              homeMarks: homeMarks,
+              awayMarks: awayMarks,
+            ),
           ),
         ),
 
@@ -230,7 +235,12 @@ class _TacticalPitch extends StatelessWidget {
   // the line-up instead of squeezing 22 players into one screen. This is what
   // gives ScoreQuest its airy, uncrowded look — rows never collide at the
   // centre line and dense back-fours get room to breathe.
-  static const double _kRowH = 82.0;
+  static const double _kRowH = 84.0;
+  // Vertical breathing room at the goal lines so the top/bottom rows' rating +
+  // name (which sit BELOW the avatar) aren't clipped by the pitch edge.
+  // Symmetric, so the painter's centre line (h/2) stays aligned with the
+  // half-way split between the two teams.
+  static const double _kVPad = 32.0;
 
   @override
   Widget build(BuildContext context) {
@@ -241,7 +251,7 @@ class _TacticalPitch extends StatelessWidget {
     // tighter formation still gets a full slot per row. Centre line stays at 0.5.
     final maxRows = max(homeRows.length, awayRows.length);
     final halfH = (maxRows < 1 ? 1 : maxRows) * _kRowH;
-    final h = halfH * 2;
+    final h = halfH * 2 + _kVPad * 2;
 
     return SizedBox(
       height: h,
@@ -260,13 +270,13 @@ class _TacticalPitch extends StatelessWidget {
               if (home.formation.isNotEmpty)
                 Positioned(
                   left: 10,
-                  top: halfH - 16,
+                  top: halfH - 16 + _kVPad,
                   child: _FormationChip(home.formation),
                 ),
               if (away != null && away!.formation.isNotEmpty)
                 Positioned(
                   left: 10,
-                  top: halfH + 4,
+                  top: halfH + 4 + _kVPad,
                   child: _FormationChip(away!.formation),
                 ),
 
@@ -316,7 +326,7 @@ class _TacticalPitch extends StatelessWidget {
       // Centre each row in its equal band: GK band near the goal line, last
       // outfield band leaves a half-band gap before the centre line.
       final frac = (ri + 0.5) / n; // 0..1 within this team's half
-      final y = isHome ? halfH * frac : halfH * 2 - halfH * frac;
+      final y = _kVPad + (isHome ? halfH * frac : halfH * 2 - halfH * frac);
 
       final np = rowPlayers.length;
       for (int ci = 0; ci < np; ci++) {
@@ -564,12 +574,11 @@ class _PlayerDot extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.95),
+              style: const TextStyle(
+                color: Colors.white,
                 fontSize: 9.5,
                 height: 1.15,
                 fontWeight: FontWeight.w600,
-                shadows: const [Shadow(color: Color(0xCC000000), blurRadius: 4)],
               ),
             ),
           ],
@@ -627,16 +636,7 @@ class _PlayerAvatar extends StatelessWidget {
     return Container(
       width: _kDia,
       height: _kDia,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.4),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      decoration: const BoxDecoration(shape: BoxShape.circle),
       child: ClipOval(
         child: (photoUrl != null && photoUrl!.isNotEmpty)
             ? Image.network(
