@@ -443,7 +443,18 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
       if (home == null || away == null || home.isEmpty || away.isEmpty) {
         continue;
       }
-      if (DateTime.now().isAfter(game.date.toLocal())) continue;
+      // Block guesses once the match is underway. Two independent guards
+      // because neither alone is sufficient:
+      //  • status != 'Not Started' — server-derived, so it survives a user
+      //    spoofing their device clock; but it can lag a few minutes after
+      //    kickoff (status only refreshes periodically).
+      //  • clock past kickoff — catches that lag window, but trusts the
+      //    device clock and so is bypassable on its own.
+      // The backend re-checks against server time as the real enforcement.
+      if (game.status.long != 'Not Started' ||
+          DateTime.now().isAfter(game.date.toLocal())) {
+        continue;
+      }
 
       Guess? existing;
       try {
