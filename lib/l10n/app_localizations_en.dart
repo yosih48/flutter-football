@@ -855,6 +855,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsTab => 'Stats';
 
   @override
+  String get teamStatPlayed => 'Matches';
+
+  @override
+  String get teamStatWon => 'Won';
+
+  @override
+  String get teamStatDrawn => 'Drawn';
+
+  @override
+  String get teamStatLost => 'Lost';
+
+  @override
+  String get teamStatGoalsFor => 'Goals for';
+
+  @override
+  String get teamStatGoalsAgainst => 'Goals against';
+
+  @override
+  String get teamStatGoalDiff => 'Goal difference';
+
+  @override
+  String get teamStatNoData => 'No completed matches yet';
+
+  @override
+  String get distributionLabel => 'Distribution';
+
+  @override
+  String get drawLabel => 'Draw';
+
+  @override
+  String guessesCount(String count) => '$count guesses';
+
+  @override
+  String get h2hTab => 'H2H';
+
+  @override
+  String get h2hNoData => 'No previous meetings';
+
+  @override
+  String get h2hGoals => 'Goals';
+
+  @override
   String get statsNotAvailable => 'Stats not yet available';
 
   @override

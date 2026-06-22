@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:football/models/games.dart';
+import 'package:football/resources/team_statistics_service.dart';
 import 'package:football/screens/gameDetails.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
@@ -143,7 +144,11 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
   // ── Tab bar ──────────────────────────────────────────────────────────────
   Widget _buildTabs(EditorialColors c) {
     final l = AppLocalizations.of(context)!;
-    final tabs = [l.matchesTab.toUpperCase(), l.tableTab.toUpperCase()];
+    final tabs = [
+      l.matchesTab.toUpperCase(),
+      l.tableTab.toUpperCase(),
+      l.statsTab.toUpperCase(),
+    ];
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -190,7 +195,8 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
 
   Widget _buildTabBody() {
     if (_selectedTab == 0) return _buildMatchesTab();
-    return _buildTableTab();
+    if (_selectedTab == 1) return _buildTableTab();
+    return _buildStatsTab();
   }
 
   // ── Matches tab ──────────────────────────────────────────────────────────
@@ -583,6 +589,83 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  // ── Stats tab ────────────────────────────────────────────────────────────
+  // Season record computed in-memory from the loaded league fixtures — same
+  // source as the Matches tab, no API call.
+  Widget _buildStatsTab() {
+    final c = context.col;
+    final l = AppLocalizations.of(context)!;
+
+    final teamId = _resolveFixtureTeamId();
+    final stats = TeamStatisticsService.compute(widget.allLeagueGames, teamId);
+
+    if (stats.played == 0) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+        child: Center(
+          child: Text(
+            l.teamStatNoData.toUpperCase(),
+            style: EType.label(color: c.inkDim, size: 11, letterSpacing: 2),
+          ),
+        ),
+      );
+    }
+
+    final diff = stats.goalDiff;
+    final diffStr = diff > 0 ? '+$diff' : '$diff';
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(2),
+        border: Border.all(color: c.hairline, width: 1),
+      ),
+      child: Column(
+        children: [
+          _statRow(c, l.teamStatPlayed, '${stats.played}', isFirst: true),
+          _statRow(c, l.teamStatWon, '${stats.won}'),
+          _statRow(c, l.teamStatDrawn, '${stats.drawn}'),
+          _statRow(c, l.teamStatLost, '${stats.lost}'),
+          _statRow(c, l.teamStatGoalsFor, '${stats.goalsFor}'),
+          _statRow(c, l.teamStatGoalsAgainst, '${stats.goalsAgainst}'),
+          _statRow(c, l.teamStatGoalDiff, diffStr, isLast: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _statRow(
+    EditorialColors c,
+    String label,
+    String value, {
+    bool isFirst = false,
+    bool isLast = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        border: isLast
+            ? null
+            : Border(bottom: BorderSide(color: c.hairline, width: 1)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label.toUpperCase(),
+              style: EType.label(color: c.inkMute, size: 11, letterSpacing: 1.4),
+            ),
+          ),
+          Text(
+            value,
+            style: EType.numeric(color: c.ink, size: 15, weight: FontWeight.w700),
+          ),
+        ],
       ),
     );
   }

@@ -294,6 +294,23 @@
     "timeline": "Timeline",
     "tableTab": "Table",
     "statsTab": "Stats",
+    "teamStatPlayed": "Matches",
+    "teamStatWon": "Won",
+    "teamStatDrawn": "Drawn",
+    "teamStatLost": "Lost",
+    "teamStatGoalsFor": "Goals for",
+    "teamStatGoalsAgainst": "Goals against",
+    "teamStatGoalDiff": "Goal difference",
+    "teamStatNoData": "No completed matches yet",
+    "distributionLabel": "Distribution",
+    "drawLabel": "Draw",
+    "guessesCount": "{count} guesses",
+    "@guessesCount": {
+      "placeholders": { "count": { "type": "String" } }
+    },
+    "h2hTab": "H2H",
+    "h2hNoData": "No previous meetings",
+    "h2hGoals": "Goals",
     "statsNotAvailable": "Stats not yet available",
     "statsAsOf": "As of {minute}'",
     "@statsAsOf": {

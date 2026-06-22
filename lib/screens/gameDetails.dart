@@ -16,12 +16,15 @@ import 'package:football/theme/typography.dart';
 import 'package:football/utils/localized_team_name.dart';
 import 'package:football/utils/status_utils.dart';
 import 'package:football/widgets/FixtureEventsWidget.dart';
+// H2H tab is built but hidden for now — re-enable once FixtureCache has more
+// historical meetings to show. See HeadToHeadWidget + the commented tab below.
+// import 'package:football/widgets/HeadToHeadWidget.dart';
 import 'package:football/widgets/SharedPreferences.dart';
 import 'package:football/widgets/LineupsWidget.dart';
 import 'package:football/widgets/StatsWidget.dart';
 import 'package:football/widgets/StandingsTableWidget.dart';
 import 'package:football/widgets/teamLinks.dart';
-import 'package:intl/intl.dart' show DateFormat;
+import 'package:intl/intl.dart' show DateFormat, NumberFormat;
 import 'package:provider/provider.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -54,6 +57,10 @@ class _GameDetailsState extends State<GameDetails> {
   late String currentUserId;
   late int league;
   List<GuessWithNames> _guessesWithNames = [];
+  // Global (all-users) guesses for the current game, used by the distribution
+  // bar. Independent of the selected group; shown for all game states.
+  List<Guess>? _allGuesses;
+  bool _distLoading = true;
   late String selectedGroupName = "";
   Map<String, String> _userGroups = {};
   bool isLoading = true;
@@ -83,6 +90,9 @@ class _GameDetailsState extends State<GameDetails> {
     // as the source of truth for the active group. Cheap (SharedPreferences
     // read, no network) so it never gates the UI.
     _ensureDefaultGroupLoaded();
+
+    // Global guess distribution — group-independent, shown for all game states.
+    _fetchDistribution(currentGameId);
 
     final hydratedGroups = _hydrateUserGroupsFromCache();
     // Kick off groups + guesses in parallel so we don't waterfall.
@@ -186,6 +196,7 @@ class _GameDetailsState extends State<GameDetails> {
       });
       // Cache hit → background revalidate. Cache miss → foreground fetch.
       _fetchGuesses(selectedGroupName, background: cached != null);
+      _fetchDistribution(newGameId);
     }
   }
 
@@ -228,6 +239,7 @@ class _GameDetailsState extends State<GameDetails> {
               _buildHeroCard(),
               if (_selectedTab != null) _buildTabContent(),
               const SizedBox(height: 8),
+              _buildDistributionBlock(),
               if (_currentGame.status.long != 'Not Started') ...[
                 _buildPredictionsBlock(),
                 const SizedBox(height: 8),
@@ -558,6 +570,7 @@ class _GameDetailsState extends State<GameDetails> {
       l.lineups.toUpperCase(),
       l.tableTab.toUpperCase(),
       l.statsTab.toUpperCase(),
+      // l.h2hTab.toUpperCase(), // H2H tab hidden for now — re-enable later.
     ];
 
     return Padding(
@@ -659,7 +672,152 @@ class _GameDetailsState extends State<GameDetails> {
           matchElapsed: _currentGame.status.elapsed,
           matchStatusShort: _currentGame.status.short,
         );
+      // H2H tab hidden for now — re-enable once there is more historical data.
+      // case 4:
+      //   return Padding(
+      //     padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
+      //     child: HeadToHeadWidget(
+      //       fixtureId: currentGameId,
+      //       homeTeamName: _currentGame.home.name,
+      //       homeTeamLogo: _currentGame.home.logo,
+      //       homeTeamId: _currentGame.home.id,
+      //       awayTeamName: _currentGame.away.name,
+      //       awayTeamLogo: _currentGame.away.logo,
+      //     ),
+      //   );
     }
+  }
+
+  // ── Distribution bar ───────────────────────────────────────────────────
+  /// Global split of all users' guesses into home win / draw / away win.
+  /// Group-independent and shown for every game state (incl. before kickoff).
+  Widget _buildDistributionBlock() {
+    final c = context.col;
+    final l = AppLocalizations.of(context)!;
+
+    // Hidden until data arrives (avoids a loading flash) and when there are no
+    // guesses to show.
+    final all = _allGuesses;
+    if (all == null) return const SizedBox.shrink();
+
+    int homeWins = 0, draws = 0, awayWins = 0;
+    for (final g in all) {
+      final h = int.tryParse(g.homeTeamGoals);
+      final a = int.tryParse(g.awayTeamGoals);
+      if (h == null || a == null) continue;
+      if (h > a) {
+        homeWins++;
+      } else if (h < a) {
+        awayWins++;
+      } else {
+        draws++;
+      }
+    }
+    final total = homeWins + draws + awayWins;
+    if (total == 0) return const SizedBox.shrink();
+
+    final countStr = NumberFormat.decimalPattern().format(total);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: c.card,
+        border: Border(
+          top: BorderSide(color: c.hairline, width: 1),
+          bottom: BorderSide(color: c.hairline, width: 1),
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _sectionLabel(l.distributionLabel.toUpperCase()),
+              Text(
+                l.guessesCount(countStr),
+                style: EType.label(color: c.inkDim, size: 11, letterSpacing: 1.2),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _distRow(
+            localizedTeamName(context, _currentGame.home.name),
+            homeWins,
+            total,
+            c.live,
+          ),
+          const SizedBox(height: 10),
+          _distRow(l.drawLabel, draws, total, c.hairlineHi),
+          const SizedBox(height: 10),
+          _distRow(
+            localizedTeamName(context, _currentGame.away.name),
+            awayWins,
+            total,
+            blue,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _distRow(String label, int count, int total, Color color) {
+    final c = context.col;
+    final frac = total == 0 ? 0.0 : count / total;
+    final pct = (frac * 100).round();
+    return Row(
+      children: [
+        // Percentage (leading, like the screenshot).
+        SizedBox(
+          width: 52,
+          child: Text(
+            '$pct%',
+            style: EType.numeric(color: color, size: 15, weight: FontWeight.w700),
+          ),
+        ),
+        const SizedBox(width: 12),
+        // Bar track + fill.
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              height: 12,
+              color: c.cardHi,
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: (frac * 1000).round().clamp(0, 1000),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: ((1 - frac) * 1000).round().clamp(0, 1000),
+                    child: const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        // Label (trailing — team name / draw).
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 120),
+          child: Text(
+            label,
+            textAlign: TextAlign.end,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: EType.body(color: c.ink, size: 14),
+          ),
+        ),
+      ],
+    );
   }
 
   // ── Predictions table ──────────────────────────────────────────────────
@@ -1204,6 +1362,36 @@ class _GameDetailsState extends State<GameDetails> {
     }
   }
 
+  /// Loads the all-users guesses for [gameId] that feed the distribution bar.
+  /// Paints instantly from cache when available, then revalidates.
+  Future<void> _fetchDistribution(int gameId) async {
+    final cached = _GuessesCache.allGuesses[gameId];
+    if (cached != null) {
+      setState(() {
+        _allGuesses = cached;
+        _distLoading = false;
+      });
+    } else {
+      setState(() {
+        _allGuesses = null;
+        _distLoading = true;
+      });
+    }
+    try {
+      final all = await GuessesMethods().fetchAllUsersGuesses(gameId);
+      _GuessesCache.allGuesses[gameId] = all;
+      if (!mounted || currentGameId != gameId) return;
+      setState(() {
+        _allGuesses = all;
+        _distLoading = false;
+      });
+    } catch (e) {
+      print('Failed to fetch distribution guesses: $e');
+      if (!mounted || currentGameId != gameId) return;
+      setState(() => _distLoading = false);
+    }
+  }
+
   Future<void> _fetchGuesses(groupName, {bool background = false}) async {
     final gameIdAtCall = currentGameId;
 
@@ -1260,6 +1448,8 @@ class _GuessesCache {
   static final Map<String, Map<String, String>> userGroups = {};
   // Per-(gameId, groupName) cache of the predictions list.
   static final Map<String, List<GuessWithNames>> guesses = {};
+  // Per-gameId cache of all-users guesses, for the distribution bar.
+  static final Map<int, List<Guess>> allGuesses = {};
   // Default group name picked by the user in TableScreen (the starred one).
   // Read from SharedPreferences once and shared across re-entries so the
   // initial hydrate path doesn't need an async await before it can paint.

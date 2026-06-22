@@ -1787,6 +1787,90 @@ abstract class AppLocalizations {
   /// **'Stats'**
   String get statsTab;
 
+  /// No description provided for @teamStatPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Matches'**
+  String get teamStatPlayed;
+
+  /// No description provided for @teamStatWon.
+  ///
+  /// In en, this message translates to:
+  /// **'Won'**
+  String get teamStatWon;
+
+  /// No description provided for @teamStatDrawn.
+  ///
+  /// In en, this message translates to:
+  /// **'Drawn'**
+  String get teamStatDrawn;
+
+  /// No description provided for @teamStatLost.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost'**
+  String get teamStatLost;
+
+  /// No description provided for @teamStatGoalsFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals for'**
+  String get teamStatGoalsFor;
+
+  /// No description provided for @teamStatGoalsAgainst.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals against'**
+  String get teamStatGoalsAgainst;
+
+  /// No description provided for @teamStatGoalDiff.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal difference'**
+  String get teamStatGoalDiff;
+
+  /// No description provided for @teamStatNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed matches yet'**
+  String get teamStatNoData;
+
+  /// No description provided for @distributionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Distribution'**
+  String get distributionLabel;
+
+  /// No description provided for @drawLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw'**
+  String get drawLabel;
+
+  /// No description provided for @guessesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} guesses'**
+  String guessesCount(String count);
+
+  /// No description provided for @h2hTab.
+  ///
+  /// In en, this message translates to:
+  /// **'H2H'**
+  String get h2hTab;
+
+  /// No description provided for @h2hNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No previous meetings'**
+  String get h2hNoData;
+
+  /// No description provided for @h2hGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals'**
+  String get h2hGoals;
+
   /// No description provided for @statsNotAvailable.
   ///
   /// In en, this message translates to:

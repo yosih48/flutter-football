@@ -500,6 +500,23 @@
     "timeline": "אירועים",
     "tableTab": "טבלה",
     "statsTab": "סטטיסטיקה",
+    "teamStatPlayed": "משחקים",
+    "teamStatWon": "ניצחונות",
+    "teamStatDrawn": "תיקו",
+    "teamStatLost": "הפסדים",
+    "teamStatGoalsFor": "שערי זכות",
+    "teamStatGoalsAgainst": "שערי חובה",
+    "teamStatGoalDiff": "הפרש שערים",
+    "teamStatNoData": "אין עדיין משחקים שהסתיימו",
+    "distributionLabel": "התפלגות",
+    "drawLabel": "תיקו",
+    "guessesCount": "{count} ניחושים",
+    "@guessesCount": {
+      "placeholders": { "count": { "type": "String" } }
+    },
+    "h2hTab": "מפגשים",
+    "h2hNoData": "אין מפגשים קודמים",
+    "h2hGoals": "שערים",
     "statsNotAvailable": "סטטיסטיקה תהיה זמינה אחרי תחילת המשחק",
     "statsAsOf": "נכון לדקה {minute}",
     "@statsAsOf": {

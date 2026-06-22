@@ -855,6 +855,48 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statsTab => 'סטטיסטיקה';
 
   @override
+  String get teamStatPlayed => 'משחקים';
+
+  @override
+  String get teamStatWon => 'ניצחונות';
+
+  @override
+  String get teamStatDrawn => 'תיקו';
+
+  @override
+  String get teamStatLost => 'הפסדים';
+
+  @override
+  String get teamStatGoalsFor => 'שערי זכות';
+
+  @override
+  String get teamStatGoalsAgainst => 'שערי חובה';
+
+  @override
+  String get teamStatGoalDiff => 'הפרש שערים';
+
+  @override
+  String get teamStatNoData => 'אין עדיין משחקים שהסתיימו';
+
+  @override
+  String get distributionLabel => 'התפלגות';
+
+  @override
+  String get drawLabel => 'תיקו';
+
+  @override
+  String guessesCount(String count) => '$count ניחושים';
+
+  @override
+  String get h2hTab => 'מפגשים';
+
+  @override
+  String get h2hNoData => 'אין מפגשים קודמים';
+
+  @override
+  String get h2hGoals => 'שערים';
+
+  @override
   String get statsNotAvailable => 'סטטיסטיקה תהיה זמינה אחרי תחילת המשחק';
 
   @override
