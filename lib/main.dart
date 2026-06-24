@@ -12,6 +12,7 @@ import 'package:football/resources/auth.dart';
 import 'package:football/resources/firebase_messaging_service.dart';
 import 'package:football/resources/gamesMethods.dart';
 import 'package:football/resources/league_config_service.dart';
+import 'package:football/resources/rate_app_service.dart';
 import 'package:football/resources/remote_config_service.dart';
 import 'package:football/utils/player_names_he.dart';
 import 'package:football/responsive/mobile_screen_layout.dart';
@@ -54,6 +55,9 @@ void main() async {
   // Curated Hebrew player names (bundled asset) — loaded once so lineup/event
   // names resolve on first frame; falls back to transliteration if absent.
   await PlayerNamesHe.load();
+
+  // Cheap, no network — bumps the launch counter that gates the rate-app prompt.
+  await RateAppService().recordLaunch();
 
   final authProvider = AuthProvider();
   await authProvider.initializeApp();

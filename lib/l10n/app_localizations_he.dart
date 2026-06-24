@@ -855,6 +855,15 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statsTab => 'סטטיסטיקה';
 
   @override
+  String get recentFormTitle => 'כושר אחרון';
+
+  @override
+  String get recentFormEmpty => 'אין משחקים אחרונים';
+
+  @override
+  String get formTab => 'כושר';
+
+  @override
   String get teamStatPlayed => 'משחקים';
 
   @override
@@ -879,13 +888,15 @@ class AppLocalizationsHe extends AppLocalizations {
   String get teamStatNoData => 'אין עדיין משחקים שהסתיימו';
 
   @override
-  String get distributionLabel => 'התפלגות';
+  String get distributionLabel => 'התפלגות ניחושים';
 
   @override
   String get drawLabel => 'תיקו';
 
   @override
-  String guessesCount(String count) => '$count ניחושים';
+  String guessesCount(String count) {
+    return '$count ניחושים';
+  }
 
   @override
   String get h2hTab => 'מפגשים';
@@ -1236,4 +1247,19 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get playerLabel => 'שחקן';
+
+  @override
+  String get rateAppTitle => 'נהנים מהאפליקציה?';
+
+  @override
+  String get rateAppMessage => 'אם אתם נהנים, נשמח אם תדרגו אותנו ב‑Google Play. זה ממש עוזר לנו.';
+
+  @override
+  String get rateAppRateNow => 'לדירוג עכשיו';
+
+  @override
+  String get rateAppLater => 'אולי מאוחר יותר';
+
+  @override
+  String get rateAppNoThanks => 'לא תודה';
 }

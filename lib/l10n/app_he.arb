@@ -500,6 +500,9 @@
     "timeline": "אירועים",
     "tableTab": "טבלה",
     "statsTab": "סטטיסטיקה",
+    "recentFormTitle": "כושר אחרון",
+    "recentFormEmpty": "אין משחקים אחרונים",
+    "formTab": "כושר",
     "teamStatPlayed": "משחקים",
     "teamStatWon": "ניצחונות",
     "teamStatDrawn": "תיקו",
@@ -508,7 +511,7 @@
     "teamStatGoalsAgainst": "שערי חובה",
     "teamStatGoalDiff": "הפרש שערים",
     "teamStatNoData": "אין עדיין משחקים שהסתיימו",
-    "distributionLabel": "התפלגות",
+    "distributionLabel": "התפלגות ניחושים",
     "drawLabel": "תיקו",
     "guessesCount": "{count} ניחושים",
     "@guessesCount": {
@@ -632,5 +635,10 @@
     "statisticsOverview": "סקירה כללית",
     "statisticsAccuracy": "דיוק",
     "statisticsPoints": "נקודות",
-    "playerLabel": "שחקן"
+    "playerLabel": "שחקן",
+    "rateAppTitle": "נהנים מהאפליקציה?",
+    "rateAppMessage": "אם אתם נהנים, נשמח אם תדרגו אותנו ב‑Google Play. זה ממש עוזר לנו.",
+    "rateAppRateNow": "לדירוג עכשיו",
+    "rateAppLater": "אולי מאוחר יותר",
+    "rateAppNoThanks": "לא תודה"
 }

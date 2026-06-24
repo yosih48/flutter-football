@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:football/resources/rate_app_service.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/l10n/app_localizations.dart';
+import 'package:football/widgets/RateAppDialog.dart';
 import '../utils/global_variables.dart';
 
 class MobileScreenLayout extends StatefulWidget {
@@ -19,6 +21,19 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
   void initState() {
     super.initState();
     pageController = PageController(initialPage: _page);
+    _maybeShowRatePrompt();
+  }
+
+  // After the first frame, ask the user to rate the app if they've used it
+  // enough and haven't already rated or declined. Never interrupts login or
+  // onboarding because this screen only mounts for logged-in returning users.
+  void _maybeShowRatePrompt() {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      if (await RateAppService().shouldPrompt() && mounted) {
+        await showRateAppDialog(context);
+      }
+    });
   }
 
   @override

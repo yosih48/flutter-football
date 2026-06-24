@@ -45,9 +45,9 @@ class StatItem {
 }
 
 class StatsService {
-  Future<List<TeamStats>?> getFixtureStats(int fixtureId) async {
+  Future<List<TeamStats>?> getFixtureStats(int fixtureId, {bool fetch = false}) async {
     try {
-      final url = '$backendUrl/fixtures/$fixtureId/stats';
+      final url = '$backendUrl/fixtures/$fixtureId/stats${fetch ? '?fetch=1' : ''}';
       final response = await http.get(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},

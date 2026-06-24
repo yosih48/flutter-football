@@ -294,6 +294,9 @@
     "timeline": "Timeline",
     "tableTab": "Table",
     "statsTab": "Stats",
+    "recentFormTitle": "Recent Form",
+    "recentFormEmpty": "No recent matches",
+    "formTab": "Form",
     "teamStatPlayed": "Matches",
     "teamStatWon": "Won",
     "teamStatDrawn": "Drawn",
@@ -426,5 +429,10 @@
     "statisticsOverview": "Overview",
     "statisticsAccuracy": "Accuracy",
     "statisticsPoints": "Points",
-    "playerLabel": "Player"
+    "playerLabel": "Player",
+    "rateAppTitle": "Enjoying the app?",
+    "rateAppMessage": "If you're having fun, would you take a moment to rate us on Google Play? It really helps.",
+    "rateAppRateNow": "Rate now",
+    "rateAppLater": "Maybe later",
+    "rateAppNoThanks": "No thanks"
 }

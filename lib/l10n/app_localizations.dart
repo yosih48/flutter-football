@@ -1787,6 +1787,24 @@ abstract class AppLocalizations {
   /// **'Stats'**
   String get statsTab;
 
+  /// No description provided for @recentFormTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Form'**
+  String get recentFormTitle;
+
+  /// No description provided for @recentFormEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No recent matches'**
+  String get recentFormEmpty;
+
+  /// No description provided for @formTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Form'**
+  String get formTab;
+
   /// No description provided for @teamStatPlayed.
   ///
   /// In en, this message translates to:
@@ -2525,11 +2543,59 @@ abstract class AppLocalizations {
   /// **'Got it'**
   String get bracketHelpGotIt;
 
+  /// No description provided for @statisticsOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
   String get statisticsOverview;
+
+  /// No description provided for @statisticsAccuracy.
+  ///
+  /// In en, this message translates to:
+  /// **'Accuracy'**
   String get statisticsAccuracy;
+
+  /// No description provided for @statisticsPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Points'**
   String get statisticsPoints;
 
+  /// No description provided for @playerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Player'**
   String get playerLabel;
+
+  /// No description provided for @rateAppTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoying the app?'**
+  String get rateAppTitle;
+
+  /// No description provided for @rateAppMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'If you\'re having fun, would you take a moment to rate us on Google Play? It really helps.'**
+  String get rateAppMessage;
+
+  /// No description provided for @rateAppRateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate now'**
+  String get rateAppRateNow;
+
+  /// No description provided for @rateAppLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe later'**
+  String get rateAppLater;
+
+  /// No description provided for @rateAppNoThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'No thanks'**
+  String get rateAppNoThanks;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

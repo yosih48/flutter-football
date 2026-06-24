@@ -855,6 +855,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsTab => 'Stats';
 
   @override
+  String get recentFormTitle => 'Recent Form';
+
+  @override
+  String get recentFormEmpty => 'No recent matches';
+
+  @override
+  String get formTab => 'Form';
+
+  @override
   String get teamStatPlayed => 'Matches';
 
   @override
@@ -885,7 +894,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get drawLabel => 'Draw';
 
   @override
-  String guessesCount(String count) => '$count guesses';
+  String guessesCount(String count) {
+    return '$count guesses';
+  }
 
   @override
   String get h2hTab => 'H2H';
@@ -1236,4 +1247,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playerLabel => 'Player';
+
+  @override
+  String get rateAppTitle => 'Enjoying the app?';
+
+  @override
+  String get rateAppMessage => 'If you\'re having fun, would you take a moment to rate us on Google Play? It really helps.';
+
+  @override
+  String get rateAppRateNow => 'Rate now';
+
+  @override
+  String get rateAppLater => 'Maybe later';
+
+  @override
+  String get rateAppNoThanks => 'No thanks';
 }

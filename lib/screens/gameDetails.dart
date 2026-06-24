@@ -22,6 +22,7 @@ import 'package:football/widgets/FixtureEventsWidget.dart';
 import 'package:football/widgets/SharedPreferences.dart';
 import 'package:football/widgets/LineupsWidget.dart';
 import 'package:football/widgets/StatsWidget.dart';
+import 'package:football/widgets/MatchFormSection.dart';
 import 'package:football/widgets/StandingsTableWidget.dart';
 import 'package:football/widgets/teamLinks.dart';
 import 'package:intl/intl.dart' show DateFormat, NumberFormat;
@@ -66,6 +67,9 @@ class _GameDetailsState extends State<GameDetails> {
   bool isLoading = true;
   bool _groupsLoading = true;
   int? _selectedTab; // 0=Timeline, 1=Lineups, 2=Table, 3=Stats. null = collapsed (default).
+  // Started games collapse the distribution block to a one-line summary so the
+  // predictions sit near the top; pre-match games always show the full bars.
+  bool _distExpanded = false;
   late int _currentIndex;
   late Game _currentGame;
   late int currentGameId;
@@ -73,6 +77,11 @@ class _GameDetailsState extends State<GameDetails> {
   static const Set<String> _liveShort = {'1H', '2H', 'H1', 'H2', 'ET', 'BT', 'P', 'INT'};
 
   String _guessesCacheKey(int gameId, String group) => '$gameId|$group';
+
+  /// The guess distribution bar is admin-only.
+  bool get _isAdmin =>
+      Provider.of<AuthProvider>(context, listen: false).currentUser?.admin ==
+      true;
 
   @override
   void initState() {
@@ -200,6 +209,7 @@ class _GameDetailsState extends State<GameDetails> {
     }
   }
 
+  bool get _notStarted => _currentGame.status.long == 'Not Started';
   bool get _isLive => _liveShort.contains(_currentGame.status.short);
   bool get _isHalftime => _currentGame.status.short == 'HT';
   bool get _isFinished =>
@@ -238,6 +248,7 @@ class _GameDetailsState extends State<GameDetails> {
             children: [
               _buildHeroCard(),
               if (_selectedTab != null) _buildTabContent(),
+              if (_notStarted) _buildFormSection(),
               const SizedBox(height: 8),
               _buildDistributionBlock(),
               if (_currentGame.status.long != 'Not Started') ...[
@@ -631,6 +642,70 @@ class _GameDetailsState extends State<GameDetails> {
     );
   }
 
+  // Pre-match form section, shown inline below the tabbed block (for started
+  // games the same content lives in the FORM tab instead).
+  Widget _buildFormSection() {
+    final c = context.col;
+    final l = AppLocalizations.of(context)!;
+    return Container(
+      decoration: BoxDecoration(
+        color: c.card,
+        border: Border(bottom: BorderSide(color: c.hairline, width: 1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(height: 1, color: c.hairline),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+            child: Row(
+              children: [
+                Container(width: 18, height: 1, color: c.live),
+                const SizedBox(width: 10),
+                Text(
+                  l.formTab.toUpperCase(),
+                  style: EType.label(color: c.inkDim, size: 11, letterSpacing: 2.2),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: MatchFormSection(
+              home: _currentGame.home,
+              away: _currentGame.away,
+              collapsible: true,
+              onMatchTap: _openFormGame,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Navigate to a form match ONLY if it's one of the games already loaded in
+  // the app (allLeagueGames / games). Those have full fixture detail and a valid
+  // paging context. Form matches that aren't cached (e.g. AllSport-sourced or
+  // other competitions) have no detail data, so tapping them does nothing.
+  void _openFormGame(Game game, List<Game> contextMatches) {
+    final cache = widget.allLeagueGames ?? widget.games;
+    final cacheIdx = cache.indexWhere((m) => m.fixtureId == game.fixtureId);
+    if (cacheIdx < 0) return; // not in app cache → no game details to show
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => GameDetails(
+          gameOriginalId: cache[cacheIdx].fixtureId,
+          game: cache[cacheIdx],
+          games: cache,
+          initialIndex: cacheIdx,
+          allLeagueGames: widget.allLeagueGames ?? widget.games,
+          userId: widget.userId,
+        ),
+      ),
+    );
+  }
+
   Widget _buildTabBody() {
     switch (_selectedTab) {
       case 0:
@@ -718,6 +793,12 @@ class _GameDetailsState extends State<GameDetails> {
 
     final countStr = NumberFormat.decimalPattern().format(total);
 
+    // Started games are collapsible (collapsed by default) so predictions stay
+    // near the top; pre-match games always render the full bars.
+    final collapsible = !_notStarted;
+    final expanded = !collapsible || _distExpanded;
+    int pct(int n) => total == 0 ? 0 : (n / total * 100).round();
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
@@ -731,34 +812,90 @@ class _GameDetailsState extends State<GameDetails> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _sectionLabel(l.distributionLabel.toUpperCase()),
-              Text(
-                l.guessesCount(countStr),
-                style: EType.label(color: c.inkDim, size: 11, letterSpacing: 1.2),
-              ),
-            ],
+          InkWell(
+            onTap: collapsible
+                ? () => setState(() => _distExpanded = !_distExpanded)
+                : null,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _sectionLabel(l.distributionLabel.toUpperCase()),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Total guess count is admin-only; shown when expanded.
+                    if (_isAdmin && expanded)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Text(
+                          l.guessesCount(countStr),
+                          style: EType.label(
+                              color: c.inkDim, size: 11, letterSpacing: 1.2),
+                        ),
+                      ),
+                    if (collapsible && !expanded)
+                      _distCompactSummary(
+                        c,
+                        pct(homeWins),
+                        pct(draws),
+                        pct(awayWins),
+                      ),
+                    if (collapsible) ...[
+                      const SizedBox(width: 8),
+                      Icon(
+                        expanded ? Icons.expand_less : Icons.expand_more,
+                        size: 18,
+                        color: c.inkMute,
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          _distRow(
-            localizedTeamName(context, _currentGame.home.name),
-            homeWins,
-            total,
-            c.live,
-          ),
-          const SizedBox(height: 10),
-          _distRow(l.drawLabel, draws, total, c.hairlineHi),
-          const SizedBox(height: 10),
-          _distRow(
-            localizedTeamName(context, _currentGame.away.name),
-            awayWins,
-            total,
-            blue,
-          ),
+          if (expanded) ...[
+            const SizedBox(height: 16),
+            _distRow(
+              localizedTeamName(context, _currentGame.home.name),
+              homeWins,
+              total,
+              c.live,
+            ),
+            const SizedBox(height: 10),
+            _distRow(l.drawLabel, draws, total, c.hairlineHi),
+            const SizedBox(height: 10),
+            _distRow(
+              localizedTeamName(context, _currentGame.away.name),
+              awayWins,
+              total,
+              blue,
+            ),
+          ],
         ],
       ),
+    );
+  }
+
+  // Compact one-line distribution shown when the (started-game) block is
+  // collapsed: home% · draw% · away%, colour-matched to the full bars.
+  Widget _distCompactSummary(EditorialColors c, int home, int draw, int away) {
+    Widget p(int v, Color col) => Text(
+          '$v%',
+          style: EType.numeric(color: col, size: 13, weight: FontWeight.w700),
+        );
+    Widget sep() => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Text('·', style: EType.label(color: c.inkDim, size: 12)),
+        );
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        p(home, c.live),
+        sep(),
+        p(draw, c.inkMute),
+        sep(),
+        p(away, blue),
+      ],
     );
   }
 

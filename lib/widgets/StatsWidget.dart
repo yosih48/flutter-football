@@ -45,7 +45,10 @@ class _StatsWidgetState extends State<StatsWidget> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final result = await _service.getFixtureStats(widget.fixtureId);
+    const playedOrLive = {'FT', 'AET', 'PEN', '1H', '2H', 'HT', 'ET', 'P', 'LIVE'};
+    final shouldFetch = playedOrLive.contains(widget.matchStatusShort);
+    final result =
+        await _service.getFixtureStats(widget.fixtureId, fetch: shouldFetch);
     if (!mounted) return;
     setState(() {
       _stats = result;
