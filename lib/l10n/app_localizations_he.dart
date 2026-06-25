@@ -855,13 +855,13 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statsTab => 'סטטיסטיקה';
 
   @override
-  String get recentFormTitle => 'כושר אחרון';
+  String get recentFormTitle => 'פורמה';
 
   @override
   String get recentFormEmpty => 'אין משחקים אחרונים';
 
   @override
-  String get formTab => 'כושר';
+  String get formTab => 'משחקים אחרונים';
 
   @override
   String get teamStatPlayed => 'משחקים';
