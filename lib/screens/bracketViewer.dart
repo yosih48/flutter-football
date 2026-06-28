@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:football/models/bracket.dart';
+import 'package:football/models/games.dart';
 import 'package:football/resources/bracketMethods.dart';
+import 'package:football/resources/gamesMethods.dart';
 import 'package:football/resources/standings_service.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
@@ -47,6 +49,14 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   UserBracket? _bracket;
 
   final Map<String, List<String>> _groupRosters = {};
+  // group letter -> actual qualifiers in final rank order [1st, 2nd], from the
+  // settled standings. Used to mark each pick correct/wrong + award points.
+  final Map<String, List<String>> _groupActualTop2 = {};
+  // Actual 8 best third-placed teams (ranked), from the settled standings.
+  final List<String> _bestThirdsActual = [];
+  // stage key -> set of normalized team names that actually advanced, from
+  // finished knockout fixtures. Used to mark advancer picks correct/wrong.
+  final Map<String, Set<String>> _knockoutWinners = {};
   final Map<String, String> _logos = {};
 
   // Derived read-only selections.
@@ -71,12 +81,14 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           : Future.value(_structure),
       _api.fetchUserBracket(widget.userId, widget.leagueId, season: _season()),
       _standingsApi.getLeagueStandings(widget.leagueId),
+      GamesMethods().fetchGamesForLeague(widget.leagueId),
     ]);
     if (!mounted) return;
 
     _structure = results[0] as BracketStructure? ?? _structure;
     _bracket = results[1] as UserBracket?;
     _ingestStandings(results[2] as List<StandingRow>?);
+    _computeKnockoutWinners(results[3] as List<Game>?);
     _deriveSelections();
 
     setState(() => _loading = false);
@@ -84,13 +96,35 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
   void _ingestStandings(List<StandingRow>? rows) {
     _groupRosters.clear();
+    _groupActualTop2.clear();
+    _bestThirdsActual.clear();
     _logos.clear();
+    final byGroup = <String, List<StandingRow>>{};
     for (final r in rows ?? <StandingRow>[]) {
       if (r.teamName.isEmpty) continue;
       if (r.teamLogo.isNotEmpty) _logos[r.teamName] = r.teamLogo;
       final letter = _groupLetter(r.group);
-      if (letter != null) (_groupRosters[letter] ??= []).add(r.teamName);
+      if (letter == null) continue;
+      (byGroup[letter] ??= []).add(r);
     }
+    final thirds = <StandingRow>[];
+    byGroup.forEach((letter, list) {
+      // Sort by final rank so index 0 = group winner, 1 = runner-up.
+      list.sort((a, b) => a.rank.compareTo(b.rank));
+      _groupRosters[letter] = list.map((r) => r.teamName).toList();
+      _groupActualTop2[letter] =
+          list.take(2).map((r) => r.teamName).toList();
+      if (list.length > 2) thirds.add(list[2]);
+    });
+    // FIFA best-thirds ranking: points → goal difference → goals for.
+    thirds.sort((a, b) =>
+        b.points != a.points
+            ? b.points - a.points
+            : b.goalsDiff != a.goalsDiff
+                ? b.goalsDiff - a.goalsDiff
+                : b.goalsFor - a.goalsFor);
+    final n = _structure?.bestThirds ?? 0;
+    _bestThirdsActual.addAll(thirds.take(n).map((r) => r.teamName));
   }
 
   String? _groupLetter(String? group) {
@@ -144,6 +178,83 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       _winSel.isNotEmpty;
 
   int? _stageEarned(String key) => widget.stagePoints?[key];
+
+  // The group stage shows per-pick correct/wrong + points only once it's been
+  // settled (the backend stamped stagePoints.groups) and we have final
+  // standings to compare against.
+  bool get _groupsSettled =>
+      (widget.stagePoints?['groups'] ?? _bracket?.stagePoints['groups']) !=
+          null &&
+      _groupActualTop2.isNotEmpty;
+
+  bool _sameTeam(String a, String b) =>
+      a.trim().toLowerCase() == b.trim().toLowerCase();
+
+  bool _isQualifier(String letter, String team) =>
+      (_groupActualTop2[letter] ?? const [])
+          .any((t) => _sameTeam(t, team));
+
+  // Points for one group pick: qualifier points if the team finished top-2,
+  // plus the order bonus if it landed in the exact predicted position.
+  // Mirrors the backend scoreGroups logic.
+  int _scoreGroupPick(String letter, String team, int predictedIndex) {
+    final gs = _structure?.stage('groups');
+    if (gs == null) return 0;
+    final actual = _groupActualTop2[letter] ?? const [];
+    final inTop2 = actual.any((t) => _sameTeam(t, team));
+    final exact =
+        predictedIndex < actual.length && _sameTeam(actual[predictedIndex], team);
+    return (inTop2 ? gs.qualifierPoints : 0) + (exact ? gs.orderBonus : 0);
+  }
+
+  // Thirds are settled with the group stage; show results once that's stamped
+  // and we've computed the actual best-thirds.
+  bool get _thirdsSettled =>
+      (widget.stagePoints?['groups'] ?? _bracket?.stagePoints['groups']) !=
+          null &&
+      _bestThirdsActual.isNotEmpty;
+
+  bool _isBestThird(String team) =>
+      _bestThirdsActual.any((t) => _sameTeam(t, team));
+
+  int _scoreThirdPick(String team) =>
+      _isBestThird(team) ? (_structure?.stage('groups')?.thirdQualifierPoints ?? 0) : 0;
+
+  // ── Knockout results (mirrors backend computeKnockoutWinners) ──────────────
+  static const Set<String> _finishedStatuses = {'FT', 'AET', 'PEN'};
+
+  void _computeKnockoutWinners(List<Game>? games) {
+    _knockoutWinners.clear();
+    for (final g in games ?? const <Game>[]) {
+      final stage = _stageForRound(g.league.round);
+      if (stage == null) continue;
+      if (!_finishedStatuses.contains(g.status.short)) continue;
+      final winner = g.home.winner == true
+          ? g.home.name
+          : (g.away.winner == true ? g.away.name : null);
+      if (winner == null || winner.isEmpty) continue;
+      (_knockoutWinners[stage] ??= {}).add(winner.trim().toLowerCase());
+    }
+  }
+
+  String? _stageForRound(String round) {
+    final r = round.toLowerCase();
+    if (r.contains('round of 32')) return 'R32';
+    if (r.contains('round of 16')) return 'R16';
+    if (r.contains('quarter')) return 'QF';
+    if (r.contains('semi')) return 'SF';
+    if (r.contains('final') &&
+        !RegExp(r'semi|quarter|3rd|third|play').hasMatch(r)) return 'F';
+    return null;
+  }
+
+  bool _knockoutSettled(String stageKey) =>
+      (widget.stagePoints?[stageKey] ?? _bracket?.stagePoints[stageKey]) !=
+          null &&
+      (_knockoutWinners[stageKey]?.isNotEmpty ?? false);
+
+  bool _isAdvancer(String stageKey, String team) =>
+      _knockoutWinners[stageKey]?.contains(team.trim().toLowerCase()) ?? false;
 
   int get _total =>
       widget.stagePoints?.values.fold<int>(0, (a, b) => a + b) ??
@@ -307,6 +418,13 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                 team: ranked[i],
                 logo: _logoFor(ranked[i]),
                 order: i + 1,
+                // Once settled: mark each pick correct/wrong + its points.
+                correct: _groupsSettled
+                    ? _isQualifier(letter, ranked[i])
+                    : null,
+                points: _groupsSettled
+                    ? _scoreGroupPick(letter, ranked[i], i)
+                    : null,
               ),
         ],
       ),
@@ -333,24 +451,34 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             for (final t in _thirdQual)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  children: [
-                    _Crest(url: _logoFor(t), size: 22),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(t,
-                          style: EType.body(
-                              color: c.ink, size: 14, weight: FontWeight.w600),
-                          overflow: TextOverflow.ellipsis),
-                    ),
-                    Text(l.bracketThirdPlace.toUpperCase(),
-                        style: EType.label(
-                            color: c.inkDim, size: 9, letterSpacing: 1)),
-                  ],
-                ),
-              ),
+              Builder(builder: (context) {
+                final settled = _thirdsSettled;
+                final correct = settled ? _isBestThird(t) : null;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    children: [
+                      _Crest(url: _logoFor(t), size: 22),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(localizedTeamName(context, t),
+                            style: EType.body(
+                                color: correct == false ? c.inkMute : c.ink,
+                                size: 14,
+                                weight: FontWeight.w600),
+                            overflow: TextOverflow.ellipsis),
+                      ),
+                      if (correct != null)
+                        _ResultBadge(
+                            correct: correct, points: _scoreThirdPick(t))
+                      else
+                        Text(l.bracketThirdPlace.toUpperCase(),
+                            style: EType.label(
+                                color: c.inkDim, size: 9, letterSpacing: 1)),
+                    ],
+                  ),
+                );
+              }),
           ],
         ),
       ),
@@ -374,14 +502,15 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
               child: Column(
                 children: [
-                  for (final m in matches) _buildMatchCard(c, m, l),
+                  for (final m in matches) _buildMatchCard(c, m, stage, l),
                 ],
               ),
             ),
     );
   }
 
-  Widget _buildMatchCard(EditorialColors c, BracketMatch m, AppLocalizations l) {
+  Widget _buildMatchCard(
+      EditorialColors c, BracketMatch m, BracketStage stage, AppLocalizations l) {
     final aTeam = _participant(m, true);
     final bTeam = _participant(m, false);
     final win = _winSel[m.id];
@@ -394,18 +523,22 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       ),
       child: Column(
         children: [
-          _matchRow(c, m, true, aTeam, win != null && win == aTeam, l),
+          _matchRow(c, m, stage, true, aTeam, win != null && win == aTeam, l),
           Divider(height: 1, color: c.hairline),
-          _matchRow(c, m, false, bTeam, win != null && win == bTeam, l),
+          _matchRow(c, m, stage, false, bTeam, win != null && win == bTeam, l),
         ],
       ),
     );
   }
 
-  Widget _matchRow(EditorialColors c, BracketMatch m, bool sideA, String? team,
-      bool isWinner, AppLocalizations l) {
+  Widget _matchRow(EditorialColors c, BracketMatch m, BracketStage stage,
+      bool sideA, String? team, bool isWinner, AppLocalizations l) {
     final slot = sideA ? m.a : m.b;
     final resolved = team != null;
+    // Once the round is settled, show a result chip on the user's predicted
+    // advancer: green +points if they actually advanced, red 0 otherwise.
+    final showResult = isWinner && resolved && _knockoutSettled(stage.key);
+    final advanced = showResult ? _isAdvancer(stage.key, team) : false;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(color: isWinner ? c.liveSoft : null),
@@ -417,7 +550,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             child: Text(
               resolved ? localizedTeamName(context, team) : _slotLabel(slot, l),
               style: EType.body(
-                color: isWinner ? c.live : (resolved ? c.ink : c.inkDim),
+                color: showResult && !advanced
+                    ? c.inkMute
+                    : (isWinner ? c.live : (resolved ? c.ink : c.inkDim)),
                 size: 14,
                 weight: isWinner
                     ? FontWeight.w700
@@ -426,7 +561,10 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (isWinner) Icon(Icons.check_circle, size: 18, color: c.live),
+          if (showResult)
+            _ResultBadge(correct: advanced, points: stage.points)
+          else if (isWinner)
+            Icon(Icons.check_circle, size: 18, color: c.live),
         ],
       ),
     );
@@ -547,10 +685,20 @@ class _PointsBadge extends StatelessWidget {
 }
 
 class _TeamRow extends StatelessWidget {
-  const _TeamRow({required this.team, required this.logo, required this.order});
+  const _TeamRow({
+    required this.team,
+    required this.logo,
+    required this.order,
+    this.correct,
+    this.points,
+  });
   final String team;
   final String? logo;
   final int order;
+  // null = stage not settled yet (no result shown). Otherwise true/false marks
+  // whether this pick qualified, with [points] earned for it.
+  final bool? correct;
+  final int? points;
 
   @override
   Widget build(BuildContext context) {
@@ -565,8 +713,9 @@ class _TeamRow extends StatelessWidget {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: c.live,
-              border: Border.all(color: c.live, width: 1.5),
+              color: correct == false ? c.flag : c.live,
+              border: Border.all(
+                  color: correct == false ? c.flag : c.live, width: 1.5),
             ),
             child: Text('$order',
                 style: EType.numeric(
@@ -578,9 +727,47 @@ class _TeamRow extends StatelessWidget {
           Expanded(
             child: Text(localizedTeamName(context, team),
                 style: EType.body(
-                    color: c.ink, size: 14, weight: FontWeight.w600),
+                    color: correct == false ? c.inkMute : c.ink,
+                    size: 14,
+                    weight: FontWeight.w600),
                 overflow: TextOverflow.ellipsis),
           ),
+          if (correct != null) ...[
+            const SizedBox(width: 8),
+            _ResultBadge(correct: correct!, points: points ?? 0),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// Correct/wrong + points chip shown on a settled pick. Green check "+N" when
+// the pick qualified, red ✕ "0" when it didn't.
+class _ResultBadge extends StatelessWidget {
+  const _ResultBadge({required this.correct, required this.points});
+  final bool correct;
+  final int points;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    final color = correct ? c.live : c.flag;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        border: Border.all(color: color, width: 1),
+        borderRadius: BorderRadius.circular(2),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(correct ? Icons.check : Icons.close, size: 11, color: color),
+          const SizedBox(width: 3),
+          Text(correct ? '+$points' : '0',
+              style:
+                  EType.numeric(color: color, size: 10, weight: FontWeight.w700)),
         ],
       ),
     );

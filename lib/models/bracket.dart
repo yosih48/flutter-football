@@ -12,6 +12,7 @@ class BracketStage {
   final int? advancers; // knockout: teams that reach the next round
   final int qualifierPoints; // groups
   final int orderBonus; // groups
+  final int thirdQualifierPoints; // groups: per correct best-third pick
   final int points; // knockout flat award
   final DateTime? lockAt; // null = not locked
 
@@ -24,6 +25,7 @@ class BracketStage {
     this.advancers,
     this.qualifierPoints = 0,
     this.orderBonus = 0,
+    this.thirdQualifierPoints = 0,
     this.points = 0,
     this.lockAt,
   });
@@ -40,6 +42,8 @@ class BracketStage {
       advancers: (j['advancers'] as num?)?.toInt(),
       qualifierPoints: pts is Map ? (pts['qualifier'] as num?)?.toInt() ?? 0 : 0,
       orderBonus: pts is Map ? (pts['orderBonus'] as num?)?.toInt() ?? 0 : 0,
+      thirdQualifierPoints:
+          pts is Map ? (pts['thirdQualifier'] as num?)?.toInt() ?? 0 : 0,
       points: pts is num ? pts.toInt() : 0,
       lockAt: _parseDate(j['lockAt']),
     );

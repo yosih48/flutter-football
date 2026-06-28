@@ -54,6 +54,10 @@ class _BracketScreenState extends State<BracketScreen> {
 
   // group letter -> ordered roster of team names (from standings).
   final Map<String, List<String>> _groupRosters = {};
+  // group letter -> actual qualifiers [1st, 2nd] (rank order) once settled.
+  final Map<String, List<String>> _groupActualTop2 = {};
+  // Actual 8 best third-placed teams (ranked) once settled.
+  final List<String> _bestThirdsActual = [];
   // team name -> crest url, for chip logos.
   final Map<String, String> _logos = {};
 
@@ -119,16 +123,63 @@ class _BracketScreenState extends State<BracketScreen> {
   // "Group A" etc.; we key by the trailing letter to match structure.groupIds.
   void _ingestStandings(List<StandingRow>? rows) {
     _groupRosters.clear();
+    _groupActualTop2.clear();
+    _bestThirdsActual.clear();
     _logos.clear();
+    final byGroup = <String, List<StandingRow>>{};
     for (final r in rows ?? []) {
       if (r.teamName.isEmpty) continue;
       if (r.teamLogo.isNotEmpty) _logos[r.teamName] = r.teamLogo;
       final letter = _groupLetter(r.group);
-      if (letter != null) {
-        (_groupRosters[letter] ??= []).add(r.teamName);
-      }
+      if (letter == null) continue;
+      (byGroup[letter] ??= []).add(r);
     }
+    final thirds = <StandingRow>[];
+    byGroup.forEach((letter, list) {
+      list.sort((a, b) => a.rank.compareTo(b.rank));
+      _groupRosters[letter] = list.map((r) => r.teamName).toList();
+      _groupActualTop2[letter] = list.take(2).map((r) => r.teamName).toList();
+      if (list.length > 2) thirds.add(list[2]);
+    });
+    // FIFA best-thirds ranking: points → goal difference → goals for.
+    thirds.sort((a, b) => b.points != a.points
+        ? b.points - a.points
+        : b.goalsDiff != a.goalsDiff
+            ? b.goalsDiff - a.goalsDiff
+            : b.goalsFor - a.goalsFor);
+    final n = _structure?.bestThirds ?? 0;
+    _bestThirdsActual.addAll(thirds.take(n).map((r) => r.teamName));
   }
+
+  // ── Settled-stage scoring (display only; mirrors backend scoreGroups) ──────
+  bool get _groupsSettled =>
+      (_bracket?.stagePoints['groups']) != null && _groupActualTop2.isNotEmpty;
+
+  bool get _thirdsSettled =>
+      (_bracket?.stagePoints['groups']) != null && _bestThirdsActual.isNotEmpty;
+
+  bool _sameTeam(String a, String b) =>
+      a.trim().toLowerCase() == b.trim().toLowerCase();
+
+  bool _isQualifier(String letter, String team) =>
+      (_groupActualTop2[letter] ?? const []).any((t) => _sameTeam(t, team));
+
+  int _scoreGroupPick(String letter, String team, int predictedIndex) {
+    final gs = _structure?.stage('groups');
+    if (gs == null) return 0;
+    final actual = _groupActualTop2[letter] ?? const [];
+    final inTop2 = actual.any((t) => _sameTeam(t, team));
+    final exact = predictedIndex < actual.length &&
+        _sameTeam(actual[predictedIndex], team);
+    return (inTop2 ? gs.qualifierPoints : 0) + (exact ? gs.orderBonus : 0);
+  }
+
+  bool _isBestThird(String team) =>
+      _bestThirdsActual.any((t) => _sameTeam(t, team));
+
+  int _scoreThirdPick(String team) => _isBestThird(team)
+      ? (_structure?.stage('groups')?.thirdQualifierPoints ?? 0)
+      : 0;
 
   String? _groupLetter(String? group) {
     if (group == null || group.isEmpty) return null;
@@ -469,13 +520,21 @@ class _BracketScreenState extends State<BracketScreen> {
               style: EType.label(color: c.inkMute, size: 11, letterSpacing: 2)),
           const SizedBox(height: 10),
           for (final team in roster)
-            _GroupTeamRow(
-              team: team,
-              logo: _logoFor(team),
-              order: _orderOf(sel, team),
-              locked: locked,
-              onTap: locked ? null : () => _toggleGroup(letter, team),
-            ),
+            Builder(builder: (context) {
+              final order = _orderOf(sel, team);
+              // Show the result only on the user's two picks once settled.
+              final showResult = _groupsSettled && order > 0;
+              return _GroupTeamRow(
+                team: team,
+                logo: _logoFor(team),
+                order: order,
+                locked: locked,
+                onTap: locked ? null : () => _toggleGroup(letter, team),
+                correct: showResult ? _isQualifier(letter, team) : null,
+                points:
+                    showResult ? _scoreGroupPick(letter, team, order - 1) : null,
+              );
+            }),
         ],
       ),
     );
@@ -583,6 +642,13 @@ class _BracketScreenState extends State<BracketScreen> {
                                   : FontWeight.w400),
                           overflow: TextOverflow.ellipsis),
                     ),
+                    // Result only on the user's selected thirds once settled.
+                    if (_thirdsSettled && _thirdQual.contains(team)) ...[
+                      const SizedBox(width: 8),
+                      _ResultBadge(
+                          correct: _isBestThird(team),
+                          points: _scoreThirdPick(team)),
+                    ],
                   ],
                 ),
               ),
@@ -1620,12 +1686,18 @@ class _GroupTeamRow extends StatelessWidget {
     required this.order,
     required this.locked,
     required this.onTap,
+    this.correct,
+    this.points,
   });
   final String team;
   final String? logo;
   final int order; // 0 unpicked, 1 first, 2 second
   final bool locked;
   final VoidCallback? onTap;
+  // null = no settled result to show. Otherwise true/false marks whether this
+  // pick qualified, with [points] earned.
+  final bool? correct;
+  final int? points;
 
   @override
   Widget build(BuildContext context) {
@@ -1644,13 +1716,51 @@ class _GroupTeamRow extends StatelessWidget {
             Expanded(
               child: Text(localizedTeamName(context, team),
                   style: EType.body(
-                      color: picked ? c.ink : c.inkMute,
+                      color: correct == false
+                          ? c.inkMute
+                          : (picked ? c.ink : c.inkMute),
                       size: 14,
                       weight: picked ? FontWeight.w600 : FontWeight.w400),
                   overflow: TextOverflow.ellipsis),
             ),
+            if (correct != null) ...[
+              const SizedBox(width: 8),
+              _ResultBadge(correct: correct!, points: points ?? 0),
+            ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+// Correct/wrong + points chip shown on a settled pick. Green check "+N" when
+// the pick scored, red ✕ "0" when it didn't.
+class _ResultBadge extends StatelessWidget {
+  const _ResultBadge({required this.correct, required this.points});
+  final bool correct;
+  final int points;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    final color = correct ? c.live : c.flag;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        border: Border.all(color: color, width: 1),
+        borderRadius: BorderRadius.circular(2),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(correct ? Icons.check : Icons.close, size: 11, color: color),
+          const SizedBox(width: 3),
+          Text(correct ? '+$points' : '0',
+              style:
+                  EType.numeric(color: color, size: 10, weight: FontWeight.w700)),
+        ],
       ),
     );
   }
