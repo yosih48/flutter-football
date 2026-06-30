@@ -7,6 +7,9 @@ import 'package:football/resources/usersMethods.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/l10n/app_localizations.dart';
+import 'package:football/utils/localized_team_name.dart';
+import 'package:football/utils/he_player_name.dart';
+import 'package:football/widgets/seasonPickers.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class Statistics extends StatefulWidget {
@@ -24,6 +27,16 @@ class _StatisticsState extends State<Statistics> {
   List<Guess> directionGuesses = [];
   int _topScorerPoints = 0;
   int _championPoints = 0;
+  // This player's pre-season predictions for the current league. Revealed to
+  // everyone only once the league has kicked off (see _leagueStarted) so picks
+  // can't be copied before the season begins.
+  String _winnerPick = '';
+  String _topScorerPick = '';
+  // Crest URLs, re-derived from the league lists once picks are known. Logos pop
+  // in asynchronously; the Hebrew names render immediately without them.
+  String? _winnerLogo;
+  String? _topScorerLogo;
+  bool _leagueStarted = false;
   bool isLoading = true;
 
   @override
@@ -80,6 +93,17 @@ class _StatisticsState extends State<Statistics> {
       final topScorerPts = leaguePoints(userData['topScorerPoints']);
       final championPts = leaguePoints(userData['championPoints']);
 
+      // Winner/topScorer picks are stored as plain name strings keyed by league.
+      String leaguePick(dynamic field) {
+        if (field is Map && field[leagueKey] != null) {
+          return field[leagueKey].toString();
+        }
+        return '';
+      }
+
+      final winnerPick = leaguePick(userData['winner']);
+      final topScorerPick = leaguePick(userData['topScorer']);
+
       setState(() {
         userGuesses = filtered;
         directGuesses = filtered.where((g) => g.direct == 1).toList();
@@ -87,12 +111,35 @@ class _StatisticsState extends State<Statistics> {
             filtered.where((g) => g.direction == 1).toList();
         _topScorerPoints = topScorerPts;
         _championPoints = championPts;
+        _winnerPick = winnerPick;
+        _topScorerPick = topScorerPick;
+        _leagueStarted = startedFixtureIds.isNotEmpty;
         isLoading = false;
       });
+
+      // Only fetch crests when the section will actually render (league started
+      // and a pick exists), so we don't hit the team/player lists needlessly.
+      if (_leagueStarted) _resolvePickLogos(leagueID);
     } catch (e) {
       print('Error fetching user guesses: $e');
       setState(() => isLoading = false);
     }
+  }
+
+  // Resolve the winner/top-scorer crests in the background and fold them in when
+  // ready. Fails soft: a missing logo just leaves the generic fallback icon.
+  Future<void> _resolvePickLogos(int leagueId) async {
+    final winnerLogo = _winnerPick.isEmpty
+        ? null
+        : await resolveWinnerLogo(leagueId, _winnerPick);
+    final topScorerLogo = _topScorerPick.isEmpty
+        ? null
+        : await resolveTopScorerLogo(leagueId, _topScorerPick);
+    if (!mounted) return;
+    setState(() {
+      _winnerLogo = winnerLogo;
+      _topScorerLogo = topScorerLogo;
+    });
   }
 
   @override
@@ -264,17 +311,33 @@ class _StatisticsState extends State<Statistics> {
             label: l.topScorerPointsLabel,
             value: isLoading ? '—' : _topScorerPoints.toString(),
             accent: c.live,
+            // Reveal the actual pick (Hebrew name + crest) once the league has
+            // started — before that it stays hidden so picks can't be copied.
+            pickName: _showPicks && _topScorerPick.isNotEmpty
+                ? localizedPlayerName(context, _topScorerPick)
+                : null,
+            pickLogo: _topScorerLogo,
+            pickFallbackIcon: Icons.sports_soccer_outlined,
           ),
           Container(height: 1, color: c.hairline),
           _PointsRow(
             label: l.championPointsLabel,
             value: isLoading ? '—' : _championPoints.toString(),
             accent: c.flag,
+            pickName: _showPicks && _winnerPick.isNotEmpty
+                ? localizedTeamName(context, _winnerPick)
+                : null,
+            pickLogo: _winnerLogo,
+            pickFallbackIcon: Icons.emoji_events_outlined,
           ),
         ],
       ),
     );
   }
+
+  // Picks are revealed to everyone only after the league kicks off, so they
+  // can't be copied pre-season.
+  bool get _showPicks => !isLoading && _leagueStarted;
 
   Widget _sectionLabel(String text, EditorialColors c) {
     return Row(
@@ -417,17 +480,26 @@ class _AccuracyBar extends StatelessWidget {
 }
 
 // ── Points breakdown row ────────────────────────────────────────────────
+// For the top-scorer / champion rows, [pickName] (+ optional [pickLogo]) reveals
+// who the player predicted, rendered as a crest + Hebrew name between the label
+// and the points so the points are tied to the actual prediction.
 class _PointsRow extends StatelessWidget {
   const _PointsRow({
     required this.label,
     required this.value,
     required this.accent,
     this.isTotal = false,
+    this.pickName,
+    this.pickLogo,
+    this.pickFallbackIcon,
   });
   final String label;
   final String value;
   final Color accent;
   final bool isTotal;
+  final String? pickName;
+  final String? pickLogo;
+  final IconData? pickFallbackIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -441,16 +513,52 @@ class _PointsRow extends StatelessWidget {
         ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label.toUpperCase(),
-            style: EType.label(
-              color: isTotal ? c.ink : c.inkMute,
-              size: 11,
-              letterSpacing: 1.8,
+          // Min width so short labels (e.g. אלופה) pad out to the same start as
+          // longer ones (מלך שערים), keeping the pick names in a straight
+          // vertical line across rows. Longer labels grow past it freely.
+          ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 116),
+            child: Text(
+              label.toUpperCase(),
+              style: EType.label(
+                color: isTotal ? c.ink : c.inkMute,
+                size: 11,
+                letterSpacing: 1.8,
+              ),
             ),
           ),
+          // Pick reveal fills the middle so the label stays at the start and the
+          // points stay at the end; empty when there's no pick to show.
+          Expanded(
+            child: pickName == null
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsetsDirectional.only(start: 12),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _Crest(
+                            logoUrl: pickLogo,
+                            fallback: pickFallbackIcon ??
+                                Icons.sports_soccer_outlined),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            pickName!,
+                            overflow: TextOverflow.ellipsis,
+                            style: EType.label(
+                              color: c.ink,
+                              size: 12,
+                              letterSpacing: 0.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+          ),
+          const SizedBox(width: 12),
           Text(
             value,
             style: EType.numeric(
@@ -460,6 +568,38 @@ class _PointsRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// Circular crest frame matching the season-picker dropdown rows. Falls back to
+// a generic icon while the logo is still resolving or when none is available.
+class _Crest extends StatelessWidget {
+  const _Crest({required this.logoUrl, required this.fallback});
+  final String? logoUrl;
+  final IconData fallback;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    if (logoUrl == null || logoUrl!.isEmpty) {
+      return Icon(fallback, size: 16, color: c.inkMute);
+    }
+    return Container(
+      width: 22,
+      height: 22,
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: c.cardHi,
+        shape: BoxShape.circle,
+        border: Border.all(color: c.hairline, width: 1),
+      ),
+      child: Image.network(
+        logoUrl!,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) =>
+            Icon(fallback, size: 12, color: c.inkDim),
       ),
     );
   }

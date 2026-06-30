@@ -50,6 +50,7 @@ class GameWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.col;
+    final l = AppLocalizations.of(context)!;
     final info = StatusUtils.getStatusInfo(game.status.short, context);
 
     // Compute accent locally so it can use the theme colors.
@@ -86,7 +87,7 @@ class GameWidget extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildMeta(info, c),
+                        _buildMeta(info, c, l),
                         const SizedBox(height: 14),
                         _buildMatchRow(context, c),
                         if (_isUpcoming) ...[
@@ -109,10 +110,11 @@ class GameWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildMeta(Map<String, dynamic> info, EditorialColors c) {
+  Widget _buildMeta(
+      Map<String, dynamic> info, EditorialColors c, AppLocalizations l) {
     return Row(
       children: [
-        _buildStatusPill(info, c),
+        _buildStatusPill(info, c, l),
         const Spacer(),
         if (_isUpcoming)
           Text(
@@ -136,16 +138,18 @@ class GameWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusPill(Map<String, dynamic> info, EditorialColors c) {
+  Widget _buildStatusPill(
+      Map<String, dynamic> info, EditorialColors c, AppLocalizations l) {
     if (_isLive) {
       final elapsed = game.status.elapsed;
+      final live = l.liveLabel.toUpperCase();
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           _PulsingDot(color: c.live),
           const SizedBox(width: 6),
           Text(
-            elapsed != null ? "LIVE  ${elapsed}'" : 'LIVE',
+            elapsed != null ? "$live  ${elapsed}'" : live,
             style: EType.label(
               color: c.live,
               size: 10,
@@ -156,22 +160,22 @@ class GameWidget extends StatelessWidget {
       );
     }
     if (_isHalftime) {
-      return Text('HALF TIME',
+      return Text(l.halfTimeLabel.toUpperCase(),
           style: EType.label(
               color: c.amber, size: 10, letterSpacing: 1.8));
     }
     if (_isAfterPenalties) {
-      return Text('AFTER PENALTIES',
+      return Text(l.afterPenaltiesLabel.toUpperCase(),
           style: EType.label(
               color: c.inkMute, size: 10, letterSpacing: 1.8));
     }
     if (_isAfterExtraTime) {
-      return Text('AFTER EXTRA TIME',
+      return Text(l.afterExtraTimeLabel.toUpperCase(),
           style: EType.label(
               color: c.inkMute, size: 10, letterSpacing: 1.8));
     }
     if (_isFinished) {
-      return Text('FULL TIME',
+      return Text(l.fullTimeLabel.toUpperCase(),
           style: EType.label(
               color: c.inkMute, size: 10, letterSpacing: 1.8));
     }

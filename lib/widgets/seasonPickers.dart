@@ -167,6 +167,50 @@ Future<String?> openTopScorerPicker(
   );
 }
 
+// ── Crest resolvers for revealing other users' picks ────────────────────────
+// Saved picks store only the English name (team / player). To show a crest like
+// the rest of the app, we re-derive the logo URL from the same backend lists the
+// pickers use. Both fail soft to null (name-only) so a reveal never errors out.
+
+// Team crest for a saved winner pick ([teamEnglish] is the persisted value).
+Future<String?> resolveWinnerLogo(int leagueId, String teamEnglish) async {
+  if (teamEnglish.isEmpty) return null;
+  try {
+    final teams = await _fetchAllTeamsRaw(leagueId);
+    for (final t in teams) {
+      if (t.value == teamEnglish) return t.iconUrl;
+    }
+  } catch (_) {}
+  return null;
+}
+
+// The player's team crest for a saved top-scorer pick. Top-scorer rows carry no
+// team, so we look the player up in the league list to find their team, then map
+// that team to a logo — mirroring openTopScorerPicker's crest attachment.
+Future<String?> resolveTopScorerLogo(int leagueId, String playerEnglish) async {
+  if (playerEnglish.isEmpty) return null;
+  try {
+    final results = await Future.wait([
+      PlayersMethods().fetchPlayersListRaw({'league': leagueId}),
+      _fetchAllTeamsRaw(leagueId),
+    ]);
+    final players = results[0] as List<Map<String, String>>;
+    final teams = results[1] as List<PickerOption>;
+    var teamEnglish = '';
+    for (final p in players) {
+      if (p['name_english'] == playerEnglish) {
+        teamEnglish = p['team_english'] ?? '';
+        break;
+      }
+    }
+    if (teamEnglish.isEmpty) return null;
+    for (final t in teams) {
+      if (t.value == teamEnglish) return t.iconUrl;
+    }
+  } catch (_) {}
+  return null;
+}
+
 // A picker row: the [value] is what gets saved, [label] is what's displayed,
 // and [iconUrl] (when present) renders a small crest/avatar instead of the
 // generic fallback icon.

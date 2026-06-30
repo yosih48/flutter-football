@@ -266,6 +266,8 @@
     "pickDate": "Pick date",
     "liveLabel": "Live",
     "fullTimeLabel": "Full Time",
+    "afterPenaltiesLabel": "After Penalties",
+    "afterExtraTimeLabel": "After Extra Time",
     "halfTimeLabel": "Half Time",
     "todayLabel": "Today",
     "refreshFailed": "Refresh failed",

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:football/resources/stats_service.dart';
+import 'package:football/utils/localized_stat_label.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 
@@ -194,7 +195,7 @@ class _StatsWidgetState extends State<StatsWidget> {
               Expanded(
                 flex: 2,
                 child: Text(
-                  type.toUpperCase(),
+                  localizedStatLabel(context, type).toUpperCase(),
                   textAlign: TextAlign.center,
                   style: EType.label(color: c.inkDim, size: 10, letterSpacing: 1.4),
                 ),

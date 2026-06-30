@@ -771,6 +771,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get fullTimeLabel => 'סיום';
 
   @override
+  String get afterPenaltiesLabel => 'סיום לאחר פנדלים';
+
+  @override
+  String get afterExtraTimeLabel => 'סיום לאחר הארכה';
+
+  @override
   String get halfTimeLabel => 'מחצית';
 
   @override

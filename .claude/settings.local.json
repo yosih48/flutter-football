@@ -107,7 +107,8 @@
       "Bash(cd /c/world-front/src && find . -type f \\\\\\( -name \"*.vue\" -o -name \"*.js\" -o -name \"*.scss\" -o -name \"*.css\" \\\\\\) | head -100 && echo \"---TOTAL---\" && find . -type f -name \"*.vue\" | wc -l)",
       "Bash(git checkout *)",
       "Bash(curl -s --max-time 30 https://leagues.onrender.com/groups/register -o groups_tmp.json)",
-      "Bash(ls C:/worldBackend/src)"
+      "Bash(ls C:/worldBackend/src)",
+      "Bash(python -c ' *)"
     ]
   }
 }

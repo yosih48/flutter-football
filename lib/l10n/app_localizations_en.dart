@@ -771,6 +771,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fullTimeLabel => 'Full Time';
 
   @override
+  String get afterPenaltiesLabel => 'After Penalties';
+
+  @override
+  String get afterExtraTimeLabel => 'After Extra Time';
+
+  @override
   String get halfTimeLabel => 'Half Time';
 
   @override

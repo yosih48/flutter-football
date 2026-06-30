@@ -9,6 +9,7 @@ import 'package:football/resources/guessesMethods.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/screens/profile.dart';
+import 'package:football/screens/statistics.dart';
 import 'package:football/screens/table.dart';
 import 'package:football/screens/teamDetails.dart';
 import 'package:football/theme/colors.dart';
@@ -1337,7 +1338,19 @@ class _GameDetailsState extends State<GameDetails> {
           final g = e.value;
           final isMe = g.guess.userId == currentUserId;
           final pts = g.guess.sumPoints;
-          return Container(
+          return InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => Statistics(
+                    userId: g.guess.userId,
+                    leagueId: _currentGame.league.id,
+                  ),
+                ),
+              );
+            },
+            child: Container(
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(color: c.hairline, width: 1),
@@ -1421,6 +1434,7 @@ class _GameDetailsState extends State<GameDetails> {
                   ),
                 ),
               ],
+            ),
             ),
           );
         }),

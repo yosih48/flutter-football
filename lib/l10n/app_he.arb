@@ -472,6 +472,8 @@
     "pickDate": "בחר תאריך",
     "liveLabel": "LIVE",
     "fullTimeLabel": "סיום",
+    "afterPenaltiesLabel": "סיום לאחר פנדלים",
+    "afterExtraTimeLabel": "סיום לאחר הארכה",
     "halfTimeLabel": "מחצית",
     "todayLabel": "היום",
     "refreshFailed": "הרענון נכשל",

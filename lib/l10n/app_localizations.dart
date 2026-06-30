@@ -1619,6 +1619,18 @@ abstract class AppLocalizations {
   /// **'Full Time'**
   String get fullTimeLabel;
 
+  /// No description provided for @afterPenaltiesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'After Penalties'**
+  String get afterPenaltiesLabel;
+
+  /// No description provided for @afterExtraTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'After Extra Time'**
+  String get afterExtraTimeLabel;
+
   /// No description provided for @halfTimeLabel.
   ///
   /// In en, this message translates to:
