@@ -19,6 +19,7 @@ const Map<String, String> kStatLabelsHe = {
   'expected goals': 'שערים צפויים',
   'expected_goals': 'שערים צפויים',
   'expected assists': 'בישולים צפויים',
+  'goals prevented': 'שערים שנמנעו',
   'goals_prevented': 'שערים שנמנעו',
 
   // ── Shots ────────────────────────────────────────────────────────
@@ -72,6 +73,7 @@ const Map<String, String> kStatLabelsHe = {
   'recoveries': 'השבת כדורים',
   'clearances': 'הרחקות כדור',
   'errors lead to a shot': 'טעויות שהובילו לבעיטה',
+  'errors lead to a goal': 'טעויות שהובילו לשער',
 
   // ── Goalkeeping ──────────────────────────────────────────────────
   'goalkeeper saves': 'הצלות שוער',
