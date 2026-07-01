@@ -207,13 +207,19 @@ class AppLocalizationsHe extends AppLocalizations {
   String get notifPoints => 'ניקוד בסוף משחק';
 
   @override
-  String get notifAllGoals => 'כל התראות השערים';
+  String get notifAllGoals => 'שערים';
 
   @override
-  String get notifAllReminders => 'כל התזכורות';
+  String get notifAllReminders => 'תזכורות';
 
   @override
-  String get notifAllPoints => 'כל התראות הניקוד';
+  String get notifAllPoints => 'ניקוד';
+
+  @override
+  String get notifGlobalTitle => 'הגדרות גלובליות (משפיעות על כל הליגות)';
+
+  @override
+  String get notifMoreSettings => 'הגדרות נוספות';
 
   @override
   String get joingrouptoseefreinds => 'הצטרף לקבוצה כדי לראות ניחושים של חברים';

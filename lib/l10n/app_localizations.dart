@@ -509,6 +509,12 @@ abstract class AppLocalizations {
   /// **'All points alerts'**
   String get notifAllPoints;
 
+  /// No description provided for @notifGlobalTitle.
+  String get notifGlobalTitle;
+
+  /// No description provided for @notifMoreSettings.
+  String get notifMoreSettings;
+
   /// No description provided for @joingrouptoseefreinds.
   ///
   /// In en, this message translates to:
