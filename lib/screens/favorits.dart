@@ -14,6 +14,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import '../models/notif_pref.dart';
 
 class FavoritsScreen extends StatefulWidget {
   const FavoritsScreen({super.key});
@@ -32,8 +33,9 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
   // Both maps are keyed by league id and driven by the backend config. The DB
   // stores snetEmail and chosenLeagues id-keyed too, so this is a 1:1 mapping
   // with no name bridge — any league added in config works with no app update.
-  Map<int, bool> notificationStates = {
-    for (final id in LeagueConfigService().supportedLeagues) id: false,
+  Map<int, NotifPref> notificationStates = {
+    for (final id in LeagueConfigService().supportedLeagues)
+      id: const NotifPref(),
   };
 
   Map<int, bool> chosenLeagues = {
@@ -80,7 +82,8 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       setState(() {
         for (final id in LeagueConfigService().supportedLeagues) {
           chosenLeagues[id] = chosenLeaguesData[id.toString()] ?? true;
-          notificationStates[id] = snetEmail[id.toString()] == true;
+          notificationStates[id] =
+              NotifPref.fromJson(snetEmail[id.toString()]);
         }
         isLoading = false;
       });
@@ -98,17 +101,18 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
   // group-join branch. name/email kept in the signature for call-site parity.
   Future<void> updateDatabase(String name, String email) async {
     try {
-      // Sync: disable notifications for leagues that are unchecked.
+      // Sync: disable ALL notification kinds for leagues that are unchecked.
       for (final id in LeagueConfigService().supportedLeagues) {
-        if (notificationStates[id] == true && chosenLeagues[id] == false) {
-          notificationStates[id] = false;
+        if (chosenLeagues[id] == false) {
+          notificationStates[id] = const NotifPref();
         }
       }
 
       final set = <String, dynamic>{};
       for (final id in LeagueConfigService().supportedLeagues) {
         set['chosenLeagues.$id'] = chosenLeagues[id] ?? true;
-        set['snetEmail.$id'] = notificationStates[id] ?? false;
+        set['snetEmail.$id'] =
+            (notificationStates[id] ?? const NotifPref()).toJson();
       }
 
       await http.put(
@@ -279,7 +283,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                       chosenLeagues[id] = !isSelected;
                       // Disable notification when league is unchecked.
                       if (!chosenLeagues[id]!) {
-                        notificationStates[id] = false;
+                        notificationStates[id] = const NotifPref();
                       }
                     });
                     updateDatabase(name, userEmail);
@@ -306,42 +310,47 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       return _EmptyNotifs(l: l);
     }
 
-    final allOn =
-        enabledIds.every((id) => notificationStates[id] == true);
+    bool allOfKind(bool Function(NotifPref) sel) =>
+        enabledIds.every((id) => sel(notificationStates[id] ?? const NotifPref()));
+
+    void setAllOfKind(String kind, bool v) {
+      setState(() {
+        for (final id in enabledIds) {
+          final cur = notificationStates[id] ?? const NotifPref();
+          notificationStates[id] = kind == 'goals'
+              ? cur.copyWith(goals: v)
+              : kind == 'reminders'
+                  ? cur.copyWith(reminders: v)
+                  : cur.copyWith(points: v);
+        }
+      });
+      updateDatabase(name, userEmail);
+    }
 
     return ListView(
       physics: const BouncingScrollPhysics(),
       children: [
-        // ── Select all ──
-        _NotifRow(
-          logoWidget: Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: c.card,
-              shape: BoxShape.circle,
-              border: Border.all(color: c.hairline, width: 1),
-            ),
-            child: Icon(Icons.notifications_outlined,
-                size: 16, color: c.inkMute),
-          ),
-          label: l.chooseallcompetitions,
-          value: allOn,
-          onChanged: (v) {
-            setState(() {
-              for (final id in enabledIds) {
-                notificationStates[id] = v;
-              }
-            });
-            updateDatabase(name, userEmail);
-          },
-          isSelectAll: true,
+        // ── Category masters ──
+        _NotifMasterRow(
+          label: l.notifAllGoals,
+          value: allOfKind((p) => p.goals),
+          onChanged: (v) => setAllOfKind('goals', v),
+        ),
+        _NotifMasterRow(
+          label: l.notifAllReminders,
+          value: allOfKind((p) => p.reminders),
+          onChanged: (v) => setAllOfKind('reminders', v),
+        ),
+        _NotifMasterRow(
+          label: l.notifAllPoints,
+          value: allOfKind((p) => p.points),
+          onChanged: (v) => setAllOfKind('points', v),
         ),
         Container(height: 1, color: c.hairline),
-        // ── Individual leagues ──
+        // ── Individual leagues: 3 toggles each ──
         ...enabledIds.map((id) {
-          final on = notificationStates[id] == true;
-          return _NotifRow(
+          final pref = notificationStates[id] ?? const NotifPref();
+          return _NotifLeagueRow(
             logoWidget: Container(
               width: 36,
               height: 36,
@@ -350,24 +359,24 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                 color: Colors.white,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: on ? c.live.withOpacity(0.5) : c.hairline,
+                  color: pref.anyOn ? c.live.withOpacity(0.5) : c.hairline,
                   width: 1,
                 ),
               ),
               child: Image(
                 image: leagueLogoProvider(id),
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => Icon(
-                  Icons.shield_outlined,
-                  size: 16,
-                  color: c.inkDim,
-                ),
+                errorBuilder: (_, __, ___) =>
+                    Icon(Icons.shield_outlined, size: 16, color: c.inkDim),
               ),
             ),
             label: _localizedLeagueName(id),
-            value: on,
-            onChanged: (v) {
-              setState(() => notificationStates[id] = v);
+            pref: pref,
+            goalsLabel: l.notifGoals,
+            remindersLabel: l.notifReminders,
+            pointsLabel: l.notifPoints,
+            onChanged: (next) {
+              setState(() => notificationStates[id] = next);
               updateDatabase(name, userEmail);
             },
           );
@@ -542,59 +551,117 @@ class _LeagueCard extends StatelessWidget {
   }
 }
 
-// ── Notification row ────────────────────────────────────────────────────
-class _NotifRow extends StatelessWidget {
-  const _NotifRow({
-    required this.logoWidget,
+// ── Master toggle for one notification kind across all leagues ──────────
+class _NotifMasterRow extends StatelessWidget {
+  const _NotifMasterRow({
     required this.label,
     required this.value,
     required this.onChanged,
-    this.isSelectAll = false,
   });
-  final Widget logoWidget;
   final String label;
   final bool value;
   final ValueChanged<bool> onChanged;
-  final bool isSelectAll;
 
   @override
   Widget build(BuildContext context) {
     final c = context.col;
     return Container(
       decoration: BoxDecoration(
-        color: isSelectAll ? c.terrace : Colors.transparent,
+        color: c.terrace,
+        border: Border(bottom: BorderSide(color: c.hairline, width: 1)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Row(
+        children: [
+          Icon(Icons.notifications_outlined, size: 16, color: c.inkMute),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              label.toUpperCase(),
+              overflow: TextOverflow.ellipsis,
+              style: EType.label(color: c.ink, size: 11, letterSpacing: 1.8),
+            ),
+          ),
+          const SizedBox(width: 12),
+          _EditorialSwitch(value: value, onChanged: onChanged),
+        ],
+      ),
+    );
+  }
+}
+
+// ── One league row with three labeled toggles ──────────────────────────
+class _NotifLeagueRow extends StatelessWidget {
+  const _NotifLeagueRow({
+    required this.logoWidget,
+    required this.label,
+    required this.pref,
+    required this.goalsLabel,
+    required this.remindersLabel,
+    required this.pointsLabel,
+    required this.onChanged,
+  });
+  final Widget logoWidget;
+  final String label;
+  final NotifPref pref;
+  final String goalsLabel;
+  final String remindersLabel;
+  final String pointsLabel;
+  final ValueChanged<NotifPref> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    Widget toggle(String lbl, bool value, NotifPref Function(bool) apply) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                lbl.toUpperCase(),
+                overflow: TextOverflow.ellipsis,
+                style: EType.label(color: c.inkMute, size: 11, letterSpacing: 1.2),
+              ),
+            ),
+            const SizedBox(width: 12),
+            _EditorialSwitch(value: value, onChanged: (v) => onChanged(apply(v))),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(color: c.hairline, width: 1),
           left: BorderSide(
-            color: value ? c.live : Colors.transparent,
+            color: pref.anyOn ? c.live : Colors.transparent,
             width: 3,
           ),
         ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          logoWidget,
-          const SizedBox(width: 14),
-          Expanded(
-            child: Text(
-              isSelectAll
-                  ? label.toUpperCase()
-                  : label.toUpperCase(),
-              overflow: TextOverflow.ellipsis,
-              style: isSelectAll
-                  ? EType.label(
-                      color: c.ink, size: 11, letterSpacing: 1.8)
-                  : EType.display(
-                      size: 16,
-                      color: c.ink,
-                      letterSpacing: 0.8,
-                      height: 1.0,
-                    ),
-            ),
+          Row(
+            children: [
+              logoWidget,
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  label.toUpperCase(),
+                  overflow: TextOverflow.ellipsis,
+                  style: EType.display(
+                      size: 16, color: c.ink, letterSpacing: 0.8, height: 1.0),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          _EditorialSwitch(value: value, onChanged: onChanged),
+          toggle(goalsLabel, pref.goals, (v) => pref.copyWith(goals: v)),
+          toggle(remindersLabel, pref.reminders, (v) => pref.copyWith(reminders: v)),
+          toggle(pointsLabel, pref.points, (v) => pref.copyWith(points: v)),
         ],
       ),
     );

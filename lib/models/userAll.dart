@@ -1,3 +1,5 @@
+import 'notif_pref.dart';
+
 class Users {
   final String id;
   final String displayName;
@@ -7,7 +9,7 @@ class Users {
   final DateTime createdAt;
   final DateTime updatedAt;
   final Map<String, int> thisDayPoints;
-  final Map<String, bool> snetEmail;
+  final Map<String, NotifPref> snetEmail;
   final Map<String, String> groupID;
   final Map<String, String> winner;
 
@@ -33,9 +35,11 @@ class Users {
       return data?.map((key, value) => MapEntry(key, value as int)) ?? {};
     }
 
-    // Convert snetEmail from dynamic to bool
-    Map<String, bool> convertSnetEmail(Map<String, dynamic>? data) {
-      return data?.map((key, value) => MapEntry(key, value as bool)) ?? {};
+    // Convert snetEmail into NotifPref, tolerating the legacy bool shape.
+    Map<String, NotifPref> convertSnetEmail(Map<String, dynamic>? data) {
+      return data?.map(
+              (key, value) => MapEntry(key, NotifPref.fromJson(value))) ??
+          {};
     }
 
     // Convert groupID from dynamic to String

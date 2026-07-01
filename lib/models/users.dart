@@ -1,3 +1,5 @@
+import 'notif_pref.dart';
+
 class User {
   final String id;
   final String name;
@@ -8,6 +10,7 @@ class User {
    final bool isFirstLogin;
   final Map<String, dynamic>? groups;
   final Map<String, dynamic>? groupID;
+  final Map<String, NotifPref>? snetEmail;
 
   User({
     required this.id,
@@ -19,6 +22,7 @@ class User {
     this.fcmToken,
     this.groups,
     this.groupID,
+    this.snetEmail,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -32,6 +36,10 @@ class User {
       newToken: json['newToken'],
       groups: json['groups'] != null ? Map<String, dynamic>.from(json['groups']) : null,
       groupID: json['groupID'] != null ? Map<String, dynamic>.from(json['groupID']) : null,
+      snetEmail: json['snetEmail'] != null
+          ? Map<String, dynamic>.from(json['snetEmail'])
+              .map((k, v) => MapEntry(k, NotifPref.fromJson(v)))
+          : null,
     );
   }
 
@@ -46,6 +54,8 @@ class User {
       'isFirstLogin': isFirstLogin,
       'groups': groups,
       'groupID': groupID,
+      'snetEmail':
+          snetEmail?.map((k, v) => MapEntry(k, v.toJson())),
     };
   }
 

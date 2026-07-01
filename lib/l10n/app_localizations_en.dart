@@ -198,6 +198,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chooseallcompetitions => 'Choose All Leagues';
 
   @override
+  String get notifGoals => 'Goals';
+
+  @override
+  String get notifReminders => 'Reminders';
+
+  @override
+  String get notifPoints => 'Points';
+
+  @override
+  String get notifAllGoals => 'All goal alerts';
+
+  @override
+  String get notifAllReminders => 'All reminders';
+
+  @override
+  String get notifAllPoints => 'All points alerts';
+
+  @override
   String get joingrouptoseefreinds => 'Join Group To See Freinds Guesses';
 
   @override
