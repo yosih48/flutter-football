@@ -108,7 +108,17 @@
       "Bash(git checkout *)",
       "Bash(curl -s --max-time 30 https://leagues.onrender.com/groups/register -o groups_tmp.json)",
       "Bash(ls C:/worldBackend/src)",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(node -e \"Promise.all\\(['./src/controllers/topScorerReminder.js','./src/controllers/teamWinnerReminder.js','./src/controllers/bracketReminder.js','./src/controllers/bracketStatus.js','./src/controllers/championSettlement.js','./src/controllers/bracketSettlement.js','./editPoints.js'].map\\(p=>import\\(p\\)\\)\\).then\\(\\(\\)=>console.log\\('ok'\\)\\).catch\\(e=>{console.error\\(e\\);process.exit\\(1\\)}\\)\")",
+      "Bash(echo \"exit:$?\")",
+      "Bash(npm test *)",
+      "Bash(echo \"exit-grep=$?\")",
+      "Bash(flutter test *)",
+      "Bash(git -C /c/flutter-football status --short)",
+      "Bash(git -C /c/worldBackend status --short)",
+      "Bash(node --test tests/notifPrefs.test.mjs)",
+      "Bash(cd /c/worldBackend && grep -n \"export async function getUserFCMToken\" api.js)",
+      "Bash(node -e \"import\\('./src/models/cacheModels.js'\\).then\\(m=>console.log\\('cacheModels OK', !!m.GoalNotificationCache\\)\\)\")"
     ]
   }
 }
