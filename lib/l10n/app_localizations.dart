@@ -474,21 +474,39 @@ abstract class AppLocalizations {
   String get chooseallcompetitions;
 
   /// No description provided for @notifGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals'**
   String get notifGoals;
 
   /// No description provided for @notifReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
   String get notifReminders;
 
   /// No description provided for @notifPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Points'**
   String get notifPoints;
 
   /// No description provided for @notifAllGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'All goal alerts'**
   String get notifAllGoals;
 
   /// No description provided for @notifAllReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'All reminders'**
   String get notifAllReminders;
 
   /// No description provided for @notifAllPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'All points alerts'**
   String get notifAllPoints;
 
   /// No description provided for @joingrouptoseefreinds.

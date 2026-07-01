@@ -198,13 +198,13 @@ class AppLocalizationsHe extends AppLocalizations {
   String get chooseallcompetitions => 'בחירת כל הליגות';
 
   @override
-  String get notifGoals => 'שערים';
+  String get notifGoals => 'התראות שערים';
 
   @override
-  String get notifReminders => 'תזכורות';
+  String get notifReminders => 'תזכורת ניחוש';
 
   @override
-  String get notifPoints => 'נקודות';
+  String get notifPoints => 'ניקוד בסוף משחק';
 
   @override
   String get notifAllGoals => 'כל התראות השערים';
