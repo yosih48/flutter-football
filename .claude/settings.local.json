@@ -118,7 +118,9 @@
       "Bash(git -C /c/worldBackend status --short)",
       "Bash(node --test tests/notifPrefs.test.mjs)",
       "Bash(cd /c/worldBackend && grep -n \"export async function getUserFCMToken\" api.js)",
-      "Bash(node -e \"import\\('./src/models/cacheModels.js'\\).then\\(m=>console.log\\('cacheModels OK', !!m.GoalNotificationCache\\)\\)\")"
+      "Bash(node -e \"import\\('./src/models/cacheModels.js'\\).then\\(m=>console.log\\('cacheModels OK', !!m.GoalNotificationCache\\)\\)\")",
+      "Bash(node --test tests/playerNamesHe.test.mjs tests/notifPrefs.test.mjs)",
+      "Bash(node --input-type=module -e ' *)"
     ]
   }
 }

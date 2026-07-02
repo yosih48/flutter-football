@@ -216,7 +216,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get notifAllPoints => 'ניקוד';
 
   @override
-  String get notifGlobalTitle => 'הגדרות גלובליות (משפיעות על כל הליגות)';
+  String get notifGlobalTitle => 'התראות לכל הליגות';
 
   @override
   String get notifMoreSettings => 'הגדרות נוספות';

@@ -494,25 +494,31 @@ abstract class AppLocalizations {
   /// No description provided for @notifAllGoals.
   ///
   /// In en, this message translates to:
-  /// **'All goal alerts'**
+  /// **'Goals'**
   String get notifAllGoals;
 
   /// No description provided for @notifAllReminders.
   ///
   /// In en, this message translates to:
-  /// **'All reminders'**
+  /// **'Reminders'**
   String get notifAllReminders;
 
   /// No description provided for @notifAllPoints.
   ///
   /// In en, this message translates to:
-  /// **'All points alerts'**
+  /// **'Points'**
   String get notifAllPoints;
 
   /// No description provided for @notifGlobalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Global settings (affect all leagues)'**
   String get notifGlobalTitle;
 
   /// No description provided for @notifMoreSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'More settings'**
   String get notifMoreSettings;
 
   /// No description provided for @joingrouptoseefreinds.
