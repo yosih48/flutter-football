@@ -25,6 +25,10 @@ class _StatisticsState extends State<Statistics> {
   List<Guess> userGuesses = [];
   List<Guess> directGuesses = [];
   List<Guess> directionGuesses = [];
+  // fixtureId → Game for the current league, so a tapped metric can list each
+  // guess alongside its team names and the actual result. Built from the games
+  // already fetched below — no extra network round-trip.
+  final Map<int, Game> _gamesById = {};
   int _topScorerPoints = 0;
   int _championPoints = 0;
   // This player's pre-season predictions for the current league. Revealed to
@@ -105,6 +109,9 @@ class _StatisticsState extends State<Statistics> {
       final topScorerPick = leaguePick(userData['topScorer']);
 
       setState(() {
+        _gamesById
+          ..clear()
+          ..addEntries(games.map((g) => MapEntry(g.fixtureId, g)));
         userGuesses = filtered;
         directGuesses = filtered.where((g) => g.direct == 1).toList();
         directionGuesses =
@@ -202,6 +209,10 @@ class _StatisticsState extends State<Statistics> {
                         label: l.totalGuesses,
                         accent: c.ink,
                         isLarge: true,
+                        onTap: isLoading || total == 0
+                            ? null
+                            : () => _showGuessesSheet(
+                                l.totalGuesses, userGuesses, c.ink),
                       ),
                     ),
                     Container(
@@ -212,6 +223,10 @@ class _StatisticsState extends State<Statistics> {
                         label: l.directGuesses,
                         accent: c.live,
                         isLarge: false,
+                        onTap: isLoading || direct == 0
+                            ? null
+                            : () => _showGuessesSheet(
+                                l.directGuesses, directGuesses, c.live),
                       ),
                     ),
                     Container(
@@ -222,6 +237,10 @@ class _StatisticsState extends State<Statistics> {
                         label: l.directionGuesses,
                         accent: c.amber,
                         isLarge: false,
+                        onTap: isLoading || direction == 0
+                            ? null
+                            : () => _showGuessesSheet(
+                                l.directionGuesses, directionGuesses, c.amber),
                       ),
                     ),
                   ],
@@ -339,6 +358,84 @@ class _StatisticsState extends State<Statistics> {
   // can't be copied pre-season.
   bool get _showPicks => !isLoading && _leagueStarted;
 
+  // Reveal the individual guesses behind a tapped metric. Everything is already
+  // in memory (guesses + games), so this opens instantly with no extra fetch.
+  void _showGuessesSheet(String title, List<Guess> guesses, Color accent) {
+    final c = context.col;
+    final l = AppLocalizations.of(context)!;
+    // Most recent first — mirrors how players think about their latest games.
+    final sorted = [...guesses]
+      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: c.pitch,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        final maxHeight = MediaQuery.of(ctx).size.height * 0.8;
+        return ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              // Grab handle
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: c.hairline,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Container(width: 18, height: 1, color: accent),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        '${title.toUpperCase()}  ·  ${sorted.length}',
+                        style: EType.label(
+                            color: c.ink, size: 12, letterSpacing: 2),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Flexible(
+                child: sorted.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Text(l.noGuesses,
+                            style: EType.label(color: c.inkMute, size: 12)),
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: sorted.length,
+                        separatorBuilder: (_, __) =>
+                            Container(height: 1, color: c.hairline),
+                        itemBuilder: (_, i) => _GuessRow(
+                          guess: sorted[i],
+                          game: _gamesById[sorted[i].gameOriginalId],
+                          accent: accent,
+                        ),
+                      ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _sectionLabel(String text, EditorialColors c) {
     return Row(
       children: [
@@ -359,38 +456,50 @@ class _MetricBlock extends StatelessWidget {
     required this.label,
     required this.accent,
     required this.isLarge,
+    this.onTap,
   });
   final String value;
   final String label;
   final Color accent;
   final bool isLarge;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final c = context.col;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            value,
-            style: EType.scoreboard(
-              size: isLarge ? 64 : 48,
-              color: accent,
+    final tappable = onTap != null;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              value,
+              style: EType.scoreboard(
+                size: isLarge ? 64 : 48,
+                color: accent,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label.toUpperCase(),
-            textAlign: TextAlign.center,
-            style: EType.label(
-              color: c.inkDim,
-              size: 9,
-              letterSpacing: 1.6,
+            const SizedBox(height: 8),
+            Text(
+              label.toUpperCase(),
+              textAlign: TextAlign.center,
+              style: EType.label(
+                color: c.inkDim,
+                size: 9,
+                letterSpacing: 1.6,
+              ),
             ),
-          ),
-        ],
+            // Subtle affordance that the number opens the underlying list.
+            if (tappable) ...[
+              const SizedBox(height: 6),
+              Icon(Icons.expand_more, size: 14, color: accent),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -569,6 +678,146 @@ class _PointsRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── One guess row inside the metric sheet ───────────────────────────────
+// Shows the fixture (localized team names), the player's predicted score, the
+// actual result when known, and the points that guess earned.
+class _GuessRow extends StatelessWidget {
+  const _GuessRow({
+    required this.guess,
+    required this.game,
+    required this.accent,
+  });
+  final Guess guess;
+  final Game? game;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    final l = AppLocalizations.of(context)!;
+
+    final homeName =
+        game != null ? localizedTeamName(context, game!.home.name) : '';
+    final awayName =
+        game != null ? localizedTeamName(context, game!.away.name) : '';
+
+    final guessScore = '${guess.homeTeamGoals}-${guess.awayTeamGoals}';
+    final hasResult =
+        game != null && game!.goals.home != null && game!.goals.away != null;
+    // The actual result sits inline between the team names (e.g. "teamA 3-2
+    // teamB"); a dash stands in until the score is posted.
+    final resultScore =
+        hasResult ? '${game!.goals.home}-${game!.goals.away}' : '–';
+
+    String fmtPts(double v) =>
+        v % 1 == 0 ? v.toInt().toString() : v.toStringAsFixed(1);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (game != null)
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          homeName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.end,
+                          style: EType.label(
+                              color: c.ink, size: 13, letterSpacing: 0.3),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          resultScore,
+                          style: EType.numeric(
+                              color: c.ink,
+                              size: 14,
+                              weight: FontWeight.w700),
+                        ),
+                      ),
+                      Flexible(
+                        child: Text(
+                          awayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: EType.label(
+                              color: c.ink, size: 13, letterSpacing: 0.3),
+                        ),
+                      ),
+                    ],
+                  ),
+                const SizedBox(height: 6),
+                _ScoreChip(
+                  caption: l.guess,
+                  score: guessScore,
+                  color: accent,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                fmtPts(guess.sumPoints),
+                style: EType.numeric(
+                    color: accent, size: 18, weight: FontWeight.w700),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                l.points.toUpperCase(),
+                style:
+                    EType.label(color: c.inkMute, size: 8, letterSpacing: 1.4),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// A small captioned score pill: caption on top, "h - a" beneath it.
+class _ScoreChip extends StatelessWidget {
+  const _ScoreChip({
+    required this.caption,
+    required this.score,
+    required this.color,
+  });
+  final String caption;
+  final String score;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          caption.toUpperCase(),
+          style: EType.label(color: c.inkMute, size: 8, letterSpacing: 1.2),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          score,
+          style: EType.numeric(color: color, size: 14, weight: FontWeight.w700),
+        ),
+      ],
     );
   }
 }

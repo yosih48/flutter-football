@@ -372,6 +372,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get results => 'results';
 
   @override
+  String get result => 'result';
+
+  @override
   String get profile => 'profile';
 
   @override

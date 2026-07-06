@@ -821,6 +821,12 @@ abstract class AppLocalizations {
   /// **'results'**
   String get results;
 
+  /// No description provided for @result.
+  ///
+  /// In en, this message translates to:
+  /// **'result'**
+  String get result;
+
   /// No description provided for @profile.
   ///
   /// In en, this message translates to:

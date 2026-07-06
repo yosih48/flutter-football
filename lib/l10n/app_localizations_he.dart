@@ -372,6 +372,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get results => 'תוצאות';
 
   @override
+  String get result => 'תוצאה';
+
+  @override
   String get profile => 'פרופיל';
 
   @override

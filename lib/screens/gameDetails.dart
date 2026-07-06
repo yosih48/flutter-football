@@ -213,8 +213,12 @@ class _GameDetailsState extends State<GameDetails> {
   bool get _notStarted => _currentGame.status.long == 'Not Started';
   bool get _isLive => _liveShort.contains(_currentGame.status.short);
   bool get _isHalftime => _currentGame.status.short == 'HT';
+  bool get _isAfterPenalties => _currentGame.status.short == 'PEN';
+  bool get _isAfterExtraTime => _currentGame.status.short == 'AET';
   bool get _isFinished =>
-      _currentGame.status.short == 'FT' || _currentGame.status.short == 'AET';
+      _currentGame.status.short == 'FT' ||
+      _isAfterExtraTime ||
+      _isAfterPenalties;
 
   Color _getAccent(EditorialColors c) {
     if (_isLive) return c.live;
@@ -327,6 +331,14 @@ class _GameDetailsState extends State<GameDetails> {
     } else if (_isHalftime) {
       statusText = AppLocalizations.of(context)!.halfTimeLabel.toUpperCase();
       statusColor = c.amber;
+    } else if (_isAfterPenalties) {
+      statusText =
+          AppLocalizations.of(context)!.afterPenaltiesLabel.toUpperCase();
+      statusColor = c.inkMute;
+    } else if (_isAfterExtraTime) {
+      statusText =
+          AppLocalizations.of(context)!.afterExtraTimeLabel.toUpperCase();
+      statusColor = c.inkMute;
     } else if (_isFinished) {
       statusText = AppLocalizations.of(context)!.fullTimeLabel.toUpperCase();
       statusColor = c.inkMute;
