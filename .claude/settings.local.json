@@ -120,7 +120,20 @@
       "Bash(cd /c/worldBackend && grep -n \"export async function getUserFCMToken\" api.js)",
       "Bash(node -e \"import\\('./src/models/cacheModels.js'\\).then\\(m=>console.log\\('cacheModels OK', !!m.GoalNotificationCache\\)\\)\")",
       "Bash(node --test tests/playerNamesHe.test.mjs tests/notifPrefs.test.mjs)",
-      "Bash(node --input-type=module -e ' *)"
+      "Bash(node --input-type=module -e ' *)",
+      "PowerShell(adb devices)",
+      "PowerShell(adb shell getprop sys.boot_completed)",
+      "PowerShell($adb = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; if \\(Test-Path $adb\\) { Write-Output \"FOUND: $adb\"; & $adb devices; & $adb shell getprop sys.boot_completed } else { Write-Output \"Not at default path. ANDROID_HOME=$env:ANDROID_HOME ANDROID_SDK_ROOT=$env:ANDROID_SDK_ROOT\" })",
+      "PowerShell($adb = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; Write-Output \"--- package service ---\"; & $adb shell service check package; Write-Output \"--- activity service ---\"; & $adb shell service check activity; Write-Output \"--- boot anim ---\"; & $adb shell getprop init.svc.bootanim; Write-Output \"--- dev.bootcomplete ---\"; & $adb shell getprop dev.bootcomplete)",
+      "PowerShell($adb = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; & $adb kill-server; Start-Sleep -Milliseconds 500; & $adb start-server; & $adb wait-for-device; Write-Output \"--- installing ---\"; & $adb install -r \"C:\\\\flutter-football\\\\build\\\\app\\\\outputs\\\\flutter-apk\\\\app-debug.apk\")",
+      "PowerShell($adb = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; & $adb -s emulator-5554 emu avd name; Write-Output \"--- emulator exe ---\"; $emu = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\emulator\\\\emulator.exe\"; if \\(Test-Path $emu\\) { Write-Output \"FOUND: $emu\"; & $emu -list-avds } else { Write-Output \"emulator.exe not at $emu\" })",
+      "PowerShell($adb = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; & $adb -s emulator-5554 emu kill; Start-Sleep -Seconds 3; Write-Output \"--- devices after kill ---\"; & $adb devices)",
+      "PowerShell($emu = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\emulator\\\\emulator.exe\"; Start-Process -FilePath $emu -ArgumentList \"-avd\",\"servio_Pixel_5_API_31\",\"-no-snapshot-load\"; Write-Output \"Cold boot launched for servio_Pixel_5_API_31\")",
+      "PowerShell($adb = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; Write-Output \"--- pm can list packages? ---\"; $pkgs = & $adb shell pm list packages 2>&1 | Select-Object -First 3; Write-Output $pkgs; Write-Output \"--- settings provider ---\"; & $adb shell settings get global device_name 2>&1; Write-Output \"--- installing app ---\"; & $adb install -r \"C:\\\\flutter-football\\\\build\\\\app\\\\outputs\\\\flutter-apk\\\\app-debug.apk\")",
+      "Bash(node --check scripts/prewarmSquads.js)",
+      "Bash(ls -la /data/squad-*.json 2>/dev/null | head -3; echo \"--- C:/data ---\"; ls -la /c/data/squad-*.json 2>/dev/null | head -3; echo \"--- sample content \\(team 16\\) ---\"; cat /data/squad-16.json 2>/dev/null | head -c 400 || cat /c/data/squad-16.json 2>/dev/null | head -c 400)",
+      "Bash(node --check src/controllers/squad.js)",
+      "Bash(node --check src/routes/teamsAndPlayers.js)"
     ]
   }
 }

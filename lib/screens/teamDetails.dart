@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:football/models/games.dart';
+import 'package:football/models/squad_player.dart';
+import 'package:football/resources/team_squad_service.dart';
 import 'package:football/resources/team_statistics_service.dart';
 import 'package:football/screens/gameDetails.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
+import 'package:football/utils/he_player_name.dart';
 import 'package:football/utils/localized_team_name.dart';
 import 'package:football/widgets/StandingsTableWidget.dart';
 import 'package:intl/intl.dart';
@@ -35,7 +38,11 @@ class TeamDetailsScreen extends StatefulWidget {
 }
 
 class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
-  int _selectedTab = 0; // 0=Matches, 1=Table
+  int _selectedTab = 0; // 0=Matches, 1=Squad, 2=Table, 3=Stats
+
+  // Squad fetch, cached per resolved team id so switching tabs doesn't refetch.
+  int? _squadTeamId;
+  Future<List<SquadPlayer>>? _squadFuture;
 
   @override
   Widget build(BuildContext context) {
@@ -146,6 +153,7 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
     final l = AppLocalizations.of(context)!;
     final tabs = [
       l.matchesTab.toUpperCase(),
+      l.squadTab.toUpperCase(),
       l.tableTab.toUpperCase(),
       l.statsTab.toUpperCase(),
     ];
@@ -195,7 +203,8 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
 
   Widget _buildTabBody() {
     if (_selectedTab == 0) return _buildMatchesTab();
-    if (_selectedTab == 1) return _buildTableTab();
+    if (_selectedTab == 1) return _buildSquadTab();
+    if (_selectedTab == 2) return _buildTableTab();
     return _buildStatsTab();
   }
 
@@ -560,6 +569,164 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
       }
     });
     return bestScore > 0 ? bestId : widget.team.id;
+  }
+
+  // ── Squad tab ────────────────────────────────────────────────────────────
+  // Reads the squad cached server-side (prewarmSquads.js). Grouped by position,
+  // each row shows the player's photo, number and (localized) name.
+  Widget _buildSquadTab() {
+    final c = context.col;
+    final l = AppLocalizations.of(context)!;
+
+    final teamId = _resolveFixtureTeamId();
+    if (_squadFuture == null || _squadTeamId != teamId) {
+      _squadTeamId = teamId;
+      _squadFuture = TeamSquadService().getSquad(teamId);
+    }
+
+    return FutureBuilder<List<SquadPlayer>>(
+      future: _squadFuture,
+      builder: (ctx, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 40),
+            child: Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 1.5,
+                  valueColor: AlwaysStoppedAnimation(c.live),
+                ),
+              ),
+            ),
+          );
+        }
+        final players = snap.data ?? const <SquadPlayer>[];
+        if (players.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+            child: Center(
+              child: Text(
+                l.squadNotAvailable.toUpperCase(),
+                style: EType.label(color: c.inkDim, size: 11, letterSpacing: 2),
+              ),
+            ),
+          );
+        }
+        return _buildSquadGroups(players, l);
+      },
+    );
+  }
+
+  Widget _buildSquadGroups(List<SquadPlayer> players, AppLocalizations l) {
+    List<SquadPlayer> byPos(String pos) =>
+        players.where((p) => p.position == pos).toList();
+    // Any unexpected/blank positions fall into a trailing "other" bucket.
+    final known = {'Goalkeeper', 'Defender', 'Midfielder', 'Attacker'};
+    final other = players.where((p) => !known.contains(p.position)).toList();
+
+    final groups = <(String, List<SquadPlayer>)>[
+      (l.goalkeepers, byPos('Goalkeeper')),
+      (l.defenders, byPos('Defender')),
+      (l.midfielders, byPos('Midfielder')),
+      (l.forwards, byPos('Attacker')),
+      if (other.isNotEmpty) ('—', other),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final g in groups)
+            if (g.$2.isNotEmpty) ...[
+              _sectionHeader(g.$1.toUpperCase()),
+              const SizedBox(height: 8),
+              _squadCard(g.$2),
+              const SizedBox(height: 16),
+            ],
+        ],
+      ),
+    );
+  }
+
+  Widget _squadCard(List<SquadPlayer> players) {
+    final c = context.col;
+    return Container(
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(2),
+        border: Border.all(color: c.hairline, width: 1),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < players.length; i++)
+            _squadRow(players[i], isLast: i == players.length - 1),
+        ],
+      ),
+    );
+  }
+
+  Widget _squadRow(SquadPlayer p, {required bool isLast}) {
+    final c = context.col;
+    return Container(
+      decoration: BoxDecoration(
+        border: isLast
+            ? null
+            : Border(bottom: BorderSide(color: c.hairline, width: 1)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      child: Row(
+        children: [
+          // Shirt number
+          SizedBox(
+            width: 26,
+            child: Text(
+              p.number?.toString() ?? '',
+              textAlign: TextAlign.center,
+              style: EType.numeric(color: c.inkMute, size: 13, weight: FontWeight.w700),
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Photo
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: c.cardHi,
+              shape: BoxShape.circle,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: (p.photo != null && p.photo!.isNotEmpty)
+                ? Image.network(
+                    p.photo!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) =>
+                        Icon(Icons.person, size: 18, color: c.inkDim),
+                  )
+                : Icon(Icons.person, size: 18, color: c.inkDim),
+          ),
+          const SizedBox(width: 12),
+          // Name
+          Expanded(
+            child: Text(
+              localizedPlayerName(context, p.name),
+              overflow: TextOverflow.ellipsis,
+              style: EType.body(color: c.ink, size: 14),
+            ),
+          ),
+          // Age (end of row)
+          if (p.age != null) ...[
+            const SizedBox(width: 10),
+            Text(
+              '${p.age}',
+              style: EType.numeric(color: c.inkDim, size: 13, weight: FontWeight.w500),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
   // ── Table tab ────────────────────────────────────────────────────────────

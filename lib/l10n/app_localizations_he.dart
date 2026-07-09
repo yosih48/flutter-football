@@ -888,6 +888,24 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statsTab => 'סטטיסטיקה';
 
   @override
+  String get squadTab => 'סגל';
+
+  @override
+  String get goalkeepers => 'שוערים';
+
+  @override
+  String get defenders => 'מגנים';
+
+  @override
+  String get midfielders => 'קשרים';
+
+  @override
+  String get forwards => 'חלוצים';
+
+  @override
+  String get squadNotAvailable => 'הסגל עדיין לא זמין';
+
+  @override
   String get recentFormTitle => 'פורמה';
 
   @override

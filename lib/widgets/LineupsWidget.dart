@@ -516,9 +516,9 @@ class _PlayerDot extends StatelessWidget {
                     child: _PlayerAvatar(
                       number: player.number,
                       color: color,
-                      // photoUrl: player.photo,  ← drop-in once the image
-                      // proxy lands; falls back to the number automatically.
-                      photoUrl: null,
+                      // API-Football media CDN headshot (free, disk-warmed
+                      // server-side); falls back to the number on load error.
+                      photoUrl: player.photo,
                     ),
                   ),
 
@@ -568,19 +568,39 @@ class _PlayerDot extends StatelessWidget {
               const SizedBox(height: 2),
             ],
 
-            // ── Name (number is shown inside the coloured circle) ──
-            Text(
-              localizedPlayerName(context, player.name, abbreviate: true),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 9.5,
-                height: 1.15,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            // ── Name — with the number when a photo hides it in the circle ──
+            Builder(builder: (_) {
+              final hasPhoto = player.photo != null && player.photo!.isNotEmpty;
+              final nameText = Text(
+                localizedPlayerName(context, player.name, abbreviate: true),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 9.5,
+                  height: 1.15,
+                  fontWeight: FontWeight.w600,
+                ),
+              );
+              if (!hasPhoto) return nameText;
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '${player.number}',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.6),
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(width: 3),
+                  Flexible(child: nameText),
+                ],
+              );
+            }),
           ],
         ),
       ),

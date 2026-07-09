@@ -91,6 +91,7 @@ class LineupPlayer {
   final String? grid;
   final double? rating;
   final bool captain;
+  final String? photo;
 
   LineupPlayer({
     required this.id,
@@ -100,6 +101,7 @@ class LineupPlayer {
     this.grid,
     this.rating,
     this.captain = false,
+    this.photo,
   });
 
   factory LineupPlayer.fromJson(Map<String, dynamic> json) {
@@ -111,6 +113,7 @@ class LineupPlayer {
       grid: json['grid'],
       rating: (json['rating'] as num?)?.toDouble(),
       captain: json['captain'] == true,
+      photo: json['photo'],
     );
   }
 }

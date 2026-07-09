@@ -1853,6 +1853,24 @@ abstract class AppLocalizations {
   /// **'Stats'**
   String get statsTab;
 
+  /// No description provided for @squadTab.
+  String get squadTab;
+
+  /// No description provided for @goalkeepers.
+  String get goalkeepers;
+
+  /// No description provided for @defenders.
+  String get defenders;
+
+  /// No description provided for @midfielders.
+  String get midfielders;
+
+  /// No description provided for @forwards.
+  String get forwards;
+
+  /// No description provided for @squadNotAvailable.
+  String get squadNotAvailable;
+
   /// No description provided for @recentFormTitle.
   ///
   /// In en, this message translates to:

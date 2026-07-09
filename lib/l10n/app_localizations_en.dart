@@ -888,6 +888,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsTab => 'Stats';
 
   @override
+  String get squadTab => 'Squad';
+
+  @override
+  String get goalkeepers => 'Goalkeepers';
+
+  @override
+  String get defenders => 'Defenders';
+
+  @override
+  String get midfielders => 'Midfielders';
+
+  @override
+  String get forwards => 'Forwards';
+
+  @override
+  String get squadNotAvailable => 'Squad not available yet';
+
+  @override
   String get recentFormTitle => 'Recent Form';
 
   @override
