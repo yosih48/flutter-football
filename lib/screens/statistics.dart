@@ -705,16 +705,14 @@ class _GuessRow extends StatelessWidget {
     final awayName =
         game != null ? localizedTeamName(context, game!.away.name) : '';
 
-    final guessScore = '${guess.homeTeamGoals}-${guess.awayTeamGoals}';
     final hasResult =
         game != null && game!.goals.home != null && game!.goals.away != null;
-    // The actual result sits inline between the team names (e.g. "teamA 3-2
-    // teamB"); a dash stands in until the score is posted.
-    final resultScore =
-        hasResult ? '${game!.goals.home}-${game!.goals.away}' : '–';
 
     String fmtPts(double v) =>
         v % 1 == 0 ? v.toInt().toString() : v.toStringAsFixed(1);
+
+    final scoreStyle =
+        EType.numeric(color: c.ink, size: 14, weight: FontWeight.w700);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -726,6 +724,11 @@ class _GuessRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (game != null)
+                  // Score is split into per-team goal widgets (home, dash, away)
+                  // rather than one "1-2" string. A single numeric string is a
+                  // bidi "island" that always renders LTR, so in Hebrew (RTL) the
+                  // digits would sit next to the wrong team. Separate widgets let
+                  // the row's direction place each goal beside its own team.
                   Row(
                     children: [
                       Flexible(
@@ -740,13 +743,16 @@ class _GuessRow extends StatelessWidget {
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Text(
-                          resultScore,
-                          style: EType.numeric(
-                              color: c.ink,
-                              size: 14,
-                              weight: FontWeight.w700),
-                        ),
+                        child: hasResult
+                            ? Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text('${game!.goals.home}', style: scoreStyle),
+                                  Text('-', style: scoreStyle),
+                                  Text('${game!.goals.away}', style: scoreStyle),
+                                ],
+                              )
+                            : Text('–', style: scoreStyle),
                       ),
                       Flexible(
                         child: Text(
@@ -762,7 +768,8 @@ class _GuessRow extends StatelessWidget {
                 const SizedBox(height: 6),
                 _ScoreChip(
                   caption: l.guess,
-                  score: guessScore,
+                  homeGoals: guess.homeTeamGoals,
+                  awayGoals: guess.awayTeamGoals,
                   color: accent,
                 ),
               ],
@@ -791,20 +798,27 @@ class _GuessRow extends StatelessWidget {
   }
 }
 
-// A small captioned score pill: caption on top, "h - a" beneath it.
+// A small captioned score pill: caption on top, home/away goals beneath it.
+// The goals are split into separate widgets (home, dash, away) so they line up
+// with their teams in both LTR and RTL — a single "h-a" string is a bidi island
+// that renders LTR everywhere and would read backwards in Hebrew.
 class _ScoreChip extends StatelessWidget {
   const _ScoreChip({
     required this.caption,
-    required this.score,
+    required this.homeGoals,
+    required this.awayGoals,
     required this.color,
   });
   final String caption;
-  final String score;
+  final String homeGoals;
+  final String awayGoals;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
     final c = context.col;
+    final scoreStyle =
+        EType.numeric(color: color, size: 14, weight: FontWeight.w700);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -813,9 +827,13 @@ class _ScoreChip extends StatelessWidget {
           style: EType.label(color: c.inkMute, size: 8, letterSpacing: 1.2),
         ),
         const SizedBox(height: 2),
-        Text(
-          score,
-          style: EType.numeric(color: color, size: 14, weight: FontWeight.w700),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(homeGoals, style: scoreStyle),
+            Text('-', style: scoreStyle),
+            Text(awayGoals, style: scoreStyle),
+          ],
         ),
       ],
     );
