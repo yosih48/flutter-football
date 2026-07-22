@@ -10,6 +10,8 @@ import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/providers/league_data_provider.dart';
 import 'package:football/resources/appUpdates.dart';
 import 'package:football/resources/auth.dart';
+import 'package:football/resources/league_config_service.dart';
+import 'package:football/utils/league_logos.dart';
 import 'package:football/resources/groupsMethods.dart';
 import 'package:football/resources/guessesMethods.dart';
 import 'package:football/resources/usersMethods.dart';
@@ -933,7 +935,7 @@ class TableScreenContentState extends State<TableScreenContent> {
           else ...[
             if (selectedGroupName.isNotEmpty &&
                 selectedGroupName != 'Public')
-              _buildGroupHeader(context, c),
+              _buildGroupHeader(context, c, _users.length),
             // Only the rows shimmer while we fetch.
             Expanded(
               child: Skeletonizer(
@@ -941,7 +943,6 @@ class TableScreenContentState extends State<TableScreenContent> {
                 child: _buildLeaderboard(context, effectiveUsers, c),
               ),
             ),
-            _buildFooterActions(context, c),
           ],
         ],
       ),
@@ -996,73 +997,132 @@ class TableScreenContentState extends State<TableScreenContent> {
     );
   }
 
-  Widget _buildGroupHeader(BuildContext context, EditorialColors c) {
+  String _leagueName() {
+    final remote = LeagueConfigService()
+        .nameFor(league, Localizations.localeOf(context).languageCode);
+    if (remote != null) return remote;
+    final l = AppLocalizations.of(context)!;
+    switch (league) {
+      case 2:   return l.championsleague;
+      case 383: return l.ligathaal;
+      case 140: return l.laliga;
+      case 3:   return l.europaleague;
+      case 39:  return l.premierleague;
+      case 848: return l.conferenceleague;
+      default:  return '$league';
+    }
+  }
+
+  Widget _buildGroupHeader(
+      BuildContext context, EditorialColors c, int playerCount) {
+    final l = AppLocalizations.of(context)!;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-      child: InkWell(
-        onTap: _showGroupSwitcherSheet,
-        child: Row(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: c.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: c.hairline, width: 1),
+        ),
+        child: Column(
           children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: c.cardHi,
-                shape: BoxShape.circle,
-                border: Border.all(color: c.live, width: 1),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                selectedGroupName.isNotEmpty
-                    ? selectedGroupName[0].toUpperCase()
-                    : '?',
-                style: EType.display(
-                  size: 16,
-                  color: c.live,
-                ),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+            // Identity + switch
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+              child: Row(
                 children: [
-                  Text(AppLocalizations.of(context)!.group.toUpperCase(),
-                      style: EType.label(
-                          color: c.inkDim,
-                          size: 9,
-                          letterSpacing: 2)),
-                  const SizedBox(height: 4),
-                  Text(
-                    selectedGroupName.toUpperCase(),
-                    overflow: TextOverflow.ellipsis,
-                    style: EType.display(
-                      size: 20,
-                      color: c.ink,
-                      letterSpacing: 1,
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: c.cardHi,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: c.live, width: 1.5),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      selectedGroupName.isNotEmpty
+                          ? selectedGroupName[0].toUpperCase()
+                          : '?',
+                      style: EType.display(size: 16, color: c.live),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(l.group.toUpperCase(),
+                            style: EType.label(
+                                color: c.inkDim, size: 9, letterSpacing: 2)),
+                        const SizedBox(height: 3),
+                        Text(
+                          selectedGroupName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: EType.display(size: 18, color: c.ink),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: _showGroupSwitcherSheet,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: c.hairline, width: 1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(l.switchGroup,
+                              style: EType.label(
+                                  color: c.inkMute,
+                                  size: 11,
+                                  letterSpacing: 0.5)),
+                          const SizedBox(width: 4),
+                          Icon(Icons.unfold_more, color: c.inkMute, size: 14),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
+            // League strip
             Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 10, vertical: 6),
+              width: double.infinity,
               decoration: BoxDecoration(
-                border: Border.all(color: c.hairline, width: 1),
-                borderRadius: BorderRadius.circular(2),
+                color: c.liveSoft,
+                borderRadius:
+                    const BorderRadius.vertical(bottom: Radius.circular(15)),
               ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               child: Row(
                 children: [
-                  Text(AppLocalizations.of(context)!.switchGroup.toUpperCase(),
-                      style: EType.label(
-                          color: c.inkMute,
-                          size: 10,
-                          letterSpacing: 1.6)),
-                  const SizedBox(width: 4),
-                  Icon(Icons.expand_more,
-                      color: c.inkMute, size: 14),
+                  SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: Image(
+                      image: leagueLogoProvider(league),
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => Icon(
+                          Icons.emoji_events_outlined,
+                          size: 16,
+                          color: c.live),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(_leagueName(),
+                      style: EType.display(
+                          size: 14, color: c.ink, letterSpacing: 0.2)),
+                  const Spacer(),
+                  Text('$playerCount ${l.playersLabel}',
+                      style: EType.body(color: c.inkMute, size: 12)),
                 ],
               ),
             ),
@@ -1072,252 +1132,158 @@ class TableScreenContentState extends State<TableScreenContent> {
     );
   }
 
+  // ── Points helpers ──────────────────────────────────────────────────────
+  double _numOf(dynamic v) => double.tryParse(v?.toString() ?? '') ?? 0;
+  double _ptsOf(Map u) => _numOf(u['points']?[league.toString()]);
+  double _dayOf(Map u) => _numOf(u['thisDayPoints']?[league.toString()]);
+  String _fmtPts(double v) =>
+      v % 1 == 0 ? v.toInt().toString() : v.toStringAsFixed(1);
+
+  // Previous-rank map: rank each user by points EXCLUDING today's points
+  // (points - thisDayPoints). Comparing that to the live rank yields the
+  // up/down position-change arrows without any snapshot or backend field.
+  Map<String, int> _previousRanks(List<Map<String, dynamic>> rows) {
+    final prev = [...rows]
+      ..sort((a, b) => (_ptsOf(b) - _dayOf(b)).compareTo(_ptsOf(a) - _dayOf(a)));
+    return {
+      for (int i = 0; i < prev.length; i++)
+        (prev[i]['_id']?.toString() ?? 'x$i'): i + 1,
+    };
+  }
+
   Widget _buildLeaderboard(
       BuildContext context, List<Map<String, dynamic>> rows, EditorialColors c) {
     final l = AppLocalizations.of(context)!;
-    return Column(
-      children: [
-        // Column header
-        Container(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: c.hairline, width: 1),
-            ),
+    final sorted = [...rows]..sort((a, b) => _ptsOf(b).compareTo(_ptsOf(a)));
+    final prevRank = _previousRanks(rows);
+    int deltaOf(String id, int rank) => (prevRank[id] ?? rank) - rank;
+
+    final top3 = sorted.take(3).toList();
+    final rest = sorted.length > 3
+        ? sorted.sublist(3)
+        : const <Map<String, dynamic>>[];
+
+    void openStats(Map u) => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => Statistics(userId: u['_id'], leagueId: league),
           ),
+        );
+
+    return ListView(
+      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.zero,
+      children: [
+        if (top3.isNotEmpty)
+          _Podium(
+            spots: [
+              for (int i = 0; i < top3.length; i++)
+                _PodiumData(
+                  rank: i + 1,
+                  name: top3[i]['displayName']?.toString() ?? '—',
+                  points: _fmtPts(_ptsOf(top3[i])),
+                  isMe: top3[i]['_id'] == currentUserId,
+                  onTap: () => openStats(top3[i]),
+                ),
+            ],
+          ),
+        // Column header (name · change · day pts · total pts)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 6, 20, 8),
           child: Row(
             children: [
               SizedBox(
-                width: 28,
+                width: 24,
                 child: Text('#',
                     style: EType.label(
-                        color: c.inkDim,
-                        size: 10,
-                        letterSpacing: 1.4)),
+                        color: c.inkDim, size: 10, letterSpacing: 1.4)),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(l.name.toUpperCase(),
                     style: EType.label(
-                        color: c.inkDim,
-                        size: 10,
-                        letterSpacing: 1.6)),
+                        color: c.inkDim, size: 10, letterSpacing: 1.6)),
+              ),
+              const SizedBox(width: 28), // change arrow column (no label)
+              SizedBox(
+                width: 64,
+                child: Text(l.daypoints.toUpperCase(),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: EType.label(
+                        color: c.inkDim, size: 10, letterSpacing: 0.3)),
               ),
               SizedBox(
-                width: 56,
-                child: Text(
-                  l.daypoints.toUpperCase(),
-                  textAlign: TextAlign.center,
-                  style: EType.label(
-                      color: c.inkDim,
-                      size: 10,
-                      letterSpacing: 1.6),
-                ),
-              ),
-              SizedBox(
-                width: 56,
-                child: Text(
-                  l.sumpoints.toUpperCase(),
-                  textAlign: TextAlign.center,
-                  style: EType.label(
-                      color: c.inkDim,
-                      size: 10,
-                      letterSpacing: 1.6),
-                ),
+                width: 50,
+                child: Text(l.sumpoints.toUpperCase(),
+                    textAlign: TextAlign.end,
+                    style: EType.label(
+                        color: c.inkDim, size: 10, letterSpacing: 1.4)),
               ),
             ],
           ),
         ),
-        Expanded(
-          child: ListView.builder(
-            physics: const BouncingScrollPhysics(),
-            itemCount: rows.length,
-            itemBuilder: (ctx, index) {
-              final user = rows[index];
-              final isMe = user['_id'] == currentUserId;
-              final dayPts = user['thisDayPoints']?[league.toString()]
-                      ?.toString() ??
-                  '0';
-              final sumPts =
-                  user['points']?[league.toString()]?.toString() ?? '0';
-              final dayPtsNum = double.tryParse(dayPts) ?? 0;
-
-              return InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => Statistics(
-                        userId: user['_id'],
-                        leagueId: league,
-                      ),
-                    ),
-                  );
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isMe ? c.liveSoft : Colors.transparent,
-                    border: Border(
-                      bottom: BorderSide(
-                          color: c.hairline, width: 1),
-                      left: BorderSide(
-                        color: isMe ? c.live : Colors.transparent,
-                        width: 3,
-                      ),
-                    ),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 14),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 28,
-                        child: _rankCell(index + 1, c),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                user['displayName'] ?? '—',
-                                overflow: TextOverflow.ellipsis,
-                                style: EType.body(
-                                  color: c.ink,
-                                  size: 14,
-                                  weight: isMe
-                                      ? FontWeight.w600
-                                      : FontWeight.w400,
-                                ),
-                              ),
-                            ),
-                            if (isMe) ...[
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 5, vertical: 2),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                      color: c.live, width: 1),
-                                  borderRadius:
-                                      BorderRadius.circular(2),
-                                ),
-                                child: Text(AppLocalizations.of(context)!.youLabel.toUpperCase(),
-                                    style: EType.label(
-                                        color: c.live,
-                                        size: 9,
-                                        letterSpacing: 1.2)),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        width: 56,
-                        child: Text(
-                          dayPts,
-                          textAlign: TextAlign.center,
-                          style: EType.numeric(
-                            color: dayPtsNum > 0
-                                ? c.live
-                                : c.inkMute,
-                            size: 13,
-                            weight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 56,
-                        child: Text(
-                          sumPts,
-                          textAlign: TextAlign.center,
-                          style: EType.numeric(
-                            color: c.ink,
-                            size: 15,
-                            weight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
+        Container(height: 1, color: c.hairline),
+        ...rest.asMap().entries.map((e) {
+          final rank = e.key + 4;
+          final u = e.value;
+          final id = u['_id']?.toString() ?? '';
+          return _LeaderRow(
+            rank: rank,
+            name: u['displayName']?.toString() ?? '—',
+            dayPoints: _fmtPts(_dayOf(u)),
+            dayPositive: _dayOf(u) > 0,
+            points: _fmtPts(_ptsOf(u)),
+            delta: deltaOf(id, rank),
+            isMe: u['_id'] == currentUserId,
+            youLabel: l.youLabel,
+            onTap: () => openStats(u),
+          );
+        }),
+        const SizedBox(height: 16),
+        _buildInviteLeave(context, c, l),
+        const SizedBox(height: 12),
       ],
     );
   }
 
-  Widget _rankCell(int rank, EditorialColors c) {
-    if (rank <= 3) {
-      final color = rank == 1
-          ? c.amber
-          : rank == 2
-              ? c.chalk
-              : const Color(0xFFCD7F32); // bronze
-      return Center(
-        child: Container(
-          width: 22,
-          height: 22,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.12),
-            border: Border.all(color: color, width: 1),
-            borderRadius: BorderRadius.circular(2),
-          ),
-          child: Text(
-            rank.toString(),
-            style: EType.numeric(
-              color: color,
-              size: 11,
-              weight: FontWeight.w700,
-            ),
-          ),
-        ),
-      );
-    }
-    return Center(
-      child: Text(
-        rank.toString(),
-        textAlign: TextAlign.center,
-        style: EType.numeric(
-          color: c.inkDim,
-          size: 12,
-          weight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFooterActions(BuildContext context, EditorialColors c) {
-    final l = AppLocalizations.of(context)!;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-      decoration: BoxDecoration(
-        color: c.pitch,
-        border:
-            Border(top: BorderSide(color: c.hairline, width: 1)),
-      ),
-      child: Row(
+  Widget _buildInviteLeave(
+      BuildContext context, EditorialColors c, AppLocalizations l) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
         children: [
-          Expanded(
-            child: _footerBtn(
-              icon: Icons.share_outlined,
-              label: l.invitefriend,
-              color: c.live,
-              onTap: () => _inviteFriend(selectedGroupName),
+          GestureDetector(
+            onTap: () => _inviteFriend(selectedGroupName),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: c.card,
+                borderRadius: BorderRadius.circular(14),
+                border:
+                    Border.all(color: c.live.withValues(alpha: 0.5), width: 1),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.share_outlined, color: c.live, size: 16),
+                  const SizedBox(width: 8),
+                  Text(l.invitefriend,
+                      style: EType.label(
+                          color: c.live, size: 12, letterSpacing: 1)),
+                ],
+              ),
             ),
           ),
           if (!isLoading && !_isCreatorOfActiveGroup) ...[
-            const SizedBox(width: 10),
-            Expanded(
-              child: _footerBtn(
-                icon: Icons.logout,
-                label: l.leave,
-                color: c.flag,
-                onTap: _leaveActiveGroup,
-              ),
+            const SizedBox(height: 10),
+            _footerBtn(
+              icon: Icons.logout,
+              label: l.leave,
+              color: c.flag,
+              onTap: _leaveActiveGroup,
             ),
           ],
         ],
@@ -1524,6 +1490,268 @@ class _HeaderActionButtonState extends State<_HeaderActionButton> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ── Position-change arrow: green up / red down / dash for no change ─────────
+class _DeltaArrow extends StatelessWidget {
+  const _DeltaArrow({required this.delta});
+  final int delta;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    if (delta == 0) {
+      return Text('–', style: EType.body(color: c.inkDim, size: 14));
+    }
+    final up = delta > 0;
+    final color = up ? c.live : c.flag;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('${delta.abs()}',
+            style:
+                EType.numeric(color: color, size: 12, weight: FontWeight.w700)),
+        Icon(up ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+            color: color, size: 18),
+      ],
+    );
+  }
+}
+
+// ── One leaderboard row (rank 4+): number · name · change · points ─────────
+class _LeaderRow extends StatelessWidget {
+  const _LeaderRow({
+    required this.rank,
+    required this.name,
+    required this.dayPoints,
+    required this.dayPositive,
+    required this.points,
+    required this.delta,
+    required this.isMe,
+    required this.youLabel,
+    required this.onTap,
+  });
+  final int rank;
+  final String name;
+  final String dayPoints;
+  final bool dayPositive;
+  final String points;
+  final int delta;
+  final bool isMe;
+  final String youLabel;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isMe ? c.liveSoft : Colors.transparent,
+          border: Border(
+            bottom: BorderSide(color: c.hairline, width: 1),
+            left: BorderSide(
+                color: isMe ? c.live : Colors.transparent, width: 3),
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 24,
+              child: Text('$rank',
+                  style: EType.numeric(
+                      color: c.inkDim, size: 13, weight: FontWeight.w500)),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      name,
+                      overflow: TextOverflow.ellipsis,
+                      style: EType.body(
+                        color: c.ink,
+                        size: 14,
+                        weight: isMe ? FontWeight.w600 : FontWeight.w400,
+                      ),
+                    ),
+                  ),
+                  if (isMe) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 5, vertical: 2),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: c.live, width: 1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(youLabel.toUpperCase(),
+                          style: EType.label(
+                              color: c.live, size: 9, letterSpacing: 1.2)),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            SizedBox(
+              width: 28,
+              child: Center(child: _DeltaArrow(delta: delta)),
+            ),
+            SizedBox(
+              width: 64,
+              child: Text(dayPoints,
+                  textAlign: TextAlign.center,
+                  style: EType.numeric(
+                      color: dayPositive ? c.live : c.inkMute,
+                      size: 13,
+                      weight: FontWeight.w500)),
+            ),
+            SizedBox(
+              width: 50,
+              child: Text(points,
+                  textAlign: TextAlign.end,
+                  style: EType.numeric(
+                      color: c.ink, size: 15, weight: FontWeight.w600)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Podium (top 3): #1 centered and elevated, #2 right, #3 left ────────────
+class _PodiumData {
+  const _PodiumData({
+    required this.rank,
+    required this.name,
+    required this.points,
+    required this.isMe,
+    required this.onTap,
+  });
+  final int rank;
+  final String name;
+  final String points;
+  final bool isMe;
+  final VoidCallback onTap;
+}
+
+class _Podium extends StatelessWidget {
+  const _Podium({required this.spots});
+  final List<_PodiumData> spots;
+
+  _PodiumData? _byRank(int r) {
+    for (final s in spots) {
+      if (s.rank == r) return s;
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r1 = _byRank(1);
+    final r2 = _byRank(2);
+    final r3 = _byRank(3);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 20, 12, 20),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Expanded(
+              child:
+                  r2 != null ? _PodiumSpot(data: r2) : const SizedBox.shrink()),
+          Expanded(
+              child: r1 != null
+                  ? _PodiumSpot(data: r1, big: true)
+                  : const SizedBox.shrink()),
+          Expanded(
+              child:
+                  r3 != null ? _PodiumSpot(data: r3) : const SizedBox.shrink()),
+        ],
+      ),
+    );
+  }
+}
+
+class _PodiumSpot extends StatelessWidget {
+  const _PodiumSpot({required this.data, this.big = false});
+  final _PodiumData data;
+  final bool big;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    final rankColor = data.rank == 1
+        ? c.amber
+        : data.rank == 2
+            ? c.chalk
+            : const Color(0xFFCD7F32); // bronze
+    final size = big ? 68.0 : 56.0;
+    final initial = data.name.isNotEmpty ? data.name[0].toUpperCase() : '?';
+
+    return GestureDetector(
+      onTap: data.onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: size,
+                height: size,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: data.isMe ? c.live : c.cardHi,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                      color: data.isMe ? c.live : rankColor, width: 2),
+                ),
+                child: Text(initial,
+                    style: EType.display(
+                        size: big ? 26 : 20,
+                        color: data.isMe ? c.pitch : rankColor)),
+              ),
+              Positioned(
+                bottom: -8,
+                child: Container(
+                  width: 22,
+                  height: 22,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: rankColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: c.pitch, width: 2),
+                  ),
+                  child: Text('${data.rank}',
+                      style: EType.numeric(
+                          color: c.pitch, size: 11, weight: FontWeight.w700)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(data.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style:
+                  EType.body(color: c.ink, size: 12, weight: FontWeight.w600)),
+          const SizedBox(height: 2),
+          Text(data.points,
+              style: EType.numeric(
+                  color: data.rank == 1 ? c.live : c.ink,
+                  size: big ? 18 : 15,
+                  weight: FontWeight.w700)),
+        ],
       ),
     );
   }

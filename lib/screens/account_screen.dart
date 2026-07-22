@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:football/providers/flutter pub add provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
@@ -15,7 +14,6 @@ class AccountScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.col;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
     final user = authProvider.currentUser;
     final l = AppLocalizations.of(context)!;
 
@@ -72,106 +70,53 @@ class AccountScreen extends StatelessWidget {
               // ── Identity block ─────────────────────────────────────
               Container(
                 margin: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                padding: const EdgeInsets.all(20),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                 decoration: BoxDecoration(
                   color: c.card,
-                  border: Border(
-                    top: BorderSide(color: c.live, width: 2),
-                    left: BorderSide(color: c.hairline, width: 1),
-                    right: BorderSide(color: c.hairline, width: 1),
-                    bottom: BorderSide(color: c.hairline, width: 1),
-                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: c.hairline, width: 1),
                 ),
                 child: Row(
                   children: [
                     Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: c.cardHi,
-                        shape: BoxShape.circle,
-                        border:
-                            Border.all(color: c.live, width: 1.5),
-                      ),
+                      width: 48,
+                      height: 48,
                       alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                          color: c.live, shape: BoxShape.circle),
                       child: Text(
                         initial,
-                        style: EType.display(
-                            size: 32,
-                            color: c.ink,
-                            letterSpacing: 0),
+                        style:
+                            EType.display(size: 20, color: Colors.white),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            userName.isNotEmpty
-                                ? userName.toUpperCase()
-                                : '—',
+                            userName.isNotEmpty ? userName : '—',
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: EType.display(
-                                size: 22,
+                            style: EType.body(
                                 color: c.ink,
-                                letterSpacing: 0.8),
+                                size: 16,
+                                weight: FontWeight.w600),
                           ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Icon(Icons.email_outlined,
-                                  size: 12, color: c.inkDim),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  userEmail,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: EType.body(
-                                      color: c.ink, size: 12),
-                                ),
-                              ),
-                            ],
+                          const SizedBox(height: 3),
+                          Text(
+                            userEmail,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style:
+                                EType.body(color: c.inkMute, size: 12),
                           ),
                         ],
                       ),
                     ),
                   ],
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // ── Section label ──────────────────────────────────────
-              // Padding(
-              //   padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-              //   child: _sectionLabel(l.dangerZoneLabel.toUpperCase(), c),
-              // ),
-
-              // ── Sign Out row ───────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                child: _ActionRow(
-                  icon: Icons.exit_to_app_outlined,
-                  label: l.signout.toUpperCase(),
-                  accent: c.flag,
-                  onTap: () async {
-                    final nav = Navigator.of(context);
-                    final confirm = await _showEditorialDialog(
-                      context: context,
-                      title: l.confirmsignout,
-                      body: l.leaveapp,
-                      confirmLabel: l.yes,
-                      confirmColor: c.flag,
-                      cancelLabel: l.cancel,
-                    );
-                    if (confirm == true) {
-                      userProvider.setSelectedGroupName('public');
-                      await authProvider.signOut(user.id);
-                      nav.pushNamedAndRemoveUntil(
-                          '/login', (route) => false);
-                    }
-                  },
                 ),
               ),
 
@@ -263,18 +208,6 @@ class AccountScreen extends StatelessWidget {
     );
   }
 
-  Widget _sectionLabel(String text, EditorialColors c) {
-    return Row(
-      children: [
-        Container(width: 18, height: 1, color: c.flag),
-        const SizedBox(width: 10),
-        Text(text,
-            style: EType.label(
-                color: c.ink, size: 10, letterSpacing: 2.4)),
-      ],
-    );
-  }
-
   Future<bool?> _showEditorialDialog({
     required BuildContext context,
     required String title,
@@ -291,28 +224,20 @@ class AccountScreen extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: c.card,
-            border: Border(
-              top: BorderSide(color: confirmColor, width: 2),
-              left: BorderSide(color: c.hairline, width: 1),
-              right: BorderSide(color: c.hairline, width: 1),
-              bottom: BorderSide(color: c.hairline, width: 1),
-            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: c.hairline, width: 1),
           ),
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(22),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title.toUpperCase(),
-                  style: EType.display(
-                      size: 22,
-                      color: c.ink,
-                      letterSpacing: 0.8)),
-              const SizedBox(height: 12),
-              Text(body,
-                  style:
-                      EType.body(color: c.inkDim, size: 13)),
-              const SizedBox(height: 28),
+              Text(title,
+                  style: EType.body(
+                      color: c.ink, size: 18, weight: FontWeight.w600)),
+              const SizedBox(height: 10),
+              Text(body, style: EType.body(color: c.inkMute, size: 13)),
+              const SizedBox(height: 24),
               Row(
                 children: [
                   Expanded(
@@ -339,65 +264,6 @@ class AccountScreen extends StatelessWidget {
   }
 }
 
-// ── Action row ───────────────────────────────────────────────────────────
-class _ActionRow extends StatelessWidget {
-  const _ActionRow({
-    required this.icon,
-    required this.label,
-    required this.accent,
-    required this.onTap,
-  });
-  final IconData icon;
-  final String label;
-  final Color accent;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.col;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        decoration: BoxDecoration(
-          color: c.card,
-          border: Border(
-            top: BorderSide(color: accent, width: 2),
-            left: BorderSide(color: c.hairline, width: 1),
-            right: BorderSide(color: c.hairline, width: 1),
-            bottom: BorderSide(color: c.hairline, width: 1),
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: accent.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(2),
-                border: Border.all(
-                    color: accent.withOpacity(0.3), width: 1),
-              ),
-              child: Icon(icon, size: 16, color: accent),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                label,
-                style: EType.label(
-                    color: accent, size: 11, letterSpacing: 1.8),
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios, size: 12, color: accent),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // ── Icon button ──────────────────────────────────────────────────────────
 class _IconBtn extends StatelessWidget {
   const _IconBtn({required this.icon, required this.onTap});
@@ -416,7 +282,7 @@ class _IconBtn extends StatelessWidget {
         decoration: BoxDecoration(
           color: c.card,
           border: Border.all(color: c.hairline, width: 1),
-          borderRadius: BorderRadius.circular(2),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, size: 16, color: c.ink),
       ),
@@ -439,7 +305,7 @@ class _GhostBtn extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           border: Border.all(color: c.hairline, width: 1),
-          borderRadius: BorderRadius.circular(2),
+          borderRadius: BorderRadius.circular(10),
         ),
         alignment: Alignment.center,
         child: Text(label.toUpperCase(),
@@ -468,7 +334,7 @@ class _SolidBtn extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(2),
+          borderRadius: BorderRadius.circular(10),
         ),
         alignment: Alignment.center,
         child: Text(label.toUpperCase(),

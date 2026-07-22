@@ -1,0 +1,46 @@
+import 'package:flutter/material.dart';
+import 'package:football/l10n/app_localizations.dart';
+import 'package:football/theme/colors.dart';
+import 'package:football/theme/typography.dart';
+import 'package:football/widgets/trophyCabinet.dart';
+
+// Dedicated past-seasons screen, opened from the profile's cabinet entry card.
+// Keeps the long per-season history off the main profile scroll.
+class TrophyCabinetScreen extends StatelessWidget {
+  const TrophyCabinetScreen({
+    super.key,
+    required this.userId,
+    required this.allowedIds,
+  });
+
+  final String userId;
+  final Set<String> allowedIds;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    final l = AppLocalizations.of(context)!;
+
+    return Scaffold(
+      backgroundColor: c.pitch,
+      appBar: AppBar(
+        backgroundColor: c.pitch,
+        elevation: 0,
+        iconTheme: IconThemeData(color: c.ink),
+        title: Text(
+          l.trophyCabinet,
+          style: EType.display(size: 20, color: c.ink, letterSpacing: 0.6),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: TrophyCabinetTab(
+            userId: userId,
+            allowedIds: allowedIds,
+          ),
+        ),
+      ),
+    );
+  }
+}

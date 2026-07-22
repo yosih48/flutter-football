@@ -1853,24 +1853,6 @@ abstract class AppLocalizations {
   /// **'Stats'**
   String get statsTab;
 
-  /// No description provided for @squadTab.
-  String get squadTab;
-
-  /// No description provided for @goalkeepers.
-  String get goalkeepers;
-
-  /// No description provided for @defenders.
-  String get defenders;
-
-  /// No description provided for @midfielders.
-  String get midfielders;
-
-  /// No description provided for @forwards.
-  String get forwards;
-
-  /// No description provided for @squadNotAvailable.
-  String get squadNotAvailable;
-
   /// No description provided for @recentFormTitle.
   ///
   /// In en, this message translates to:
@@ -2050,6 +2032,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Matches'**
   String get matchesTab;
+
+  /// No description provided for @squadTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Squad'**
+  String get squadTab;
+
+  /// No description provided for @goalkeepers.
+  ///
+  /// In en, this message translates to:
+  /// **'Goalkeepers'**
+  String get goalkeepers;
+
+  /// No description provided for @defenders.
+  ///
+  /// In en, this message translates to:
+  /// **'Defenders'**
+  String get defenders;
+
+  /// No description provided for @midfielders.
+  ///
+  /// In en, this message translates to:
+  /// **'Midfielders'**
+  String get midfielders;
+
+  /// No description provided for @forwards.
+  ///
+  /// In en, this message translates to:
+  /// **'Forwards'**
+  String get forwards;
+
+  /// No description provided for @squadNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Squad not available yet'**
+  String get squadNotAvailable;
 
   /// No description provided for @recentResults.
   ///
@@ -2680,6 +2698,300 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No thanks'**
   String get rateAppNoThanks;
+
+  /// No description provided for @trophyCabinet.
+  ///
+  /// In en, this message translates to:
+  /// **'Trophy Cabinet'**
+  String get trophyCabinet;
+
+  /// No description provided for @thisSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'This Season'**
+  String get thisSeason;
+
+  /// No description provided for @pastSeasons.
+  ///
+  /// In en, this message translates to:
+  /// **'Past Seasons'**
+  String get pastSeasons;
+
+  /// No description provided for @trophySeason.
+  ///
+  /// In en, this message translates to:
+  /// **'Season'**
+  String get trophySeason;
+
+  /// No description provided for @trophyRank.
+  ///
+  /// In en, this message translates to:
+  /// **'Rank'**
+  String get trophyRank;
+
+  /// No description provided for @trophyOf.
+  ///
+  /// In en, this message translates to:
+  /// **'of'**
+  String get trophyOf;
+
+  /// No description provided for @trophyChampionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Champion'**
+  String get trophyChampionLabel;
+
+  /// No description provided for @trophyTopScorerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Scorer'**
+  String get trophyTopScorerLabel;
+
+  /// No description provided for @trophyBracketLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bracket'**
+  String get trophyBracketLabel;
+
+  /// No description provided for @trophyCorrect.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct'**
+  String get trophyCorrect;
+
+  /// No description provided for @trophyMissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed'**
+  String get trophyMissed;
+
+  /// No description provided for @noTrophiesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No trophies yet'**
+  String get noTrophiesYet;
+
+  /// No description provided for @noTrophiesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your season results will appear here.'**
+  String get noTrophiesHint;
+
+  /// No description provided for @closeSeasonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Close Season'**
+  String get closeSeasonTitle;
+
+  /// No description provided for @seasonNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Season (year)'**
+  String get seasonNumberLabel;
+
+  /// No description provided for @archiveConfirmButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get archiveConfirmButton;
+
+  /// No description provided for @archiveWillArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Will archive'**
+  String get archiveWillArchive;
+
+  /// No description provided for @archiveDoneMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get archiveDoneMessage;
+
+  /// No description provided for @myChampionshipPicks.
+  ///
+  /// In en, this message translates to:
+  /// **'My championship picks'**
+  String get myChampionshipPicks;
+
+  /// No description provided for @championHit.
+  ///
+  /// In en, this message translates to:
+  /// **'Nailed the champion'**
+  String get championHit;
+
+  /// No description provided for @championMiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed the champion'**
+  String get championMiss;
+
+  /// No description provided for @leagueManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'League management'**
+  String get leagueManagement;
+
+  /// No description provided for @adminSettleBracketSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Set results and compute points'**
+  String get adminSettleBracketSub;
+
+  /// No description provided for @adminSettleChampionSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock the champion pick'**
+  String get adminSettleChampionSub;
+
+  /// No description provided for @adminCloseSeasonSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrap up the current season'**
+  String get adminCloseSeasonSub;
+
+  /// No description provided for @notifMasterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All notifications'**
+  String get notifMasterTitle;
+
+  /// No description provided for @notifMasterSub.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll get alerts based on the settings below'**
+  String get notifMasterSub;
+
+  /// No description provided for @notifDefaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Defaults'**
+  String get notifDefaults;
+
+  /// No description provided for @notifApplyAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to all leagues'**
+  String get notifApplyAll;
+
+  /// No description provided for @notifPerLeague.
+  ///
+  /// In en, this message translates to:
+  /// **'Per league'**
+  String get notifPerLeague;
+
+  /// No description provided for @notifGoalsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'When a goal is scored in your matches'**
+  String get notifGoalsSub;
+
+  /// No description provided for @notifRemindersSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Before kickoff, if your picks are missing'**
+  String get notifRemindersSub;
+
+  /// No description provided for @notifPointsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'When results settle and points are awarded'**
+  String get notifPointsSub;
+
+  /// No description provided for @notifAlertsOnSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'of 3 alerts on'**
+  String get notifAlertsOnSuffix;
+
+  /// No description provided for @playersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'players'**
+  String get playersLabel;
+
+  /// No description provided for @yourPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Your position'**
+  String get yourPosition;
+
+  /// No description provided for @actualResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Actual result'**
+  String get actualResult;
+
+  /// No description provided for @exactBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Exact'**
+  String get exactBadge;
+
+  /// No description provided for @winWord.
+  ///
+  /// In en, this message translates to:
+  /// **'win'**
+  String get winWord;
+
+  /// No description provided for @groupGuesses.
+  ///
+  /// In en, this message translates to:
+  /// **'Group guesses'**
+  String get groupGuesses;
+
+  /// No description provided for @formLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Form'**
+  String get formLabel;
+
+  /// No description provided for @venueHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get venueHome;
+
+  /// No description provided for @venueAway.
+  ///
+  /// In en, this message translates to:
+  /// **'Away'**
+  String get venueAway;
+
+  /// No description provided for @preferencesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get preferencesSection;
+
+  /// No description provided for @themeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Light or dark appearance'**
+  String get themeSubtitle;
+
+  /// No description provided for @languageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hebrew or English'**
+  String get languageSubtitle;
+
+  /// No description provided for @notifSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage push notifications'**
+  String get notifSubtitle;
+
+  /// No description provided for @rulesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How points are scored'**
+  String get rulesSubtitle;
+
+  /// No description provided for @termsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms & privacy'**
+  String get termsTitle;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

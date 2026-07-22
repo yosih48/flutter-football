@@ -1,0 +1,90 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:football/l10n/app_localizations.dart';
+import 'package:football/models/season_record.dart';
+import 'package:football/resources/trophyMethods.dart';
+import 'package:football/widgets/trophyCabinet.dart';
+
+class _FakeTrophyMethods extends TrophyMethods {
+  const _FakeTrophyMethods(this.history);
+  final List<SeasonRecord> history;
+  @override
+  Future<List<SeasonRecord>> fetchHistory(String userId) async => history;
+}
+
+SeasonRecord _rec({
+  int leagueId = 39,
+  int season = 2025,
+  int rank = 1,
+  int totalPlayers = 10,
+}) =>
+    SeasonRecord.fromJson({
+      'leagueId': leagueId,
+      'season': season,
+      'current': false,
+      'points': 100,
+      'rank': rank,
+      'totalPlayers': totalPlayers,
+      'winnerPick': 'Man City',
+      'championName': 'Man City',
+      'championCorrect': true,
+      'championPoints': 20,
+      'topScorerPick': 'Haaland',
+      'topScorerPoints': 12,
+      'bracketPoints': 0,
+    });
+
+Widget _wrap(Widget child) => MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: const Locale('en'),
+      home: Scaffold(body: SingleChildScrollView(child: child)),
+    );
+
+void main() {
+  testWidgets('shows empty state when there is no history', (tester) async {
+    await tester.pumpWidget(_wrap(TrophyCabinetTab(
+      userId: 'u1',
+      allowedIds: const {'39'},
+      methods: const _FakeTrophyMethods([]),
+    )));
+    await tester.pumpAndSettle();
+    expect(find.text('NO TROPHIES YET'), findsOneWidget);
+  });
+
+  testWidgets('renders an archived season card with rank badge', (tester) async {
+    await tester.pumpWidget(_wrap(TrophyCabinetTab(
+      userId: 'u1',
+      allowedIds: const {'39'},
+      methods: _FakeTrophyMethods([_rec(season: 2026, rank: 1, totalPlayers: 42)]),
+    )));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('2026'), findsWidgets);
+    expect(find.textContaining('#1'), findsOneWidget);
+    expect(find.textContaining('42'), findsOneWidget);
+  });
+
+  testWidgets('filters out leagues not in allowedIds', (tester) async {
+    await tester.pumpWidget(_wrap(TrophyCabinetTab(
+      userId: 'u1',
+      allowedIds: const {'140'}, // record is league 39 → filtered out
+      methods: _FakeTrophyMethods([_rec(leagueId: 39)]),
+    )));
+    await tester.pumpAndSettle();
+    expect(find.text('NO TROPHIES YET'), findsOneWidget);
+  });
+
+  testWidgets('groups records by season, newest first', (tester) async {
+    await tester.pumpWidget(_wrap(TrophyCabinetTab(
+      userId: 'u1',
+      allowedIds: const {'39'},
+      methods: _FakeTrophyMethods([
+        _rec(season: 2024),
+        _rec(season: 2026),
+      ]),
+    )));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('2024'), findsWidgets);
+    expect(find.textContaining('2026'), findsWidgets);
+  });
+}

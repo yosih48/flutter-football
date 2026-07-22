@@ -888,24 +888,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsTab => 'Stats';
 
   @override
-  String get squadTab => 'Squad';
-
-  @override
-  String get goalkeepers => 'Goalkeepers';
-
-  @override
-  String get defenders => 'Defenders';
-
-  @override
-  String get midfielders => 'Midfielders';
-
-  @override
-  String get forwards => 'Forwards';
-
-  @override
-  String get squadNotAvailable => 'Squad not available yet';
-
-  @override
   String get recentFormTitle => 'Recent Form';
 
   @override
@@ -998,6 +980,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get matchesTab => 'Matches';
+
+  @override
+  String get squadTab => 'Squad';
+
+  @override
+  String get goalkeepers => 'Goalkeepers';
+
+  @override
+  String get defenders => 'Defenders';
+
+  @override
+  String get midfielders => 'Midfielders';
+
+  @override
+  String get forwards => 'Forwards';
+
+  @override
+  String get squadNotAvailable => 'Squad not available yet';
 
   @override
   String get recentResults => 'Recent Results';
@@ -1313,4 +1313,151 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rateAppNoThanks => 'No thanks';
+
+  @override
+  String get trophyCabinet => 'Trophy Cabinet';
+
+  @override
+  String get thisSeason => 'This Season';
+
+  @override
+  String get pastSeasons => 'Past Seasons';
+
+  @override
+  String get trophySeason => 'Season';
+
+  @override
+  String get trophyRank => 'Rank';
+
+  @override
+  String get trophyOf => 'of';
+
+  @override
+  String get trophyChampionLabel => 'Champion';
+
+  @override
+  String get trophyTopScorerLabel => 'Top Scorer';
+
+  @override
+  String get trophyBracketLabel => 'Bracket';
+
+  @override
+  String get trophyCorrect => 'Correct';
+
+  @override
+  String get trophyMissed => 'Missed';
+
+  @override
+  String get noTrophiesYet => 'No trophies yet';
+
+  @override
+  String get noTrophiesHint => 'Your season results will appear here.';
+
+  @override
+  String get closeSeasonTitle => 'Close Season';
+
+  @override
+  String get seasonNumberLabel => 'Season (year)';
+
+  @override
+  String get archiveConfirmButton => 'Archive';
+
+  @override
+  String get archiveWillArchive => 'Will archive';
+
+  @override
+  String get archiveDoneMessage => 'Archived';
+
+  @override
+  String get myChampionshipPicks => 'My championship picks';
+
+  @override
+  String get championHit => 'Nailed the champion';
+
+  @override
+  String get championMiss => 'Missed the champion';
+
+  @override
+  String get leagueManagement => 'League management';
+
+  @override
+  String get adminSettleBracketSub => 'Set results and compute points';
+
+  @override
+  String get adminSettleChampionSub => 'Lock the champion pick';
+
+  @override
+  String get adminCloseSeasonSub => 'Wrap up the current season';
+
+  @override
+  String get notifMasterTitle => 'All notifications';
+
+  @override
+  String get notifMasterSub => 'You\'ll get alerts based on the settings below';
+
+  @override
+  String get notifDefaults => 'Defaults';
+
+  @override
+  String get notifApplyAll => 'Apply to all leagues';
+
+  @override
+  String get notifPerLeague => 'Per league';
+
+  @override
+  String get notifGoalsSub => 'When a goal is scored in your matches';
+
+  @override
+  String get notifRemindersSub => 'Before kickoff, if your picks are missing';
+
+  @override
+  String get notifPointsSub => 'When results settle and points are awarded';
+
+  @override
+  String get notifAlertsOnSuffix => 'of 3 alerts on';
+
+  @override
+  String get playersLabel => 'players';
+
+  @override
+  String get yourPosition => 'Your position';
+
+  @override
+  String get actualResult => 'Actual result';
+
+  @override
+  String get exactBadge => 'Exact';
+
+  @override
+  String get winWord => 'win';
+
+  @override
+  String get groupGuesses => 'Group guesses';
+
+  @override
+  String get formLabel => 'Form';
+
+  @override
+  String get venueHome => 'Home';
+
+  @override
+  String get venueAway => 'Away';
+
+  @override
+  String get preferencesSection => 'Preferences';
+
+  @override
+  String get themeSubtitle => 'Light or dark appearance';
+
+  @override
+  String get languageSubtitle => 'Hebrew or English';
+
+  @override
+  String get notifSubtitle => 'Manage push notifications';
+
+  @override
+  String get rulesSubtitle => 'How points are scored';
+
+  @override
+  String get termsTitle => 'Terms & privacy';
 }

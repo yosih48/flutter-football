@@ -254,12 +254,9 @@ class _GameDetailsState extends State<GameDetails> {
               _buildHeroCard(),
               if (_selectedTab != null) _buildTabContent(),
               if (_notStarted) _buildFormSection(),
-              const SizedBox(height: 8),
               _buildDistributionBlock(),
-              if (_currentGame.status.long != 'Not Started') ...[
+              if (_currentGame.status.long != 'Not Started')
                 _buildPredictionsBlock(),
-                const SizedBox(height: 8),
-              ],
               const SizedBox(height: 32),
             ],
           ),
@@ -298,19 +295,19 @@ class _GameDetailsState extends State<GameDetails> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 22, 16, 18),
+              padding: const EdgeInsets.fromLTRB(16, 22, 16, 14),
               child: Column(
                 children: [
                   _buildHeroMeta(),
                   const SizedBox(height: 28),
                   _buildScoreboard(hasPrev: hasPrev, hasNext: hasNext),
-                  const SizedBox(height: 24),
-                  Container(height: 1, color: c.hairline),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 20),
                   _buildLeagueStrip(),
                 ],
               ),
             ),
+            // Divider sits BELOW the league strip and ABOVE the tabs.
+            Container(height: 1, color: c.hairline),
             _buildTabBar(),
           ],
         ),
@@ -594,7 +591,6 @@ class _GameDetailsState extends State<GameDetails> {
       l.lineups.toUpperCase(),
       l.tableTab.toUpperCase(),
       l.statsTab.toUpperCase(),
-      // l.h2hTab.toUpperCase(), // H2H tab hidden for now — re-enable later.
     ];
 
     return Padding(
@@ -813,15 +809,8 @@ class _GameDetailsState extends State<GameDetails> {
     int pct(int n) => total == 0 ? 0 : (n / total * 100).round();
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: c.card,
-        border: Border(
-          top: BorderSide(color: c.hairline, width: 1),
-          bottom: BorderSide(color: c.hairline, width: 1),
-        ),
-      ),
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
+      decoration: BoxDecoration(color: c.card),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -867,23 +856,126 @@ class _GameDetailsState extends State<GameDetails> {
             ),
           ),
           if (expanded) ...[
-            const SizedBox(height: 16),
-            _distRow(
-              localizedTeamName(context, _currentGame.home.name),
-              homeWins,
-              total,
-              c.live,
-            ),
-            const SizedBox(height: 10),
-            _distRow(l.drawLabel, draws, total, c.hairlineHi),
-            const SizedBox(height: 10),
-            _distRow(
-              localizedTeamName(context, _currentGame.away.name),
-              awayWins,
-              total,
-              blue,
-            ),
+            const SizedBox(height: 12),
+            _stackedBar(homeWins, draws, awayWins, _outcomeColor('home'),
+                _outcomeColor('draw'), _outcomeColor('away')),
+            const SizedBox(height: 6),
+            _distDotRow(_outcomeColor('home'), _winLabel(_currentGame.home.name, l),
+                pct(homeWins), _actualOutcome() == 'home', l),
+            _distDotRow(_outcomeColor('draw'), l.drawLabel, pct(draws),
+                _actualOutcome() == 'draw', l),
+            _distDotRow(_outcomeColor('away'), _winLabel(_currentGame.away.name, l),
+                pct(awayWins), _actualOutcome() == 'away', l),
           ],
+        ],
+      ),
+    );
+  }
+
+  // "{team} win" in the current locale's word order.
+  String _winLabel(String rawTeamName, AppLocalizations l) {
+    final team = localizedTeamName(context, rawTeamName);
+    final isHe = Localizations.localeOf(context).languageCode == 'he';
+    return isHe ? '${l.winWord} $team' : '$team ${l.winWord}';
+  }
+
+  // The outcome that actually happened ('home'/'draw'/'away'), for the
+  // "actual result" badge — only once the game has a real score.
+  String? _actualOutcome() {
+    if (_notStarted) return null;
+    final h = _currentGame.goals.home;
+    final a = _currentGame.goals.away;
+    if (h == null || a == null) return null;
+    return h > a ? 'home' : (h < a ? 'away' : 'draw');
+  }
+
+  // Distribution colours: the outcome that actually happened is green, a draw
+  // is gray, and the other (unfulfilled) win outcome is orange. Before the
+  // result is known, both win outcomes are orange and the draw is gray.
+  Color _outcomeColor(String outcome) {
+    final c = context.col;
+    final actual = _actualOutcome();
+    if (actual != null && outcome == actual) return c.live; // actual → green
+    if (outcome == 'draw') return c.inkMute; // draw → gray
+    return c.amber; // other win → orange
+  }
+
+  // Segmented distribution bar: home | draw | away, rounded, small gaps,
+  // zero-count segments skipped.
+  Widget _stackedBar(int hf, int df, int af, Color hc, Color dc, Color ac) {
+    final segs = <Widget>[];
+    void add(int flex, Color color) {
+      if (flex <= 0) return;
+      if (segs.isNotEmpty) segs.add(const SizedBox(width: 3));
+      segs.add(Expanded(
+        flex: flex,
+        child: Container(
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ),
+      ));
+    }
+
+    add(hf, hc);
+    add(df, dc);
+    add(af, ac);
+    return Row(children: segs);
+  }
+
+  Widget _distDotRow(
+      Color color, String label, int pctVal, bool actual, AppLocalizations l) {
+    final c = context.col;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7),
+      child: Row(
+        children: [
+          Container(
+            width: 9,
+            height: 9,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 12),
+          // Label + optional "actual result" badge fill the middle so the
+          // percentage stays in a fixed, aligned column at the end.
+          Expanded(
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: EType.body(color: c.ink, size: 13)),
+                ),
+                if (actual) ...[
+                  const SizedBox(width: 10),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: color.withValues(alpha: 0.5), width: 1),
+                    ),
+                    child: Text(l.actualResult,
+                        style: EType.label(
+                            color: color, size: 9, letterSpacing: 0.3)),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 46,
+            child: Text('$pctVal%',
+                textAlign: TextAlign.end,
+                style: EType.numeric(
+                    color: color, size: 15, weight: FontWeight.w700)),
+          ),
         ],
       ),
     );
@@ -903,69 +995,11 @@ class _GameDetailsState extends State<GameDetails> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        p(home, c.live),
+        p(home, _outcomeColor('home')),
         sep(),
-        p(draw, c.inkMute),
+        p(draw, _outcomeColor('draw')),
         sep(),
-        p(away, blue),
-      ],
-    );
-  }
-
-  Widget _distRow(String label, int count, int total, Color color) {
-    final c = context.col;
-    final frac = total == 0 ? 0.0 : count / total;
-    final pct = (frac * 100).round();
-    return Row(
-      children: [
-        // Percentage (leading, like the screenshot).
-        SizedBox(
-          width: 52,
-          child: Text(
-            '$pct%',
-            style: EType.numeric(color: color, size: 15, weight: FontWeight.w700),
-          ),
-        ),
-        const SizedBox(width: 12),
-        // Bar track + fill.
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              height: 12,
-              color: c.cardHi,
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: (frac * 1000).round().clamp(0, 1000),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: ((1 - frac) * 1000).round().clamp(0, 1000),
-                    child: const SizedBox.shrink(),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        // Label (trailing — team name / draw).
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 120),
-          child: Text(
-            label,
-            textAlign: TextAlign.end,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: EType.body(color: c.ink, size: 14),
-          ),
-        ),
+        p(away, _outcomeColor('away')),
       ],
     );
   }
@@ -978,15 +1012,25 @@ class _GameDetailsState extends State<GameDetails> {
       decoration: BoxDecoration(
         color: c.card,
         border: Border(
-          top: BorderSide(color: c.hairline, width: 1),
           bottom: BorderSide(color: c.hairline, width: 1),
         ),
       ),
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionLabel(l.predictionsLabel.toUpperCase()),
+          Row(
+            children: [
+              Container(width: 18, height: 1, color: c.live),
+              const SizedBox(width: 10),
+              Text(l.groupGuesses.toUpperCase(),
+                  style: EType.label(
+                      color: c.ink, size: 11, letterSpacing: 2.4)),
+              const Spacer(),
+              if (!_groupsLoading && _userGroups.isNotEmpty)
+                _compactGroupSelector(),
+            ],
+          ),
           const SizedBox(height: 14),
           if (_groupsLoading)
             Padding(
@@ -1005,8 +1049,6 @@ class _GameDetailsState extends State<GameDetails> {
           else if (_userGroups.isEmpty)
             _joinGroupCallout(l)
           else ...[
-            _buildGroupHeader(),
-            const SizedBox(height: 14),
             if (isLoading)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),
@@ -1072,82 +1114,43 @@ class _GameDetailsState extends State<GameDetails> {
     );
   }
 
-  Widget _buildGroupHeader() {
+  // Compact group selector shown at the end of the "Group guesses" header.
+  Widget _compactGroupSelector() {
     final c = context.col;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: _showGroupSwitcherSheet,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: c.terrace,
-          borderRadius: BorderRadius.circular(2),
-        ),
-        child: Row(
-          children: [
-            // Monogram circle
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: c.cardHi,
-                shape: BoxShape.circle,
-                border: Border.all(color: c.live, width: 1),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                selectedGroupName.isNotEmpty
-                    ? selectedGroupName[0].toUpperCase()
-                    : '?',
-                style: EType.display(
-                    size: 16, color: c.live, letterSpacing: 0),
-              ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: Text(
+              selectedGroupName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: EType.body(color: c.ink, size: 13),
             ),
-            const SizedBox(width: 24),
-            // Group name
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(AppLocalizations.of(context)!.group.toUpperCase(),
-                      style: EType.label(
-                          color: c.inkDim,
-                          size: 9,
-                          letterSpacing: 2)),
-                  const SizedBox(height: 3),
-                  Text(
-                    selectedGroupName.toUpperCase(),
-                    overflow: TextOverflow.ellipsis,
-                    style: EType.display(
-                        size: 18, color: c.ink, letterSpacing: 1),
-                  ),
-                ],
-              ),
+          ),
+          const SizedBox(width: 6),
+          Icon(Icons.unfold_more, color: c.inkMute, size: 14),
+          const SizedBox(width: 8),
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: c.cardHi,
+              shape: BoxShape.circle,
+              border: Border.all(color: c.live, width: 1),
             ),
-            // SWITCH pill
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                border: Border.all(color: c.hairline, width: 1),
-                borderRadius: BorderRadius.circular(2),
-              ),
-              child: Row(
-                children: [
-                  Text(AppLocalizations.of(context)!.switchGroup.toUpperCase(),
-                      style: EType.label(
-                          color: c.inkMute,
-                          size: 10,
-                          letterSpacing: 1.6)),
-                  const SizedBox(width: 4),
-                  Icon(Icons.expand_more,
-                      color: c.inkMute, size: 14),
-                ],
-              ),
+            alignment: Alignment.center,
+            child: Text(
+              selectedGroupName.isNotEmpty
+                  ? selectedGroupName[0].toUpperCase()
+                  : '?',
+              style: EType.display(size: 13, color: c.live),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1350,6 +1353,16 @@ class _GameDetailsState extends State<GameDetails> {
           final g = e.value;
           final isMe = g.guess.userId == currentUserId;
           final pts = g.guess.sumPoints;
+          final exact = g.guess.direct == 1; // exact score
+          final partial = !exact && pts > 0; // right direction only
+          final ptsColor =
+              exact ? c.live : (partial ? c.amber : c.inkMute);
+          // Row tint by guess quality only — exact = green, direction = orange,
+          // miss = none. The current user's row is marked by a left border and
+          // the "you" badge, NOT a green fill (green means a correct guess).
+          final bg = exact
+              ? c.liveSoft
+              : (partial ? c.amber.withValues(alpha: 0.08) : Colors.transparent);
           return InkWell(
             onTap: () {
               Navigator.push(
@@ -1363,90 +1376,92 @@ class _GameDetailsState extends State<GameDetails> {
               );
             },
             child: Container(
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: c.hairline, width: 1),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: c.hairline, width: 1),
+                  left: BorderSide(
+                    color: isMe ? c.live : Colors.transparent,
+                    width: 3,
+                  ),
+                ),
+                color: bg,
               ),
-              color: isMe ? c.liveSoft : Colors.transparent,
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 24,
-                  child: Text(
-                    '${i + 1}'.padLeft(2, '0'),
-                    style: EType.numeric(
-                      color: i < 3 ? c.live : c.inkDim,
-                      size: 11,
-                      weight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          g.userName,
-                          overflow: TextOverflow.ellipsis,
-                          style: EType.body(
-                            color: c.ink,
-                            size: 13,
-                            weight: isMe
-                                ? FontWeight.w600
-                                : FontWeight.w400,
-                          ),
-                        ),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 24,
+                    child: Text(
+                      '${i + 1}'.padLeft(2, '0'),
+                      style: EType.numeric(
+                        color: i < 3 ? c.live : c.inkDim,
+                        size: 11,
+                        weight: FontWeight.w600,
                       ),
-                      if (isMe) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 5, vertical: 1),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                                color: c.live, width: 1),
-                            borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            g.userName,
+                            overflow: TextOverflow.ellipsis,
+                            style: EType.body(
+                              color: c.ink,
+                              size: 13,
+                              weight:
+                                  isMe ? FontWeight.w600 : FontWeight.w400,
+                            ),
                           ),
-                          child: Text(AppLocalizations.of(context)!.youLabel.toUpperCase(),
-                              style: EType.label(
-                                  color: c.live,
-                                  size: 9,
-                                  letterSpacing: 1.2)),
                         ),
+                        if (isMe) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 1),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: c.live, width: 1),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                            child: Text(l.youLabel.toUpperCase(),
+                                style: EType.label(
+                                    color: c.live,
+                                    size: 9,
+                                    letterSpacing: 1.2)),
+                          ),
+                        ],
                       ],
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  width: 56,
-                  child: Text(
-                    '${g.guess.homeTeamGoals} : ${g.guess.awayTeamGoals}',
-                    textAlign: TextAlign.center,
-                    style: EType.numeric(
-                      color: c.ink,
-                      size: 13,
-                      weight: FontWeight.w500,
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                SizedBox(
-                  width: 72,
-                  child: Text(
-                    pts % 1 == 0 ? pts.toInt().toString() : pts.toString(),
-                    textAlign: TextAlign.center,
-                    style: EType.numeric(
-                      color: pts > 0 ? c.live : c.inkMute,
-                      size: 14,
-                      weight: FontWeight.w600,
+                  SizedBox(
+                    width: 56,
+                    child: Text(
+                      '${g.guess.homeTeamGoals} : ${g.guess.awayTeamGoals}',
+                      textAlign: TextAlign.center,
+                      style: EType.numeric(
+                        color: c.ink,
+                        size: 13,
+                        weight: FontWeight.w500,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    width: 72,
+                    child: Text(
+                      pts % 1 == 0 ? pts.toInt().toString() : pts.toString(),
+                      textAlign: TextAlign.center,
+                      style: EType.numeric(
+                        color: ptsColor,
+                        size: 14,
+                        weight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         }),

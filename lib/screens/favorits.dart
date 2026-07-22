@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/providers/league_data_provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/resources/league_config_service.dart';
@@ -17,7 +16,10 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../models/notif_pref.dart';
 
 class FavoritsScreen extends StatefulWidget {
-  const FavoritsScreen({super.key});
+  const FavoritsScreen({super.key, this.initialTab = 0});
+
+  // 0 = choose leagues, 1 = notifications. Lets other screens deep-link.
+  final int initialTab;
 
   @override
   State<FavoritsScreen> createState() => _FavoritsScreenState();
@@ -28,7 +30,13 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
   late String email;
   bool isLoading = true;
   String userId = '';
-  int selectedTab = 0; // 0 = choose leagues, 1 = notifications
+  late int selectedTab; // 0 = choose leagues, 1 = notifications
+
+  @override
+  void initState() {
+    super.initState();
+    selectedTab = widget.initialTab;
+  }
 
   // Both maps are keyed by league id and driven by the backend config. The DB
   // stores snetEmail and chosenLeagues id-keyed too, so this is a 1:1 mapping
@@ -250,14 +258,14 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         ),
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: GridView.builder(
               physics: const BouncingScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
                 crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                childAspectRatio: 0.85,
+                mainAxisSpacing: 10,
+                childAspectRatio: 0.92,
               ),
               itemCount: _leagueOrder.length,
               itemBuilder: (context, index) {
@@ -338,55 +346,84 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       updateDatabase(name, userEmail);
     }
 
+    final anyOn = enabledIds
+        .any((id) => (notificationStates[id] ?? const NotifPref()).anyOn);
+
+    void setAllNotifs(bool v) {
+      setState(() {
+        for (final id in enabledIds) {
+          notificationStates[id] = v
+              ? const NotifPref(goals: true, reminders: true, points: true)
+              : const NotifPref();
+        }
+      });
+      updateDatabase(name, userEmail);
+    }
+
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
-        // ── Global settings (affect every league) ──
-        _GlobalNotifCard(
-          title: l.notifGlobalTitle,
-          goalsLabel: l.notifAllGoals,
-          remindersLabel: l.notifAllReminders,
-          pointsLabel: l.notifAllPoints,
-          goals: allOfKind((p) => p.goals),
-          reminders: allOfKind((p) => p.reminders),
-          points: allOfKind((p) => p.points),
-          onChanged: setAllOfKind,
+        // ── Master switch — turns every alert on or off ──
+        _MasterNotifCard(
+          title: l.notifMasterTitle,
+          subtitle: l.notifMasterSub,
+          value: anyOn,
+          onChanged: setAllNotifs,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
+
+        // ── Defaults (apply to all leagues) ──
+        _NotifSectionHeader(label: l.notifDefaults, trailing: l.notifApplyAll),
+        const SizedBox(height: 10),
+        _NotifRowCard(
+          kind: _NotifKind.goals,
+          title: l.notifAllGoals,
+          subtitle: l.notifGoalsSub,
+          value: allOfKind((p) => p.goals),
+          onChanged: (v) => setAllOfKind('goals', v),
+        ),
+        const SizedBox(height: 10),
+        _NotifRowCard(
+          kind: _NotifKind.reminders,
+          title: l.notifAllReminders,
+          subtitle: l.notifRemindersSub,
+          value: allOfKind((p) => p.reminders),
+          onChanged: (v) => setAllOfKind('reminders', v),
+        ),
+        const SizedBox(height: 10),
+        _NotifRowCard(
+          kind: _NotifKind.points,
+          title: l.notifAllPoints,
+          subtitle: l.notifPointsSub,
+          value: allOfKind((p) => p.points),
+          onChanged: (v) => setAllOfKind('points', v),
+        ),
+        const SizedBox(height: 28),
+
         // ── Per-league cards (first open by default) ──
+        _NotifSectionHeader(label: l.notifPerLeague),
+        const SizedBox(height: 10),
         ...enabledIds.map((id) {
           final pref = notificationStates[id] ?? const NotifPref();
           final expanded = _expandedNotifLeagues.contains(id);
+          final onCount = (pref.goals ? 1 : 0) +
+              (pref.reminders ? 1 : 0) +
+              (pref.points ? 1 : 0);
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: _LeagueNotifCard(
-              logo: Container(
-                width: 40,
-                height: 40,
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: pref.anyOn ? c.live.withOpacity(0.5) : c.hairline,
-                    width: 1,
-                  ),
-                ),
-                child: Image(
-                  image: leagueLogoProvider(id),
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) =>
-                      Icon(Icons.shield_outlined, size: 18, color: c.inkDim),
-                ),
-              ),
+            child: _LeagueNotifGroup(
+              leagueId: id,
               name: _localizedLeagueName(id),
               pref: pref,
               expanded: expanded,
-              moreLabel: l.notifMoreSettings,
-              goalsLabel: l.notifGoals,
-              remindersLabel: l.notifReminders,
-              pointsLabel: l.notifPoints,
+              subtitle: '$onCount ${l.notifAlertsOnSuffix}',
+              goalsTitle: l.notifAllGoals,
+              remindersTitle: l.notifAllReminders,
+              pointsTitle: l.notifAllPoints,
+              goalsSub: l.notifGoalsSub,
+              remindersSub: l.notifRemindersSub,
+              pointsSub: l.notifPointsSub,
               onToggleExpand: () => setState(() {
                 if (expanded) {
                   _expandedNotifLeagues.remove(id);
@@ -394,12 +431,6 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                   _expandedNotifLeagues.add(id);
                 }
               }),
-              onMasterChanged: (v) {
-                setState(() => notificationStates[id] = v
-                    ? const NotifPref(goals: true, reminders: true, points: true)
-                    : const NotifPref());
-                updateDatabase(name, userEmail);
-              },
               onChanged: (next) {
                 setState(() => notificationStates[id] = next);
                 updateDatabase(name, userEmail);
@@ -488,30 +519,28 @@ class _LeagueCard extends StatelessWidget {
     final c = context.col;
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        decoration: BoxDecoration(
-          color: selected ? c.liveSoft : c.card,
-          borderRadius: BorderRadius.circular(2),
-          border: Border.all(
-            color: selected ? c.live : c.hairline,
-            width: selected ? 1.5 : 1,
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Logo + check badge
-            Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.center,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            padding: const EdgeInsets.fromLTRB(8, 14, 8, 12),
+            decoration: BoxDecoration(
+              color: selected ? c.liveSoft : c.card,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: selected ? c.live : c.hairline,
+                width: selected ? 1.5 : 1,
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // White circle — keeps dark logos visible
+                // White circle — keeps dark logos visible (unchanged).
                 Container(
-                  width: 52,
-                  height: 52,
-                  padding: const EdgeInsets.all(8),
+                  width: 54,
+                  height: 54,
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
@@ -530,272 +559,348 @@ class _LeagueCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Check badge — top-right of the circle
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 160),
-                    width: 16,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: selected ? c.live : c.card,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: selected ? c.live : c.hairlineHi,
-                        width: 1,
-                      ),
-                    ),
-                    child: selected
-                        ? Icon(Icons.check, size: 9, color: c.pitch)
-                        : null,
+                const SizedBox(height: 10),
+                Text(
+                  leagueName,
+                  style: EType.body(
+                    size: 13,
+                    color: c.ink,
+                    weight: FontWeight.w600,
+                    height: 1.15,
                   ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
-
-            const SizedBox(height: 10),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Text(
-                leagueName.toUpperCase(),
-                style: EType.label(
-                  color: selected ? c.live : c.inkMute,
-                  size: 9,
-                  letterSpacing: 1.2,
+          ),
+          // Selected check badge — card's top-right corner.
+          if (selected)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                width: 22,
+                height: 22,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: c.live,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: c.card, width: 2),
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+                child: const Icon(Icons.check, size: 12, color: Colors.white),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Global settings card: three category toggles for all leagues ────────
-class _GlobalNotifCard extends StatelessWidget {
-  const _GlobalNotifCard({
-    required this.title,
-    required this.goalsLabel,
-    required this.remindersLabel,
-    required this.pointsLabel,
-    required this.goals,
-    required this.reminders,
-    required this.points,
-    required this.onChanged,
-  });
-  final String title;
-  final String goalsLabel;
-  final String remindersLabel;
-  final String pointsLabel;
-  final bool goals;
-  final bool reminders;
-  final bool points;
-  final void Function(String kind, bool value) onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.col;
-    return Container(
-      decoration: BoxDecoration(
-        color: c.card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: c.hairline, width: 1),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
-      child: Column(
-        children: [
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: EType.display(size: 16, color: c.ink, height: 1.2),
-          ),
-          const SizedBox(height: 22),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _GlobalToggle(
-                  label: pointsLabel,
-                  value: points,
-                  onChanged: (v) => onChanged('points', v)),
-              _GlobalToggle(
-                  label: remindersLabel,
-                  value: reminders,
-                  onChanged: (v) => onChanged('reminders', v)),
-              _GlobalToggle(
-                  label: goalsLabel,
-                  value: goals,
-                  onChanged: (v) => onChanged('goals', v)),
-            ],
-          ),
         ],
       ),
     );
   }
 }
 
-// One labeled toggle in the global card (switch above a caption).
-class _GlobalToggle extends StatelessWidget {
-  const _GlobalToggle({
-    required this.label,
+// The three notification categories, each with its own tinted icon tile.
+enum _NotifKind { goals, reminders, points }
+
+class _NotifIconTile extends StatelessWidget {
+  const _NotifIconTile({required this.kind});
+  final _NotifKind kind;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    final IconData icon;
+    final Color bg;
+    final Color fg;
+    switch (kind) {
+      case _NotifKind.goals:
+        icon = Icons.adjust;
+        bg = c.live.withValues(alpha: 0.12);
+        fg = c.live;
+        break;
+      case _NotifKind.reminders:
+        icon = Icons.schedule_outlined;
+        bg = c.amber.withValues(alpha: 0.16);
+        fg = c.amber;
+        break;
+      case _NotifKind.points:
+        icon = Icons.emoji_events_outlined;
+        bg = c.inkMute.withValues(alpha: 0.14);
+        fg = c.ink;
+        break;
+    }
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(icon, size: 20, color: fg),
+    );
+  }
+}
+
+// Master card: one switch that turns every alert on or off.
+class _MasterNotifCard extends StatelessWidget {
+  const _MasterNotifCard({
+    required this.title,
+    required this.subtitle,
     required this.value,
     required this.onChanged,
   });
-  final String label;
+  final String title;
+  final String subtitle;
   final bool value;
   final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
     final c = context.col;
-    return Expanded(
-      child: Column(
+    return Container(
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: c.hairline, width: 1),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+      child: Row(
         children: [
-          _EditorialSwitch(value: value, onChanged: onChanged),
-          const SizedBox(height: 10),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: EType.label(color: c.inkMute, size: 11, letterSpacing: 0.5),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: c.live.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Icons.notifications_none, size: 20, color: c.live),
           ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: EType.display(size: 16, color: c.ink, height: 1.1)),
+                const SizedBox(height: 3),
+                Text(subtitle,
+                    style: EType.body(color: c.inkMute, size: 12, height: 1.3)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          _EditorialSwitch(value: value, onChanged: onChanged),
         ],
       ),
     );
   }
 }
 
-// ── One league card: collapsed summary (a master switch) that expands to
-// the three per-kind toggles. ───────────────────────────────────────────
-class _LeagueNotifCard extends StatelessWidget {
-  const _LeagueNotifCard({
-    required this.logo,
+// Small section label (e.g. DEFAULTS) with an optional trailing hint.
+class _NotifSectionHeader extends StatelessWidget {
+  const _NotifSectionHeader({required this.label, this.trailing});
+  final String label;
+  final String? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        children: [
+          Text(label.toUpperCase(),
+              style:
+                  EType.label(color: c.inkDim, size: 11, letterSpacing: 1.8)),
+          const Spacer(),
+          if (trailing != null)
+            Text(trailing!, style: EType.body(color: c.inkMute, size: 12)),
+        ],
+      ),
+    );
+  }
+}
+
+// A single notification row card: tinted icon + title/subtitle + switch.
+// Used both in "Defaults" and inside an expanded per-league card.
+class _NotifRowCard extends StatelessWidget {
+  const _NotifRowCard({
+    required this.kind,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
+  final _NotifKind kind;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    return Container(
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: c.hairline, width: 1),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      child: Row(
+        children: [
+          _NotifIconTile(kind: kind),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: EType.display(size: 15, color: c.ink, height: 1.1)),
+                const SizedBox(height: 3),
+                Text(subtitle,
+                    style:
+                        EType.body(color: c.inkMute, size: 12, height: 1.25)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          _EditorialSwitch(value: value, onChanged: onChanged),
+        ],
+      ),
+    );
+  }
+}
+
+// One league group: a header card (logo + name + "N of 3 alerts on" + chevron)
+// that expands to three notification row cards for that league.
+class _LeagueNotifGroup extends StatelessWidget {
+  const _LeagueNotifGroup({
+    required this.leagueId,
     required this.name,
     required this.pref,
     required this.expanded,
-    required this.moreLabel,
-    required this.goalsLabel,
-    required this.remindersLabel,
-    required this.pointsLabel,
+    required this.subtitle,
+    required this.goalsTitle,
+    required this.remindersTitle,
+    required this.pointsTitle,
+    required this.goalsSub,
+    required this.remindersSub,
+    required this.pointsSub,
     required this.onToggleExpand,
-    required this.onMasterChanged,
     required this.onChanged,
   });
-  final Widget logo;
+  final int leagueId;
   final String name;
   final NotifPref pref;
   final bool expanded;
-  final String moreLabel;
-  final String goalsLabel;
-  final String remindersLabel;
-  final String pointsLabel;
+  final String subtitle;
+  final String goalsTitle;
+  final String remindersTitle;
+  final String pointsTitle;
+  final String goalsSub;
+  final String remindersSub;
+  final String pointsSub;
   final VoidCallback onToggleExpand;
-  final ValueChanged<bool> onMasterChanged;
   final ValueChanged<NotifPref> onChanged;
 
   @override
   Widget build(BuildContext context) {
     final c = context.col;
 
-    Widget kindRow(String lbl, bool value, NotifPref Function(bool) apply) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 14),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                lbl,
-                overflow: TextOverflow.ellipsis,
-                style: EType.display(size: 15, color: c.ink, height: 1.0),
+    return Column(
+      children: [
+        // Header card — tap anywhere to expand/collapse.
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onToggleExpand,
+          child: Container(
+            decoration: BoxDecoration(
+              color: c.card,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: pref.anyOn ? c.live.withValues(alpha: 0.5) : c.hairline,
+                width: 1,
               ),
             ),
-            const SizedBox(width: 10),
-            Icon(Icons.notifications_none, size: 18, color: c.inkMute),
-            const SizedBox(width: 12),
-            _EditorialSwitch(value: value, onChanged: (v) => onChanged(apply(v))),
-          ],
-        ),
-      );
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: c.card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: c.hairline, width: 1),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Column(
-        children: [
-          // Header — tap the logo/name/chevron to expand or collapse.
-          Row(
-            children: [
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: onToggleExpand,
-                child: logo,
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: onToggleExpand,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: pref.anyOn ? c.live : c.hairline,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Image(
+                    image: leagueLogoProvider(leagueId),
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) =>
+                        Icon(Icons.shield_outlined, size: 18, color: c.inkDim),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              name,
-                              overflow: TextOverflow.ellipsis,
-                              style: EType.display(
-                                  size: 16, color: c.ink, height: 1.0),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Icon(
-                            expanded
-                                ? Icons.keyboard_arrow_up
-                                : Icons.keyboard_arrow_down,
-                            size: 20,
-                            color: c.inkMute,
-                          ),
-                        ],
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style:
+                            EType.display(size: 16, color: c.ink, height: 1.1),
                       ),
-                      if (!expanded) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          moreLabel,
-                          style: EType.label(
-                              color: c.inkDim, size: 10, letterSpacing: 0.5),
-                        ),
-                      ],
+                      const SizedBox(height: 3),
+                      Text(subtitle,
+                          style: EType.body(color: c.inkMute, size: 12)),
                     ],
                   ),
                 ),
-              ),
-              if (!expanded) ...[
-                const SizedBox(width: 12),
-                _EditorialSwitch(value: pref.anyOn, onChanged: onMasterChanged),
+                const SizedBox(width: 8),
+                Icon(
+                  expanded
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down,
+                  size: 22,
+                  color: c.inkMute,
+                ),
               ],
-            ],
+            ),
           ),
-          if (expanded) ...[
-            const SizedBox(height: 6),
-            kindRow(goalsLabel, pref.goals, (v) => pref.copyWith(goals: v)),
-            kindRow(remindersLabel, pref.reminders,
-                (v) => pref.copyWith(reminders: v)),
-            kindRow(pointsLabel, pref.points, (v) => pref.copyWith(points: v)),
-          ],
+        ),
+        if (expanded) ...[
+          const SizedBox(height: 10),
+          _NotifRowCard(
+            kind: _NotifKind.goals,
+            title: goalsTitle,
+            subtitle: goalsSub,
+            value: pref.goals,
+            onChanged: (v) => onChanged(pref.copyWith(goals: v)),
+          ),
+          const SizedBox(height: 10),
+          _NotifRowCard(
+            kind: _NotifKind.reminders,
+            title: remindersTitle,
+            subtitle: remindersSub,
+            value: pref.reminders,
+            onChanged: (v) => onChanged(pref.copyWith(reminders: v)),
+          ),
+          const SizedBox(height: 10),
+          _NotifRowCard(
+            kind: _NotifKind.points,
+            title: pointsTitle,
+            subtitle: pointsSub,
+            value: pref.points,
+            onChanged: (v) => onChanged(pref.copyWith(points: v)),
+          ),
         ],
-      ),
+      ],
     );
   }
 }

@@ -888,24 +888,6 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statsTab => 'סטטיסטיקה';
 
   @override
-  String get squadTab => 'סגל';
-
-  @override
-  String get goalkeepers => 'שוערים';
-
-  @override
-  String get defenders => 'מגנים';
-
-  @override
-  String get midfielders => 'קשרים';
-
-  @override
-  String get forwards => 'חלוצים';
-
-  @override
-  String get squadNotAvailable => 'הסגל עדיין לא זמין';
-
-  @override
   String get recentFormTitle => 'פורמה';
 
   @override
@@ -998,6 +980,24 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get matchesTab => 'משחקים';
+
+  @override
+  String get squadTab => 'סגל';
+
+  @override
+  String get goalkeepers => 'שוערים';
+
+  @override
+  String get defenders => 'מגנים';
+
+  @override
+  String get midfielders => 'קשרים';
+
+  @override
+  String get forwards => 'חלוצים';
+
+  @override
+  String get squadNotAvailable => 'הסגל עדיין לא זמין';
 
   @override
   String get recentResults => 'תוצאות אחרונות';
@@ -1313,4 +1313,151 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get rateAppNoThanks => 'לא תודה';
+
+  @override
+  String get trophyCabinet => 'ארון גביעים';
+
+  @override
+  String get thisSeason => 'העונה';
+
+  @override
+  String get pastSeasons => 'עונות קודמות';
+
+  @override
+  String get trophySeason => 'עונה';
+
+  @override
+  String get trophyRank => 'דירוג';
+
+  @override
+  String get trophyOf => 'מתוך';
+
+  @override
+  String get trophyChampionLabel => 'אלופה';
+
+  @override
+  String get trophyTopScorerLabel => 'מלך שערים';
+
+  @override
+  String get trophyBracketLabel => 'נוקאאוט';
+
+  @override
+  String get trophyCorrect => 'פגעת';
+
+  @override
+  String get trophyMissed => 'לא פגעת';
+
+  @override
+  String get noTrophiesYet => 'אין גביעים עדיין';
+
+  @override
+  String get noTrophiesHint => 'תוצאות העונה שלך יופיעו כאן.';
+
+  @override
+  String get closeSeasonTitle => 'סגירת עונה';
+
+  @override
+  String get seasonNumberLabel => 'עונה (שנה)';
+
+  @override
+  String get archiveConfirmButton => 'ארכב';
+
+  @override
+  String get archiveWillArchive => 'יאורכבו';
+
+  @override
+  String get archiveDoneMessage => 'אורכבו';
+
+  @override
+  String get myChampionshipPicks => 'הבחירות שלי';
+
+  @override
+  String get championHit => 'פגעת באלופה';
+
+  @override
+  String get championMiss => 'לא פגעת באלופה';
+
+  @override
+  String get leagueManagement => 'ניהול הליגה';
+
+  @override
+  String get adminSettleBracketSub => 'קבע תוצאות וחשב נקודות';
+
+  @override
+  String get adminSettleChampionSub => 'נעל את בחירת האלופה';
+
+  @override
+  String get adminCloseSeasonSub => 'סכם את העונה הנוכחית';
+
+  @override
+  String get notifMasterTitle => 'כל ההתראות';
+
+  @override
+  String get notifMasterSub => 'תקבלו התראות לפי ההגדרות שמטה';
+
+  @override
+  String get notifDefaults => 'ברירת מחדל';
+
+  @override
+  String get notifApplyAll => 'חל על כל הליגות';
+
+  @override
+  String get notifPerLeague => 'לכל ליגה';
+
+  @override
+  String get notifGoalsSub => 'כשנכבש שער במשחקים שלכם';
+
+  @override
+  String get notifRemindersSub => 'לפני תחילת המשחק, אם חסרות בחירות';
+
+  @override
+  String get notifPointsSub => 'כשהתוצאות נסגרות והנקודות מחושבות';
+
+  @override
+  String get notifAlertsOnSuffix => 'מתוך 3 התראות פעילות';
+
+  @override
+  String get playersLabel => 'שחקנים';
+
+  @override
+  String get yourPosition => 'המיקום שלך';
+
+  @override
+  String get actualResult => 'התוצאה בפועל';
+
+  @override
+  String get exactBadge => 'מדייק';
+
+  @override
+  String get winWord => 'ניצחון';
+
+  @override
+  String get groupGuesses => 'ניחושי הקבוצה';
+
+  @override
+  String get formLabel => 'כושר';
+
+  @override
+  String get venueHome => 'בית';
+
+  @override
+  String get venueAway => 'חוץ';
+
+  @override
+  String get preferencesSection => 'העדפות';
+
+  @override
+  String get themeSubtitle => 'מראה בהיר או כהה';
+
+  @override
+  String get languageSubtitle => 'עברית או אנגלית';
+
+  @override
+  String get notifSubtitle => 'ניהול התראות פוש';
+
+  @override
+  String get rulesSubtitle => 'איך צוברים נקודות';
+
+  @override
+  String get termsTitle => 'תנאי שימוש ופרטיות';
 }

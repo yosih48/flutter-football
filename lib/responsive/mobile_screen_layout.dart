@@ -57,8 +57,8 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
       ),
       _TabDef(
         label: l.results,
-        icon: Icons.sports_soccer_outlined,
-        activeIcon: Icons.sports_soccer,
+        icon: Icons.adjust_outlined,
+        activeIcon: Icons.adjust,
       ),
       _TabDef(
         label: l.table,

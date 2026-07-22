@@ -4,6 +4,7 @@ import 'package:football/resources/auth.dart';
 import 'package:football/resources/league_config_service.dart';
 import 'package:football/utils/league_logos.dart';
 import 'package:football/utils/localized_team_name.dart';
+import 'package:football/utils/he_player_name.dart';
 import 'package:football/resources/usersMethods.dart';
 import 'package:football/screens/bracket.dart';
 import 'package:football/screens/login_screen.dart';
@@ -11,7 +12,9 @@ import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/widgets/adminChampionSettle.dart';
 import 'package:football/widgets/adminBracketSettle.dart';
+import 'package:football/widgets/adminSeasonArchive.dart';
 import 'package:football/widgets/seasonPickers.dart';
+import 'package:football/screens/trophyCabinet.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -49,13 +52,11 @@ class ProfileScreenContent extends StatefulWidget {
 class _ProfileScreenContentState extends State<ProfileScreenContent> {
   Map<String, String> _userWinners = {};
   Map<String, String> _userTopScorer = {};
-  Map<String, int> _userTopScorerPoints = {};
   // chosenLeagues[id] from the user record. Missing entries are treated as
   // opted-in (matches the bootstrap default in games.dart), so a league newly
   // added to the remote config shows up here without a manual toggle.
   Map<String, bool> _chosenLeagues = {};
   bool _isLoading = true;
-  bool _showWinners = true;
   late String currentUserId;
   late String currentUserEmail;
   late String currentUserName;
@@ -77,8 +78,6 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
         _userWinners = Map<String, String>.from(userData['winner'] ?? {});
         _userTopScorer =
             Map<String, String>.from(userData['topScorer'] ?? {});
-        _userTopScorerPoints =
-            Map<String, int>.from(userData['topScorerPoints'] ?? {});
         _chosenLeagues =
             Map<String, bool>.from(userData['chosenLeagues'] ?? {});
         _isLoading = false;
@@ -113,10 +112,6 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
       for (final id in LeagueConfigService().supportedLeagues)
         id.toString(): 'Loading',
     };
-    final placeholderPoints = <String, int>{
-      for (final id in LeagueConfigService().supportedLeagues)
-        id.toString(): 0,
-    };
 
     return Scaffold(
       backgroundColor: c.pitch,
@@ -129,48 +124,16 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
             // ── Bracket entry (tournament leagues only) ──────────────
             _buildBracketEntry(context, c),
 
-            // ── Tab strip (pinned) ───────────────────────────────────
-            _buildTabStrip(context, c),
-
             // ── Scrollable content ───────────────────────────────────
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                child: Skeletonizer(
-                  enabled: _isLoading,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 220),
-                    child: _showWinners
-                        ? usersWinners(
-                            key: const ValueKey('winners'),
-                            filteredWinners: _isLoading
-                                ? placeholderNames
-                                : filteredWinners,
-                            leagueIds: _isLoading
-                                ? placeholderNames.keys.toList()
-                                : _allowedIds.toList(),
-                            clientId: currentUserId,
-                            email: currentUserEmail,
-                            isLoading: _isLoading,
-                            onChanged: _fetchPersonalData,
-                          )
-                        : usersTopScorers(
-                            key: const ValueKey('topScorers'),
-                            userTopScorerPoints: _isLoading
-                                ? placeholderPoints
-                                : _userTopScorerPoints,
-                            filteredTopScorers: _isLoading
-                                ? placeholderNames
-                                : filteredTopScorers,
-                            leagueIds: _isLoading
-                                ? placeholderNames.keys.toList()
-                                : _allowedIds.toList(),
-                            clientId: currentUserId,
-                            email: currentUserEmail,
-                            isLoading: _isLoading,
-                            onChanged: _fetchPersonalData,
-                          ),
-                  ),
+                child: _buildBody(
+                  context,
+                  c,
+                  placeholderNames: placeholderNames,
+                  filteredWinners: filteredWinners,
+                  filteredTopScorers: filteredTopScorers,
                 ),
               ),
             ),
@@ -180,36 +143,137 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     );
   }
 
-  Map<String, String> _filterById(Map<String, String> src) => Map.fromEntries(
-      src.entries.where((e) => _allowedIds.contains(e.key)));
-
-  Widget _buildTabStrip(BuildContext context, EditorialColors c) {
+  Widget _buildBody(
+    BuildContext context,
+    EditorialColors c, {
+    required Map<String, String> placeholderNames,
+    required Map<String, String> filteredWinners,
+    required Map<String, String> filteredTopScorers,
+  }) {
     final l = AppLocalizations.of(context)!;
-    return Container(
-      decoration: BoxDecoration(
-        color: c.pitch,
-        border: Border(
-          bottom: BorderSide(color: c.hairline, width: 1),
+    final ids =
+        _isLoading ? placeholderNames.keys.toList() : _allowedIds.toList();
+
+    if (!_isLoading && ids.isEmpty) {
+      return _EmptyCard(
+        icon: Icons.emoji_events_outlined,
+        title: l.noWinnersYet,
+        subtitle: l.noWinnersHint,
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // ── Championship picks: one card per opted-in league ──────────
+        _greenHeader(context, c, l.myChampionshipPicks),
+        Skeletonizer(
+          enabled: _isLoading,
+          child: Column(
+            children: ids
+                .map((id) => _LeaguePredictionCard(
+                      leagueIdStr: id,
+                      winnerPick: _isLoading ? null : filteredWinners[id],
+                      topScorerPick: _isLoading ? null : filteredTopScorers[id],
+                      clientId: currentUserId,
+                      email: currentUserEmail,
+                      isLoading: _isLoading,
+                      onChanged: _fetchPersonalData,
+                    ))
+                .toList(),
+          ),
+        ),
+
+        // ── Trophy cabinet entry → dedicated past-seasons screen ──────
+        if (!_isLoading) _buildCabinetEntry(context, c),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  // Tappable card that opens the dedicated Trophy Cabinet screen (past
+  // seasons). Keeps the long, per-season history off the main profile scroll.
+  Widget _buildCabinetEntry(BuildContext context, EditorialColors c) {
+    final l = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 6),
+      child: GestureDetector(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => TrophyCabinetScreen(
+              userId: currentUserId,
+              allowedIds: _allowedIds,
+            ),
+          ),
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          decoration: BoxDecoration(
+            color: c.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: c.hairline),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: c.ink,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.emoji_events,
+                    size: 20, color: Color(0xFFD4AF37)),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l.trophyCabinet,
+                        style: EType.display(
+                            size: 16, color: c.ink, letterSpacing: 0.4)),
+                    const SizedBox(height: 3),
+                    Text(l.pastSeasons,
+                        style: EType.body(color: c.inkMute, size: 12)),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, size: 22, color: c.inkDim),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  // Green-accented section header (a short green dash + label), matching the
+  // "My championship picks" / "Trophy cabinet" headers in the design.
+  Widget _greenHeader(BuildContext context, EditorialColors c, String label,
+      {Widget? trailing}) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 10),
       child: Row(
         children: [
-          _Tab(
-            label: l.yourwinners,
-            icon: Icons.emoji_events_outlined,
-            active: _showWinners,
-            onTap: () => setState(() => _showWinners = true),
+          Container(
+            width: 18,
+            height: 3,
+            decoration: BoxDecoration(
+              color: c.live,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-          _Tab(
-            label: l.topScorers ?? 'Top Scorers',
-            icon: Icons.sports_soccer_outlined,
-            active: !_showWinners,
-            onTap: () => setState(() => _showWinners = false),
-          ),
+          const SizedBox(width: 10),
+          Text(label, style: EType.label(color: c.ink, size: 13, letterSpacing: 1)),
+          const Spacer(),
+          if (trailing != null) trailing,
         ],
       ),
     );
   }
+
+  Map<String, String> _filterById(Map<String, String> src) => Map.fromEntries(
+      src.entries.where((e) => _allowedIds.contains(e.key)));
 
   // Tournament leagues (hasBracket) the user has opted into get a tappable
   // entry into the bracket-prediction game. Hidden entirely for ordinary
@@ -367,22 +431,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
           ),
           if (widget.authProvider.currentUser?.admin == true) ...[
             const SizedBox(height: 20),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                _AdminActionChip(
-                  icon: Icons.admin_panel_settings_outlined,
-                  label: AppLocalizations.of(context)!.settleChampionTitle,
-                  onTap: () => showAdminChampionSettleDialog(context),
-                ),
-                _AdminActionChip(
-                  icon: Icons.account_tree_outlined,
-                  label: AppLocalizations.of(context)!.settleBracketTitle,
-                  onTap: () => showAdminBracketSettleDialog(context),
-                ),
-              ],
-            ),
+            const _AdminManagementSection(),
           ],
         ],
       ),
@@ -391,96 +440,142 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
 }
 
 
-// Compact admin action button used in the profile header (admins only).
-class _AdminActionChip extends StatelessWidget {
-  const _AdminActionChip({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
+// Admin-only "league management" section. Collapsed to a single line; tapping
+// expands a card with the three admin actions (settle bracket / champion /
+// close season).
+class _AdminManagementSection extends StatefulWidget {
+  const _AdminManagementSection();
+
+  @override
+  State<_AdminManagementSection> createState() =>
+      _AdminManagementSectionState();
+}
+
+class _AdminManagementSectionState extends State<_AdminManagementSection> {
+  bool _open = false;
 
   @override
   Widget build(BuildContext context) {
     final c = context.col;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: c.card,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: c.hairline),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: c.live),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: EType.label(color: c.ink, size: 11, letterSpacing: 1.4),
+    final l = AppLocalizations.of(context)!;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Toggle line: green dash + "League management" + chevron.
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => setState(() => _open = !_open),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              children: [
+                Container(
+                  width: 18,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: c.live,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(l.leagueManagement,
+                    style: EType.label(color: c.ink, size: 13, letterSpacing: 1)),
+                const Spacer(),
+                AnimatedRotation(
+                  turns: _open ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 180),
+                  child: Icon(Icons.expand_more, size: 22, color: c.inkDim),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
+        if (_open) ...[
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: c.card,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: c.hairline),
+            ),
+            child: Column(
+              children: [
+                _AdminRow(
+                  icon: Icons.fact_check_outlined,
+                  title: l.settleBracketTitle,
+                  subtitle: l.adminSettleBracketSub,
+                  onTap: () => showAdminBracketSettleDialog(context),
+                ),
+                Divider(height: 1, color: c.hairline, indent: 14, endIndent: 14),
+                _AdminRow(
+                  icon: Icons.workspace_premium_outlined,
+                  title: l.settleChampionTitle,
+                  subtitle: l.adminSettleChampionSub,
+                  onTap: () => showAdminChampionSettleDialog(context),
+                ),
+                Divider(height: 1, color: c.hairline, indent: 14, endIndent: 14),
+                _AdminRow(
+                  icon: Icons.event_available_outlined,
+                  title: l.closeSeasonTitle,
+                  subtitle: l.adminCloseSeasonSub,
+                  onTap: () => showAdminSeasonArchiveDialog(context),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
 
-class _Tab extends StatelessWidget {
-  const _Tab({
-    required this.label,
+// A single admin action row: soft-green icon tile + title + subtitle + chevron.
+class _AdminRow extends StatelessWidget {
+  const _AdminRow({
     required this.icon,
-    required this.active,
+    required this.title,
+    required this.subtitle,
     required this.onTap,
   });
-  final String label;
   final IconData icon;
-  final bool active;
+  final String title;
+  final String subtitle;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final c = context.col;
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Stack(
-          alignment: Alignment.bottomCenter,
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: c.live.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 19, color: c.live),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    icon,
-                    size: 16,
-                    color: active ? c.ink : c.inkDim,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    label.toUpperCase(),
-                    style: EType.label(
-                      color: active ? c.ink : c.inkDim,
-                      size: 11,
-                      letterSpacing: 1.6,
-                    ),
-                  ),
+                  Text(title,
+                      style: EType.display(
+                          size: 14, color: c.ink, letterSpacing: 0.2)),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: EType.body(color: c.inkDim, size: 11)),
                 ],
               ),
             ),
-            // Active underline indicator
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              height: 2,
-              width: active ? 60.0 : 0.0,
-              color: c.live,
-            ),
+            Icon(Icons.chevron_right, size: 20, color: c.inkDim),
           ],
         ),
       ),
@@ -520,26 +615,23 @@ String _leagueName(String id, AppLocalizations l, BuildContext context) {
 String _leagueLogoUrl(String id) =>
     'https://media.api-sports.io/football/leagues/$id.png';
 
-// ── Winners list ────────────────────────────────────────────────────────
-// Iterates every supported league so users can see and start a pick even when
-// they haven't chosen yet. Each row probes the pre-season cutoff window via
-// PickAvailability and renders one of: existing pick (PickedChip), empty
-// state (EmptyPickChip, tappable), or closed (ClosedPickChip, not tappable).
-class usersWinners extends StatelessWidget {
-  const usersWinners({
-    super.key,
-    required this.filteredWinners,
-    required this.leagueIds,
+// ── Combined per-league prediction card ─────────────────────────────────
+// One white card per opted-in league showing both the champion pick and the
+// top-scorer pick. Each inner row keeps its own availability-aware picker.
+class _LeaguePredictionCard extends StatelessWidget {
+  const _LeaguePredictionCard({
+    required this.leagueIdStr,
+    required this.winnerPick,
+    required this.topScorerPick,
     required this.clientId,
     required this.email,
     required this.isLoading,
     required this.onChanged,
   });
 
-  final Map<String, String> filteredWinners;
-  // Pre-filtered to leagues the user has opted into; iteration order is
-  // preserved so the list matches the order the parent computes.
-  final List<String> leagueIds;
+  final String leagueIdStr;
+  final String? winnerPick;
+  final String? topScorerPick;
   final String clientId;
   final String email;
   final bool isLoading;
@@ -547,93 +639,81 @@ class usersWinners extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     final l = AppLocalizations.of(context)!;
-    final ids = leagueIds;
 
-    if (ids.isEmpty) {
-      return _EmptyCard(
-        icon: Icons.emoji_events_outlined,
-        title: l.noWinnersYet,
-        subtitle: l.noWinnersHint,
-      );
-    }
-
-    return Column(
-      children: ids.map((id) {
-        final pick = filteredWinners[id];
-        return _SeasonPickRow(
-          leagueIdStr: id,
-          pick: pick,
-          icon: Icons.emoji_events_outlined,
-          clientId: clientId,
-          email: email,
-          isLoading: isLoading,
-          onChanged: onChanged,
-          mode: _PickKind.winner,
-        );
-      }).toList(),
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: c.hairline),
+      ),
+      child: Column(
+        children: [
+          // League header (crest + name)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: c.pitch,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: c.hairline, width: 1),
+                  ),
+                  child: Image(
+                    image: leagueLogoProviderForUrl(_leagueLogoUrl(leagueIdStr)),
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) =>
+                        Icon(Icons.shield_outlined, size: 14, color: c.inkDim),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _leagueName(leagueIdStr, l, context),
+                    style: EType.display(size: 16, color: c.ink, letterSpacing: 0.4),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1, color: c.hairline),
+          _SeasonPickRow(
+            leagueIdStr: leagueIdStr,
+            pick: winnerPick,
+            icon: Icons.emoji_events_outlined,
+            label: l.trophyChampionLabel,
+            clientId: clientId,
+            email: email,
+            isLoading: isLoading,
+            onChanged: onChanged,
+            mode: _PickKind.winner,
+          ),
+          Divider(height: 1, color: c.hairline, indent: 16, endIndent: 16),
+          _SeasonPickRow(
+            leagueIdStr: leagueIdStr,
+            pick: topScorerPick,
+            icon: Icons.sports_soccer_outlined,
+            label: l.trophyTopScorerLabel,
+            clientId: clientId,
+            email: email,
+            isLoading: isLoading,
+            onChanged: onChanged,
+            mode: _PickKind.topScorer,
+          ),
+        ],
+      ),
     );
   }
 }
 
-// ── Top scorers list ────────────────────────────────────────────────────
-// Same shape as usersWinners: one row per supported league with availability-
-// aware trailing chip. Points are only shown when the user has actually picked.
-class usersTopScorers extends StatelessWidget {
-  const usersTopScorers({
-    super.key,
-    required this.userTopScorerPoints,
-    required this.filteredTopScorers,
-    required this.leagueIds,
-    required this.clientId,
-    required this.email,
-    required this.isLoading,
-    required this.onChanged,
-  });
-
-  final Map<String, int> userTopScorerPoints;
-  final Map<String, String> filteredTopScorers;
-  // Same filtered set as usersWinners — only leagues the user opted into.
-  final List<String> leagueIds;
-  final String clientId;
-  final String email;
-  final bool isLoading;
-  final VoidCallback onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    final ids = leagueIds;
-
-    if (ids.isEmpty) {
-      return _EmptyCard(
-        icon: Icons.sports_soccer_outlined,
-        title: l.noTopScorersYet,
-        subtitle: l.noTopScorersHint,
-      );
-    }
-
-    return Column(
-      children: ids.map((id) {
-        final pick = filteredTopScorers[id];
-        final pts = userTopScorerPoints[id] ?? 0;
-        return _SeasonPickRow(
-          leagueIdStr: id,
-          pick: pick,
-          icon: Icons.sports_soccer_outlined,
-          clientId: clientId,
-          email: email,
-          isLoading: isLoading,
-          onChanged: onChanged,
-          mode: _PickKind.topScorer,
-          points: pts,
-        );
-      }).toList(),
-    );
-  }
-}
-
-// ── Shared per-league row with availability-aware picker ────────────────────
+// ── Shared per-league pick row with availability-aware picker ───────────────
 enum _PickKind { winner, topScorer }
 
 class _SeasonPickRow extends StatefulWidget {
@@ -641,23 +721,23 @@ class _SeasonPickRow extends StatefulWidget {
     required this.leagueIdStr,
     required this.pick,
     required this.icon,
+    required this.label,
     required this.clientId,
     required this.email,
     required this.isLoading,
     required this.onChanged,
     required this.mode,
-    this.points,
   });
 
   final String leagueIdStr;
   final String? pick;
   final IconData icon;
+  final String label;
   final String clientId;
   final String email;
   final bool isLoading;
   final VoidCallback onChanged;
   final _PickKind mode;
-  final int? points;
 
   @override
   State<_SeasonPickRow> createState() => _SeasonPickRowState();
@@ -665,6 +745,9 @@ class _SeasonPickRow extends StatefulWidget {
 
 class _SeasonPickRowState extends State<_SeasonPickRow> {
   Future<PickAvailability>? _availability;
+  // Crest next to the pick. Memoised so rebuilds don't re-trigger the fetch or
+  // flicker the FutureBuilder. Re-resolved when the pick changes.
+  Future<String?>? _logo;
 
   // resolvePickWindow reads AppLocalizations for its error strings, so it
   // depends on inherited widgets and can't run in initState. Defer to
@@ -674,6 +757,7 @@ class _SeasonPickRowState extends State<_SeasonPickRow> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _availability ??= _resolve();
+    _logo ??= _resolveLogo();
   }
 
   @override
@@ -682,6 +766,7 @@ class _SeasonPickRowState extends State<_SeasonPickRow> {
     // Re-probe after a save so a row that flipped past the cutoff updates.
     if (old.pick != widget.pick) {
       _availability = _resolve();
+      _logo = _resolveLogo();
     }
   }
 
@@ -690,6 +775,18 @@ class _SeasonPickRowState extends State<_SeasonPickRow> {
     final id = int.tryParse(widget.leagueIdStr);
     if (id == null) return const PickAvailability(PickWindow.error);
     return resolvePickWindow(context, id);
+  }
+
+  Future<String?> _resolveLogo() async {
+    final pick = widget.pick;
+    final id = int.tryParse(widget.leagueIdStr);
+    if (widget.isLoading || id == null || pick == null || pick.isEmpty) {
+      return null;
+    }
+    // Same resolvers the statistics screen uses, so crests come from one source.
+    return widget.mode == _PickKind.winner
+        ? resolveWinnerLogo(id, pick)
+        : resolveTopScorerLogo(id, pick);
   }
 
   Future<void> _openPicker() async {
@@ -720,7 +817,6 @@ class _SeasonPickRowState extends State<_SeasonPickRow> {
   @override
   Widget build(BuildContext context) {
     final c = context.col;
-    final l = AppLocalizations.of(context)!;
 
     return FutureBuilder<PickAvailability>(
       future: _availability,
@@ -728,15 +824,37 @@ class _SeasonPickRowState extends State<_SeasonPickRow> {
         final isOpen = snap.data?.canPick ?? false;
         final hasPick = widget.pick != null && widget.pick!.isNotEmpty;
 
-        final Widget trailing;
+        final Widget value;
         if (hasPick) {
-          trailing = PickedChip(
-              label: localizedTeamName(context, widget.pick!), icon: widget.icon);
+          final name = widget.mode == _PickKind.winner
+              ? localizedTeamName(context, widget.pick!)
+              : localizedPlayerName(context, widget.pick!);
+          value = Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _PickCrest(
+                future: _logo,
+                fallback: widget.mode == _PickKind.winner
+                    ? Icons.emoji_events_outlined
+                    : Icons.sports_soccer_outlined,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  name,
+                  textAlign: TextAlign.end,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: EType.label(color: c.ink, size: 12, letterSpacing: 0.4),
+                ),
+              ),
+            ],
+          );
         } else if (isOpen) {
-          trailing = const EmptyPickChip();
+          value = const EmptyPickChip();
         } else if (snap.connectionState == ConnectionState.waiting) {
           // Quiet placeholder while the availability probe is in-flight.
-          trailing = SizedBox(
+          value = SizedBox(
             width: 14,
             height: 14,
             child: CircularProgressIndicator(
@@ -745,137 +863,75 @@ class _SeasonPickRowState extends State<_SeasonPickRow> {
             ),
           );
         } else {
-          trailing = const ClosedPickChip();
+          value = const ClosedPickChip();
         }
 
-        final subtitle = _buildSubtitle(c, l, hasPick: hasPick, isOpen: isOpen);
         final tappable = isOpen; // edits allowed only inside the open window
 
-        return _LeagueRow(
-          logoUrl: _leagueLogoUrl(widget.leagueIdStr),
-          leagueName: _leagueName(widget.leagueIdStr, l, context),
-          trailing: trailing,
-          subtitle: subtitle,
+        return InkWell(
           onTap: tappable ? _openPicker : null,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Icon(widget.icon, size: 18, color: c.live),
+                const SizedBox(width: 10),
+                Text(
+                  widget.label,
+                  style:
+                      EType.label(color: c.inkDim, size: 12, letterSpacing: 0.5),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: value,
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
   }
-
-  Widget _buildSubtitle(EditorialColors c, AppLocalizations l,
-      {required bool hasPick, required bool isOpen}) {
-    if (widget.mode == _PickKind.topScorer && hasPick) {
-      final pts = widget.points ?? 0;
-      return Row(
-        children: [
-          Text(
-            (l.topScorerPoints ?? 'Goals Points').toUpperCase(),
-            style:
-                EType.label(color: c.inkDim, size: 10, letterSpacing: 1.6),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            '$pts ${l.pst}',
-            style: EType.numeric(
-              color: pts > 0 ? c.live : c.inkDim,
-              size: 11,
-              weight: FontWeight.w600,
-            ),
-          ),
-        ],
-      );
-    }
-    final String text;
-    if (hasPick) {
-      text = l.yourprediction ?? 'Your prediction';
-    } else if (isOpen) {
-      text = widget.mode == _PickKind.winner
-          ? l.taptoselectwinner
-          : l.taptoselecttopscorer;
-    } else {
-      text = l.selectionClosed;
-    }
-    return Text(
-      text.toUpperCase(),
-      style: EType.label(color: c.inkDim, size: 10, letterSpacing: 1.6),
-    );
-  }
 }
 
-// ── Shared row widget ───────────────────────────────────────────────────
-class _LeagueRow extends StatelessWidget {
-  const _LeagueRow({
-    required this.logoUrl,
-    required this.leagueName,
-    required this.trailing,
-    required this.subtitle,
-    this.onTap,
-  });
-  final String logoUrl;
-  final String leagueName;
-  final Widget trailing;
-  final Widget subtitle;
-  final VoidCallback? onTap;
+// Crest next to a champion / top-scorer pick, styled identically to the
+// statistics screen's crest (circular frame; a generic fallback icon while the
+// logo resolves or when none is available).
+class _PickCrest extends StatelessWidget {
+  const _PickCrest({required this.future, required this.fallback});
+  final Future<String?>? future;
+  final IconData fallback;
 
   @override
   Widget build(BuildContext context) {
     final c = context.col;
-    final row = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: c.hairline, width: 1),
-        ),
-      ),
-      child: Row(
-        children: [
-          // League crest
-          Container(
-            width: 40,
-            height: 40,
-            padding: const EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              color: c.card,
-              shape: BoxShape.circle,
-              border: Border.all(color: c.hairline, width: 1),
-            ),
-            child: Image(
-              image: leagueLogoProviderForUrl(logoUrl),
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) =>
-                  Icon(Icons.shield_outlined, size: 16, color: c.inkDim),
-            ),
+    return FutureBuilder<String?>(
+      future: future,
+      builder: (_, snap) {
+        final url = snap.data;
+        if (url == null || url.isEmpty) {
+          return Icon(fallback, size: 16, color: c.inkMute);
+        }
+        return Container(
+          width: 22,
+          height: 22,
+          padding: const EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            color: c.cardHi,
+            shape: BoxShape.circle,
+            border: Border.all(color: c.hairline, width: 1),
           ),
-          const SizedBox(width: 14),
-          // League name + sub-label
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  leagueName.toUpperCase(),
-                  style: EType.display(
-                    size: 16,
-                    color: c.ink,
-                    letterSpacing: 0.8,
-                    height: 1.0,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 6),
-                subtitle,
-              ],
-            ),
+          child: Image.network(
+            url,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) =>
+                Icon(fallback, size: 12, color: c.inkDim),
           ),
-          const SizedBox(width: 12),
-          trailing,
-        ],
-      ),
-    );
-    if (onTap == null) return row;
-    return InkWell(
-      onTap: onTap,
-      child: row,
+        );
+      },
     );
   }
 }

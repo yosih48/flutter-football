@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:football/screens/account_screen.dart';
+import 'package:football/screens/favorits.dart';
+import 'package:football/screens/instructionsb.dart';
+import 'package:provider/provider.dart';
+import 'package:football/providers/flutter pub add provider.dart';
 import 'package:football/providers/LocaleProvider.dart';
 import 'package:football/providers/theme_provider.dart';
-import 'package:football/screens/account_screen.dart';
-import 'package:football/screens/instructionsb.dart';
+import 'package:football/resources/auth.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
-import 'package:provider/provider.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:football/l10n/app_localizations.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -32,378 +35,550 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // All color references go through `c` — the only change needed when
-    // migrating a screen to support both light and dark mode.
     final c = context.col;
     final l = AppLocalizations.of(context)!;
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final user = authProvider.currentUser;
+
+    final userName = user?.name ?? '';
+    final userEmail = user?.email ?? '';
+    final initial = userName.isNotEmpty ? userName[0].toUpperCase() : '?';
 
     return Scaffold(
       backgroundColor: c.pitch,
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: ListView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
           children: [
             // ── Header ────────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+              padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(l.appLabel.toUpperCase(),
                       style: EType.label(
-                          color: c.inkDim,
-                          size: 10,
-                          letterSpacing: 3)),
+                          color: c.inkDim, size: 10, letterSpacing: 3)),
                   const SizedBox(height: 2),
                   Text(l.settings.toUpperCase(),
                       style: EType.display(
-                          size: 28,
-                          color: c.ink,
-                          letterSpacing: 1.4)),
+                          size: 28, color: c.ink, letterSpacing: 1.4)),
                 ],
               ),
             ),
+            const SizedBox(height: 20),
 
-            // ── Menu list ─────────────────────────────────────────────
-            Expanded(
-              child: ListView(
-                padding:
-                    const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                children: [
-                  _sectionLabel(l.account.toUpperCase(), c),
-                  const SizedBox(height: 12),
-
-                  _SettingsRow(
-                    icon: Icons.person_outline,
-                    label: l.settings_account,
-                    c: c,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const AccountScreen()),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-                  _sectionLabel(l.appLabel.toUpperCase(), c),
-                  const SizedBox(height: 12),
-
-                  _SettingsRow(
-                    icon: Icons.info_outline,
-                    label: l.settings_rules,
-                    c: c,
-                    onTap: () =>
-                        showInstructionsBottomSheet(context),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // Theme toggle — DARK / LIGHT
-                  _ThemeRow(l: l, c: c),
-
-                  const SizedBox(height: 8),
-
-                  // Language toggle — ENG / HEB
-                  _LanguageRow(l: l, c: c),
-
-                  const SizedBox(height: 32),
-
-                  // Version stamp
-                  if (appVersion.isNotEmpty)
-                    Center(
-                      child: Text(
-                        'v$appVersion',
-                        style: EType.label(
-                            color: c.inkFaint,
-                            size: 10,
-                            letterSpacing: 1.6),
-                      ),
-                    ),
-                ],
+            if (user != null) ...[
+              _identityCard(
+                c,
+                userName,
+                userEmail,
+                initial,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AccountScreen()),
+                ),
               ),
-            ),
+              const SizedBox(height: 24),
+            ],
+
+            // ── Preferences ─────────────────────────────────────────
+            _greenHeader(c, l.preferencesSection),
+            const SizedBox(height: 10),
+            _ThemeCard(l: l),
+            const SizedBox(height: 10),
+            _LanguageCard(l: l),
+            const SizedBox(height: 24),
+
+            // ── Application ─────────────────────────────────────────
+            _greenHeader(c, l.appLabel),
+            const SizedBox(height: 10),
+            _appLinksCard(context, c, l),
+            const SizedBox(height: 20),
+
+            // ── Sign out ────────────────────────────────────────────
+            if (user != null) ...[
+              _signOutCard(context, c, l, user, authProvider, userProvider),
+              const SizedBox(height: 20),
+            ],
+
+            if (appVersion.isNotEmpty)
+              Center(
+                child: Text('v$appVersion',
+                    style: EType.label(
+                        color: c.inkFaint, size: 10, letterSpacing: 1.6)),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _sectionLabel(String text, EditorialColors c) {
-    return Row(
-      children: [
-        Container(width: 18, height: 1, color: c.live),
-        const SizedBox(width: 10),
-        Text(text,
-            style: EType.label(
-                color: c.inkMute, size: 10, letterSpacing: 2.4)),
-      ],
+  // ── Section header (green dash) ────────────────────────────────────────
+  Widget _greenHeader(EditorialColors c, String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 18,
+            height: 3,
+            decoration: BoxDecoration(
+              color: c.live,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(label.toUpperCase(),
+              style:
+                  EType.label(color: c.inkDim, size: 11, letterSpacing: 1.8)),
+        ],
+      ),
+    );
+  }
+
+  // ── Identity card ──────────────────────────────────────────────────────
+  Widget _identityCard(
+      EditorialColors c, String name, String email, String initial,
+      {required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: c.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: c.hairline, width: 1),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: c.live, shape: BoxShape.circle),
+            child: Text(initial,
+                style: EType.display(size: 20, color: Colors.white)),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name.isNotEmpty ? name : '—',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: EType.body(
+                        color: c.ink, size: 16, weight: FontWeight.w600)),
+                const SizedBox(height: 3),
+                Text(email,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: EType.body(color: c.inkMute, size: 12)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Icon(Icons.chevron_left, size: 22, color: c.inkDim),
+        ],
+        ),
+      ),
+    );
+  }
+
+  // ── Application links (grouped card) ───────────────────────────────────
+  Widget _appLinksCard(
+      BuildContext context, EditorialColors c, AppLocalizations l) {
+    return Container(
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: c.hairline, width: 1),
+      ),
+      child: Column(
+        children: [
+          _linkRow(
+            c,
+            icon: Icons.notifications_none,
+            title: l.notifications,
+            subtitle: l.notifSubtitle,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                  builder: (_) => const FavoritsScreen(initialTab: 1)),
+            ),
+          ),
+          Divider(height: 1, color: c.hairline, indent: 14, endIndent: 14),
+          _linkRow(
+            c,
+            icon: Icons.info_outline,
+            title: l.settings_rules,
+            subtitle: l.rulesSubtitle,
+            onTap: () => showInstructionsBottomSheet(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _linkRow(
+    EditorialColors c, {
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        child: Row(
+          children: [
+            _IconTile(icon: icon, color: c.inkMute),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: EType.body(
+                          color: c.ink, size: 15, weight: FontWeight.w600)),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 3),
+                    Text(subtitle,
+                        style: EType.body(color: c.inkMute, size: 12)),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_left, size: 22, color: c.inkDim),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Sign out card (red-accented) ───────────────────────────────────────
+  Widget _signOutCard(
+    BuildContext context,
+    EditorialColors c,
+    AppLocalizations l,
+    dynamic user,
+    AuthProvider authProvider,
+    UserProvider userProvider,
+  ) {
+    return InkWell(
+      onTap: () async {
+        final nav = Navigator.of(context);
+        final confirm = await _showEditorialDialog(
+          context: context,
+          title: l.confirmsignout,
+          body: l.leaveapp,
+          confirmLabel: l.yes,
+          confirmColor: c.flag,
+          cancelLabel: l.cancel,
+        );
+        if (confirm == true) {
+          userProvider.setSelectedGroupName('public');
+          await authProvider.signOut(user.id);
+          nav.pushNamedAndRemoveUntil('/login', (route) => false);
+        }
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: c.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: c.hairline, width: 1),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+        child: Row(
+          children: [
+            _IconTile(icon: Icons.logout, color: c.flag),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(l.signout,
+                  style: EType.body(
+                      color: c.flag, size: 15, weight: FontWeight.w600)),
+            ),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_left, size: 22, color: c.flag),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<bool?> _showEditorialDialog({
+    required BuildContext context,
+    required String title,
+    required String body,
+    required String confirmLabel,
+    required Color confirmColor,
+    required String cancelLabel,
+  }) {
+    final c = context.col;
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          decoration: BoxDecoration(
+            color: c.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: c.hairline, width: 1),
+          ),
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title,
+                  style: EType.body(
+                      color: c.ink, size: 18, weight: FontWeight.w600)),
+              const SizedBox(height: 10),
+              Text(body, style: EType.body(color: c.inkMute, size: 13)),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: _GhostBtn(
+                      label: cancelLabel,
+                      onTap: () => Navigator.of(ctx).pop(false),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _SolidBtn(
+                      label: confirmLabel,
+                      color: confirmColor,
+                      onTap: () => Navigator.of(ctx).pop(true),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
 
-// ── Settings row ─────────────────────────────────────────────────────────
-class _SettingsRow extends StatelessWidget {
-  const _SettingsRow({
-    required this.icon,
-    required this.label,
-    required this.c,
-    required this.onTap,
-  });
+// ── Tinted icon tile ───────────────────────────────────────────────────────
+class _IconTile extends StatelessWidget {
+  const _IconTile({required this.icon, required this.color});
   final IconData icon;
-  final String label;
-  final EditorialColors c;
-  final VoidCallback onTap;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        decoration: BoxDecoration(
-          color: c.card,
-          border: Border.all(color: c.hairline, width: 1),
-          borderRadius: BorderRadius.circular(2),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: c.terrace,
-                borderRadius: BorderRadius.circular(2),
-                border: Border.all(color: c.hairline, width: 1),
-              ),
-              child: Icon(icon, size: 16, color: c.inkMute),
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(icon, size: 20, color: color),
+    );
+  }
+}
+
+// ── A settings card row: icon + title/subtitle + a trailing segmented ──────
+class _SettingsCardRow extends StatelessWidget {
+  const _SettingsCardRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.trailing,
+  });
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Widget trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    return Container(
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: c.hairline, width: 1),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          _IconTile(icon: icon, color: c.live),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: EType.body(
+                        color: c.ink, size: 15, weight: FontWeight.w600)),
+                const SizedBox(height: 3),
+                Text(subtitle,
+                    style: EType.body(color: c.inkMute, size: 12)),
+              ],
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                label.toUpperCase(),
-                style: EType.label(
-                    color: c.ink, size: 11, letterSpacing: 1.8),
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios,
-                size: 12, color: c.inkDim),
-          ],
-        ),
+          ),
+          const SizedBox(width: 12),
+          trailing,
+        ],
       ),
     );
   }
 }
 
-// ── Theme row — DARK / LIGHT segmented toggle ─────────────────────────────
-class _ThemeRow extends StatelessWidget {
-  const _ThemeRow({required this.l, required this.c});
+// ── Segmented pill toggle (two options; active one filled green) ───────────
+class _SegOption {
+  const _SegOption(this.label, this.active, this.onTap);
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+}
+
+class _Segmented extends StatelessWidget {
+  const _Segmented({required this.options});
+  final List<_SegOption> options;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: c.pitch,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: c.hairline, width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: options
+            .map((o) => GestureDetector(
+                  onTap: o.onTap,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: o.active ? c.live : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(o.label,
+                        style: EType.label(
+                            color: o.active ? Colors.white : c.inkMute,
+                            size: 12,
+                            letterSpacing: 0.5)),
+                  ),
+                ))
+            .toList(),
+      ),
+    );
+  }
+}
+
+// ── Theme card ─────────────────────────────────────────────────────────────
+class _ThemeCard extends StatelessWidget {
+  const _ThemeCard({required this.l});
   final AppLocalizations l;
-  final EditorialColors c;
 
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, _) {
-        final isDark = themeProvider.isDarkMode;
-        return Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-          decoration: BoxDecoration(
-            color: c.card,
-            border: Border.all(color: c.hairline, width: 1),
-            borderRadius: BorderRadius.circular(2),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: c.terrace,
-                  borderRadius: BorderRadius.circular(2),
-                  border: Border.all(color: c.hairline, width: 1),
-                ),
-                child: Icon(
-                  isDark
-                      ? Icons.dark_mode_outlined
-                      : Icons.light_mode_outlined,
-                  size: 16,
-                  color: c.inkMute,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  l.settings_theme.toUpperCase(),
-                  style: EType.label(
-                      color: c.ink, size: 11, letterSpacing: 1.8),
-                ),
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  color: c.terrace,
-                  border: Border.all(color: c.hairline, width: 1),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _ModeChip(
-                      label: l.settings_dark,
-                      active: isDark,
-                      c: c,
-                      roundLeft: true,
-                      onTap: () {
-                        if (!isDark) themeProvider.setDarkMode(true);
-                      },
-                    ),
-                    Container(
-                        width: 1, height: 28, color: c.hairline),
-                    _ModeChip(
-                      label: l.settings_light,
-                      active: !isDark,
-                      c: c,
-                      roundRight: true,
-                      onTap: () {
-                        if (isDark) themeProvider.setDarkMode(false);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+      builder: (context, tp, _) {
+        final isDark = tp.isDarkMode;
+        return _SettingsCardRow(
+          icon: isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+          title: l.settings_theme,
+          subtitle: l.themeSubtitle,
+          trailing: _Segmented(options: [
+            _SegOption(l.settings_light, !isDark,
+                () => tp.setDarkMode(false)),
+            _SegOption(l.settings_dark, isDark, () => tp.setDarkMode(true)),
+          ]),
         );
       },
     );
   }
 }
 
-// ── Language row ──────────────────────────────────────────────────────────
-class _LanguageRow extends StatelessWidget {
-  const _LanguageRow({required this.l, required this.c});
+// ── Language card ──────────────────────────────────────────────────────────
+class _LanguageCard extends StatelessWidget {
+  const _LanguageCard({required this.l});
   final AppLocalizations l;
-  final EditorialColors c;
 
   @override
   Widget build(BuildContext context) {
     return Consumer<LocaleProvider>(
-      builder: (context, localeProvider, _) {
-        final isEn = localeProvider.locale.languageCode == 'en';
-        return Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-          decoration: BoxDecoration(
-            color: c.card,
-            border: Border.all(color: c.hairline, width: 1),
-            borderRadius: BorderRadius.circular(2),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: c.terrace,
-                  borderRadius: BorderRadius.circular(2),
-                  border:
-                      Border.all(color: c.hairline, width: 1),
-                ),
-                child: Icon(Icons.language_outlined,
-                    size: 16, color: c.inkMute),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  l.settings_language.toUpperCase(),
-                  style: EType.label(
-                      color: c.ink, size: 11, letterSpacing: 1.8),
-                ),
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  color: c.terrace,
-                  border:
-                      Border.all(color: c.hairline, width: 1),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _ModeChip(
-                      label: l.settings_eng,
-                      active: isEn,
-                      c: c,
-                      roundLeft: true,
-                      onTap: () => context
-                          .read<LocaleProvider>()
-                          .setLocale(const Locale('en')),
-                    ),
-                    Container(
-                        width: 1, height: 28, color: c.hairline),
-                    _ModeChip(
-                      label: l.settings_heb,
-                      active: !isEn,
-                      c: c,
-                      roundRight: true,
-                      onTap: () => context
-                          .read<LocaleProvider>()
-                          .setLocale(const Locale('he')),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+      builder: (context, lp, _) {
+        final isEn = lp.locale.languageCode == 'en';
+        return _SettingsCardRow(
+          icon: Icons.language_outlined,
+          title: l.settings_language,
+          subtitle: l.languageSubtitle,
+          trailing: _Segmented(options: [
+            _SegOption(l.settings_heb, !isEn,
+                () => lp.setLocale(const Locale('he'))),
+            _SegOption(
+                l.settings_eng, isEn, () => lp.setLocale(const Locale('en'))),
+          ]),
         );
       },
     );
   }
 }
 
-// ── Shared segmented chip (theme + language rows) ─────────────────────────
-class _ModeChip extends StatelessWidget {
-  const _ModeChip({
-    required this.label,
-    required this.active,
-    required this.c,
-    required this.onTap,
-    this.roundLeft = false,
-    this.roundRight = false,
-  });
+// ── Dialog buttons ───────────────────────────────────────────────────────
+class _GhostBtn extends StatelessWidget {
+  const _GhostBtn({required this.label, required this.onTap});
   final String label;
-  final bool active;
-  final EditorialColors c;
   final VoidCallback onTap;
-  final bool roundLeft;
-  final bool roundRight;
 
   @override
   Widget build(BuildContext context) {
+    final c = context.col;
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: active ? c.live : Colors.transparent,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(roundLeft ? 2 : 0),
-            bottomLeft: Radius.circular(roundLeft ? 2 : 0),
-            topRight: Radius.circular(roundRight ? 2 : 0),
-            bottomRight: Radius.circular(roundRight ? 2 : 0),
-          ),
+          border: Border.all(color: c.hairline, width: 1),
+          borderRadius: BorderRadius.circular(10),
         ),
-        child: Text(
-          label.toUpperCase(),
-          style: EType.label(
-            color: active ? c.pitch : c.inkMute,
-            size: 11,
-            letterSpacing: 1.6,
-          ),
+        alignment: Alignment.center,
+        child: Text(label.toUpperCase(),
+            style: EType.label(color: c.ink, size: 11, letterSpacing: 1.6)),
+      ),
+    );
+  }
+}
+
+class _SolidBtn extends StatelessWidget {
+  const _SolidBtn(
+      {required this.label, required this.color, required this.onTap});
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(10),
         ),
+        alignment: Alignment.center,
+        child: Text(label.toUpperCase(),
+            style: EType.label(color: c.pitch, size: 11, letterSpacing: 1.6)),
       ),
     );
   }
