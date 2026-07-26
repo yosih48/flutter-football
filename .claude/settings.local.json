@@ -193,7 +193,19 @@
       "Bash(node -e \"Promise.all\\([import\\('./src/controllers/usersClass.js'\\),import\\('./src/controllers/seasonArchive.js'\\),import\\('./src/routes/reminders.js'\\),import\\('./src/routes/users.js'\\),import\\('./src/models/usersModel.js'\\)]\\).then\\(\\(\\)=>console.log\\('ALL BACKEND PARSE OK'\\)\\).catch\\(e=>{console.error\\(e\\);process.exit\\(1\\)}\\)\")",
       "Bash(node -e \"Promise.all\\([import\\('./src/controllers/usersClass.js'\\),import\\('./src/routes/users.js'\\),import\\('./src/controllers/seasonArchive.js'\\)]\\).then\\(\\(\\)=>console.log\\('BACKEND PARSE OK'\\)\\).catch\\(e=>{console.error\\(e\\);process.exit\\(1\\)}\\)\")",
       "mcp__visualize__read_me",
-      "mcp__visualize__show_widget"
+      "mcp__visualize__show_widget",
+      "PowerShell(flutter analyze lib/screens/customer_assets_screen.dart)",
+      "PowerShell(flutter analyze C:\\\\flutter-business-1\\\\lib\\\\screens\\\\customer_assets_screen.dart)",
+      "Bash(ls /c/worldBackend 2>/dev/null || echo \"no worldBackend\")",
+      "Bash(grep -rn '\"points\\\\.\\\\|points\\\\.\\\\${\\\\|`points\\\\.' src/)",
+      "Bash(grep -rn '\\\\$inc\\\\|updatePoints\\\\|calculatePoints\\\\|totalPoints' src/)",
+      "Bash(grep -v \"^.*//\")",
+      "Bash(grep -vi \"expectedPoints\\\\|//\")",
+      "Bash(grep -n 'points\\\\.\\\\|thisDayPoints\\\\|topScorerPoints\\\\|findOneAndUpdate\\\\|$set' editPoints.js)",
+      "Bash(node tests/seasonHistory.test.mjs)",
+      "Bash(cp /tmp/scope_test.mjs ./_scope_test.mjs)",
+      "Bash(node ./_scope_test.mjs)",
+      "Bash(node --test tests/)"
     ]
   }
 }

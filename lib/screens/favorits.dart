@@ -265,7 +265,10 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                 crossAxisCount: 3,
                 crossAxisSpacing: 8,
                 mainAxisSpacing: 10,
-                childAspectRatio: 0.92,
+                // Fixed pixel height rather than a width-derived ratio: the
+                // card content is a constant 122px tall, so a ratio would
+                // under-size (and overflow) the cards on narrow screens.
+                mainAxisExtent: 138,
               ),
               itemCount: _leagueOrder.length,
               itemBuilder: (context, index) {
@@ -521,6 +524,9 @@ class _LeagueCard extends StatelessWidget {
       onTap: onTap,
       child: Stack(
         clipBehavior: Clip.none,
+        // Fill the whole grid cell so every card is the same height and the
+        // check badge anchors to a consistent corner.
+        fit: StackFit.expand,
         children: [
           AnimatedContainer(
             duration: const Duration(milliseconds: 160),
@@ -560,17 +566,22 @@ class _LeagueCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  leagueName,
-                  style: EType.body(
-                    size: 13,
-                    color: c.ink,
-                    weight: FontWeight.w600,
-                    height: 1.15,
+                // Fixed two-line box: one- and two-line names occupy the same
+                // space, so logos sit on a shared baseline across the grid.
+                SizedBox(
+                  height: 32,
+                  child: Text(
+                    leagueName,
+                    style: EType.body(
+                      size: 13,
+                      color: c.ink,
+                      weight: FontWeight.w600,
+                      height: 1.15,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
