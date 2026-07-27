@@ -5,6 +5,7 @@ import 'package:football/resources/league_config_service.dart';
 import 'package:football/resources/trophyMethods.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
+import 'package:football/utils/league_logos.dart';
 import 'package:football/utils/localized_team_name.dart';
 import 'package:football/utils/he_player_name.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -54,8 +55,9 @@ class _TrophyCabinetTabState extends State<TrophyCabinetTab> {
     }
   }
 
-  List<SeasonRecord> _filter(List<SeasonRecord> src) =>
-      src.where((r) => widget.allowedIds.contains(r.leagueId.toString())).toList();
+  List<SeasonRecord> _filter(List<SeasonRecord> src) => src
+      .where((r) => widget.allowedIds.contains(r.leagueId.toString()))
+      .toList();
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +107,9 @@ class _TrophyCabinetTabState extends State<TrophyCabinetTab> {
       children: [
         for (final s in seasons) ...[
           _SectionHeader(label: '${l.trophySeason} $s'),
-          ..._history.where((r) => r.season == s).map((r) => _TrophyCard(record: r)),
+          ..._history
+              .where((r) => r.season == s)
+              .map((r) => _TrophyCard(record: r)),
         ],
       ],
     );
@@ -174,15 +178,26 @@ class _TrophyCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
             child: Row(
               children: [
+                // Real league crest, same source/framing as every other league
+                // badge in the app (profile prediction cards, league chips).
                 Container(
                   width: 44,
                   height: 44,
+                  padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
-                    color: c.ink,
-                    borderRadius: BorderRadius.circular(12),
+                    color: c.pitch,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: c.hairline, width: 1),
                   ),
-                  child: const Icon(Icons.emoji_events,
-                      size: 22, color: Color(0xFFD4AF37)),
+                  child: Image(
+                    image: leagueLogoProvider(record.leagueId),
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => Icon(
+                      Icons.shield_outlined,
+                      size: 18,
+                      color: c.inkDim,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -208,7 +223,9 @@ class _TrophyCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          record.championCorrect ? l.championHit : l.championMiss,
+                          record.championCorrect
+                              ? l.championHit
+                              : l.championMiss,
                           style: EType.body(
                             color: record.championCorrect ? c.live : c.inkMute,
                             size: 11,
@@ -303,33 +320,45 @@ class _CabinetEmpty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.col;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: c.hairline, width: 1),
-            ),
-            child: Icon(Icons.emoji_events_outlined, size: 26, color: c.inkDim),
+    // Center on BOTH axes. The parent gives this a min-height of the viewport
+    // (see TrophyCabinetScreen), so Center has room to work vertically; the
+    // full-width SizedBox stops the Column from shrink-wrapping and drifting
+    // off-centre horizontally.
+    return Center(
+      child: SizedBox(
+        width: double.infinity,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: c.hairline, width: 1),
+                ),
+                child: Icon(Icons.emoji_events_outlined,
+                    size: 26, color: c.inkDim),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                title.toUpperCase(),
+                style:
+                    EType.display(size: 22, color: c.ink, letterSpacing: 1.2),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: EType.body(color: c.inkMute, size: 13, height: 1.5),
+              ),
+            ],
           ),
-          const SizedBox(height: 18),
-          Text(
-            title.toUpperCase(),
-            style: EType.display(size: 22, color: c.ink, letterSpacing: 1.2),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 10),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: EType.body(color: c.inkMute, size: 13, height: 1.5),
-          ),
-        ],
+        ),
       ),
     );
   }

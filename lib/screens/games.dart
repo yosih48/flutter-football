@@ -874,7 +874,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     if (_allGames.isEmpty) {
       return _buildEmptyState(
         icon: Icons.scoreboard_outlined,
-        message: AppLocalizations.of(context)!.nogames,
+        message: AppLocalizations.of(context)!.seasonWillSartSoon,
         c: c,
       );
     }
@@ -883,7 +883,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
         icon: _showOnlyLiveGames ? Icons.live_tv : Icons.scoreboard_outlined,
         message: _showOnlyLiveGames
             ? AppLocalizations.of(context)!.nolivegames
-            : AppLocalizations.of(context)!.nogames,
+            : AppLocalizations.of(context)!.seasonWillSartSoon,
         c: c,
       );
     }

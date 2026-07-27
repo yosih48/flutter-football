@@ -33,11 +33,19 @@ class TrophyCabinetScreen extends StatelessWidget {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: TrophyCabinetTab(
-            userId: userId,
-            allowedIds: allowedIds,
+        // minHeight = viewport so the empty state can centre vertically in the
+        // page instead of hugging the top. Content taller than the viewport
+        // still scrolls normally.
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: TrophyCabinetTab(
+                userId: userId,
+                allowedIds: allowedIds,
+              ),
+            ),
           ),
         ),
       ),

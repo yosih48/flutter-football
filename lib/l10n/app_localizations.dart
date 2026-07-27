@@ -1511,6 +1511,12 @@ abstract class AppLocalizations {
   /// **'from'**
   String get from;
 
+  /// No description provided for @seasonWillSartSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Season Will Start Soon'**
+  String get seasonWillSartSoon;
+
   /// No description provided for @settings_theme.
   ///
   /// In en, this message translates to:

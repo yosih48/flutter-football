@@ -143,6 +143,170 @@ const Map<String, String> kTeamNamesHe = {
   'Tahiti': 'טהיטי',
 };
 
+/// Hebrew display names for CLUB sides, keyed by the English name as returned
+/// by api-sports.io. Same DISPLAY-ONLY contract as [kTeamNamesHe] above — these
+/// may only be substituted inside `Text(...)`.
+///
+/// Covers the leagues in config/leagues.json plus the clubs that regularly
+/// appear in the European competitions. Anything not listed falls back to the
+/// English name, so partial coverage degrades gracefully rather than breaking.
+const Map<String, String> kClubNamesHe = {
+  // ── Premier League ───────────────────────────────────────────────
+  'Arsenal': 'ארסנל',
+  'Aston Villa': 'אסטון וילה',
+  'Bournemouth': 'בורנמות׳',
+  'Brentford': 'ברנטפורד',
+  'Brighton': 'ברייטון',
+  'Burnley': 'ברנלי',
+  'Chelsea': "צ'לסי",
+  'Crystal Palace': 'קריסטל פאלאס',
+  'Everton': 'אברטון',
+  'Fulham': 'פולהאם',
+  'Ipswich': 'איפסוויץ׳',
+  'Leeds': 'לידס',
+  'Leicester': 'לסטר',
+  'Liverpool': 'ליברפול',
+  'Manchester City': "מנצ'סטר סיטי",
+  'Manchester United': "מנצ'סטר יונייטד",
+  'Newcastle': 'ניוקאסל',
+  'Nottingham Forest': 'נוטינגהאם פורסט',
+  'Southampton': 'סאות׳מפטון',
+  'Sunderland': 'סנדרלנד',
+  'Tottenham': 'טוטנהאם',
+  'West Ham': 'ווסטהאם',
+  'Wolves': 'וולבס',
+
+  // ── La Liga ──────────────────────────────────────────────────────
+  'Alaves': 'אלאבס',
+  'Athletic Club': 'אתלטיק בילבאו',
+  'Atletico Madrid': 'אתלטיקו מדריד',
+  'Barcelona': 'ברצלונה',
+  'Celta Vigo': 'סלטה ויגו',
+  'Elche': 'אלצ׳ה',
+  'Espanyol': 'אספניול',
+  'Getafe': 'חטאפה',
+  'Girona': 'ז׳ירונה',
+  'Las Palmas': 'לאס פלמאס',
+  'Levante': 'לבאנטה',
+  'Mallorca': 'מיורקה',
+  'Osasuna': 'אוססונה',
+  'Rayo Vallecano': 'ראיו ואייקאנו',
+  'Real Betis': 'ריאל בטיס',
+  'Real Madrid': 'ריאל מדריד',
+  'Real Oviedo': 'ריאל אוביידו',
+  'Real Sociedad': 'ריאל סוסיאדד',
+  'Sevilla': 'סביליה',
+  'Valencia': 'ולנסיה',
+  'Villarreal': 'ויאריאל',
+
+  // ── Serie A ──────────────────────────────────────────────────────
+  'AC Milan': 'מילאן',
+  'Milan': 'מילאן',
+  'Atalanta': 'אטלנטה',
+  'Bologna': 'בולוניה',
+  'Cagliari': 'קליארי',
+  'Como': 'קומו',
+  'Cremonese': 'קרמונזה',
+  'Fiorentina': 'פיורנטינה',
+  'Genoa': 'גנואה',
+  'Inter': 'אינטר',
+  'Juventus': 'יובנטוס',
+  'Lazio': 'לאציו',
+  'Lecce': 'לצ׳ה',
+  'Napoli': 'נאפולי',
+  'Parma': 'פארמה',
+  'Pisa': 'פיזה',
+  'Roma': 'רומא',
+  'Sassuolo': 'ססואולו',
+  'Torino': 'טורינו',
+  'Udinese': 'אודינזה',
+  'Verona': 'ורונה',
+  'Hellas Verona': 'ורונה',
+
+  // ── Ligue 1 ──────────────────────────────────────────────────────
+  'Angers': 'אנז׳ה',
+  'Auxerre': 'אוסר',
+  'Brest': 'ברסט',
+  'Le Havre': 'לה האבר',
+  'Lens': 'לאנס',
+  'Lille': 'ליל',
+  'Lorient': 'לוריאן',
+  'Lyon': 'ליון',
+  'Marseille': 'מארסיי',
+  'Metz': 'מץ',
+  'Monaco': 'מונאקו',
+  'Montpellier': 'מונפלייה',
+  'Nantes': 'נאנט',
+  'Nice': 'ניס',
+  'Paris FC': 'פריז אף.סי',
+  'Paris Saint Germain': 'פריז סן ז׳רמן',
+  'Paris Saint-Germain': 'פריז סן ז׳רמן',
+  'Reims': 'ריימס',
+  'Rennes': 'רן',
+  'Saint Etienne': 'סנט אטיין',
+  'Strasbourg': 'שטרסבורג',
+  'Toulouse': 'טולוז',
+
+  // ── Ligat Haal (Israel) ──────────────────────────────────────────
+  'Ashdod': 'מ.ס. אשדוד',
+  'Beitar Jerusalem': 'בית״ר ירושלים',
+  'Bnei Sakhnin': 'בני סכנין',
+  'Hapoel Beer Sheva': 'הפועל באר שבע',
+  'Hapoel Hadera': 'הפועל חדרה',
+  'Hapoel Haifa': 'הפועל חיפה',
+  'Hapoel Jerusalem': 'הפועל ירושלים',
+  'Hapoel Petah Tikva': 'הפועל פתח תקווה',
+  'Hapoel Tel Aviv': 'הפועל תל אביב',
+  'Ironi Kiryat Shmona': 'עירוני קרית שמונה',
+  'Ironi Tiberias': 'עירוני טבריה',
+  'Maccabi Bnei Raina': 'מכבי בני ריינה',
+  'Maccabi Haifa': 'מכבי חיפה',
+  'Maccabi Netanya': 'מכבי נתניה',
+  'Maccabi Petah Tikva': 'מכבי פתח תקווה',
+  'Maccabi Tel Aviv': 'מכבי תל אביב',
+  'Sektzia Ness Ziona': 'סקציה נס ציונה',
+
+  // ── Regulars in the European competitions ────────────────────────
+  'Ajax': 'איאקס',
+  'Anderlecht': 'אנדרלכט',
+  'Bayer Leverkusen': 'באייר לברקוזן',
+  'Bayern Munich': 'באיירן מינכן',
+  'Benfica': 'בנפיקה',
+  'Besiktas': 'בשיקטאש',
+  'Borussia Dortmund': 'בורוסיה דורטמונד',
+  'Borussia Monchengladbach': 'בורוסיה מנשנגלדבאך',
+  'Celtic': 'סלטיק',
+  'Club Brugge KV': 'קלוב ברוז׳',
+  'Copenhagen': 'קופנהגן',
+  'Dinamo Zagreb': 'דינמו זאגרב',
+  'Eintracht Frankfurt': 'אינטראכט פרנקפורט',
+  'Fenerbahce': 'פנרבחצ׳ה',
+  'Ferencvarosi TC': 'פרנצוארוש',
+  'Freiburg': 'פרייבורג',
+  'Galatasaray': 'גלאטסראיי',
+  'Legia Warszawa': 'לגיה ורשה',
+  'Olympiakos Piraeus': 'אולימפיאקוס',
+  'PAOK': 'פאוק סלוניקי',
+  'PSV Eindhoven': 'פ.ס.וו. איינדהובן',
+  'Panathinaikos': 'פנאתינייקוס',
+  'Porto': 'פורטו',
+  'Qarabag': 'קרבאח',
+  'RB Leipzig': 'לייפציג',
+  'Rangers': 'ריינג׳רס',
+  'Red Bull Salzburg': 'זלצבורג',
+  'Red Star Belgrade': 'הכוכב האדום בלגרד',
+  'Feyenoord': 'פיינורד',
+  'Shakhtar Donetsk': 'שחטאר דונייצק',
+  'Slavia Praha': 'סלביה פראג',
+  'Sparta Praha': 'ספרטה פראג',
+  'Sporting CP': 'ספורטינג ליסבון',
+  'Stuttgart': 'שטוטגרט',
+  'Union Berlin': 'אוניון ברלין',
+  'VfL Wolfsburg': 'וולפסבורג',
+  'Werder Bremen': 'ורדר ברמן',
+  'Young Boys': 'יאנג בויז',
+};
+
 /// Maps common Latin-1/Latin Extended diacritics to their base ASCII letter, so
 /// API names like `Türkiye`, `Curaçao` or `Côte d'Ivoire` resolve against the
 /// plain-ASCII keys above.
@@ -170,9 +334,10 @@ String _foldKey(String s) {
   return buf.toString();
 }
 
-/// Diacritic-insensitive index built once from [kTeamNamesHe].
+/// Diacritic-insensitive index built once from [kTeamNamesHe] + [kClubNamesHe].
 final Map<String, String> _foldedIndex = {
   for (final e in kTeamNamesHe.entries) _foldKey(e.key): e.value,
+  for (final e in kClubNamesHe.entries) _foldKey(e.key): e.value,
 };
 
 /// Hebrew display name for [englishName] when the app locale is Hebrew and a
@@ -193,7 +358,9 @@ String localizedTeamNameFor(String languageCode, String englishName) {
 }
 
 String _lookupHe(String englishName) {
-  return kTeamNamesHe[englishName.trim()] ??
+  final trimmed = englishName.trim();
+  return kTeamNamesHe[trimmed] ??
+      kClubNamesHe[trimmed] ??
       _foldedIndex[_foldKey(englishName)] ??
       englishName;
 }

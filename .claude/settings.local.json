@@ -205,7 +205,15 @@
       "Bash(node tests/seasonHistory.test.mjs)",
       "Bash(cp /tmp/scope_test.mjs ./_scope_test.mjs)",
       "Bash(node ./_scope_test.mjs)",
-      "Bash(node --test tests/)"
+      "Bash(node --test tests/)",
+      "Bash(node --test tests/points.test.mjs)",
+      "Bash(timeout 180 node scripts/migrateSeasonScoping.js --archive)",
+      "Bash(timeout 180 node scripts/migrateSeasonScoping.js)",
+      "Bash(python -)",
+      "Bash(node --check src/controllers/usersClass.js)",
+      "Bash(node -e \"import\\('dotenv/config'\\).then\\(async\\(\\)=>{await import\\('./src/controllers/usersClass.js'\\);console.log\\('usersClass loads ok'\\);}\\)\")",
+      "Bash(timeout 60 curl -s \"https://leagues.onrender.com/users/69ef34d25b52e9b138b8e342\")",
+      "Bash(dart format *)"
     ]
   }
 }

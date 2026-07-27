@@ -717,6 +717,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get from => 'מתוך';
 
   @override
+  String get seasonWillSartSoon => 'העונה תתחיל בקרוב';
+
+  @override
   String get settings_theme => 'ערכת נושא';
 
   @override
