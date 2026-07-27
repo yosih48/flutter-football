@@ -53,6 +53,34 @@ class EType {
               fontWeight: FontWeight.w400,
             );
 
+  // Screen title in an app-bar slot ("FIXTURES", "משחקים").
+  //
+  // Same reasoning as [teamNameDisplay]: Bebas Neue carries no Hebrew glyphs,
+  // so a Hebrew title styled with [display] silently falls back to a thin,
+  // inconsistent system font. Rubik bold gives Hebrew the weight the Latin
+  // display voice has.
+  static TextStyle screenTitle({
+    double size = 26,
+    Color color = Editorial.ink,
+    double letterSpacing = 1.4,
+    bool hebrew = false,
+  }) =>
+      hebrew
+          ? GoogleFonts.rubik(
+              fontSize: size,
+              color: color,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0,
+              height: 1.15,
+            )
+          : GoogleFonts.bebasNeue(
+              fontSize: size,
+              color: color,
+              letterSpacing: letterSpacing,
+              height: 0.95,
+              fontWeight: FontWeight.w400,
+            );
+
   // Editorial small-caps label, e.g. "MATCH EVENTS", "PREDICTIONS".
   static TextStyle label({
     Color color = Editorial.inkMute,

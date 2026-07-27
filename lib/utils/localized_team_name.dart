@@ -175,6 +175,8 @@ const Map<String, String> kClubNamesHe = {
   'Tottenham': 'טוטנהאם',
   'West Ham': 'ווסטהאם',
   'Wolves': 'וולבס',
+  'Coventry': 'קובנטרי',
+  'Hull City': 'האל סיטי',
 
   // ── La Liga ──────────────────────────────────────────────────────
   'Alaves': 'אלאבס',
@@ -222,6 +224,10 @@ const Map<String, String> kClubNamesHe = {
   'Udinese': 'אודינזה',
   'Verona': 'ורונה',
   'Hellas Verona': 'ורונה',
+  'AS Roma': 'רומא',
+  'Monza': 'מוצה',
+  'Frosinone': 'פרוזינונה',
+  'Venezia': 'ונציה',
 
   // ── Ligue 1 ──────────────────────────────────────────────────────
   'Angers': 'אנז׳ה',
@@ -246,6 +252,9 @@ const Map<String, String> kClubNamesHe = {
   'Saint Etienne': 'סנט אטיין',
   'Strasbourg': 'שטרסבורג',
   'Toulouse': 'טולוז',
+  'Le Mans': 'לה מאן',
+  'Estac Troyes': 'טרואה',
+  'Stade Brestois 29': 'ברסט',
 
   // ── Ligat Haal (Israel) ──────────────────────────────────────────
   'Ashdod': 'מ.ס. אשדוד',
@@ -255,6 +264,8 @@ const Map<String, String> kClubNamesHe = {
   'Hapoel Hadera': 'הפועל חדרה',
   'Hapoel Haifa': 'הפועל חיפה',
   'Hapoel Jerusalem': 'הפועל ירושלים',
+  'Hapoel Katamon': 'הפועל ירושלים',
+  'Hapoel Ramat Gan': 'הפועל רמת גן',
   'Hapoel Petah Tikva': 'הפועל פתח תקווה',
   'Hapoel Tel Aviv': 'הפועל תל אביב',
   'Ironi Kiryat Shmona': 'עירוני קרית שמונה',

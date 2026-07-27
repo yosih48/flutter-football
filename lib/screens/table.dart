@@ -131,9 +131,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                 const SizedBox(width: 10),
                 Text(title.toUpperCase(),
                     style: EType.label(
-                        color: c.ink,
-                        size: 11,
-                        letterSpacing: 2.4)),
+                        color: c.ink, size: 11, letterSpacing: 2.4)),
               ],
             ),
             const SizedBox(height: 18),
@@ -159,10 +157,9 @@ class TableScreenContentState extends State<TableScreenContent> {
       style: EType.body(color: c.ink, size: 14),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: EType.label(
-            color: c.inkDim, size: 11, letterSpacing: 1.6),
-        floatingLabelStyle: EType.label(
-            color: c.live, size: 11, letterSpacing: 1.6),
+        labelStyle: EType.label(color: c.inkDim, size: 11, letterSpacing: 1.6),
+        floatingLabelStyle:
+            EType.label(color: c.live, size: 11, letterSpacing: 1.6),
         filled: true,
         fillColor: c.terrace,
         contentPadding:
@@ -213,8 +210,7 @@ class TableScreenContentState extends State<TableScreenContent> {
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           child: Text(
             label.toUpperCase(),
-            style: EType.label(
-                color: c.pitch, size: 11, letterSpacing: 1.8),
+            style: EType.label(color: c.pitch, size: 11, letterSpacing: 1.8),
           ),
         ),
       ),
@@ -237,8 +233,8 @@ class TableScreenContentState extends State<TableScreenContent> {
               const SizedBox(height: 14),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                 decoration: BoxDecoration(
                   color: c.terrace,
                   border: Border.all(color: c.hairline, width: 1),
@@ -306,8 +302,7 @@ class TableScreenContentState extends State<TableScreenContent> {
         if (!mounted) return;
         String errorMessage = responseData['msg'] ?? 'Unknown error occurred';
         if (errorMessage == 'group name is already exist') {
-          errorMessage =
-              AppLocalizations.of(context)!.groupnamealreadyexists;
+          errorMessage = AppLocalizations.of(context)!.groupnamealreadyexists;
         }
         showSnackBar(context, errorMessage, tone: SnackTone.error);
       }
@@ -331,10 +326,8 @@ class TableScreenContentState extends State<TableScreenContent> {
       return;
     }
     final groupID = Map<String, String>.from(userData['groupID'] ?? {});
-    final existingKeys =
-        groupID.keys.map((k) => int.tryParse(k) ?? 0).toList();
-    final nextKey =
-        existingKeys.isEmpty ? 1 : (existingKeys.reduce(max) + 1);
+    final existingKeys = groupID.keys.map((k) => int.tryParse(k) ?? 0).toList();
+    final nextKey = existingKeys.isEmpty ? 1 : (existingKeys.reduce(max) + 1);
 
     final email = widget.authProvider.currentUser?.email;
     try {
@@ -622,8 +615,7 @@ class TableScreenContentState extends State<TableScreenContent> {
 
   bool get _isCreatorOfActiveGroup => _groupsInfo.any(
         (g) =>
-            g['name'] == selectedGroupName &&
-            g['createdBy'] == currentUserId,
+            g['name'] == selectedGroupName && g['createdBy'] == currentUserId,
       );
 
   Future<void> _setAsDefaultGroup(String name) async {
@@ -641,8 +633,7 @@ class TableScreenContentState extends State<TableScreenContent> {
       context: context,
       backgroundColor: c.card,
       shape: RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(2)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(2)),
       ),
       builder: (sheetCtx) {
         return StatefulBuilder(
@@ -669,17 +660,14 @@ class TableScreenContentState extends State<TableScreenContent> {
                     padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
                     child: Row(
                       children: [
-                        Container(
-                            width: 18, height: 1, color: sc.live),
+                        Container(width: 18, height: 1, color: sc.live),
                         const SizedBox(width: 10),
                         Text(
                           AppLocalizations.of(innerCtx)!
                               .privategroups
                               .toUpperCase(),
                           style: EType.label(
-                              color: sc.ink,
-                              size: 11,
-                              letterSpacing: 2.4),
+                              color: sc.ink, size: 11, letterSpacing: 2.4),
                         ),
                       ],
                     ),
@@ -697,18 +685,13 @@ class TableScreenContentState extends State<TableScreenContent> {
                       child: Container(
                         decoration: BoxDecoration(
                           border: Border(
-                            bottom: BorderSide(
-                                color: sc.hairline, width: 1),
+                            bottom: BorderSide(color: sc.hairline, width: 1),
                             left: BorderSide(
-                              color: isActive
-                                  ? sc.live
-                                  : Colors.transparent,
+                              color: isActive ? sc.live : Colors.transparent,
                               width: 3,
                             ),
                           ),
-                          color: isActive
-                              ? sc.liveSoft
-                              : Colors.transparent,
+                          color: isActive ? sc.liveSoft : Colors.transparent,
                         ),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 16),
@@ -721,22 +704,16 @@ class TableScreenContentState extends State<TableScreenContent> {
                                 color: sc.cardHi,
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: isActive
-                                      ? sc.live
-                                      : sc.hairline,
+                                  color: isActive ? sc.live : sc.hairline,
                                   width: 1,
                                 ),
                               ),
                               alignment: Alignment.center,
                               child: Text(
-                                name.isNotEmpty
-                                    ? name[0].toUpperCase()
-                                    : '?',
+                                name.isNotEmpty ? name[0].toUpperCase() : '?',
                                 style: EType.display(
                                   size: 16,
-                                  color: isActive
-                                      ? sc.live
-                                      : sc.inkMute,
+                                  color: isActive ? sc.live : sc.inkMute,
                                 ),
                               ),
                             ),
@@ -753,12 +730,11 @@ class TableScreenContentState extends State<TableScreenContent> {
                               ),
                             ),
                             IconButton(
-                              tooltip: AppLocalizations.of(context)!.setAsDefault,
+                              tooltip:
+                                  AppLocalizations.of(context)!.setAsDefault,
                               icon: Icon(
                                 isDefault ? Icons.star : Icons.star_border,
-                                color: isDefault
-                                    ? sc.amber
-                                    : sc.inkDim,
+                                color: isDefault ? sc.amber : sc.inkDim,
                                 size: 18,
                               ),
                               onPressed: () async {
@@ -791,8 +767,8 @@ class TableScreenContentState extends State<TableScreenContent> {
         final l = AppLocalizations.of(ctx)!;
         return _editorialDialog(
           title: l.leavethegroup,
-          body: Text(l.leavegroup,
-              style: EType.body(color: c.inkMute, size: 13)),
+          body:
+              Text(l.leavegroup, style: EType.body(color: c.inkMute, size: 13)),
           actions: [
             _ghostBtn(l.cancel, () => Navigator.of(ctx).pop(false)),
             const SizedBox(width: 8),
@@ -803,13 +779,11 @@ class TableScreenContentState extends State<TableScreenContent> {
                 borderRadius: BorderRadius.circular(2),
                 onTap: () => Navigator.of(ctx).pop(true),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 18, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                   child: Text(l.leave.toUpperCase(),
                       style: EType.label(
-                          color: c.ink,
-                          size: 11,
-                          letterSpacing: 1.8)),
+                          color: c.ink, size: 11, letterSpacing: 1.8)),
                 ),
               ),
             ),
@@ -826,8 +800,7 @@ class TableScreenContentState extends State<TableScreenContent> {
       print('Error fetching user for leave: $e');
       return;
     }
-    final userGroups =
-        Map<String, String>.from(userData['groupID'] ?? {});
+    final userGroups = Map<String, String>.from(userData['groupID'] ?? {});
     final keyToRemove = userGroups.entries
         .firstWhere(
           (e) => e.value == selectedGroupName,
@@ -867,8 +840,7 @@ class TableScreenContentState extends State<TableScreenContent> {
   Future<void> changeSelectedGroup(String newGroupName) async {
     if (newGroupName == selectedGroupName) return;
 
-    final cached =
-        _TableCache.users[_usersCacheKey(newGroupName, league)];
+    final cached = _TableCache.users[_usersCacheKey(newGroupName, league)];
     setState(() {
       selectedGroupName = newGroupName;
       if (cached != null) {
@@ -896,18 +868,19 @@ class TableScreenContentState extends State<TableScreenContent> {
   @override
   Widget build(BuildContext context) {
     final c = context.col;
-    final effectivePrivateGroups =
-        isLoading ? {'0': AppLocalizations.of(context)!.loadingGroup} : _privateGroups;
+    final effectivePrivateGroups = isLoading
+        ? {'0': AppLocalizations.of(context)!.loadingGroup}
+        : _privateGroups;
 
     final effectiveUsers = isLoading
         ? List.generate(
             10,
             (index) => {
-              'displayName': AppLocalizations.of(context)!.loadingName,
-              'thisDayPoints': {league.toString(): '0'},
-              'points': {league.toString(): '0'},
-              '_id': 'dummy_$index'
-            })
+                  'displayName': AppLocalizations.of(context)!.loadingName,
+                  'thisDayPoints': {league.toString(): '0'},
+                  'points': {league.toString(): '0'},
+                  '_id': 'dummy_$index'
+                })
         : _users;
 
     return Scaffold(
@@ -933,8 +906,7 @@ class TableScreenContentState extends State<TableScreenContent> {
           if (effectivePrivateGroups.isEmpty)
             Expanded(child: _buildEmptyState(context, c))
           else ...[
-            if (selectedGroupName.isNotEmpty &&
-                selectedGroupName != 'Public')
+            if (selectedGroupName.isNotEmpty && selectedGroupName != 'Public')
               _buildGroupHeader(context, c, _users.length),
             // Only the rows shimmer while we fetch.
             Expanded(
@@ -963,12 +935,16 @@ class TableScreenContentState extends State<TableScreenContent> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(AppLocalizations.of(context)!.league.toUpperCase(),
-              style: EType.label(
-                  color: c.inkDim, size: 10, letterSpacing: 3)),
+              style: EType.label(color: c.inkDim, size: 10, letterSpacing: 3)),
           const SizedBox(height: 2),
-          Text(AppLocalizations.of(context)!.standings.toUpperCase(),
-              style: EType.display(
-                  size: 28, color: c.ink, letterSpacing: 1.4)),
+          Text(
+            AppLocalizations.of(context)!.standings.toUpperCase(),
+            style: EType.screenTitle(
+              size: 26,
+              color: c.ink,
+              hebrew: Localizations.localeOf(context).languageCode == 'he',
+            ),
+          ),
         ],
       ),
       actions: [
@@ -1003,13 +979,20 @@ class TableScreenContentState extends State<TableScreenContent> {
     if (remote != null) return remote;
     final l = AppLocalizations.of(context)!;
     switch (league) {
-      case 2:   return l.championsleague;
-      case 383: return l.ligathaal;
-      case 140: return l.laliga;
-      case 3:   return l.europaleague;
-      case 39:  return l.premierleague;
-      case 848: return l.conferenceleague;
-      default:  return '$league';
+      case 2:
+        return l.championsleague;
+      case 383:
+        return l.ligathaal;
+      case 140:
+        return l.laliga;
+      case 3:
+        return l.europaleague;
+      case 39:
+        return l.premierleague;
+      case 848:
+        return l.conferenceleague;
+      default:
+        return '$league';
     }
   }
 
@@ -1143,25 +1126,25 @@ class TableScreenContentState extends State<TableScreenContent> {
   // (points - thisDayPoints). Comparing that to the live rank yields the
   // up/down position-change arrows without any snapshot or backend field.
   Map<String, int> _previousRanks(List<Map<String, dynamic>> rows) {
-    final prev = [...rows]
-      ..sort((a, b) => (_ptsOf(b) - _dayOf(b)).compareTo(_ptsOf(a) - _dayOf(a)));
+    final prev = [
+      ...rows
+    ]..sort((a, b) => (_ptsOf(b) - _dayOf(b)).compareTo(_ptsOf(a) - _dayOf(a)));
     return {
       for (int i = 0; i < prev.length; i++)
         (prev[i]['_id']?.toString() ?? 'x$i'): i + 1,
     };
   }
 
-  Widget _buildLeaderboard(
-      BuildContext context, List<Map<String, dynamic>> rows, EditorialColors c) {
+  Widget _buildLeaderboard(BuildContext context,
+      List<Map<String, dynamic>> rows, EditorialColors c) {
     final l = AppLocalizations.of(context)!;
     final sorted = [...rows]..sort((a, b) => _ptsOf(b).compareTo(_ptsOf(a)));
     final prevRank = _previousRanks(rows);
     int deltaOf(String id, int rank) => (prevRank[id] ?? rank) - rank;
 
     final top3 = sorted.take(3).toList();
-    final rest = sorted.length > 3
-        ? sorted.sublist(3)
-        : const <Map<String, dynamic>>[];
+    final rest =
+        sorted.length > 3 ? sorted.sublist(3) : const <Map<String, dynamic>>[];
 
     void openStats(Map u) => Navigator.push(
           context,
@@ -1315,8 +1298,7 @@ class TableScreenContentState extends State<TableScreenContent> {
               const SizedBox(width: 8),
               Text(
                 label.toUpperCase(),
-                style: EType.label(
-                    color: color, size: 11, letterSpacing: 1.8),
+                style: EType.label(color: color, size: 11, letterSpacing: 1.8),
               ),
             ],
           ),
@@ -1340,8 +1322,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                 shape: BoxShape.circle,
                 border: Border.all(color: c.hairline, width: 1),
               ),
-              child: Icon(Icons.groups_outlined,
-                  size: 30, color: c.inkMute),
+              child: Icon(Icons.groups_outlined, size: 30, color: c.inkMute),
             ),
             const SizedBox(height: 22),
             Text(
@@ -1375,16 +1356,13 @@ class TableScreenContentState extends State<TableScreenContent> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 18, vertical: 12),
                       decoration: BoxDecoration(
-                        border: Border.all(
-                            color: c.hairlineHi, width: 1),
+                        border: Border.all(color: c.hairlineHi, width: 1),
                         borderRadius: BorderRadius.circular(2),
                       ),
                       child: Text(
                         l.joingroup.toUpperCase(),
                         style: EType.label(
-                            color: c.ink,
-                            size: 11,
-                            letterSpacing: 1.8),
+                            color: c.ink, size: 11, letterSpacing: 1.8),
                       ),
                     ),
                   ),
@@ -1433,9 +1411,8 @@ class _HeaderActionButtonState extends State<_HeaderActionButton> {
 
     final Color fillColor = widget.primary ? c.live : c.cardHi;
     final Color textColor = widget.primary ? c.pitch : c.ink;
-    final Color borderColor = widget.primary
-        ? c.live
-        : c.hairlineHi.withOpacity(0.55);
+    final Color borderColor =
+        widget.primary ? c.live : c.hairlineHi.withOpacity(0.55);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -1554,8 +1531,8 @@ class _LeaderRow extends StatelessWidget {
           color: isMe ? c.liveSoft : Colors.transparent,
           border: Border(
             bottom: BorderSide(color: c.hairline, width: 1),
-            left: BorderSide(
-                color: isMe ? c.live : Colors.transparent, width: 3),
+            left:
+                BorderSide(color: isMe ? c.live : Colors.transparent, width: 3),
           ),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),

@@ -10,7 +10,6 @@ import 'package:football/utils/league_logos.dart';
 import 'package:football/widgets/LeagueSelectorChips.dart';
 import 'package:football/widgets/toggleButton.dart';
 
-
 class LeagueDataProvider extends ChangeNotifier {
   static final LeagueDataProvider _instance = LeagueDataProvider._internal();
   factory LeagueDataProvider() => _instance;
@@ -287,9 +286,8 @@ class _LeagueSelectorState extends State<LeagueSelector> {
     // full-width headline instead of one lonely toggle button.
     if (_leagueData!.enabledLeagues.length == 1) {
       final singleId = _leagueData!.enabledLeagues.first;
-      final name = _leagueData!.options.isNotEmpty
-          ? _leagueData!.options.first
-          : '';
+      final name =
+          _leagueData!.options.isNotEmpty ? _leagueData!.options.first : '';
       final imageUrl = _leagueData!.imageUrls.isNotEmpty
           ? _leagueData!.imageUrls.first
           : null;
@@ -353,7 +351,7 @@ class SingleLeagueHeadline extends StatelessWidget {
           end: Alignment.centerRight,
           colors: [c.cardHi, c.card],
         ),
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: c.hairline, width: 1),
       ),
       child: Row(
@@ -375,10 +373,8 @@ class SingleLeagueHeadline extends StatelessWidget {
               child: Image(
                 image: leagueLogoProviderForUrl(imageUrl!),
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => Icon(
-                    Icons.emoji_events_outlined,
-                    size: 22,
-                    color: c.live),
+                errorBuilder: (_, __, ___) =>
+                    Icon(Icons.emoji_events_outlined, size: 22, color: c.live),
               ),
             ),
             const SizedBox(width: 11),

@@ -87,16 +87,14 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
   Future<void> _getUserInfo() async {
     try {
       final userData = await UsersMethods().fetchUserById(userId);
-      final snetEmail =
-          Map<String, dynamic>.from(userData['snetEmail'] ?? {});
+      final snetEmail = Map<String, dynamic>.from(userData['snetEmail'] ?? {});
       final chosenLeaguesData =
           Map<String, dynamic>.from(userData['chosenLeagues'] ?? {});
 
       setState(() {
         for (final id in LeagueConfigService().supportedLeagues) {
           chosenLeagues[id] = chosenLeaguesData[id.toString()] ?? true;
-          notificationStates[id] =
-              NotifPref.fromJson(snetEmail[id.toString()]);
+          notificationStates[id] = NotifPref.fromJson(snetEmail[id.toString()]);
         }
         isLoading = false;
       });
@@ -145,13 +143,20 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
     if (remote != null) return remote;
     final l = AppLocalizations.of(context)!;
     switch (leagueId) {
-      case 2:   return l.championsleague;
-      case 383: return l.ligathaal;
-      case 140: return l.laliga;
-      case 3:   return l.europaleague;
-      case 39:  return l.premierleague;
-      case 848: return l.conferenceleague;
-      default:  return '$leagueId';
+      case 2:
+        return l.championsleague;
+      case 383:
+        return l.ligathaal;
+      case 140:
+        return l.laliga;
+      case 3:
+        return l.europaleague;
+      case 39:
+        return l.premierleague;
+      case 848:
+        return l.conferenceleague;
+      default:
+        return '$leagueId';
     }
   }
 
@@ -200,14 +205,16 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         children: [
           Text(
             l.preferences.toUpperCase(),
-            style: EType.label(
-                color: c.inkDim, size: 10, letterSpacing: 3),
+            style: EType.label(color: c.inkDim, size: 10, letterSpacing: 3),
           ),
           const SizedBox(height: 2),
           Text(
             title.toUpperCase(),
-            style: EType.display(
-                size: 26, color: c.ink, letterSpacing: 1.4),
+            style: EType.screenTitle(
+              size: 26,
+              color: c.ink,
+              hebrew: Localizations.localeOf(context).languageCode == 'he',
+            ),
           ),
         ],
       ),
@@ -250,8 +257,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
               const SizedBox(width: 10),
               Text(
                 l.allCompetitions.toUpperCase(),
-                style: EType.label(
-                    color: c.ink, size: 11, letterSpacing: 2.4),
+                style: EType.label(color: c.ink, size: 11, letterSpacing: 2.4),
               ),
             ],
           ),
@@ -332,8 +338,8 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       _expandedNotifLeagues.add(enabledIds.first);
     }
 
-    bool allOfKind(bool Function(NotifPref) sel) =>
-        enabledIds.every((id) => sel(notificationStates[id] ?? const NotifPref()));
+    bool allOfKind(bool Function(NotifPref) sel) => enabledIds
+        .every((id) => sel(notificationStates[id] ?? const NotifPref()));
 
     void setAllOfKind(String kind, bool v) {
       setState(() {
@@ -379,29 +385,32 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         // ── Defaults (apply to all leagues) ──
         _NotifSectionHeader(label: l.notifDefaults, trailing: l.notifApplyAll),
         const SizedBox(height: 10),
-        _NotifRowCard(
-          kind: _NotifKind.goals,
-          title: l.notifAllGoals,
-          subtitle: l.notifGoalsSub,
-          value: allOfKind((p) => p.goals),
-          onChanged: (v) => setAllOfKind('goals', v),
-        ),
-        const SizedBox(height: 10),
-        _NotifRowCard(
-          kind: _NotifKind.reminders,
-          title: l.notifAllReminders,
-          subtitle: l.notifRemindersSub,
-          value: allOfKind((p) => p.reminders),
-          onChanged: (v) => setAllOfKind('reminders', v),
-        ),
-        const SizedBox(height: 10),
-        _NotifRowCard(
-          kind: _NotifKind.points,
-          title: l.notifAllPoints,
-          subtitle: l.notifPointsSub,
-          value: allOfKind((p) => p.points),
-          onChanged: (v) => setAllOfKind('points', v),
-        ),
+        _GroupedCard(rows: [
+          _NotifRowCard(
+            kind: _NotifKind.goals,
+            title: l.notifAllGoals,
+            subtitle: l.notifGoalsSub,
+            value: allOfKind((p) => p.goals),
+            grouped: true,
+            onChanged: (v) => setAllOfKind('goals', v),
+          ),
+          _NotifRowCard(
+            kind: _NotifKind.reminders,
+            title: l.notifAllReminders,
+            subtitle: l.notifRemindersSub,
+            value: allOfKind((p) => p.reminders),
+            grouped: true,
+            onChanged: (v) => setAllOfKind('reminders', v),
+          ),
+          _NotifRowCard(
+            kind: _NotifKind.points,
+            title: l.notifAllPoints,
+            subtitle: l.notifPointsSub,
+            value: allOfKind((p) => p.points),
+            grouped: true,
+            onChanged: (v) => setAllOfKind('points', v),
+          ),
+        ]),
         const SizedBox(height: 28),
 
         // ── Per-league cards (first open by default) ──
@@ -474,9 +483,7 @@ class _TabItem extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon,
-                      size: 16,
-                      color: active ? c.ink : c.inkDim),
+                  Icon(icon, size: 16, color: active ? c.ink : c.inkDim),
                   const SizedBox(width: 8),
                   Text(
                     label.toUpperCase(),
@@ -740,6 +747,7 @@ class _NotifRowCard extends StatelessWidget {
     required this.subtitle,
     required this.value,
     required this.onChanged,
+    this.grouped = false,
   });
   final _NotifKind kind;
   final String title;
@@ -747,15 +755,21 @@ class _NotifRowCard extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
 
+  /// When true the row draws no surface of its own — the parent supplies one
+  /// continuous card and separates rows with a hairline instead of a gap.
+  final bool grouped;
+
   @override
   Widget build(BuildContext context) {
     final c = context.col;
     return Container(
-      decoration: BoxDecoration(
-        color: c.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: c.hairline, width: 1),
-      ),
+      decoration: grouped
+          ? null
+          : BoxDecoration(
+              color: c.card,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: c.hairline, width: 1),
+            ),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       child: Row(
         children: [
@@ -818,21 +832,16 @@ class _LeagueNotifGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.col;
 
-    return Column(
-      children: [
-        // Header card — tap anywhere to expand/collapse.
+    // Header and its toggles share ONE card so the expanded rows visibly
+    // belong to this league rather than floating as separate cards.
+    return _GroupedCard(
+      borderColor: pref.anyOn ? c.live.withValues(alpha: 0.5) : null,
+      rows: [
+        // Header — tap anywhere to expand/collapse.
         GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: onToggleExpand,
-          child: Container(
-            decoration: BoxDecoration(
-              color: c.card,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: pref.anyOn ? c.live.withValues(alpha: 0.5) : c.hairline,
-                width: 1,
-              ),
-            ),
+          child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             child: Row(
               children: [
@@ -885,33 +894,78 @@ class _LeagueNotifGroup extends StatelessWidget {
             ),
           ),
         ),
+        // _GroupedCard weaves a hairline between every pair, so the header
+        // and each toggle are separated without any gaps.
         if (expanded) ...[
-          const SizedBox(height: 10),
           _NotifRowCard(
             kind: _NotifKind.goals,
             title: goalsTitle,
             subtitle: goalsSub,
             value: pref.goals,
+            grouped: true,
             onChanged: (v) => onChanged(pref.copyWith(goals: v)),
           ),
-          const SizedBox(height: 10),
           _NotifRowCard(
             kind: _NotifKind.reminders,
             title: remindersTitle,
             subtitle: remindersSub,
             value: pref.reminders,
+            grouped: true,
             onChanged: (v) => onChanged(pref.copyWith(reminders: v)),
           ),
-          const SizedBox(height: 10),
           _NotifRowCard(
             kind: _NotifKind.points,
             title: pointsTitle,
             subtitle: pointsSub,
             value: pref.points,
+            grouped: true,
             onChanged: (v) => onChanged(pref.copyWith(points: v)),
           ),
         ],
       ],
+    );
+  }
+}
+
+// Hairline between two rows inside one grouped card, inset to the rows'
+// horizontal padding so it reads as a rule rather than a seam.
+class _GroupDivider extends StatelessWidget {
+  const _GroupDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Container(height: 1, color: c.hairline),
+    );
+  }
+}
+
+// One card holding several rows with no gaps between them — a hairline is
+// woven in between each pair instead. Rows must be built with `grouped: true`
+// so they don't draw a surface of their own.
+class _GroupedCard extends StatelessWidget {
+  const _GroupedCard({required this.rows, this.borderColor});
+  final List<Widget> rows;
+  final Color? borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    final children = <Widget>[];
+    for (var i = 0; i < rows.length; i++) {
+      if (i > 0) children.add(const _GroupDivider());
+      children.add(rows[i]);
+    }
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor ?? c.hairline, width: 1),
+      ),
+      child: Column(children: children),
     );
   }
 }
@@ -941,8 +995,7 @@ class _EditorialSwitch extends StatelessWidget {
         ),
         child: AnimatedAlign(
           duration: const Duration(milliseconds: 200),
-          alignment:
-              value ? Alignment.centerRight : Alignment.centerLeft,
+          alignment: value ? Alignment.centerRight : Alignment.centerLeft,
           child: Container(
             margin: const EdgeInsets.all(2),
             width: 18,
@@ -996,8 +1049,7 @@ class _EmptyNotifs extends StatelessWidget {
             Text(
               l.enableLeaguesFirst,
               textAlign: TextAlign.center,
-              style:
-                  EType.body(color: c.inkMute, size: 13, height: 1.5),
+              style: EType.body(color: c.inkMute, size: 13, height: 1.5),
             ),
           ],
         ),

@@ -2669,6 +2669,42 @@ abstract class AppLocalizations {
   /// **'Points'**
   String get statisticsPoints;
 
+  /// No description provided for @profilePlayerSince.
+  ///
+  /// In en, this message translates to:
+  /// **'Player since'**
+  String get profilePlayerSince;
+
+  /// No description provided for @profileLeaguesWord.
+  ///
+  /// In en, this message translates to:
+  /// **'leagues'**
+  String get profileLeaguesWord;
+
+  /// No description provided for @statisticsMisses.
+  ///
+  /// In en, this message translates to:
+  /// **'Misses'**
+  String get statisticsMisses;
+
+  /// No description provided for @statisticsMatchGuesses.
+  ///
+  /// In en, this message translates to:
+  /// **'Match guesses'**
+  String get statisticsMatchGuesses;
+
+  /// No description provided for @statisticsTournamentBonus.
+  ///
+  /// In en, this message translates to:
+  /// **'Tournament bonus'**
+  String get statisticsTournamentBonus;
+
+  /// No description provided for @statisticsTotalPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Total points'**
+  String get statisticsTotalPoints;
+
   /// No description provided for @playerLabel.
   ///
   /// In en, this message translates to:

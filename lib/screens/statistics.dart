@@ -114,8 +114,7 @@ class _StatisticsState extends State<Statistics> {
           ..addEntries(games.map((g) => MapEntry(g.fixtureId, g)));
         userGuesses = filtered;
         directGuesses = filtered.where((g) => g.direct == 1).toList();
-        directionGuesses =
-            filtered.where((g) => g.direction == 1).toList();
+        directionGuesses = filtered.where((g) => g.direction == 1).toList();
         _topScorerPoints = topScorerPts;
         _championPoints = championPts;
         _winnerPick = winnerPick;
@@ -177,12 +176,17 @@ class _StatisticsState extends State<Statistics> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(l.playerLabel.toUpperCase(),
-                style: EType.label(
-                    color: c.inkDim, size: 10, letterSpacing: 3)),
+                style:
+                    EType.label(color: c.inkDim, size: 10, letterSpacing: 3)),
             const SizedBox(height: 2),
-            Text(l.statistics.toUpperCase(),
-                style: EType.display(
-                    size: 28, color: c.ink, letterSpacing: 1.4)),
+            Text(
+              l.statistics.toUpperCase(),
+              style: EType.screenTitle(
+                size: 26,
+                color: c.ink,
+                hebrew: Localizations.localeOf(context).languageCode == 'he',
+              ),
+            ),
           ],
         ),
       ),
@@ -190,97 +194,47 @@ class _StatisticsState extends State<Statistics> {
         enabled: isLoading,
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 36),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── Section label ───────────────────────────────────────
-              _sectionLabel(l.statisticsOverview.toUpperCase(), c),
-              const SizedBox(height: 16),
+              // ── Overview: headline + split bar, on the page surface ──
+              _SectionHeader(label: l.statisticsOverview),
+              const SizedBox(height: 14),
+              _buildOverview(context, l, c, total, direct, direction),
+              const SizedBox(height: 28),
 
-              // ── Big number trio ─────────────────────────────────────
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+              // ── Accuracy ────────────────────────────────────────────
+              _SectionHeader(label: l.statisticsAccuracy),
+              const SizedBox(height: 12),
+              _Card(
+                child: Column(
                   children: [
-                    Expanded(
-                      child: _MetricBlock(
-                        value: isLoading ? '—' : total.toString(),
-                        label: l.totalGuesses,
-                        accent: c.ink,
-                        isLarge: true,
-                        onTap: isLoading || total == 0
-                            ? null
-                            : () => _showGuessesSheet(
-                                l.totalGuesses, userGuesses, c.ink),
-                      ),
+                    _AccuracyBar(
+                      label: l.directGuesses,
+                      count: direct,
+                      total: total,
+                      ratio: directPct,
+                      color: c.live,
+                      isLoading: isLoading,
                     ),
-                    Container(
-                        width: 1, color: c.hairline, margin: const EdgeInsets.symmetric(vertical: 4)),
-                    Expanded(
-                      child: _MetricBlock(
-                        value: isLoading ? '—' : direct.toString(),
-                        label: l.directGuesses,
-                        accent: c.live,
-                        isLarge: false,
-                        onTap: isLoading || direct == 0
-                            ? null
-                            : () => _showGuessesSheet(
-                                l.directGuesses, directGuesses, c.live),
-                      ),
-                    ),
-                    Container(
-                        width: 1, color: c.hairline, margin: const EdgeInsets.symmetric(vertical: 4)),
-                    Expanded(
-                      child: _MetricBlock(
-                        value: isLoading ? '—' : direction.toString(),
-                        label: l.directionGuesses,
-                        accent: c.amber,
-                        isLarge: false,
-                        onTap: isLoading || direction == 0
-                            ? null
-                            : () => _showGuessesSheet(
-                                l.directionGuesses, directionGuesses, c.amber),
-                      ),
+                    _AccuracyBar(
+                      label: l.directionGuesses,
+                      count: direction,
+                      total: total,
+                      ratio: directionPct,
+                      color: c.amber,
+                      isLoading: isLoading,
                     ),
                   ],
                 ),
               ),
+              const SizedBox(height: 28),
 
-              const SizedBox(height: 24),
-              Container(height: 1, color: c.hairline),
-              const SizedBox(height: 24),
-
-              // ── Accuracy section ────────────────────────────────────
-              _sectionLabel(l.statisticsAccuracy.toUpperCase(), c),
-              const SizedBox(height: 20),
-
-              _AccuracyBar(
-                label: l.directGuesses,
-                count: direct,
-                total: total,
-                ratio: directPct,
-                color: c.live,
-                isLoading: isLoading,
-              ),
-              const SizedBox(height: 18),
-              _AccuracyBar(
-                label: l.directionGuesses,
-                count: direction,
-                total: total,
-                ratio: directionPct,
-                color: c.amber,
-                isLoading: isLoading,
-              ),
-
-              const SizedBox(height: 24),
-              Container(height: 1, color: c.hairline),
-              const SizedBox(height: 24),
-
-              // ── Points breakdown ─────────────────────────────────────
-              _sectionLabel(l.statisticsPoints.toUpperCase(), c),
-              const SizedBox(height: 16),
-              _buildPointsBreakdown(context, l, c),
+              // ── Points ──────────────────────────────────────────────
+              _SectionHeader(label: l.statisticsPoints),
+              const SizedBox(height: 12),
+              _Card(child: _buildPointsBreakdown(context, l, c)),
             ],
           ),
         ),
@@ -288,69 +242,170 @@ class _StatisticsState extends State<Statistics> {
     );
   }
 
-  Widget _buildPointsBreakdown(BuildContext context, AppLocalizations l, EditorialColors c) {
-    final totalPts = userGuesses.fold<double>(
-        0.0, (sum, g) => sum + g.sumPoints);
-    final directPts = directGuesses.fold<double>(
-        0.0, (sum, g) => sum + g.sumPoints);
-    final directionPts = directionGuesses.fold<double>(
-        0.0, (sum, g) => sum + g.sumPoints);
+  // Headline total + segmented split + legend. Same three numbers as before
+  // (total / exact / direction) plus the derived miss count, which is what the
+  // segmented bar needs to add up to 100%.
+  Widget _buildOverview(
+    BuildContext context,
+    AppLocalizations l,
+    EditorialColors c,
+    int total,
+    int direct,
+    int direction,
+  ) {
+    // Derived for display only — clamped so an overlapping direct/direction
+    // classification can never render a negative segment.
+    final misses = (total - direct - direction).clamp(0, total);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Headline: big value pinned to the start edge (right in RTL), the
+        // label sitting alongside it on the same baseline.
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Text(
+              isLoading ? '—' : total.toString(),
+              key: const Key('stats-total'),
+              style: EType.scoreboard(size: 40, color: c.ink),
+            ),
+            const SizedBox(width: 12),
+            // Fills the rest so the label sits immediately alongside the
+            // number (start-aligned = hugging it in both RTL and LTR).
+            Expanded(
+              child: Text(
+                l.totalGuesses,
+                style: EType.body(color: c.inkMute, size: 13),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+
+        // The split bar and its legend are a chart, not prose: they read
+        // worst→best (grey, amber, green) left-to-right in the design, so both
+        // are pinned LTR. The Hebrew labels inside still shape themselves RTL.
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              StatsSegmentedBar(
+                segments: [
+                  StatsSegment(misses, c.inkFaint),
+                  StatsSegment(direction, c.amber),
+                  StatsSegment(direct, c.live),
+                ],
+                track: c.hairline,
+                isLoading: isLoading,
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  _LegendItem(
+                    value: misses,
+                    label: l.statisticsMisses,
+                    color: c.inkFaint,
+                    isLoading: isLoading,
+                  ),
+                  _LegendItem(
+                    value: direction,
+                    label: l.directionGuesses,
+                    color: c.amber,
+                    isLoading: isLoading,
+                    onTap: isLoading || direction == 0
+                        ? null
+                        : () => _showGuessesSheet(
+                            l.directionGuesses, directionGuesses, c.amber),
+                  ),
+                  _LegendItem(
+                    value: direct,
+                    label: l.directGuesses,
+                    color: c.live,
+                    isLoading: isLoading,
+                    onTap: isLoading || direct == 0
+                        ? null
+                        : () => _showGuessesSheet(
+                            l.directGuesses, directGuesses, c.live),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPointsBreakdown(
+      BuildContext context, AppLocalizations l, EditorialColors c) {
+    final matchPts =
+        userGuesses.fold<double>(0.0, (sum, g) => sum + g.sumPoints);
+    final directPts =
+        directGuesses.fold<double>(0.0, (sum, g) => sum + g.sumPoints);
+    final directionPts =
+        directionGuesses.fold<double>(0.0, (sum, g) => sum + g.sumPoints);
+
+    // Grand total = every match guess PLUS the tournament bonuses, so the
+    // figure in the dark bar is the sum of every row shown above it.
+    final totalPts = matchPts + _topScorerPoints + _championPoints;
 
     String fmt(double v) =>
         v % 1 == 0 ? v.toInt().toString() : v.toStringAsFixed(1);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: c.card,
-        border: Border.all(color: c.hairline, width: 1),
-        borderRadius: BorderRadius.circular(2),
-      ),
-      child: Column(
-        children: [
-          _PointsRow(
-            label: l.totalGuesses,
-            value: isLoading ? '—' : fmt(totalPts),
-            accent: c.ink,
-            isTotal: true,
-          ),
-          Container(height: 1, color: c.hairline),
-          _PointsRow(
-            label: l.directGuesses,
-            value: isLoading ? '—' : fmt(directPts),
-            accent: c.live,
-          ),
-          Container(height: 1, color: c.hairline),
-          _PointsRow(
-            label: l.directionGuesses,
-            value: isLoading ? '—' : fmt(directionPts),
-            accent: c.amber,
-          ),
-          Container(height: 1, color: c.hairline),
-          _PointsRow(
-            label: l.topScorerPointsLabel,
-            value: isLoading ? '—' : _topScorerPoints.toString(),
-            accent: c.live,
-            // Reveal the actual pick (Hebrew name + crest) once the league has
-            // started — before that it stays hidden so picks can't be copied.
-            pickName: _showPicks && _topScorerPick.isNotEmpty
-                ? localizedPlayerName(context, _topScorerPick)
-                : null,
-            pickLogo: _topScorerLogo,
-            pickFallbackIcon: Icons.sports_soccer_outlined,
-          ),
-          Container(height: 1, color: c.hairline),
-          _PointsRow(
-            label: l.championPointsLabel,
-            value: isLoading ? '—' : _championPoints.toString(),
-            accent: c.flag,
-            pickName: _showPicks && _winnerPick.isNotEmpty
-                ? localizedTeamName(context, _winnerPick)
-                : null,
-            pickLogo: _winnerLogo,
-            pickFallbackIcon: Icons.emoji_events_outlined,
-          ),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // ── Match guesses ────────────────────────────────────────────
+        _PointsGroupHeader(label: l.statisticsMatchGuesses),
+        _PointsRow(
+          label: l.directGuesses,
+          value: isLoading ? '—' : fmt(directPts),
+          accent: c.live,
+        ),
+        _PointsRow(
+          label: l.directionGuesses,
+          value: isLoading ? '—' : fmt(directionPts),
+          accent: c.amber,
+        ),
+
+        // ── Tournament bonus ─────────────────────────────────────────
+        _PointsGroupHeader(label: l.statisticsTournamentBonus),
+        _PointsRow(
+          label: l.topScorerPointsLabel,
+          value: isLoading ? '—' : _topScorerPoints.toString(),
+          accent: c.live,
+          // Reveal the actual pick (Hebrew name + crest) once the league has
+          // started — before that it stays hidden so picks can't be copied.
+          pickName: _showPicks && _topScorerPick.isNotEmpty
+              ? localizedPlayerName(context, _topScorerPick)
+              : null,
+          pickLogo: _topScorerLogo,
+          pickFallbackIcon: Icons.sports_soccer_outlined,
+        ),
+        _PointsRow(
+          label: l.championPointsLabel,
+          value: isLoading ? '—' : _championPoints.toString(),
+          accent: c.flag,
+          pickName: _showPicks && _winnerPick.isNotEmpty
+              ? localizedTeamName(context, _winnerPick)
+              : null,
+          pickLogo: _winnerLogo,
+          pickFallbackIcon: Icons.emoji_events_outlined,
+        ),
+
+        // ── Total ────────────────────────────────────────────────────
+        // Unchanged figure: the sum over every counted guess (misses included
+        // at 0), which is exactly what the old "total" row showed.
+        _TotalPointsRow(
+          label: l.statisticsTotalPoints,
+          value: isLoading ? '—' : fmt(totalPts),
+        ),
+      ],
     );
   }
 
@@ -435,69 +490,177 @@ class _StatisticsState extends State<Statistics> {
       },
     );
   }
-
-  Widget _sectionLabel(String text, EditorialColors c) {
-    return Row(
-      children: [
-        Container(width: 18, height: 1, color: c.live),
-        const SizedBox(width: 10),
-        Text(text,
-            style: EType.label(
-                color: c.ink, size: 11, letterSpacing: 2.4)),
-      ],
-    );
-  }
 }
 
-// ── Metric block (big number) ───────────────────────────────────────────
-class _MetricBlock extends StatelessWidget {
-  const _MetricBlock({
-    required this.value,
-    required this.label,
-    required this.accent,
-    required this.isLarge,
-    this.onTap,
-  });
-  final String value;
+// ── Card shell ──────────────────────────────────────────────────────────
+// Section label that sits ON the page surface, above its card — a short green
+// dash plus a quiet caption, as in the design.
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.label});
   final String label;
-  final Color accent;
-  final bool isLarge;
-  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final c = context.col;
-    final tappable = onTap != null;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(4),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(start: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 14,
+            height: 2.5,
+            decoration: BoxDecoration(
+              color: c.live,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: EType.body(color: c.inkMute, size: 12),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Plain white rounded surface. Contents are clipped so the group bands and the
+// dark total bar sit flush against the rounded corners.
+class _Card extends StatelessWidget {
+  const _Card({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: c.hairline, width: 1),
+      ),
+      child: child,
+    );
+  }
+}
+
+// ── Segmented split bar ─────────────────────────────────────────────────
+@visibleForTesting
+class StatsSegment {
+  const StatsSegment(this.value, this.color);
+  final int value;
+  final Color color;
+}
+
+@visibleForTesting
+class StatsSegmentedBar extends StatelessWidget {
+  const StatsSegmentedBar({
+    super.key,
+    required this.segments,
+    required this.track,
+    required this.isLoading,
+  });
+  final List<StatsSegment> segments;
+  final Color track;
+  final bool isLoading;
+
+  static const double height = 10.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final sum = segments.fold<int>(0, (a, s) => a + s.value);
+
+    if (isLoading || sum == 0) {
+      return Container(
+        height: height,
+        decoration: BoxDecoration(
+          color: track,
+          borderRadius: BorderRadius.circular(height / 2),
+        ),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(height / 2),
+      child: SizedBox(
+        height: height,
+        child: Row(
+          // MUST stretch: a childless ColoredBox takes its size from its
+          // constraints, and a Row's default centre alignment passes LOOSE
+          // vertical constraints — which collapsed every segment to zero
+          // height and made the whole bar invisible whenever there was data.
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              value,
-              style: EType.scoreboard(
-                size: isLarge ? 64 : 48,
-                color: accent,
-              ),
+            for (final s in segments)
+              if (s.value > 0)
+                Expanded(flex: s.value, child: ColoredBox(color: s.color)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Legend entry under the segmented bar ────────────────────────────────
+class _LegendItem extends StatelessWidget {
+  const _LegendItem({
+    required this.value,
+    required this.label,
+    required this.color,
+    required this.isLoading,
+    this.onTap,
+  });
+  final int value;
+  final String label;
+  final Color color;
+  final bool isLoading;
+  final VoidCallback? onTap;
+
+  /// Misses are the "inactive" series in the design — grey dot, muted figure —
+  /// while the two scoring series keep a full-contrast number.
+  bool get _muted => onTap == null;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    return Padding(
+      // Grouped from the leading edge with an even gap rather than spread
+      // across the full width — matches the design.
+      padding: const EdgeInsets.only(right: 28),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration:
+                      BoxDecoration(color: color, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  isLoading ? '—' : value.toString(),
+                  style: EType.numeric(
+                      color: _muted ? c.inkDim : c.ink,
+                      size: 17,
+                      weight: FontWeight.w700),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 2),
             Text(
-              label.toUpperCase(),
-              textAlign: TextAlign.center,
-              style: EType.label(
-                color: c.inkDim,
-                size: 9,
-                letterSpacing: 1.6,
-              ),
+              label,
+              maxLines: 1,
+              style: EType.body(color: c.inkDim, size: 11),
             ),
-            // Subtle affordance that the number opens the underlying list.
-            if (tappable) ...[
-              const SizedBox(height: 6),
-              Icon(Icons.expand_more, size: 14, color: accent),
-            ],
           ],
         ),
       ),
@@ -527,63 +690,84 @@ class _AccuracyBar extends StatelessWidget {
     final c = context.col;
     final pct = (ratio * 100).round();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label.toUpperCase(),
-                style: EType.label(
-                    color: c.inkMute, size: 10, letterSpacing: 1.6)),
-            Row(
-              children: [
-                Text(
-                  isLoading ? '—' : '$count / $total',
-                  style: EType.numeric(
-                      color: c.inkDim, size: 11),
+    const barHeight = 6.0;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: EType.body(
+                      color: c.ink, size: 13, weight: FontWeight.w600),
                 ),
-                const SizedBox(width: 10),
-                Text(
+              ),
+              const SizedBox(width: 10),
+              // Split into separate widgets rather than one "$count / $total"
+              // string: a numeric string is a bidi island that always renders
+              // LTR, so the two figures would sit the wrong way round in Hebrew.
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(isLoading ? '—' : '$count',
+                      style: EType.numeric(color: c.inkDim, size: 11)),
+                  Text(' / ', style: EType.numeric(color: c.inkDim, size: 11)),
+                  Text(isLoading ? '—' : '$total',
+                      style: EType.numeric(color: c.inkDim, size: 11)),
+                ],
+              ),
+              const SizedBox(width: 10),
+              // Fixed-width so the percentages line up in a straight column
+              // regardless of whether they're 1, 2 or 3 digits.
+              SizedBox(
+                width: 40,
+                child: Text(
                   isLoading ? '—%' : '$pct%',
+                  textAlign: TextAlign.end,
                   style: EType.numeric(
                     color: color,
-                    size: 13,
+                    size: 14,
                     weight: FontWeight.w700,
                   ),
                 ),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        // Track
-        Container(
-          height: 4,
-          decoration: BoxDecoration(
-            color: c.card,
-            borderRadius: BorderRadius.circular(2),
+              ),
+            ],
           ),
-          child: LayoutBuilder(
-            builder: (_, constraints) => Stack(
-              children: [
-                AnimatedContainer(
+          const SizedBox(height: 12),
+          // Track. The fill is start-aligned, so it grows from the right in
+          // Hebrew and from the left in English.
+          Container(
+            height: barHeight,
+            decoration: BoxDecoration(
+              color: c.hairline,
+              borderRadius: BorderRadius.circular(barHeight / 2),
+            ),
+            child: LayoutBuilder(
+              builder: (_, constraints) => Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: AnimatedContainer(
                   duration: const Duration(milliseconds: 600),
                   curve: Curves.easeOutCubic,
                   width: isLoading
                       ? 0
                       : constraints.maxWidth * ratio.clamp(0.0, 1.0),
-                  height: 4,
+                  height: barHeight,
                   decoration: BoxDecoration(
                     color: color,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(barHeight / 2),
                   ),
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -597,7 +781,6 @@ class _PointsRow extends StatelessWidget {
     required this.label,
     required this.value,
     required this.accent,
-    this.isTotal = false,
     this.pickName,
     this.pickLogo,
     this.pickFallbackIcon,
@@ -605,7 +788,6 @@ class _PointsRow extends StatelessWidget {
   final String label;
   final String value;
   final Color accent;
-  final bool isTotal;
   final String? pickName;
   final String? pickLogo;
   final IconData? pickFallbackIcon;
@@ -613,14 +795,8 @@ class _PointsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.col;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        color: isTotal ? c.terrace : Colors.transparent,
-        border: Border(
-          left: BorderSide(color: accent, width: 3),
-        ),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
           // Min width so short labels (e.g. אלופה) pad out to the same start as
@@ -629,12 +805,8 @@ class _PointsRow extends StatelessWidget {
           ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 116),
             child: Text(
-              label.toUpperCase(),
-              style: EType.label(
-                color: isTotal ? c.ink : c.inkMute,
-                size: 11,
-                letterSpacing: 1.8,
-              ),
+              label,
+              style: EType.body(color: c.ink, size: 13),
             ),
           ),
           // Pick reveal fills the middle so the label stays at the start and the
@@ -656,11 +828,7 @@ class _PointsRow extends StatelessWidget {
                           child: Text(
                             pickName!,
                             overflow: TextOverflow.ellipsis,
-                            style: EType.label(
-                              color: c.ink,
-                              size: 12,
-                              letterSpacing: 0.4,
-                            ),
+                            style: EType.body(color: c.inkMute, size: 12),
                           ),
                         ),
                       ],
@@ -672,9 +840,74 @@ class _PointsRow extends StatelessWidget {
             value,
             style: EType.numeric(
               color: accent,
-              size: isTotal ? 20 : 16,
+              size: 17,
               weight: FontWeight.w700,
             ),
+          ),
+          // Colour indicator, preserved from the old left-border accent.
+          const SizedBox(width: 12),
+          Container(
+            width: 3,
+            height: 16,
+            decoration: BoxDecoration(
+              color: accent,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Points sub-group band ───────────────────────────────────────────────
+class _PointsGroupHeader extends StatelessWidget {
+  const _PointsGroupHeader({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    return Container(
+      width: double.infinity,
+      color: c.cardHi,
+      padding: const EdgeInsets.fromLTRB(16, 9, 16, 9),
+      child: Text(
+        label,
+        style: EType.body(color: c.inkDim, size: 11),
+      ),
+    );
+  }
+}
+
+// ── Dark total bar closing the points card ──────────────────────────────
+class _TotalPointsRow extends StatelessWidget {
+  const _TotalPointsRow({required this.label, required this.value});
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    // Flush to the card's edges — the parent _Card clips it to the rounded
+    // bottom corners, so no margin or radius of its own.
+    return Container(
+      width: double.infinity,
+      color: c.ink,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style:
+                  EType.body(color: c.card, size: 13, weight: FontWeight.w600),
+            ),
+          ),
+          Text(
+            value,
+            style:
+                EType.numeric(color: c.card, size: 20, weight: FontWeight.w700),
           ),
         ],
       ),
@@ -747,9 +980,11 @@ class _GuessRow extends StatelessWidget {
                             ? Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text('${game!.goals.home}', style: scoreStyle),
+                                  Text('${game!.goals.home}',
+                                      style: scoreStyle),
                                   Text('-', style: scoreStyle),
-                                  Text('${game!.goals.away}', style: scoreStyle),
+                                  Text('${game!.goals.away}',
+                                      style: scoreStyle),
                                 ],
                               )
                             : Text('–', style: scoreStyle),
@@ -865,8 +1100,7 @@ class _Crest extends StatelessWidget {
       child: Image.network(
         logoUrl!,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) =>
-            Icon(fallback, size: 12, color: c.inkDim),
+        errorBuilder: (_, __, ___) => Icon(fallback, size: 12, color: c.inkDim),
       ),
     );
   }

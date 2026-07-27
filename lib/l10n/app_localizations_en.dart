@@ -1300,6 +1300,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statisticsPoints => 'Points';
 
   @override
+  String get profilePlayerSince => 'Player since';
+
+  @override
+  String get profileLeaguesWord => 'leagues';
+
+  @override
+  String get statisticsMisses => 'Misses';
+
+  @override
+  String get statisticsMatchGuesses => 'Match guesses';
+
+  @override
+  String get statisticsTournamentBonus => 'Tournament bonus';
+
+  @override
+  String get statisticsTotalPoints => 'Total points';
+
+  @override
   String get playerLabel => 'Player';
 
   @override

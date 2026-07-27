@@ -1300,6 +1300,24 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statisticsPoints => 'נקודות';
 
   @override
+  String get profilePlayerSince => 'שחקן מאז';
+
+  @override
+  String get profileLeaguesWord => 'ליגות';
+
+  @override
+  String get statisticsMisses => 'החטאות';
+
+  @override
+  String get statisticsMatchGuesses => 'ניחוש משחקים';
+
+  @override
+  String get statisticsTournamentBonus => 'בונוס טורניר';
+
+  @override
+  String get statisticsTotalPoints => 'סה"כ נקודות';
+
+  @override
   String get playerLabel => 'שחקן';
 
   @override

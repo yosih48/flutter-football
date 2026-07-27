@@ -56,6 +56,10 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   // opted-in (matches the bootstrap default in games.dart), so a league newly
   // added to the remote config shows up here without a manual toggle.
   Map<String, bool> _chosenLeagues = {};
+  // Year the account was created, for the "player since YYYY" line. Empty when
+  // the backend record has no usable createdAt, in which case that half of the
+  // subtitle is simply omitted.
+  String _memberSinceYear = '';
   bool _isLoading = true;
   late String currentUserId;
   late String currentUserEmail;
@@ -76,10 +80,14 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
       if (!mounted) return;
       setState(() {
         _userWinners = Map<String, String>.from(userData['winner'] ?? {});
-        _userTopScorer =
-            Map<String, String>.from(userData['topScorer'] ?? {});
+        _userTopScorer = Map<String, String>.from(userData['topScorer'] ?? {});
         _chosenLeagues =
             Map<String, bool>.from(userData['chosenLeagues'] ?? {});
+        _memberSinceYear =
+            DateTime.tryParse(userData['createdAt']?.toString() ?? '')
+                    ?.year
+                    .toString() ??
+                '';
         _isLoading = false;
       });
       Provider.of<UserProvider>(context, listen: false)
@@ -264,7 +272,8 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
             ),
           ),
           const SizedBox(width: 10),
-          Text(label, style: EType.label(color: c.ink, size: 13, letterSpacing: 1)),
+          Text(label,
+              style: EType.label(color: c.ink, size: 13, letterSpacing: 1)),
           const Spacer(),
           if (trailing != null) trailing,
         ],
@@ -272,8 +281,8 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     );
   }
 
-  Map<String, String> _filterById(Map<String, String> src) => Map.fromEntries(
-      src.entries.where((e) => _allowedIds.contains(e.key)));
+  Map<String, String> _filterById(Map<String, String> src) =>
+      Map.fromEntries(src.entries.where((e) => _allowedIds.contains(e.key)));
 
   // Tournament leagues (hasBracket) the user has opted into get a tappable
   // entry into the bracket-prediction game. Hidden entirely for ordinary
@@ -281,12 +290,10 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   Widget _buildBracketEntry(BuildContext context, EditorialColors c) {
     if (_isLoading) return const SizedBox.shrink();
     final l = AppLocalizations.of(context)!;
-    final bracketIds = _allowedIds
-        .where((id) {
-          final n = int.tryParse(id);
-          return n != null && LeagueConfigService().hasBracket(n);
-        })
-        .toList();
+    final bracketIds = _allowedIds.where((id) {
+      final n = int.tryParse(id);
+      return n != null && LeagueConfigService().hasBracket(n);
+    }).toList();
     if (bracketIds.isEmpty) return const SizedBox.shrink();
     final id = int.parse(bracketIds.first);
 
@@ -337,98 +344,63 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   }
 
   Widget _buildHero(BuildContext context, EditorialColors c) {
+    final l = AppLocalizations.of(context)!;
     final initial =
         currentUserName.isNotEmpty ? currentUserName[0].toUpperCase() : '?';
 
+    // "Player since 2023 • 5 leagues" — each half is dropped when its data
+    // isn't available, so the separator never dangles.
+    final parts = <String>[
+      if (_memberSinceYear.isNotEmpty)
+        '${l.profilePlayerSince} $_memberSinceYear',
+      if (!_isLoading) '${_allowedIds.length} ${l.profileLeaguesWord}',
+    ];
+
     return Container(
       color: c.pitch,
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Overline
-          Text(AppLocalizations.of(context)!.playerProfile.toUpperCase(),
-              style: EType.label(
-                  color: c.inkDim, size: 10, letterSpacing: 3)),
-          const SizedBox(height: 20),
-
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Large monogram with pitch-line texture
-              Stack(
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: c.card,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: c.live, width: 1.5),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: CustomPaint(
-                      painter: _MonogramBgPainter(color: c.hairline),
-                      child: Center(
-                        child: Text(
-                          initial,
-                          style: EType.display(
-                            size: 42,
-                            color: c.ink,
-                            letterSpacing: 0,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Live green dot — "online" indicator
-                  Positioned(
-                    bottom: 4,
-                    right: 4,
-                    child: Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: c.live,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: c.pitch, width: 2),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(width: 20),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      currentUserName.isNotEmpty
-                          ? currentUserName.toUpperCase()
-                          : '—',
-                      style: EType.display(
-                        size: 28,
-                        color: c.ink,
-                        letterSpacing: 1.2,
-                        height: 0.95,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      currentUserEmail,
-                      style: EType.body(
-                          color: c.inkMute, size: 12),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          // Solid green monogram — the profile's anchor.
+          Container(
+            width: 104,
+            height: 104,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: c.live, shape: BoxShape.circle),
+            child: Text(
+              initial,
+              style: EType.display(size: 46, color: Colors.white),
+            ),
           ),
+          const SizedBox(height: 16),
+
+          Text(
+            currentUserName.isNotEmpty ? currentUserName : '—',
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: EType.body(color: c.ink, size: 20, weight: FontWeight.w700),
+          ),
+
+          if (parts.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.person_outline, size: 14, color: c.inkDim),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    parts.join('  •  '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: EType.body(color: c.inkDim, size: 12),
+                  ),
+                ),
+              ],
+            ),
+          ],
+
           if (widget.authProvider.currentUser?.admin == true) ...[
             const SizedBox(height: 20),
             const _AdminManagementSection(),
@@ -438,7 +410,6 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     );
   }
 }
-
 
 // Admin-only "league management" section. Collapsed to a single line; tapping
 // expands a card with the three admin actions (settle bracket / champion /
@@ -480,7 +451,8 @@ class _AdminManagementSectionState extends State<_AdminManagementSection> {
                 ),
                 const SizedBox(width: 10),
                 Text(l.leagueManagement,
-                    style: EType.label(color: c.ink, size: 13, letterSpacing: 1)),
+                    style:
+                        EType.label(color: c.ink, size: 13, letterSpacing: 1)),
                 const Spacer(),
                 AnimatedRotation(
                   turns: _open ? 0.5 : 0,
@@ -507,14 +479,16 @@ class _AdminManagementSectionState extends State<_AdminManagementSection> {
                   subtitle: l.adminSettleBracketSub,
                   onTap: () => showAdminBracketSettleDialog(context),
                 ),
-                Divider(height: 1, color: c.hairline, indent: 14, endIndent: 14),
+                Divider(
+                    height: 1, color: c.hairline, indent: 14, endIndent: 14),
                 _AdminRow(
                   icon: Icons.workspace_premium_outlined,
                   title: l.settleChampionTitle,
                   subtitle: l.adminSettleChampionSub,
                   onTap: () => showAdminChampionSettleDialog(context),
                 ),
-                Divider(height: 1, color: c.hairline, indent: 14, endIndent: 14),
+                Divider(
+                    height: 1, color: c.hairline, indent: 14, endIndent: 14),
                 _AdminRow(
                   icon: Icons.event_available_outlined,
                   title: l.closeSeasonTitle,
@@ -570,8 +544,7 @@ class _AdminRow extends StatelessWidget {
                       style: EType.display(
                           size: 14, color: c.ink, letterSpacing: 0.2)),
                   const SizedBox(height: 2),
-                  Text(subtitle,
-                      style: EType.body(color: c.inkDim, size: 11)),
+                  Text(subtitle, style: EType.body(color: c.inkDim, size: 11)),
                 ],
               ),
             ),
@@ -666,7 +639,8 @@ class _LeaguePredictionCard extends StatelessWidget {
                     border: Border.all(color: c.hairline, width: 1),
                   ),
                   child: Image(
-                    image: leagueLogoProviderForUrl(_leagueLogoUrl(leagueIdStr)),
+                    image:
+                        leagueLogoProviderForUrl(_leagueLogoUrl(leagueIdStr)),
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) =>
                         Icon(Icons.shield_outlined, size: 14, color: c.inkDim),
@@ -676,7 +650,8 @@ class _LeaguePredictionCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     _leagueName(leagueIdStr, l, context),
-                    style: EType.display(size: 16, color: c.ink, letterSpacing: 0.4),
+                    style: EType.display(
+                        size: 16, color: c.ink, letterSpacing: 0.4),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -845,7 +820,8 @@ class _SeasonPickRowState extends State<_SeasonPickRow> {
                   textAlign: TextAlign.end,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: EType.label(color: c.ink, size: 12, letterSpacing: 0.4),
+                  style:
+                      EType.label(color: c.ink, size: 12, letterSpacing: 0.4),
                 ),
               ),
             ],
@@ -878,8 +854,8 @@ class _SeasonPickRowState extends State<_SeasonPickRow> {
                 const SizedBox(width: 10),
                 Text(
                   widget.label,
-                  style:
-                      EType.label(color: c.inkDim, size: 12, letterSpacing: 0.5),
+                  style: EType.label(
+                      color: c.inkDim, size: 12, letterSpacing: 0.5),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -984,23 +960,4 @@ class _EmptyCard extends StatelessWidget {
       ),
     );
   }
-}
-
-// ── Decorative monogram background painter ──────────────────────────────
-class _MonogramBgPainter extends CustomPainter {
-  _MonogramBgPainter({required this.color});
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withOpacity(0.6)
-      ..strokeWidth = 1;
-    for (double x = 0; x <= size.width; x += 14) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_MonogramBgPainter old) => old.color != color;
 }

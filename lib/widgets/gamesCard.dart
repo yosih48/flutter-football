@@ -34,7 +34,14 @@ class GameWidget extends StatelessWidget {
   }
 
   static const Set<String> _liveShort = {
-    '1H', '2H', 'H1', 'H2', 'ET', 'BT', 'P', 'INT'
+    '1H',
+    '2H',
+    'H1',
+    'H2',
+    'ET',
+    'BT',
+    'P',
+    'INT'
   };
 
   bool get _isLive => _liveShort.contains(game.status.short);
@@ -65,45 +72,43 @@ class GameWidget extends StatelessWidget {
       accent = c.hairline;
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: Material(
-        color: c.card,
-        borderRadius: BorderRadius.circular(2),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(2),
-          onTap: () => onTap(context),
-          splashColor: c.live.withOpacity(0.04),
-          highlightColor: Colors.transparent,
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Kit-stripe accent — colors the card by match state.
-                Container(width: 3, color: accent),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildMeta(info, c, l),
+    // Edge-to-edge: no outer margin and no corner radius, so consecutive cards
+    // form one continuous surface separated only by the hairline the caller
+    // inserts between them (see _buildDateSection in games.dart).
+    return Material(
+      color: c.card,
+      child: InkWell(
+        onTap: () => onTap(context),
+        splashColor: c.live.withOpacity(0.04),
+        highlightColor: Colors.transparent,
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Kit-stripe accent — colors the card by match state.
+              Container(width: 3, color: accent),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildMeta(info, c, l),
+                      const SizedBox(height: 14),
+                      _buildMatchRow(context, c),
+                      if (_isUpcoming) ...[
                         const SizedBox(height: 14),
-                        _buildMatchRow(context, c),
-                        if (_isUpcoming) ...[
-                          const SizedBox(height: 14),
-                          _buildOddsRow(c),
-                        ],
-                        if (!_isUpcoming) ...[
-                          const SizedBox(height: 12),
-                          _buildGuessFooter(context, c),
-                        ],
+                        _buildOddsRow(c),
                       ],
-                    ),
+                      if (!_isUpcoming) ...[
+                        const SizedBox(height: 12),
+                        _buildGuessFooter(context, c),
+                      ],
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -161,23 +166,19 @@ class GameWidget extends StatelessWidget {
     }
     if (_isHalftime) {
       return Text(l.halfTimeLabel.toUpperCase(),
-          style: EType.label(
-              color: c.amber, size: 10, letterSpacing: 1.8));
+          style: EType.label(color: c.amber, size: 10, letterSpacing: 1.8));
     }
     if (_isAfterPenalties) {
       return Text(l.afterPenaltiesLabel.toUpperCase(),
-          style: EType.label(
-              color: c.inkMute, size: 10, letterSpacing: 1.8));
+          style: EType.label(color: c.inkMute, size: 10, letterSpacing: 1.8));
     }
     if (_isAfterExtraTime) {
       return Text(l.afterExtraTimeLabel.toUpperCase(),
-          style: EType.label(
-              color: c.inkMute, size: 10, letterSpacing: 1.8));
+          style: EType.label(color: c.inkMute, size: 10, letterSpacing: 1.8));
     }
     if (_isFinished) {
       return Text(l.fullTimeLabel.toUpperCase(),
-          style: EType.label(
-              color: c.inkMute, size: 10, letterSpacing: 1.8));
+          style: EType.label(color: c.inkMute, size: 10, letterSpacing: 1.8));
     }
     return Text(
       (info['text']?.toString() ?? '').toUpperCase(),
@@ -192,12 +193,14 @@ class GameWidget extends StatelessWidget {
     // consistently.
     final homeDisplay = localizedTeamName(context, game.home.name);
     final awayDisplay = localizedTeamName(context, game.away.name);
-    final bool anyMultiWord = homeDisplay.trim().contains(' ') ||
-        awayDisplay.trim().contains(' ');
+    final bool anyMultiWord =
+        homeDisplay.trim().contains(' ') || awayDisplay.trim().contains(' ');
     final int nameMaxLines = anyMultiWord ? 2 : 1;
     return Row(
       children: [
-        Expanded(child: _buildTeamSide(context, game.home, alignEnd: true, c: c, maxLines: nameMaxLines)),
+        Expanded(
+            child: _buildTeamSide(context, game.home,
+                alignEnd: true, c: c, maxLines: nameMaxLines)),
         const SizedBox(width: 10),
         _buildTeamCrest(game.home, c),
         const SizedBox(width: 10),
@@ -205,12 +208,17 @@ class GameWidget extends StatelessWidget {
         const SizedBox(width: 10),
         _buildTeamCrest(game.away, c),
         const SizedBox(width: 10),
-        Expanded(child: _buildTeamSide(context, game.away, alignEnd: false, c: c, maxLines: nameMaxLines)),
+        Expanded(
+            child: _buildTeamSide(context, game.away,
+                alignEnd: false, c: c, maxLines: nameMaxLines)),
       ],
     );
   }
 
-  Widget _buildTeamSide(BuildContext context, Team team, {required bool alignEnd, required EditorialColors c, required int maxLines}) {
+  Widget _buildTeamSide(BuildContext context, Team team,
+      {required bool alignEnd,
+      required EditorialColors c,
+      required int maxLines}) {
     final display = localizedTeamName(context, team.name);
     final heName = display != team.name;
     return GestureDetector(
