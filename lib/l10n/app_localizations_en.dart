@@ -1300,6 +1300,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statisticsPoints => 'Points';
 
   @override
+  String get goalLabel => 'Goal';
+
+  @override
+  String get penaltyLabel => 'Penalty';
+
+  @override
+  String get ownGoalLabel => 'Own goal';
+
+  @override
+  String get yellowCardLabel => 'Yellow';
+
+  @override
+  String get redCardLabel => 'Red';
+
+  @override
   String get profilePlayerSince => 'Player since';
 
   @override

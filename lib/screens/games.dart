@@ -11,7 +11,6 @@ import 'package:football/resources/gamesMethods.dart';
 import 'package:football/resources/guessesMethods.dart';
 import 'package:football/resources/league_config_service.dart';
 import 'package:football/resources/usersMethods.dart';
-import 'package:football/screens/bracket.dart';
 import 'package:football/screens/gameDetails.dart';
 import 'package:football/screens/login_screen.dart';
 import 'package:football/screens/teamDetails.dart';
@@ -649,30 +648,6 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     }
   }
 
-  // First enabled league that offers the tournament bracket game, or null.
-  // Driven entirely by the backend league config (hasBracket) — when the
-  // backend stops serving the tournament (or flips hasBracket to false) the
-  // app-bar entry disappears on its own, no app update required.
-  int? get _bracketLeagueId {
-    for (final id in _enabledLeagues) {
-      if (LeagueConfigService().hasBracket(id)) return id;
-    }
-    return null;
-  }
-
-  void _openBracket(int leagueId) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => BracketScreen(
-          leagueId: leagueId,
-          userId: _clientId,
-          email: _email,
-          userName: widget.authProvider.currentUser?.name ?? '',
-        ),
-      ),
-    );
-  }
-
   // ── Build ────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -687,11 +662,17 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     // placeholder chips from the (synchronously available) supported-league
     // config and localize them, so they don't flash in English before the
     // real Hebrew names arrive.
-    final placeholderOptions = LeagueConfigService()
-        .supportedLeagues
-        .map((id) => getLocalizedLeagueName(id, context))
-        .where((name) => name.isNotEmpty)
-        .toList();
+    // Ids and names are collected together, not filtered independently: a
+    // league with no localized name is dropped from BOTH lists, so the chip
+    // at index i always gets the crest for the league at index i.
+    final placeholderIds = <int>[];
+    final placeholderOptions = <String>[];
+    for (final id in LeagueConfigService().supportedLeagues) {
+      final name = getLocalizedLeagueName(id, context);
+      if (name.isEmpty) continue;
+      placeholderIds.add(id);
+      placeholderOptions.add(name);
+    }
 
     return Scaffold(
       backgroundColor: c.pitch,
@@ -714,17 +695,11 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
             else
               LeagueSelectorChips(
                 options: chipOptions.isEmpty ? placeholderOptions : chipOptions,
+                // Ids must line up with whichever option list is in use.
+                leagueIds:
+                    chipOptions.isEmpty ? placeholderIds : _enabledLeagues,
                 selectedIndex: _selectedChipIndex,
                 onSelectionChanged: _onChipChanged,
-              ),
-            // Bracket-prediction entry — sits right under the tournament
-            // banner. Backend-gated via hasBracket, so it self-removes when
-            // the tournament ends (no app update needed).
-            if (_bracketLeagueId != null)
-              _BracketEntryStrip(
-                title: AppLocalizations.of(context)!.bracketTitle,
-                subtitle: AppLocalizations.of(context)!.bracketEntrySubtitle,
-                onTap: () => _openBracket(_bracketLeagueId!),
               ),
             const SizedBox(height: 12),
             Container(height: 1, color: c.hairline),
@@ -1249,115 +1224,6 @@ class _IconBtn extends StatelessWidget {
       ),
     );
     return tooltip != null ? Tooltip(message: tooltip!, child: btn) : btn;
-  }
-}
-
-// Tappable CTA strip under the World Cup banner. A slow-pulsing accent dot
-// flags it as the new, time-limited tournament feature. Backend-gated by the
-// caller (hasBracket) so it disappears on its own when the tournament ends.
-class _BracketEntryStrip extends StatefulWidget {
-  const _BracketEntryStrip({
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  @override
-  State<_BracketEntryStrip> createState() => _BracketEntryStripState();
-}
-
-class _BracketEntryStripState extends State<_BracketEntryStrip>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulse = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _pulse.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.col;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          // Matches the container radius so the ripple stays inside the card.
-          borderRadius: BorderRadius.circular(16),
-          onTap: widget.onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: c.liveSoft,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: c.live, width: 1),
-            ),
-            child: Row(
-              children: [
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Icon(Icons.emoji_events, size: 22, color: c.live),
-                    Positioned(
-                      top: -2,
-                      right: -2,
-                      child: FadeTransition(
-                        opacity: Tween(begin: 0.3, end: 1.0).animate(_pulse),
-                        child: Container(
-                          width: 7,
-                          height: 7,
-                          decoration: BoxDecoration(
-                            color: c.live,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: c.pitch, width: 1),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.title.toUpperCase(),
-                        style: EType.label(
-                            color: c.ink, size: 12, letterSpacing: 1.4),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        widget.subtitle,
-                        style: EType.label(
-                            color: c.inkDim, size: 9, letterSpacing: 0.8),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right, size: 20, color: c.live),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
 

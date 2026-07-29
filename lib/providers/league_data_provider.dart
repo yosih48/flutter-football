@@ -320,6 +320,7 @@ class _LeagueSelectorState extends State<LeagueSelector> {
     } else {
       return LeagueSelectorChips(
         options: _leagueData!.options,
+        leagueIds: _leagueData!.enabledLeagues,
         selectedIndex: initialIndex,
         onSelectionChanged: (index) {
           final selectedLeagueId = _leagueData!.enabledLeagues[index];

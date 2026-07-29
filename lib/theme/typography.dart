@@ -82,32 +82,61 @@ class EType {
             );
 
   // Editorial small-caps label, e.g. "MATCH EVENTS", "PREDICTIONS".
+  // See [body] for why [hebrew] exists. Hebrew has no letterforms that benefit
+  // from tracking, so the spacing is dropped rather than carried over.
   static TextStyle label({
     Color color = Editorial.inkMute,
     double size = 11,
     double letterSpacing = 2.4,
+    bool hebrew = false,
   }) =>
-      GoogleFonts.sora(
-        fontSize: size,
-        color: color,
-        letterSpacing: letterSpacing,
-        fontWeight: FontWeight.w600,
-        height: 1.1,
-      );
+      hebrew
+          ? GoogleFonts.rubik(
+              fontSize: size,
+              color: color,
+              letterSpacing: 0,
+              fontWeight: FontWeight.w600,
+              height: 1.1,
+            )
+          : GoogleFonts.sora(
+              fontSize: size,
+              color: color,
+              letterSpacing: letterSpacing,
+              fontWeight: FontWeight.w600,
+              height: 1.1,
+            );
 
+  // Set [hebrew] on Hebrew copy. Sora carries no Hebrew glyphs, so Hebrew set
+  // in it silently falls back to whatever font the device happens to pick —
+  // which varies by handset and doesn't match the Latin. Rubik is the closest
+  // Hebrew-capable match to Sora's geometry and is already the app's Hebrew
+  // face for [teamNameDisplay] / [screenTitle].
   static TextStyle body({
     Color color = Editorial.ink,
     double size = 14,
     FontWeight weight = FontWeight.w400,
     double height = 1.4,
+    bool hebrew = false,
   }) =>
-      GoogleFonts.sora(
-        fontSize: size,
-        color: color,
-        fontWeight: weight,
-        height: height,
-        letterSpacing: 0,
-      );
+      hebrew
+          ? GoogleFonts.rubik(
+              fontSize: size,
+              color: color,
+              // Rubik's lightest cut is 300; Sora's w100/w200 have no
+              // equivalent, so clamp rather than silently snapping to 400.
+              fontWeight: weight.index < FontWeight.w300.index
+                  ? FontWeight.w300
+                  : weight,
+              height: height,
+              letterSpacing: 0,
+            )
+          : GoogleFonts.sora(
+              fontSize: size,
+              color: color,
+              fontWeight: weight,
+              height: height,
+              letterSpacing: 0,
+            );
 
   // Tabular numerals — for scores, points, odds. Always feature-locked.
   static TextStyle numeric({

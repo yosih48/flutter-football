@@ -1300,6 +1300,21 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statisticsPoints => 'נקודות';
 
   @override
+  String get goalLabel => 'גול';
+
+  @override
+  String get penaltyLabel => 'פנדל';
+
+  @override
+  String get ownGoalLabel => 'שער עצמי';
+
+  @override
+  String get yellowCardLabel => 'צהוב';
+
+  @override
+  String get redCardLabel => 'אדום';
+
+  @override
   String get profilePlayerSince => 'שחקן מאז';
 
   @override
@@ -1315,7 +1330,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statisticsTournamentBonus => 'בונוס טורניר';
 
   @override
-  String get statisticsTotalPoints => 'סה"כ נקודות';
+  String get statisticsTotalPoints => 'סה\"כ נקודות';
 
   @override
   String get playerLabel => 'שחקן';
@@ -1345,7 +1360,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get pastSeasons => 'עונות קודמות';
 
   @override
-  String get trophySeason => 'עונה';
+  String get trophySeason => 'עונת';
 
   @override
   String get trophyRank => 'דירוג';

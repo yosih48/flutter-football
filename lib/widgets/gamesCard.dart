@@ -277,19 +277,40 @@ class GameWidget extends StatelessWidget {
     }
     final h = game.goals.home ?? 0;
     final a = game.goals.away ?? 0;
+    final digit = EType.body(
+      size: 18,
+      height: 1.0,
+      weight: FontWeight.w700,
+      color: _isLive ? c.live : c.ink,
+    );
+
+    // Light rounded pill, scaled-down version of the match-centre scoreboard.
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
       decoration: BoxDecoration(
         color: c.cardHi,
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.circular(10),
       ),
-      child: Text(
-        '$h : $a',
-        style: EType.display(
-          size: 22,
-          color: _isLive ? c.live : c.ink,
-          letterSpacing: 0.6,
-        ),
+      // Split into per-team widgets rather than one "$h : $a" string. A numeric
+      // string is a bidi island that always renders LTR, so in Hebrew the goals
+      // sat on the opposite side to their own team. Separate widgets let the
+      // row's direction place each goal beside its team — same fix already
+      // applied in _ScoreChip (statistics) and _GuessRow (gameDetails).
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('$h', style: digit),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Text(':',
+                style: EType.body(
+                    size: 13,
+                    height: 1.0,
+                    weight: FontWeight.w600,
+                    color: c.inkDim)),
+          ),
+          Text('$a', style: digit),
+        ],
       ),
     );
   }

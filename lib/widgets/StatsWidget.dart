@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:football/resources/stats_service.dart';
 import 'package:football/utils/localized_stat_label.dart';
+import 'package:football/utils/localized_team_name.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 
@@ -46,7 +47,17 @@ class _StatsWidgetState extends State<StatsWidget> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    const playedOrLive = {'FT', 'AET', 'PEN', '1H', '2H', 'HT', 'ET', 'P', 'LIVE'};
+    const playedOrLive = {
+      'FT',
+      'AET',
+      'PEN',
+      '1H',
+      '2H',
+      'HT',
+      'ET',
+      'P',
+      'LIVE'
+    };
     final shouldFetch = playedOrLive.contains(widget.matchStatusShort);
     final result =
         await _service.getFixtureStats(widget.fixtureId, fetch: shouldFetch);
@@ -139,13 +150,56 @@ class _StatsWidgetState extends State<StatsWidget> {
   //   return l.statsAsOf(minute.toString());
   // }
 
+  // Colour each side owns throughout the panel — dot, values and bar. Home is
+  // amber, away green, so a row can be read without re-checking the header.
+  Color get _homeColor => context.col.amber;
+  Color get _awayColor => context.col.live;
+
   Widget _teamHeader(String homeLogo, String awayLogo) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: _teamChip(widget.homeTeamName, homeLogo, _homeColor,
+                alignEnd: false),
+          ),
+          Expanded(
+            child: _teamChip(widget.awayTeamName, awayLogo, _awayColor,
+                alignEnd: true),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _teamChip(String name, String logo, Color dot,
+      {required bool alignEnd}) {
+    final c = context.col;
+    final isHe = Localizations.localeOf(context).languageCode == 'he';
+    final parts = <Widget>[
+      Container(
+        width: 8,
+        height: 8,
+        decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+      ),
+      const SizedBox(width: 8),
+      _logo(logo),
+      const SizedBox(width: 8),
+      Flexible(
+        child: Text(
+          localizedTeamName(context, name),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: EType.body(
+              color: c.ink, size: 13, weight: FontWeight.w700, hebrew: isHe),
+        ),
+      ),
+    ];
     return Row(
-      children: [
-        _logo(homeLogo),
-        const Spacer(),
-        _logo(awayLogo),
-      ],
+      mainAxisAlignment:
+          alignEnd ? MainAxisAlignment.end : MainAxisAlignment.start,
+      children: alignEnd ? parts.reversed.toList() : parts,
     );
   }
 
@@ -170,17 +224,35 @@ class _StatsWidgetState extends State<StatsWidget> {
   Widget _statRow(String type, TeamStats home, TeamStats away) {
     final c = context.col;
     final hVal = home.statistics
-        .firstWhere((s) => s.type == type, orElse: () => StatItem(type: type, value: null))
+        .firstWhere((s) => s.type == type,
+            orElse: () => StatItem(type: type, value: null))
         .value;
     final aVal = away.statistics
-        .firstWhere((s) => s.type == type, orElse: () => StatItem(type: type, value: null))
+        .firstWhere((s) => s.type == type,
+            orElse: () => StatItem(type: type, value: null))
         .value;
 
     final hPct = _percentFraction(hVal);
     final aPct = _percentFraction(aVal);
 
+    // Raw magnitudes drive both the bars and which side is "winning" the stat.
+    final hNum = hPct ?? _toDouble(hVal);
+    final aNum = aPct ?? _toDouble(aVal);
+    final isHe = Localizations.localeOf(context).languageCode == 'he';
+
+    // Only one side is emphasised, and only when they actually differ — a tie
+    // leaves both muted rather than bolding both.
+    final homeLeads = hNum > aNum;
+    final awayLeads = aNum > hNum;
+
+    TextStyle valueStyle(bool leads) => EType.numeric(
+          color: leads ? c.ink : c.inkDim,
+          size: 15,
+          weight: leads ? FontWeight.w700 : FontWeight.w500,
+        );
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 9),
       child: Column(
         children: [
           Row(
@@ -189,63 +261,79 @@ class _StatsWidgetState extends State<StatsWidget> {
                 child: Text(
                   _formatValue(hVal),
                   textAlign: TextAlign.start,
-                  style: EType.numeric(color: c.ink, size: 13, weight: FontWeight.w600),
+                  style: valueStyle(homeLeads),
                 ),
               ),
               Expanded(
                 flex: 2,
                 child: Text(
-                  localizedStatLabel(context, type).toUpperCase(),
+                  localizedStatLabel(context, type),
                   textAlign: TextAlign.center,
-                  style: EType.label(color: c.inkDim, size: 10, letterSpacing: 1.4),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: EType.body(
+                      color: c.ink,
+                      size: 13,
+                      weight: FontWeight.w500,
+                      hebrew: isHe),
                 ),
               ),
               Expanded(
                 child: Text(
                   _formatValue(aVal),
                   textAlign: TextAlign.end,
-                  style: EType.numeric(color: c.ink, size: 13, weight: FontWeight.w600),
+                  style: valueStyle(awayLeads),
                 ),
               ),
             ],
           ),
-          if (hPct != null || aPct != null) ...[
-            const SizedBox(height: 6),
-            _bar(hPct ?? 0, aPct ?? 0),
-          ] else ...[
-            const SizedBox(height: 4),
-            _bar(_normalize(hVal, aVal).$1, _normalize(hVal, aVal).$2),
-          ],
+          const SizedBox(height: 8),
+          _bar(hNum, aNum),
         ],
       ),
     );
   }
 
-  Widget _bar(double homeFrac, double awayFrac) {
+  // One continuous bar split at the ratio: home grows from the start edge,
+  // away from the end edge, and the two colours meet in the middle with no
+  // track showing between them.
+  Widget _bar(double homeVal, double awayVal) {
     final c = context.col;
-    final total = homeFrac + awayFrac;
-    final h = total == 0 ? 0.5 : homeFrac / total;
-    return SizedBox(
-      height: 3,
-      child: Row(
-        children: [
-          Expanded(
-            flex: (h * 1000).round().clamp(1, 999),
-            child: Container(color: c.live),
-          ),
-          Expanded(
-            flex: ((1 - h) * 1000).round().clamp(1, 999),
-            child: Container(color: c.amber),
-          ),
-        ],
+    const h = 5.0;
+    final total = homeVal + awayVal;
+
+    // Nothing recorded for either side — a flat track, rather than an
+    // arbitrary 50/50 split that would imply data we don't have.
+    if (total <= 0) {
+      return Container(
+        height: h,
+        decoration: BoxDecoration(
+          color: c.cardHi,
+          borderRadius: BorderRadius.circular(h / 2),
+        ),
+      );
+    }
+
+    // Scaled to 1000ths so small differences still shift the seam, and floored
+    // at 1 so a zero side stays a hairline rather than vanishing.
+    final hFlex = ((homeVal / total) * 1000).round().clamp(1, 999);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(h / 2),
+      child: SizedBox(
+        height: h,
+        child: Row(
+          // MUST stretch: a childless ColoredBox takes its height from its
+          // constraints, and a Row's default centre alignment would collapse
+          // both halves to zero height.
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(flex: hFlex, child: ColoredBox(color: _homeColor)),
+            Expanded(flex: 1000 - hFlex, child: ColoredBox(color: _awayColor)),
+          ],
+        ),
       ),
     );
-  }
-
-  (double, double) _normalize(dynamic a, dynamic b) {
-    final av = _toDouble(a);
-    final bv = _toDouble(b);
-    return (av, bv);
   }
 
   double _toDouble(dynamic v) {

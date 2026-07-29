@@ -67,15 +67,22 @@ class _GameDetailsState extends State<GameDetails> {
   Map<String, String> _userGroups = {};
   bool isLoading = true;
   bool _groupsLoading = true;
-  int? _selectedTab; // 0=Timeline, 1=Lineups, 2=Table, 3=Stats. null = collapsed (default).
-  // Started games collapse the distribution block to a one-line summary so the
-  // predictions sit near the top; pre-match games always show the full bars.
-  bool _distExpanded = false;
+  int?
+      _selectedTab; // 0=Timeline, 1=Lineups, 2=Table, 3=Stats. null = collapsed (default).
   late int _currentIndex;
   late Game _currentGame;
   late int currentGameId;
 
-  static const Set<String> _liveShort = {'1H', '2H', 'H1', 'H2', 'ET', 'BT', 'P', 'INT'};
+  static const Set<String> _liveShort = {
+    '1H',
+    '2H',
+    'H1',
+    'H2',
+    'ET',
+    'BT',
+    'P',
+    'INT'
+  };
 
   String _guessesCacheKey(int gameId, String group) => '$gameId|$group';
 
@@ -111,7 +118,8 @@ class _GameDetailsState extends State<GameDetails> {
     // the predictions for this game synchronously.
     if (hydratedGroups && selectedGroupName.isNotEmpty) {
       _hydrateGuessesFromCache(currentGameId, selectedGroupName);
-      _fetchGuesses(selectedGroupName, background: _guessesWithNames.isNotEmpty);
+      _fetchGuesses(selectedGroupName,
+          background: _guessesWithNames.isNotEmpty);
     }
   }
 
@@ -130,8 +138,8 @@ class _GameDetailsState extends State<GameDetails> {
             isLoading = _GuessesCache
                     .guesses[_guessesCacheKey(currentGameId, better)] ==
                 null;
-            final cached = _GuessesCache
-                .guesses[_guessesCacheKey(currentGameId, better)];
+            final cached =
+                _GuessesCache.guesses[_guessesCacheKey(currentGameId, better)];
             if (cached != null) _guessesWithNames = cached;
           });
           _fetchGuesses(better, background: _guessesWithNames.isNotEmpty);
@@ -155,7 +163,10 @@ class _GameDetailsState extends State<GameDetails> {
     final values = groups.values.toSet();
 
     final def = _GuessesCache.defaultGroupName;
-    if (def != null && def.isNotEmpty && def != 'public' && values.contains(def)) {
+    if (def != null &&
+        def.isNotEmpty &&
+        def != 'public' &&
+        values.contains(def)) {
       return def;
     }
 
@@ -191,7 +202,8 @@ class _GameDetailsState extends State<GameDetails> {
     if (newIndex >= 0 && newIndex < widget.games.length) {
       final newGameId = widget.games[newIndex].fixtureId;
       final cached = selectedGroupName.isNotEmpty
-          ? _GuessesCache.guesses[_guessesCacheKey(newGameId, selectedGroupName)]
+          ? _GuessesCache
+              .guesses[_guessesCacheKey(newGameId, selectedGroupName)]
           : null;
       setState(() {
         _currentIndex = newIndex;
@@ -241,8 +253,7 @@ class _GameDetailsState extends State<GameDetails> {
         iconTheme: IconThemeData(color: c.ink, size: 20),
         title: Text(
           AppLocalizations.of(context)!.matchCentre.toUpperCase(),
-          style: EType.label(
-              color: c.inkDim, size: 11, letterSpacing: 2.6),
+          style: EType.label(color: c.inkDim, size: 11, letterSpacing: 2.6),
         ),
         centerTitle: true,
       ),
@@ -284,14 +295,14 @@ class _GameDetailsState extends State<GameDetails> {
         }
       },
       child: Container(
-          margin: const EdgeInsets.only(top: 8),
-          decoration: BoxDecoration(
-            color: c.card,
-            border: Border(
-              top: BorderSide(color: accent, width: 2),
-              bottom: BorderSide(color: c.hairline, width: 1),
-            ),
+        margin: const EdgeInsets.only(top: 8),
+        decoration: BoxDecoration(
+          color: c.card,
+          border: Border(
+            top: BorderSide(color: accent, width: 2),
+            bottom: BorderSide(color: c.hairline, width: 1),
           ),
+        ),
         child: Column(
           children: [
             Padding(
@@ -317,13 +328,14 @@ class _GameDetailsState extends State<GameDetails> {
 
   Widget _buildHeroMeta() {
     final c = context.col;
-    final info =
-        StatusUtils.getStatusInfo(_currentGame.status.short, context);
+    final info = StatusUtils.getStatusInfo(_currentGame.status.short, context);
     String statusText;
     Color statusColor;
     if (_isLive) {
       final el = _currentGame.status.elapsed;
-      statusText = el != null ? "${AppLocalizations.of(context)!.liveLabel.toUpperCase()}  ${el}'" : AppLocalizations.of(context)!.liveLabel.toUpperCase();
+      statusText = el != null
+          ? "${AppLocalizations.of(context)!.liveLabel.toUpperCase()}  ${el}'"
+          : AppLocalizations.of(context)!.liveLabel.toUpperCase();
       statusColor = c.live;
     } else if (_isHalftime) {
       statusText = AppLocalizations.of(context)!.halfTimeLabel.toUpperCase();
@@ -344,35 +356,44 @@ class _GameDetailsState extends State<GameDetails> {
       statusColor = c.inkMute;
     }
 
+    final isHe = Localizations.localeOf(context).languageCode == 'he';
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            if (_isLive) ...[
+        // Status as a soft pill with a leading dot, rather than bare tracked
+        // small-caps.
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: c.cardHi,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
               Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: c.live,
-                  shape: BoxShape.circle,
+                width: 6,
+                height: 6,
+                decoration:
+                    BoxDecoration(color: statusColor, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 7),
+              Text(
+                statusText,
+                style: EType.body(
+                  color: statusColor,
+                  size: 11,
+                  weight: FontWeight.w600,
+                  hebrew: isHe,
                 ),
               ),
-              const SizedBox(width: 8),
             ],
-            Text(
-              statusText,
-              style: EType.label(
-                  color: statusColor, size: 11, letterSpacing: 2.2),
-            ),
-          ],
+          ),
         ),
         Text(
-          DateFormat('EEE  dd.MM.yy  •  HH:mm')
-              .format(_currentGame.date.toLocal())
-              .toUpperCase(),
-          style: EType.label(
-              color: c.inkDim, size: 10, letterSpacing: 1.6),
+          DateFormat('HH:mm  •  dd.MM.yy').format(_currentGame.date.toLocal()),
+          style: EType.numeric(color: c.inkDim, size: 11),
         ),
       ],
     );
@@ -381,37 +402,49 @@ class _GameDetailsState extends State<GameDetails> {
   Widget _buildLeagueStrip() {
     final c = context.col;
     final league = _currentGame.league;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (league.logo != null && league.logo!.isNotEmpty) ...[
-          SizedBox(
-            width: 16,
-            height: 16,
-            child: Image.network(
-              league.logo!,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) =>
-                  Icon(Icons.emoji_events_outlined, size: 14, color: c.inkDim),
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
-        Flexible(
-          child: Text(
-            league.round.isNotEmpty
-                ? '${league.name}  ·  ${league.round}'.toUpperCase()
-                : league.name.toUpperCase(),
-            overflow: TextOverflow.ellipsis,
-            style: EType.label(
-              color: c.inkMute,
-              size: 10,
-              letterSpacing: 1.8,
-            ),
-          ),
+    // Outlined green pill rather than a bare caption.
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: c.live.withValues(alpha: 0.45), width: 1),
         ),
-      ],
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                league.round.isNotEmpty
+                    ? '${league.name}  •  ${league.round}'.toUpperCase()
+                    : league.name.toUpperCase(),
+                overflow: TextOverflow.ellipsis,
+                style: EType.label(
+                  color: c.live,
+                  size: 10,
+                  letterSpacing: 1.4,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            if (league.logo != null && league.logo!.isNotEmpty)
+              SizedBox(
+                width: 15,
+                height: 15,
+                child: Image.network(
+                  league.logo!,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => Icon(
+                      Icons.emoji_events_outlined,
+                      size: 13,
+                      color: c.live),
+                ),
+              )
+            else
+              Icon(Icons.emoji_events_outlined, size: 13, color: c.live),
+          ],
+        ),
+      ),
     );
   }
 
@@ -426,42 +459,52 @@ class _GameDetailsState extends State<GameDetails> {
     // are detected even when the API name is a single word (e.g. "USA").
     final localHome = localizedTeamName(context, _currentGame.home.name);
     final localAway = localizedTeamName(context, _currentGame.away.name);
-    final bool anyMultiWord = localHome.trim().contains(' ') ||
-        localAway.trim().contains(' ');
+    final bool anyMultiWord =
+        localHome.trim().contains(' ') || localAway.trim().contains(' ');
     final int nameMaxLines = anyMultiWord ? 2 : 1;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _navArrow(Icons.arrow_back_ios_new, hasPrev,
             () => _navigateToGame(_currentIndex - 1)),
-        Expanded(child: _heroTeam(_currentGame.home, alignEnd: true, maxLines: nameMaxLines)),
+        Expanded(
+            child: _heroTeam(_currentGame.home,
+                alignEnd: true, maxLines: nameMaxLines)),
         const SizedBox(width: 24),
         Column(
           children: [
+            // Wide bold sans rather than the condensed display face, with a
+            // smaller muted colon — matches the scoreboard in the design.
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
                   '$h',
-                  style: EType.scoreboard(
-                    size: 64,
+                  style: EType.body(
+                    size: 44,
+                    height: 1.0,
+                    weight: FontWeight.w700,
                     color: _isLive ? c.live : c.ink,
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Text(
                     ':',
-                    style: EType.scoreboard(
-                      size: 56,
+                    style: EType.body(
+                      size: 30,
+                      height: 1.0,
+                      weight: FontWeight.w600,
                       color: c.inkDim,
                     ),
                   ),
                 ),
                 Text(
                   '$a',
-                  style: EType.scoreboard(
-                    size: 64,
+                  style: EType.body(
+                    size: 44,
+                    height: 1.0,
+                    weight: FontWeight.w700,
                     color: _isLive ? c.live : c.ink,
                   ),
                 ),
@@ -470,7 +513,9 @@ class _GameDetailsState extends State<GameDetails> {
           ],
         ),
         const SizedBox(width: 24),
-        Expanded(child: _heroTeam(_currentGame.away, alignEnd: false, maxLines: nameMaxLines)),
+        Expanded(
+            child: _heroTeam(_currentGame.away,
+                alignEnd: false, maxLines: nameMaxLines)),
         _navArrow(Icons.arrow_forward_ios, hasNext,
             () => _navigateToGame(_currentIndex + 1)),
       ],
@@ -530,8 +575,7 @@ class _GameDetailsState extends State<GameDetails> {
           _currentGame.home.name,
           _currentGame.away.name,
         );
-        final double nameBlockHeight =
-            nameFontSize * nameLineHeight * maxLines;
+        final double nameBlockHeight = nameFontSize * nameLineHeight * maxLines;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -541,10 +585,11 @@ class _GameDetailsState extends State<GameDetails> {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: c.cardHi,
+                  color: c.card,
                   shape: BoxShape.circle,
+                  border: Border.all(color: c.hairline, width: 1.5),
                 ),
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(9),
                 child: Image.network(
                   team.logo,
                   fit: BoxFit.contain,
@@ -559,15 +604,16 @@ class _GameDetailsState extends State<GameDetails> {
               child: GestureDetector(
                 onTap: () => _openTeamDetails(team),
                 child: Text(
-                  localizedTeamName(context, team.name).toUpperCase(),
+                  // Sentence case, not tracked caps — matches the design.
+                  localizedTeamName(context, team.name),
                   textAlign: TextAlign.center,
                   maxLines: maxLines,
                   softWrap: maxLines > 1,
                   overflow: TextOverflow.ellipsis,
-                  style: EType.teamNameDisplay(
+                  style: EType.body(
                     size: nameFontSize,
                     color: c.ink,
-                    letterSpacing: 0.8,
+                    weight: FontWeight.w700,
                     height: nameLineHeight,
                     hebrew: localizedTeamName(context, team.name) != team.name,
                   ),
@@ -593,40 +639,58 @@ class _GameDetailsState extends State<GameDetails> {
       l.statsTab.toUpperCase(),
     ];
 
+    final isHe = Localizations.localeOf(context).languageCode == 'he';
+
+    // Rounded segmented track: the active tab is a raised pill rather than an
+    // underline.
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-      child: Row(
-        children: List.generate(tabs.length, (i) {
-          final isActive = i == _selectedTab;
-          return Expanded(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => setState(() {
-                _selectedTab = _selectedTab == i ? null : i;
-              }),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: isActive ? c.live : Colors.transparent,
-                      width: 2,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: c.cardHi,
+          // Pill radius + the 4px padding, so the inner and outer curves stay
+          // concentric instead of the track looking squarer than the pill.
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: List.generate(tabs.length, (i) {
+            final isActive = i == _selectedTab;
+            return Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => setState(() {
+                  _selectedTab = _selectedTab == i ? null : i;
+                }),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  padding: const EdgeInsets.symmetric(vertical: 9),
+                  decoration: BoxDecoration(
+                    color: isActive ? c.card : Colors.transparent,
+                    // ~half the 33px pill height — fully rounded ends.
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isActive ? c.hairline : Colors.transparent,
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    tabs[i],
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: EType.body(
+                      color: isActive ? c.live : c.inkMute,
+                      size: 12,
+                      weight: FontWeight.w600,
+                      hebrew: isHe,
                     ),
                   ),
                 ),
-                child: Text(
-                  tabs[i],
-                  textAlign: TextAlign.center,
-                  style: EType.label(
-                    color: isActive ? c.live : c.inkMute,
-                    size: 11,
-                    letterSpacing: 1.6,
-                  ),
-                ),
               ),
-            ),
-          );
-        }),
+            );
+          }),
+        ),
       ),
     );
   }
@@ -673,7 +737,8 @@ class _GameDetailsState extends State<GameDetails> {
                 const SizedBox(width: 10),
                 Text(
                   l.formTab.toUpperCase(),
-                  style: EType.label(color: c.inkDim, size: 11, letterSpacing: 2.2),
+                  style: EType.label(
+                      color: c.inkDim, size: 11, letterSpacing: 2.2),
                 ),
               ],
             ),
@@ -724,6 +789,8 @@ class _GameDetailsState extends State<GameDetails> {
             fixtureId: currentGameId,
             homeTeamName: _currentGame.home.name,
             awayTeamName: _currentGame.away.name,
+            homeTeamLogo: _currentGame.home.logo,
+            awayTeamLogo: _currentGame.away.logo,
             showHeader: false,
           ),
         );
@@ -801,82 +868,99 @@ class _GameDetailsState extends State<GameDetails> {
     if (total == 0) return const SizedBox.shrink();
 
     final countStr = NumberFormat.decimalPattern().format(total);
-
-    // Started games are collapsible (collapsed by default) so predictions stay
-    // near the top; pre-match games always render the full bars.
-    final collapsible = !_notStarted;
-    final expanded = !collapsible || _distExpanded;
     int pct(int n) => total == 0 ? 0 : (n / total * 100).round();
+    final actual = _actualOutcome();
 
+    // Always a single line now: the split bar plus an inline legend. The old
+    // expand/collapse toggle and the per-outcome rows are gone.
     return Container(
       decoration: BoxDecoration(color: c.card),
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          InkWell(
-            onTap: collapsible
-                ? () => setState(() => _distExpanded = !_distExpanded)
-                : null,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _sectionLabel(l.distributionLabel.toUpperCase()),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Total guess count is admin-only; shown when expanded.
-                    if (_isAdmin && expanded)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: Text(
-                          l.guessesCount(countStr),
-                          style: EType.label(
-                              color: c.inkDim, size: 11, letterSpacing: 1.2),
-                        ),
-                      ),
-                    if (collapsible && !expanded)
-                      _distCompactSummary(
-                        c,
-                        pct(homeWins),
-                        pct(draws),
-                        pct(awayWins),
-                      ),
-                    if (collapsible) ...[
-                      const SizedBox(width: 8),
-                      Icon(
-                        expanded ? Icons.expand_less : Icons.expand_more,
-                        size: 18,
-                        color: c.inkMute,
-                      ),
-                    ],
-                  ],
+          Row(
+            children: [
+              _sectionLabel(l.distributionLabel.toUpperCase()),
+              const Spacer(),
+              // Total guess count stays admin-only.
+              if (_isAdmin)
+                Text(
+                  l.guessesCount(countStr),
+                  style: EType.label(
+                      color: c.inkDim, size: 11, letterSpacing: 1.2),
                 ),
-              ],
-            ),
+            ],
           ),
-          if (expanded) ...[
-            const SizedBox(height: 12),
-            _stackedBar(homeWins, draws, awayWins, _outcomeColor('home'),
-                _outcomeColor('draw'), _outcomeColor('away')),
-            const SizedBox(height: 6),
-            _distDotRow(_outcomeColor('home'), _winLabel(_currentGame.home.name, l),
-                pct(homeWins), _actualOutcome() == 'home', l),
-            _distDotRow(_outcomeColor('draw'), l.drawLabel, pct(draws),
-                _actualOutcome() == 'draw', l),
-            _distDotRow(_outcomeColor('away'), _winLabel(_currentGame.away.name, l),
-                pct(awayWins), _actualOutcome() == 'away', l),
-          ],
+          const SizedBox(height: 12),
+          _stackedBar(homeWins, draws, awayWins, _outcomeColor('home'),
+              _outcomeColor('draw'), _outcomeColor('away')),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              // Equal thirds so the three labels line up under their segments
+              // and a long team name truncates instead of pushing the others
+              // off the row.
+              Expanded(
+                child: _distLegend(
+                  _outcomeColor('home'),
+                  localizedTeamName(context, _currentGame.home.name),
+                  pct(homeWins),
+                  actual == 'home',
+                ),
+              ),
+              Expanded(
+                child: _distLegend(_outcomeColor('draw'), l.drawLabel,
+                    pct(draws), actual == 'draw'),
+              ),
+              Expanded(
+                child: _distLegend(
+                  _outcomeColor('away'),
+                  localizedTeamName(context, _currentGame.away.name),
+                  pct(awayWins),
+                  actual == 'away',
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  // "{team} win" in the current locale's word order.
-  String _winLabel(String rawTeamName, AppLocalizations l) {
-    final team = localizedTeamName(context, rawTeamName);
+  // One legend entry: colour dot, who it refers to, the percentage, and a tick
+  // on the outcome that actually happened.
+  Widget _distLegend(Color color, String label, int pctVal, bool actual) {
+    final c = context.col;
     final isHe = Localizations.localeOf(context).languageCode == 'he';
-    return isHe ? '${l.winWord} $team' : '$team ${l.winWord}';
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text('$pctVal%',
+            style:
+                EType.numeric(color: color, size: 13, weight: FontWeight.w700)),
+        if (actual) ...[
+          const SizedBox(width: 4),
+          Icon(Icons.check, size: 13, color: color),
+        ],
+        const SizedBox(width: 6),
+        // Flexible so a long name ellipsises rather than overflowing the third.
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: EType.body(color: c.inkMute, size: 12, hebrew: isHe),
+          ),
+        ),
+      ],
+    );
   }
 
   // The outcome that actually happened ('home'/'draw'/'away'), for the
@@ -925,85 +1009,6 @@ class _GameDetailsState extends State<GameDetails> {
     return Row(children: segs);
   }
 
-  Widget _distDotRow(
-      Color color, String label, int pctVal, bool actual, AppLocalizations l) {
-    final c = context.col;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 7),
-      child: Row(
-        children: [
-          Container(
-            width: 9,
-            height: 9,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 12),
-          // Label + optional "actual result" badge fill the middle so the
-          // percentage stays in a fixed, aligned column at the end.
-          Expanded(
-            child: Row(
-              children: [
-                Flexible(
-                  child: Text(label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: EType.body(color: c.ink, size: 13)),
-                ),
-                if (actual) ...[
-                  const SizedBox(width: 10),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                          color: color.withValues(alpha: 0.5), width: 1),
-                    ),
-                    child: Text(l.actualResult,
-                        style: EType.label(
-                            color: color, size: 9, letterSpacing: 0.3)),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 46,
-            child: Text('$pctVal%',
-                textAlign: TextAlign.end,
-                style: EType.numeric(
-                    color: color, size: 15, weight: FontWeight.w700)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Compact one-line distribution shown when the (started-game) block is
-  // collapsed: home% · draw% · away%, colour-matched to the full bars.
-  Widget _distCompactSummary(EditorialColors c, int home, int draw, int away) {
-    Widget p(int v, Color col) => Text(
-          '$v%',
-          style: EType.numeric(color: col, size: 13, weight: FontWeight.w700),
-        );
-    Widget sep() => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: Text('·', style: EType.label(color: c.inkDim, size: 12)),
-        );
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        p(home, _outcomeColor('home')),
-        sep(),
-        p(draw, _outcomeColor('draw')),
-        sep(),
-        p(away, _outcomeColor('away')),
-      ],
-    );
-  }
-
   // ── Predictions table ──────────────────────────────────────────────────
   Widget _buildPredictionsBlock() {
     final c = context.col;
@@ -1024,8 +1029,8 @@ class _GameDetailsState extends State<GameDetails> {
               Container(width: 18, height: 1, color: c.live),
               const SizedBox(width: 10),
               Text(l.groupGuesses.toUpperCase(),
-                  style: EType.label(
-                      color: c.ink, size: 11, letterSpacing: 2.4)),
+                  style:
+                      EType.label(color: c.ink, size: 11, letterSpacing: 2.4)),
               const Spacer(),
               if (!_groupsLoading && _userGroups.isNotEmpty)
                 _compactGroupSelector(),
@@ -1068,10 +1073,8 @@ class _GameDetailsState extends State<GameDetails> {
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 child: Text(
                   l.noGuesses.toUpperCase(),
-                  style: EType.label(
-                      color: c.inkDim,
-                      size: 11,
-                      letterSpacing: 2),
+                  style:
+                      EType.label(color: c.inkDim, size: 11, letterSpacing: 2),
                 ),
               )
             else
@@ -1092,22 +1095,19 @@ class _GameDetailsState extends State<GameDetails> {
         padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 14),
         decoration: BoxDecoration(
           border: Border.all(color: c.hairlineHi, width: 1),
-          borderRadius: BorderRadius.circular(2),
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Row(
           children: [
-            Icon(Icons.groups_2_outlined,
-                size: 18, color: c.inkMute),
+            Icon(Icons.groups_2_outlined, size: 18, color: c.inkMute),
             const SizedBox(width: 24),
             Expanded(
               child: Text(
                 l.joingrouptoseefreinds,
-                style: EType.body(
-                    color: c.inkMute, size: 13),
+                style: EType.body(color: c.inkMute, size: 13),
               ),
             ),
-            Icon(Icons.arrow_forward,
-                size: 14, color: c.inkMute),
+            Icon(Icons.arrow_forward, size: 14, color: c.inkMute),
           ],
         ),
       ),
@@ -1162,7 +1162,7 @@ class _GameDetailsState extends State<GameDetails> {
       context: context,
       backgroundColor: c.card,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(2)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (sheetCtx) {
         final sc = sheetCtx.col;
@@ -1188,16 +1188,14 @@ class _GameDetailsState extends State<GameDetails> {
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
                 child: Row(
                   children: [
-                    Container(
-                        width: 18, height: 1, color: sc.live),
+                    Container(width: 18, height: 1, color: sc.live),
                     const SizedBox(width: 10),
                     Text(
-                      AppLocalizations.of(sheetCtx)!.privategroups
+                      AppLocalizations.of(sheetCtx)!
+                          .privategroups
                           .toUpperCase(),
                       style: EType.label(
-                          color: sc.ink,
-                          size: 11,
-                          letterSpacing: 2.4),
+                          color: sc.ink, size: 11, letterSpacing: 2.4),
                     ),
                   ],
                 ),
@@ -1221,16 +1219,11 @@ class _GameDetailsState extends State<GameDetails> {
                   },
                   child: Container(
                     decoration: BoxDecoration(
-                      color: isActive
-                          ? sc.liveSoft
-                          : Colors.transparent,
+                      color: isActive ? sc.liveSoft : Colors.transparent,
                       border: Border(
-                        bottom: BorderSide(
-                            color: sc.hairline, width: 1),
+                        bottom: BorderSide(color: sc.hairline, width: 1),
                         left: BorderSide(
-                          color: isActive
-                              ? sc.live
-                              : Colors.transparent,
+                          color: isActive ? sc.live : Colors.transparent,
                           width: 3,
                         ),
                       ),
@@ -1246,22 +1239,16 @@ class _GameDetailsState extends State<GameDetails> {
                             color: sc.cardHi,
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: isActive
-                                  ? sc.live
-                                  : sc.hairline,
+                              color: isActive ? sc.live : sc.hairline,
                               width: 1,
                             ),
                           ),
                           alignment: Alignment.center,
                           child: Text(
-                            name.isNotEmpty
-                                ? name[0].toUpperCase()
-                                : '?',
+                            name.isNotEmpty ? name[0].toUpperCase() : '?',
                             style: EType.display(
                               size: 16,
-                              color: isActive
-                                  ? sc.live
-                                  : sc.inkMute,
+                              color: isActive ? sc.live : sc.inkMute,
                               letterSpacing: 0,
                             ),
                           ),
@@ -1279,8 +1266,7 @@ class _GameDetailsState extends State<GameDetails> {
                           ),
                         ),
                         if (isActive)
-                          Icon(Icons.check,
-                              size: 16, color: sc.live),
+                          Icon(Icons.check, size: 16, color: sc.live),
                       ],
                     ),
                   ),
@@ -1296,8 +1282,8 @@ class _GameDetailsState extends State<GameDetails> {
 
   Widget _buildGuessesList(AppLocalizations l) {
     final c = context.col;
-    final sorted = [..._guessesWithNames]..sort((a, b) =>
-        b.guess.sumPoints.compareTo(a.guess.sumPoints));
+    final sorted = [..._guessesWithNames]
+      ..sort((a, b) => b.guess.sumPoints.compareTo(a.guess.sumPoints));
 
     return Column(
       children: [
@@ -1310,26 +1296,20 @@ class _GameDetailsState extends State<GameDetails> {
                 width: 24,
                 child: Text('#',
                     style: EType.label(
-                        color: c.inkDim,
-                        size: 10,
-                        letterSpacing: 1.4)),
+                        color: c.inkDim, size: 10, letterSpacing: 1.4)),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(l.name.toUpperCase(),
                     style: EType.label(
-                        color: c.inkDim,
-                        size: 10,
-                        letterSpacing: 1.6)),
+                        color: c.inkDim, size: 10, letterSpacing: 1.6)),
               ),
               SizedBox(
                 width: 56,
                 child: Text(l.guess.toUpperCase(),
                     textAlign: TextAlign.center,
                     style: EType.label(
-                        color: c.inkDim,
-                        size: 10,
-                        letterSpacing: 1.6)),
+                        color: c.inkDim, size: 10, letterSpacing: 1.6)),
               ),
               const SizedBox(width: 12),
               SizedBox(
@@ -1340,131 +1320,147 @@ class _GameDetailsState extends State<GameDetails> {
                     overflow: TextOverflow.visible,
                     softWrap: false,
                     style: EType.label(
-                        color: c.inkDim,
-                        size: 10,
-                        letterSpacing: 1.2)),
+                        color: c.inkDim, size: 10, letterSpacing: 1.2)),
               ),
             ],
           ),
         ),
-        Container(height: 1, color: c.hairline),
-        ...sorted.asMap().entries.map((e) {
-          final i = e.key;
-          final g = e.value;
-          final isMe = g.guess.userId == currentUserId;
-          final pts = g.guess.sumPoints;
-          final exact = g.guess.direct == 1; // exact score
-          final partial = !exact && pts > 0; // right direction only
-          final ptsColor =
-              exact ? c.live : (partial ? c.amber : c.inkMute);
-          // Row tint by guess quality only — exact = green, direction = orange,
-          // miss = none. The current user's row is marked by a left border and
-          // the "you" badge, NOT a green fill (green means a correct guess).
-          final bg = exact
-              ? c.liveSoft
-              : (partial ? c.amber.withValues(alpha: 0.08) : Colors.transparent);
-          return InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => Statistics(
-                    userId: g.guess.userId,
-                    leagueId: _currentGame.league.id,
-                  ),
-                ),
-              );
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: c.hairline, width: 1),
-                  left: BorderSide(
-                    color: isMe ? c.live : Colors.transparent,
-                    width: 3,
-                  ),
-                ),
-                color: bg,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 24,
-                    child: Text(
-                      '${i + 1}'.padLeft(2, '0'),
-                      style: EType.numeric(
-                        color: i < 3 ? c.live : c.inkDim,
-                        size: 11,
-                        weight: FontWeight.w600,
+        // Rows live in one rounded, clipped card so the tinted rows follow the
+        // corners instead of running to square edges.
+        ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: c.hairline, width: 1),
+            ),
+            child: Column(children: [
+              ...sorted.asMap().entries.map((e) {
+                final i = e.key;
+                final g = e.value;
+                final isMe = g.guess.userId == currentUserId;
+                final pts = g.guess.sumPoints;
+                final exact = g.guess.direct == 1; // exact score
+                final partial = !exact && pts > 0; // right direction only
+                final ptsColor =
+                    exact ? c.live : (partial ? c.amber : c.inkMute);
+                // Row tint by guess quality only — exact = green, direction = orange,
+                // miss = none. The current user's row is marked by a left border and
+                // the "you" badge, NOT a green fill (green means a correct guess).
+                final bg = exact
+                    ? c.liveSoft
+                    : (partial
+                        ? c.amber.withValues(alpha: 0.08)
+                        : Colors.transparent);
+                final isLast = i == sorted.length - 1;
+                return InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => Statistics(
+                          userId: g.guess.userId,
+                          leagueId: _currentGame.league.id,
+                        ),
                       ),
+                    );
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: isLast ? Colors.transparent : c.hairline,
+                          width: 1,
+                        ),
+                      ),
+                      color: bg,
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 13),
                     child: Row(
                       children: [
-                        Flexible(
+                        SizedBox(
+                          width: 24,
                           child: Text(
-                            g.userName,
-                            overflow: TextOverflow.ellipsis,
-                            style: EType.body(
-                              color: c.ink,
-                              size: 13,
-                              weight:
-                                  isMe ? FontWeight.w600 : FontWeight.w400,
+                            '${i + 1}'.padLeft(2, '0'),
+                            style: EType.numeric(
+                              color: i < 3 ? c.live : c.inkDim,
+                              size: 11,
+                              weight: FontWeight.w600,
                             ),
                           ),
                         ),
-                        if (isMe) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 5, vertical: 1),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: c.live, width: 1),
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                            child: Text(l.youLabel.toUpperCase(),
-                                style: EType.label(
-                                    color: c.live,
-                                    size: 9,
-                                    letterSpacing: 1.2)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  g.userName,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: EType.body(
+                                    color: c.ink,
+                                    size: 13,
+                                    weight: isMe
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
+                                  ),
+                                ),
+                              ),
+                              if (isMe) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: c.live, width: 1),
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                  child: Text(l.youLabel.toUpperCase(),
+                                      style: EType.label(
+                                          color: c.live,
+                                          size: 9,
+                                          letterSpacing: 1.2)),
+                                ),
+                              ],
+                            ],
                           ),
-                        ],
+                        ),
+                        SizedBox(
+                          width: 56,
+                          child: Text(
+                            '${g.guess.homeTeamGoals} : ${g.guess.awayTeamGoals}',
+                            textAlign: TextAlign.center,
+                            style: EType.numeric(
+                              color: c.ink,
+                              size: 13,
+                              weight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        SizedBox(
+                          width: 72,
+                          child: Text(
+                            pts % 1 == 0
+                                ? pts.toInt().toString()
+                                : pts.toString(),
+                            textAlign: TextAlign.center,
+                            style: EType.numeric(
+                              color: ptsColor,
+                              size: 14,
+                              weight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  SizedBox(
-                    width: 56,
-                    child: Text(
-                      '${g.guess.homeTeamGoals} : ${g.guess.awayTeamGoals}',
-                      textAlign: TextAlign.center,
-                      style: EType.numeric(
-                        color: c.ink,
-                        size: 13,
-                        weight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  SizedBox(
-                    width: 72,
-                    child: Text(
-                      pts % 1 == 0 ? pts.toInt().toString() : pts.toString(),
-                      textAlign: TextAlign.center,
-                      style: EType.numeric(
-                        color: ptsColor,
-                        size: 14,
-                        weight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }),
+                );
+              }),
+            ]),
+          ),
+        ),
       ],
     );
   }
@@ -1475,9 +1471,7 @@ class _GameDetailsState extends State<GameDetails> {
       children: [
         Container(width: 18, height: 1, color: c.live),
         const SizedBox(width: 10),
-        Text(s,
-            style: EType.label(
-                color: c.ink, size: 11, letterSpacing: 2.4)),
+        Text(s, style: EType.label(color: c.ink, size: 11, letterSpacing: 2.4)),
       ],
     );
   }
@@ -1633,4 +1627,3 @@ class _GuessesCache {
   // initial hydrate path doesn't need an async await before it can paint.
   static String? defaultGroupName;
 }
-

@@ -216,7 +216,17 @@
       "Bash(dart format *)",
       "Bash(flutter --version)",
       "Bash(timeout 90 flutter devices)",
-      "PowerShell(Get-Process -Name dart,flutter_tools,adb -ErrorAction SilentlyContinue | Select-Object Id,ProcessName,StartTime,@{n='RSS_MB';e={[math]::Round\\($_.WorkingSet64/1MB,0\\)}} | Format-Table -AutoSize)"
+      "PowerShell(Get-Process -Name dart,flutter_tools,adb -ErrorAction SilentlyContinue | Select-Object Id,ProcessName,StartTime,@{n='RSS_MB';e={[math]::Round\\($_.WorkingSet64/1MB,0\\)}} | Format-Table -AutoSize)",
+      "Bash(sed -n '/tabs\\\\[i\\\\]/,+8p')",
+      "Bash(sed -n '/Text\\(\\\\s*$/,+10p' lib/screens/gameDetails.dart)",
+      "Bash(echo \"errors: $?\")",
+      "Bash(node --test tests/guessableRound.test.mjs)",
+      "Bash(node --test tests/guessableRound.test.mjs tests/playerNamesHe.test.mjs tests/notifPrefs.test.mjs)",
+      "Bash(sed -n '/^async function sendGoalNotificationsForFixtures/,/const scorerTeamHe/p' api.js)",
+      "Bash(node -e \"import\\('./api.js'\\).then\\(\\(\\)=>console.log\\('api.js loads OK'\\)\\).catch\\(e=>{console.error\\('FAIL',e.message\\);process.exit\\(1\\)}\\)\")",
+      "Bash(node -e \"import\\('./api.js'\\).then\\(\\(\\)=>console.log\\('loads OK'\\)\\).catch\\(e=>{console.error\\('FAIL',e.message\\);process.exit\\(1\\)}\\)\")",
+      "Bash(cp tests/points.golden.test.mjs /tmp/golden.bak)",
+      "Bash(sed -i 's/round: \"1st Qualifying Round\"/round: \"Group A - 1\"/' tests/points.golden.test.mjs)"
     ]
   }
 }

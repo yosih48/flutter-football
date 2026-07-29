@@ -12,15 +12,15 @@ import 'package:football/utils/lineup_event_marks.dart';
 import 'package:football/utils/localized_team_name.dart';
 
 // ── Fixed pitch colours — independent of light/dark theme ─────────────────
-const Color _kHome  = Color(0xFF4B7BF5); // vivid blue  (home XI ring)
-const Color _kAway  = Color(0xFF2BC48A); // vivid green (away XI ring)
-const Color _kPitchDark  = Color(0xFF14532D); // deep green base
-const Color _kPitchLight = Color(0xFF18603A); // subtle band
-const Color _kLine  = Color(0x3DFFFFFF); // white @ 24% — fainter lines
+const Color _kHome = Color(0xFF4B7BF5); // vivid blue  (home XI ring)
+const Color _kAway = Color(0xFF2BC48A); // vivid green (away XI ring)
+const Color _kPitchDark = Color(0xFF064D3B); // pitch base
+const Color _kPitchLight = Color(0xFF075F47); // mown band
+const Color _kLine = Color(0x42FFFFFF); // white @ ~26%
 
 // ── Player dot geometry ───────────────────────────────────────────────────
-const double _kDia      = 40.0; // avatar diameter
-const double _kLabelW   = 70.0; // total width incl. name
+const double _kDia = 40.0; // avatar diameter
+const double _kLabelW = 70.0; // total width incl. name
 
 class LineupsWidget extends StatefulWidget {
   final int fixtureId;
@@ -41,11 +41,14 @@ class LineupsWidget extends StatefulWidget {
 }
 
 class _LineupsWidgetState extends State<LineupsWidget> {
+  // false = home XI, true = away XI.
+  bool _showAway = false;
+
   final LineupService _lineupService = LineupService();
   LineupResponse? _lineupResponse;
   List<FixtureEvent> _events = const [];
   bool _isLoading = true;
-  bool _hasError   = false;
+  bool _hasError = false;
 
   @override
   void initState() {
@@ -60,7 +63,10 @@ class _LineupsWidgetState extends State<LineupsWidget> {
   }
 
   Future<void> _fetchLineups() async {
-    setState(() { _isLoading = true; _hasError = false; });
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+    });
 
     // Lineups (AllSports) and events (API-Football) are independent endpoints —
     // fetch in parallel. Events power the goal/card/sub marks on the pitch.
@@ -79,7 +85,7 @@ class _LineupsWidgetState extends State<LineupsWidget> {
       _lineupResponse = response;
       _events = eventsResp?.events ?? const [];
       _isLoading = false;
-      _hasError   = response == null;
+      _hasError = response == null;
     });
   }
 
@@ -93,7 +99,8 @@ class _LineupsWidgetState extends State<LineupsWidget> {
         padding: const EdgeInsets.symmetric(vertical: 24),
         child: Center(
           child: SizedBox(
-            width: 18, height: 18,
+            width: 18,
+            height: 18,
             child: CircularProgressIndicator(
               strokeWidth: 1.5,
               valueColor: AlwaysStoppedAnimation(c.live),
@@ -133,14 +140,22 @@ class _LineupsWidgetState extends State<LineupsWidget> {
     }
 
     final lineups = _lineupResponse!.lineups!;
-    final home    = lineups[0];
-    final away    = lineups.length > 1 ? lineups[1] : null;
+    final home = lineups[0];
+    final away = lineups.length > 1 ? lineups[1] : null;
 
     // Distil events into per-player marks, scoped to each side by team name so a
     // surname shared across both teams can't cross-match.
     final homeMarks = buildPlayerMarks(_events, home.team.name);
-    final awayMarks =
-        away != null ? buildPlayerMarks(_events, away.team.name) : <String, PlayerMarks>{};
+    final awayMarks = away != null
+        ? buildPlayerMarks(_events, away.team.name)
+        : <String, PlayerMarks>{};
+
+    // Only one XI is on the pitch at a time now, so resolve the selected side
+    // once and drive the header, pitch and substitutes from it.
+    final showAway = _showAway && away != null;
+    final team = showAway ? away : home;
+    final teamMarks = showAway ? awayMarks : homeMarks;
+    final teamColor = showAway ? _kAway : _kHome;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,33 +166,159 @@ class _LineupsWidgetState extends State<LineupsWidget> {
           const SizedBox(height: 10),
         ],
 
+        // ── Team toggle ────────────────────────────────────────────
+        if (away != null) ...[
+          _TeamToggle(
+            homeName: home.team.name,
+            awayName: away.team.name,
+            showAway: showAway,
+            onChanged: (v) => setState(() => _showAway = v),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        // ── Selected team + its formation ──────────────────────────
+        _PitchHeader(team: team),
+        const SizedBox(height: 8),
+
         // ── Tactical pitch ─────────────────────────────────────────
         // Isolate the pitch as its own layer: it's a tall, static stack of
         // gradient avatars + shadows, so caching it lets the outer scroll just
         // composite it instead of re-rasterizing all the blurs every frame.
         RepaintBoundary(
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(16),
             child: _TacticalPitch(
-              home: home,
-              away: away,
-              homeMarks: homeMarks,
-              awayMarks: awayMarks,
+              team: team,
+              marks: teamMarks,
+              color: teamColor,
             ),
           ),
         ),
 
-        // ── Substitutes ────────────────────────────────────────────
-        if (home.substitutes.isNotEmpty || (away?.substitutes.isNotEmpty ?? false)) ...[
+        // ── Substitutes (selected team only) ───────────────────────
+        if (team.substitutes.isNotEmpty) ...[
           const SizedBox(height: 20),
           _SubstitutesSection(
-            home: home,
-            away: away,
-            homeMarks: homeMarks,
-            awayMarks: awayMarks,
+            home: team,
+            away: null,
+            homeMarks: teamMarks,
+            awayMarks: const {},
             l: l,
           ),
         ],
+      ],
+    );
+  }
+}
+
+// Segmented switch between the two XIs — active half filled, matching the
+// events-tab filter.
+class _TeamToggle extends StatelessWidget {
+  const _TeamToggle({
+    required this.homeName,
+    required this.awayName,
+    required this.showAway,
+    required this.onChanged,
+  });
+  final String homeName;
+  final String awayName;
+  final bool showAway;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    // Centred: the parent Column aligns to start, so a shrink-wrapped toggle
+    // would otherwise hug the edge.
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          color: c.cardHi,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: c.hairline, width: 1),
+        ),
+        child: Row(
+          // Sized to its labels rather than stretched full-width.
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _half(context, homeName, !showAway, () => onChanged(false)),
+            _half(context, awayName, showAway, () => onChanged(true)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _half(
+      BuildContext context, String name, bool active, VoidCallback onTap) {
+    final c = context.col;
+    final isHe = Localizations.localeOf(context).languageCode == 'he';
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 7),
+        alignment: Alignment.center,
+        // Long club names would otherwise stretch it across the screen.
+        constraints: const BoxConstraints(maxWidth: 150),
+        decoration: BoxDecoration(
+          color: active ? c.live : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          localizedTeamName(context, name),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: EType.body(
+            color: active ? Colors.white : c.inkMute,
+            size: 13,
+            weight: FontWeight.w600,
+            hebrew: isHe,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Crest + name at the start, formation pill at the end.
+class _PitchHeader extends StatelessWidget {
+  const _PitchHeader({required this.team});
+  final TeamLineup team;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    final isHe = Localizations.localeOf(context).languageCode == 'he';
+    final logo = team.team.logo ?? '';
+    return Row(
+      children: [
+        SizedBox(
+          width: 22,
+          height: 22,
+          child: logo.isEmpty
+              ? Icon(Icons.shield_outlined, size: 18, color: c.inkDim)
+              : Image.network(
+                  logo,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) =>
+                      Icon(Icons.shield_outlined, size: 18, color: c.inkDim),
+                ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            localizedTeamName(context, team.team.name),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: EType.body(
+                color: c.ink, size: 14, weight: FontWeight.w700, hebrew: isHe),
+          ),
+        ),
+        if (team.formation.isNotEmpty) _FormationChip(team.formation),
       ],
     );
   }
@@ -220,15 +361,13 @@ class _PredictedBanner extends StatelessWidget {
 // ── Tactical pitch ─────────────────────────────────────────────────────────
 
 class _TacticalPitch extends StatelessWidget {
-  final TeamLineup  home;
-  final TeamLineup? away;
-  final Map<String, PlayerMarks> homeMarks;
-  final Map<String, PlayerMarks> awayMarks;
+  final TeamLineup team;
+  final Map<String, PlayerMarks> marks;
+  final Color color;
   const _TacticalPitch({
-    required this.home,
-    this.away,
-    required this.homeMarks,
-    required this.awayMarks,
+    required this.team,
+    required this.marks,
+    required this.color,
   });
 
   // Each formation row gets its own fixed-height slot, so the pitch grows with
@@ -244,14 +383,12 @@ class _TacticalPitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final homeRows = _orderedRows(home.startXI);
-    final awayRows = away != null ? _orderedRows(away!.startXI) : const <List<LineupPlayer>>[];
+    final rows = _orderedRows(team.startXI);
 
-    // Both teams share an equal half; size the half to the denser side so the
-    // tighter formation still gets a full slot per row. Centre line stays at 0.5.
-    final maxRows = max(homeRows.length, awayRows.length);
-    final halfH = (maxRows < 1 ? 1 : maxRows) * _kRowH;
-    final h = halfH * 2 + _kVPad * 2;
+    // One team now owns the whole pitch instead of a half, so each formation
+    // row gets a full slot and the XI spreads goal-line to goal-line.
+    final bodyH = (rows.isEmpty ? 1 : rows.length) * _kRowH;
+    final h = bodyH + _kVPad * 2;
 
     return SizedBox(
       height: h,
@@ -261,31 +398,10 @@ class _TacticalPitch extends StatelessWidget {
           return Stack(
             clipBehavior: Clip.none,
             children: [
-              // ── Pitch background ──────────────────────────────
               Positioned.fill(
                 child: CustomPaint(painter: _PitchPainter()),
               ),
-
-              // ── Formation chips near centre line ──────────────
-              if (home.formation.isNotEmpty)
-                Positioned(
-                  left: 10,
-                  top: halfH - 16 + _kVPad,
-                  child: _FormationChip(home.formation),
-                ),
-              if (away != null && away!.formation.isNotEmpty)
-                Positioned(
-                  left: 10,
-                  top: halfH + 4 + _kVPad,
-                  child: _FormationChip(away!.formation),
-                ),
-
-              // ── Home XI — top half, GK at top ─────────────────
-              ..._placeTeam(homeRows, w, halfH, isHome: true, marks: homeMarks),
-
-              // ── Away XI — bottom half, GK at bottom ───────────
-              if (away != null)
-                ..._placeTeam(awayRows, w, halfH, isHome: false, marks: awayMarks),
+              ..._placeTeam(rows, w, bodyH, marks: marks),
             ],
           );
         },
@@ -304,7 +420,8 @@ class _TacticalPitch extends StatelessWidget {
     final keys = byRow.keys.toList()..sort();
     return keys.map((k) {
       return List<LineupPlayer>.from(byRow[k]!)
-        ..sort((a, b) => (_gridCol(a.grid) ?? 1).compareTo(_gridCol(b.grid) ?? 1));
+        ..sort(
+            (a, b) => (_gridCol(a.grid) ?? 1).compareTo(_gridCol(b.grid) ?? 1));
     }).toList();
   }
 
@@ -312,8 +429,7 @@ class _TacticalPitch extends StatelessWidget {
   List<Widget> _placeTeam(
     List<List<LineupPlayer>> rows,
     double w,
-    double halfH, {
-    required bool isHome,
+    double bodyH, {
     required Map<String, PlayerMarks> marks,
   }) {
     final n = rows.length;
@@ -323,10 +439,10 @@ class _TacticalPitch extends StatelessWidget {
     for (int ri = 0; ri < n; ri++) {
       final rowPlayers = rows[ri];
 
-      // Centre each row in its equal band: GK band near the goal line, last
-      // outfield band leaves a half-band gap before the centre line.
-      final frac = (ri + 0.5) / n; // 0..1 within this team's half
-      final y = _kVPad + (isHome ? halfH * frac : halfH * 2 - halfH * frac);
+      // Each row is centred in its own equal band down the full pitch, keeper
+      // at the top through to the forwards at the bottom.
+      final frac = (ri + 0.5) / n;
+      final y = _kVPad + bodyH * frac;
 
       final np = rowPlayers.length;
       for (int ci = 0; ci < np; ci++) {
@@ -334,7 +450,7 @@ class _TacticalPitch extends StatelessWidget {
           player: rowPlayers[ci],
           x: w * (ci + 1) / (np + 1),
           y: y,
-          color: isHome ? _kHome : _kAway,
+          color: color,
           marks: marks.forPlayer(rowPlayers[ci]),
         ));
       }
@@ -357,11 +473,16 @@ class _TacticalPitch extends StatelessWidget {
 
   static int _posToRow(String? pos) {
     switch (pos) {
-      case 'G': return 1;
-      case 'D': return 2;
-      case 'M': return 3;
-      case 'F': return 4;
-      default:  return 3;
+      case 'G':
+        return 1;
+      case 'D':
+        return 2;
+      case 'M':
+        return 3;
+      case 'F':
+        return 4;
+      default:
+        return 3;
     }
   }
 }
@@ -374,12 +495,18 @@ class _PitchPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // ── Alternating horizontal bands (mow pattern, like ScoreQuest) ─
-    const bands = 12;
-    final bh = h / bands;
+    // ── Alternating horizontal bands (mow pattern) ─────────────────
+    // Fixed band HEIGHT rather than a fixed count: the pitch grows with the
+    // formation, so a fixed count would stretch or squash the stripes from one
+    // line-up to the next. This keeps them a consistent thickness and just
+    // draws more of them on a taller pitch.
+    const bandH = 80.0;
+    final bands = (h / bandH).ceil();
     for (int i = 0; i < bands; i++) {
+      final top = i * bandH;
       canvas.drawRect(
-        Rect.fromLTWH(0, i * bh, w, bh),
+        // Clamp the last band so it can't paint past the pitch.
+        Rect.fromLTWH(0, top, w, min(bandH, h - top)),
         Paint()..color = i.isEven ? _kPitchDark : _kPitchLight,
       );
     }
@@ -410,19 +537,19 @@ class _PitchPainter extends CustomPainter {
     final pbW = w * 0.593;
     final pbH = h * 0.157 * 0.5; // scaled to full-pitch height
     final pbX = (w - pbW) / 2;
-    canvas.drawRect(Rect.fromLTWH(pbX, 0,       pbW, pbH), lp);
+    canvas.drawRect(Rect.fromLTWH(pbX, 0, pbW, pbH), lp);
     canvas.drawRect(Rect.fromLTWH(pbX, h - pbH, pbW, pbH), lp);
 
     // ── Goal boxes (18.32m wide × 5.5m deep) ─────────────────────
     final gbW = w * 0.269;
     final gbH = h * 0.052 * 0.5;
     final gbX = (w - gbW) / 2;
-    canvas.drawRect(Rect.fromLTWH(gbX, 0,       gbW, gbH), lp);
+    canvas.drawRect(Rect.fromLTWH(gbX, 0, gbW, gbH), lp);
     canvas.drawRect(Rect.fromLTWH(gbX, h - gbH, gbW, gbH), lp);
 
     // ── Penalty spots (11m from goal line ≈ 10.5% of half-height) ─
     final psY = h * 0.105 * 0.5;
-    canvas.drawCircle(Offset(w / 2, psY),     2.5, fp);
+    canvas.drawCircle(Offset(w / 2, psY), 2.5, fp);
     canvas.drawCircle(Offset(w / 2, h - psY), 2.5, fp);
 
     // ── Penalty arcs (same radius as centre circle, clipped
@@ -441,10 +568,14 @@ class _PitchPainter extends CustomPainter {
 
     // ── Corner arcs ───────────────────────────────────────────────
     final cR = w * 0.033;
-    canvas.drawArc(Rect.fromLTWH(-cR,     -cR,     cR * 2, cR * 2), 0,         pi / 2, false, lp);
-    canvas.drawArc(Rect.fromLTWH(w - cR,  -cR,     cR * 2, cR * 2), pi / 2,    pi / 2, false, lp);
-    canvas.drawArc(Rect.fromLTWH(-cR,     h - cR,  cR * 2, cR * 2), -pi / 2,   pi / 2, false, lp);
-    canvas.drawArc(Rect.fromLTWH(w - cR,  h - cR,  cR * 2, cR * 2), pi,        pi / 2, false, lp);
+    canvas.drawArc(
+        Rect.fromLTWH(-cR, -cR, cR * 2, cR * 2), 0, pi / 2, false, lp);
+    canvas.drawArc(
+        Rect.fromLTWH(w - cR, -cR, cR * 2, cR * 2), pi / 2, pi / 2, false, lp);
+    canvas.drawArc(
+        Rect.fromLTWH(-cR, h - cR, cR * 2, cR * 2), -pi / 2, pi / 2, false, lp);
+    canvas.drawArc(
+        Rect.fromLTWH(w - cR, h - cR, cR * 2, cR * 2), pi, pi / 2, false, lp);
   }
 
   @override
@@ -477,7 +608,7 @@ class _PlayerDot extends StatelessWidget {
   final LineupPlayer player;
   final double x;
   final double y;
-  final Color  color;
+  final Color color;
   final PlayerMarks? marks;
 
   const _PlayerDot({
@@ -495,7 +626,7 @@ class _PlayerDot extends StatelessWidget {
     return Positioned(
       // Centre the label column horizontally on x, avatar top at y - r.
       left: x - _kLabelW / 2,
-      top:  y - _kDia   / 2,
+      top: y - _kDia / 2,
       child: SizedBox(
         width: _kLabelW,
         child: Column(
@@ -504,7 +635,7 @@ class _PlayerDot extends StatelessWidget {
             // ── Avatar + event badges ─────────────────────────
             // Badges spill outside the avatar bounds, so don't clip.
             SizedBox(
-              width:  _kLabelW,
+              width: _kLabelW,
               height: _kDia + 4,
               child: Stack(
                 clipBehavior: Clip.none,
@@ -676,7 +807,7 @@ Color _ratingColor(double r) {
   if (r >= 8.0) return const Color(0xFF1D9BF0); // blue — outstanding
   if (r >= 7.0) return const Color(0xFF12B886); // green — good
   if (r >= 6.0) return const Color(0xFFF59F00); // amber — average
-  return const Color(0xFFE03131);               // red — poor
+  return const Color(0xFFE03131); // red — poor
 }
 
 class _RatingPill extends StatelessWidget {
@@ -814,7 +945,8 @@ List<Widget> _subMarkers(PlayerMarks? m) {
   }
   if (m.goals > 0 || m.ownGoals > 0) {
     out.add(const SizedBox(width: 3));
-    out.add(_GoalBadge(count: m.goals + m.ownGoals, own: m.goals == 0 && m.ownGoals > 0));
+    out.add(_GoalBadge(
+        count: m.goals + m.ownGoals, own: m.goals == 0 && m.ownGoals > 0));
   }
   if (m.yellow > 0 || m.red > 0) {
     out.add(const SizedBox(width: 3));
@@ -826,7 +958,7 @@ List<Widget> _subMarkers(PlayerMarks? m) {
 // ── Substitutes section ────────────────────────────────────────────────────
 
 class _SubstitutesSection extends StatelessWidget {
-  final TeamLineup  home;
+  final TeamLineup home;
   final TeamLineup? away;
   final Map<String, PlayerMarks> homeMarks;
   final Map<String, PlayerMarks> awayMarks;
@@ -867,12 +999,20 @@ class _SubstitutesSection extends StatelessWidget {
             children: [
               Expanded(
                 child: _SubList(
-                    lineup: home, color: _kHome, c: c, mirror: false, marks: homeMarks),
+                    lineup: home,
+                    color: _kHome,
+                    c: c,
+                    mirror: false,
+                    marks: homeMarks),
               ),
               Container(width: 1, color: c.hairline),
               Expanded(
                 child: _SubList(
-                    lineup: away, color: _kAway, c: c, mirror: true, marks: awayMarks),
+                    lineup: away,
+                    color: _kAway,
+                    c: c,
+                    mirror: true,
+                    marks: awayMarks),
               ),
             ],
           ),
@@ -884,9 +1024,9 @@ class _SubstitutesSection extends StatelessWidget {
 
 class _SubList extends StatelessWidget {
   final TeamLineup? lineup;
-  final Color       color;
+  final Color color;
   final EditorialColors c;
-  final bool        mirror; // true = away side (right-aligned)
+  final bool mirror; // true = away side (right-aligned)
   final Map<String, PlayerMarks> marks;
 
   const _SubList({
@@ -903,7 +1043,7 @@ class _SubList extends StatelessWidget {
       return const SizedBox.shrink();
     }
     final subs = lineup!.substitutes;
-    final pa   = EdgeInsets.only(left: mirror ? 10 : 0, right: mirror ? 0 : 10);
+    final pa = EdgeInsets.only(left: mirror ? 10 : 0, right: mirror ? 0 : 10);
 
     return Padding(
       padding: pa,
@@ -919,7 +1059,8 @@ class _SubList extends StatelessWidget {
                 ? [
                     Flexible(
                       child: Text(
-                        localizedTeamName(context, lineup!.team.name).toUpperCase(),
+                        localizedTeamName(context, lineup!.team.name)
+                            .toUpperCase(),
                         textAlign: TextAlign.right,
                         overflow: TextOverflow.ellipsis,
                         style: EType.label(
@@ -934,7 +1075,8 @@ class _SubList extends StatelessWidget {
                     const SizedBox(width: 5),
                     Flexible(
                       child: Text(
-                        localizedTeamName(context, lineup!.team.name).toUpperCase(),
+                        localizedTeamName(context, lineup!.team.name)
+                            .toUpperCase(),
                         overflow: TextOverflow.ellipsis,
                         style: EType.label(
                             color: c.inkMute, size: 9, letterSpacing: 1.4),
@@ -988,13 +1130,14 @@ class _Dot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        width: 8, height: 8,
+        width: 8,
+        height: 8,
         decoration: BoxDecoration(color: color, shape: BoxShape.circle),
       );
 }
 
 class _NumChip extends StatelessWidget {
-  final int   number;
+  final int number;
   final Color color;
   const _NumChip({required this.number, required this.color});
 

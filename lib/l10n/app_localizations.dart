@@ -2669,6 +2669,36 @@ abstract class AppLocalizations {
   /// **'Points'**
   String get statisticsPoints;
 
+  /// No description provided for @goalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal'**
+  String get goalLabel;
+
+  /// No description provided for @penaltyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Penalty'**
+  String get penaltyLabel;
+
+  /// No description provided for @ownGoalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Own goal'**
+  String get ownGoalLabel;
+
+  /// No description provided for @yellowCardLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Yellow'**
+  String get yellowCardLabel;
+
+  /// No description provided for @redCardLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Red'**
+  String get redCardLabel;
+
   /// No description provided for @profilePlayerSince.
   ///
   /// In en, this message translates to:

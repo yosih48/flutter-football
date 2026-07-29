@@ -7,15 +7,22 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:football/utils/he_player_name.dart';
+import 'package:football/utils/localized_team_name.dart';
 
 class FixtureEventsWidget extends StatefulWidget {
   final int fixtureId;
   final String homeTeamName;
   final String awayTeamName;
   final bool isCompact;
+
   /// Set to false when the parent already provides a section header
   /// (e.g. the collapsible block in GameDetails). Defaults to true.
   final bool showHeader;
+
+  /// Crests for the two-team strip above the timeline. Optional — the strip
+  /// falls back to a shield icon when a logo is missing or fails to load.
+  final String? homeTeamLogo;
+  final String? awayTeamLogo;
 
   const FixtureEventsWidget({
     Key? key,
@@ -24,6 +31,8 @@ class FixtureEventsWidget extends StatefulWidget {
     required this.awayTeamName,
     this.isCompact = false,
     this.showHeader = true,
+    this.homeTeamLogo,
+    this.awayTeamLogo,
   }) : super(key: key);
 
   @override
@@ -36,6 +45,10 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
   String? _error;
   bool _expanded = true;
   bool _majorOnly = false;
+
+  // Hebrew copy is set in Rubik rather than Sora — see EType.body. Trialling
+  // this on the events tab only; the rest of the app still uses the default.
+  bool get _he => Localizations.localeOf(context).languageCode == 'he';
 
   bool _isMajor(FixtureEvent e) {
     final type = e.type.toLowerCase();
@@ -116,8 +129,10 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          _buildTeamStrip(c),
+          const SizedBox(height: 14),
           _buildFilterToggle(c),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           if (filtered.isEmpty)
             _buildEmptyWidget(c)
           else
@@ -128,17 +143,78 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
     return _buildEmptyWidget(c);
   }
 
+  // Two-team strip: home leads (right in RTL), away trails, each a crest plus
+  // the localized team name.
+  Widget _buildTeamStrip(EditorialColors c) {
+    return Row(
+      children: [
+        Expanded(
+          child: _teamChip(widget.homeTeamName, widget.homeTeamLogo, c,
+              alignEnd: false),
+        ),
+        Expanded(
+          child: _teamChip(widget.awayTeamName, widget.awayTeamLogo, c,
+              alignEnd: true),
+        ),
+      ],
+    );
+  }
+
+  Widget _teamChip(String name, String? logo, EditorialColors c,
+      {required bool alignEnd}) {
+    final crest = SizedBox(
+      width: 20,
+      height: 20,
+      child: (logo == null || logo.isEmpty)
+          ? Icon(Icons.shield_outlined, size: 16, color: c.inkDim)
+          : Image.network(
+              logo,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) =>
+                  Icon(Icons.shield_outlined, size: 16, color: c.inkDim),
+            ),
+    );
+    final label = Flexible(
+      child: Text(
+        localizedTeamName(context, name),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: EType.body(
+            color: c.ink, size: 13, weight: FontWeight.w700, hebrew: _he),
+      ),
+    );
+
+    return Row(
+      mainAxisAlignment:
+          alignEnd ? MainAxisAlignment.end : MainAxisAlignment.start,
+      children: alignEnd
+          ? [label, const SizedBox(width: 8), crest]
+          : [crest, const SizedBox(width: 8), label],
+    );
+  }
+
+  // Segmented filter: the active half is a solid green pill, the other is the
+  // plain card surface — both inside one rounded, hairlined track.
   Widget _buildFilterToggle(EditorialColors c) {
     final l = AppLocalizations.of(context)!;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _filterPill(l.allEvents.toUpperCase(), !_majorOnly,
-            () => setState(() => _majorOnly = false), c),
-        const SizedBox(width: 8),
-        _filterPill(l.majorEvents.toUpperCase(), _majorOnly,
-            () => setState(() => _majorOnly = true), c),
-      ],
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          color: c.cardHi,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: c.hairline, width: 1),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _filterPill(l.majorEvents, _majorOnly,
+                () => setState(() => _majorOnly = true), c),
+            _filterPill(l.allEvents, !_majorOnly,
+                () => setState(() => _majorOnly = false), c),
+          ],
+        ),
+      ),
     );
   }
 
@@ -147,22 +223,20 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? c.liveSoft : Colors.transparent,
-          border: Border.all(
-            color: active ? c.live : c.hairline,
-            width: 1,
-          ),
-          borderRadius: BorderRadius.circular(2),
+          color: active ? c.live : c.card,
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
           label,
-          style: EType.label(
-            color: active ? c.live : c.inkMute,
-            size: 10,
-            letterSpacing: 1.6,
+          style: EType.body(
+            color: active ? Colors.white : c.inkMute,
+            size: 13,
+            weight: FontWeight.w600,
+            hebrew: _he,
           ),
         ),
       ),
@@ -241,51 +315,9 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
                     : const SizedBox.shrink(),
               ),
 
-              // Timeline spine
-              SizedBox(
-                width: 40,
-                child: Column(
-                  children: [
-                    // Top line
-                    Expanded(
-                      child: Container(
-                        width: 1,
-                        color: index == 0
-                            ? Colors.transparent
-                            : c.hairline,
-                      ),
-                    ),
-                    // Time bubble
-                    Container(
-                      width: 26,
-                      height: 26,
-                      decoration: BoxDecoration(
-                        color: c.card,
-                        border:
-                            Border.all(color: c.hairlineHi, width: 1.5),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          "${event.time}'",
-                          style: EType.numeric(
-                            color: c.inkDim,
-                            size: 9,
-                            weight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Bottom line
-                    Expanded(
-                      child: Container(
-                        width: 1,
-                        color: isLast ? Colors.transparent : c.hairline,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              // Timeline spine: continuous rule, an icon node marking the
+              // event type, and the minute tucked alongside it.
+              _buildSpine(event, c, isFirst: index == 0, isLast: isLast),
 
               // Away side
               Expanded(
@@ -300,34 +332,121 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
     );
   }
 
+  static const double _nodeSize = 30;
+  // Gap + text box under the node. Fixed so the rule's gap can be computed
+  // without measuring text.
+  static const double _minuteGap = 3;
+  static const double _minuteHeight = 13;
+
+  Widget _buildSpine(
+    FixtureEvent event,
+    EditorialColors c, {
+    required bool isFirst,
+    required bool isLast,
+  }) {
+    final isGoal = event.type.toLowerCase() == 'goal';
+
+    return SizedBox(
+      width: 46,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // The rule, with a gap sized to the node PLUS the minute beneath it
+          // so neither is struck through.
+          Positioned.fill(
+            child: Column(
+              children: [
+                Expanded(
+                  child: Container(
+                    width: 1.5,
+                    color: isFirst ? Colors.transparent : c.hairline,
+                  ),
+                ),
+                const SizedBox(height: _nodeSize + _minuteGap + _minuteHeight),
+                Expanded(
+                  child: Container(
+                    width: 1.5,
+                    color: isLast ? Colors.transparent : c.hairline,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Node above, minute centred directly beneath it. Both centre on the
+          // spine, so the group lines up with the gap in the rule.
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Goals are a solid green disc, everything else a quiet outlined
+              // circle, so scoring reads at a glance down the column.
+              Container(
+                width: _nodeSize,
+                height: _nodeSize,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isGoal ? c.live : c.card,
+                  shape: BoxShape.circle,
+                  border:
+                      isGoal ? null : Border.all(color: c.hairline, width: 1.5),
+                ),
+                child: _nodeIcon(event, c, isGoal: isGoal),
+              ),
+              const SizedBox(height: _minuteGap),
+              SizedBox(
+                height: _minuteHeight,
+                child: Text(
+                  "${event.time}'",
+                  // The box is as wide as the node, so centre explicitly —
+                  // otherwise the text hugs the start edge and looks offset.
+                  textAlign: TextAlign.center,
+                  style: EType.numeric(
+                      color: c.inkDim, size: 10, weight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _nodeIcon(FixtureEvent event, EditorialColors c,
+      {required bool isGoal}) {
+    if (isGoal) {
+      return const Icon(Icons.sports_soccer, size: 17, color: Colors.white);
+    }
+    final type = event.type.toLowerCase();
+    if (type == 'subst') {
+      return Icon(Icons.swap_vert, size: 15, color: c.inkDim);
+    }
+    if (type == 'card') {
+      final detail = event.detail?.toLowerCase() ?? '';
+      final red = detail.contains('red');
+      return Icon(Icons.square_rounded,
+          size: 13, color: red ? c.flag : const Color(0xFFFACC15));
+    }
+    if (type == 'var') {
+      return Icon(Icons.videocam_outlined, size: 14, color: c.inkDim);
+    }
+    return Icon(Icons.circle, size: 8, color: c.inkDim);
+  }
+
   Widget _buildEventContent(
     FixtureEvent event, {
     required bool isHome,
     required EditorialColors c,
   }) {
-    final eventInfo = _getEventInfo(event);
-    // Substitutions already render up/down arrows inside the body, so the
-    // outer swap icon would be redundant and steals horizontal room from the
-    // player names.
-    final isSubst = event.type.toLowerCase() == 'subst';
-
+    // No side icon: the node on the spine already carries the event type, so
+    // the full width goes to the player name (long names were truncating).
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 4.0),
       child: Row(
         mainAxisAlignment:
             isHome ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
-          if (!isHome && !isSubst) ...[
-            _buildEventIcon(eventInfo),
-            const SizedBox(width: 10),
-          ],
           Flexible(
             child: _buildEventBody(event, isHome: isHome, c: c),
           ),
-          if (isHome && !isSubst) ...[
-            const SizedBox(width: 10),
-            _buildEventIcon(eventInfo),
-          ],
         ],
       ),
     );
@@ -353,7 +472,7 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
           if (event.assist != null && event.assist!.isNotEmpty)
             _subRow(
               icon: Icons.arrow_upward,
-              color: Colors.green,
+              color: c.live,
               label: l.playerIn,
               name: event.assist!,
               isHome: isHome,
@@ -363,7 +482,7 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
             const SizedBox(height: 2),
           _subRow(
             icon: Icons.arrow_downward,
-            color: Colors.redAccent,
+            color: c.flag,
             label: l.playerOut,
             name: event.player,
             isHome: isHome,
@@ -373,45 +492,90 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
       );
     }
 
-    return Column(
-      crossAxisAlignment: align,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
+    // Name + a small type badge on one line, assist underneath. No frame —
+    // the node on the spine already carries the colour coding.
+    final badge = _typeBadge(event, c);
+    final nameRow = <Widget>[
+      Flexible(
+        child: Text(
           localizedPlayerName(context, event.player),
           style: EType.body(
-            color: c.ink,
-            size: 13,
-            weight: FontWeight.w600,
-          ),
+              color: c.ink, size: 13, weight: FontWeight.w700, hebrew: _he),
           textAlign: textAlign,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        if (event.detail != null && event.detail!.isNotEmpty)
-          Text(
-            event.detail!,
-            style: EType.label(
-              color: c.inkMute,
-              size: 11,
-            ),
-            textAlign: textAlign,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        if (event.assist != null && event.assist!.isNotEmpty)
+      ),
+      if (badge != null) ...[const SizedBox(width: 8), badge],
+    ];
+
+    return Column(
+      crossAxisAlignment: align,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment:
+              isHome ? MainAxisAlignment.start : MainAxisAlignment.end,
+          children: isHome ? nameRow : nameRow.reversed.toList(),
+        ),
+        if (event.assist != null && event.assist!.isNotEmpty) ...[
+          const SizedBox(height: 3),
           Text(
             "${l.assist} ${localizedPlayerName(context, event.assist!)}",
-            style: EType.body(
-              color: c.inkDim,
-              size: 10,
-              height: 1.3,
-            ),
+            style:
+                EType.body(color: c.inkDim, size: 11, height: 1.3, hebrew: _he),
             textAlign: textAlign,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
+        ],
       ],
+    );
+  }
+
+  // Small pill naming the event kind — "goal", "penalty", "own goal", a card.
+  // Returns null for plain events that need no label.
+  Widget? _typeBadge(FixtureEvent event, EditorialColors c) {
+    final l = AppLocalizations.of(context)!;
+    final type = event.type.toLowerCase();
+    final detail = event.detail?.toLowerCase() ?? '';
+
+    String text;
+    Color color;
+    if (type == 'goal') {
+      if (detail.contains('penalty')) {
+        text = l.penaltyLabel;
+        color = c.amber;
+      } else if (detail.contains('own')) {
+        text = l.ownGoalLabel;
+        color = c.flag;
+      } else {
+        text = l.goalLabel;
+        color = c.live;
+      }
+    } else if (type == 'card') {
+      final red = detail.contains('red');
+      text = red ? l.redCardLabel : l.yellowCardLabel;
+      color = red ? c.flag : const Color(0xFFB45309);
+    } else if (type == 'var') {
+      text = 'VAR';
+      color = c.inkMute;
+    } else {
+      return null;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        text,
+        style: EType.body(
+            color: color, size: 10, weight: FontWeight.w700, hebrew: _he),
+      ),
     );
   }
 
@@ -424,14 +588,16 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
     required EditorialColors c,
   }) {
     final children = <Widget>[
-      Icon(icon, color: color, size: 12),
+      Icon(icon, color: color, size: 14),
       const SizedBox(width: 6),
       Flexible(
         child: Text(
           localizedPlayerName(context, name),
-          style: EType.body(color: c.ink, size: 12, weight: FontWeight.w500),
-          maxLines: 2,
-          softWrap: true,
+          // The arrow already encodes direction; colouring the name to match
+          // makes on/off readable without reading the icon.
+          style: EType.body(
+              color: color, size: 12.5, weight: FontWeight.w600, hebrew: _he),
+          maxLines: 1,
           overflow: TextOverflow.ellipsis,
           textAlign: isHome ? TextAlign.right : TextAlign.left,
         ),
@@ -443,74 +609,6 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
           isHome ? MainAxisAlignment.end : MainAxisAlignment.start,
       children: isHome ? children.reversed.toList() : children,
     );
-  }
-
-  Widget _buildEventIcon(Map<String, dynamic> info) {
-    if (info['type'] == 'text') {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-        decoration: BoxDecoration(
-          color: (info['color'] as Color).withOpacity(0.15),
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-              color: (info['color'] as Color).withOpacity(0.5)),
-        ),
-        child: Text(
-          info['text'] as String,
-          style: TextStyle(
-            color: info['color'] as Color,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
-    }
-
-    return Icon(
-      info['icon'] as IconData,
-      color: info['color'] as Color,
-      size: 18,
-    );
-  }
-
-  Map<String, dynamic> _getEventInfo(FixtureEvent event) {
-    final type = event.type.toLowerCase();
-    final detail = event.detail?.toLowerCase() ?? '';
-
-    if (type == 'goal') {
-      if (detail.contains('missed')) {
-        return {'icon': Icons.sports_soccer, 'color': Colors.red, 'type': 'icon'};
-      }
-      if (detail.contains('own')) {
-        return {'icon': Icons.sports_soccer, 'color': Colors.orange, 'type': 'icon'};
-      }
-      if (detail.contains('penalty')) {
-        return {'icon': Icons.sports_soccer, 'color': Colors.blue, 'type': 'icon'};
-      }
-      return {'icon': Icons.sports_soccer, 'color': Colors.blue, 'type': 'icon'};
-    } else if (type == 'card') {
-      // Yellow→Red second-yellow handled like a red.
-      if (detail.contains('yellow') && detail.contains('red')) {
-        return {'icon': Icons.style, 'color': Colors.red, 'type': 'icon'};
-      }
-      return {
-        'icon': Icons.style,
-        'color': detail.contains('yellow')
-            ? const Color(0xFFFACC15)
-            : Colors.red,
-        'type': 'icon',
-      };
-    } else if (type == 'subst') {
-      return {
-        'icon': Icons.swap_vert,
-        'color': Colors.green,
-        'type': 'icon',
-      };
-    } else if (type == 'var') {
-      return {'text': 'VAR', 'color': Colors.purpleAccent, 'type': 'text'};
-    }
-
-    return {'icon': Icons.info_outline, 'color': Colors.grey, 'type': 'icon'};
   }
 
   Widget _buildLoadingWidget(EditorialColors c) {
@@ -568,7 +666,8 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
           const SizedBox(height: 12),
           Text(
             AppLocalizations.of(context)!.noEvents,
-            style: EType.label(color: c.inkMute, size: 12, letterSpacing: 1.4),
+            style: EType.label(
+                color: c.inkMute, size: 12, letterSpacing: 1.4, hebrew: _he),
           ),
         ],
       ),

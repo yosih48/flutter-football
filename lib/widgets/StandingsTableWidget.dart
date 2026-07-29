@@ -37,7 +37,17 @@ class _StandingsTableWidgetState extends State<StandingsTableWidget> {
   bool _loading = true;
 
   static const Set<String> _stopWords = {
-    'fc', 'cf', 'afc', 'sc', 'ac', 'rc', 'cd', 'ud', 'sd', 'club', 'de',
+    'fc',
+    'cf',
+    'afc',
+    'sc',
+    'ac',
+    'rc',
+    'cd',
+    'ud',
+    'sd',
+    'club',
+    'de',
     'the',
   };
 
@@ -54,6 +64,7 @@ class _StandingsTableWidgetState extends State<StandingsTableWidget> {
     final key = s.toLowerCase().trim();
     return _nameAliases[key] ?? s;
   }
+
   static const String _accented =
       'àáâãäåāăąèéêëēĕėęěìíîïĩīĭįòóôõöōŏőùúûüũūŭůűñçßýÿźżž';
   static const String _plain =
@@ -109,10 +120,10 @@ class _StandingsTableWidgetState extends State<StandingsTableWidget> {
     final byId = <int, ({Team team, Set<String> tokens})>{};
     if (games != null) {
       for (final g in games) {
-        byId.putIfAbsent(
-            g.home.id, () => (team: g.home, tokens: _tokens(g.home.name).toSet()));
-        byId.putIfAbsent(
-            g.away.id, () => (team: g.away, tokens: _tokens(g.away.name).toSet()));
+        byId.putIfAbsent(g.home.id,
+            () => (team: g.home, tokens: _tokens(g.home.name).toSet()));
+        byId.putIfAbsent(g.away.id,
+            () => (team: g.away, tokens: _tokens(g.away.name).toSet()));
       }
     }
     _candidates = byId.values.toList();
@@ -222,7 +233,7 @@ class _StandingsTableWidgetState extends State<StandingsTableWidget> {
       if (showGroupHeaders && groupName.isNotEmpty) {
         children.add(_groupHeader(_localizedGroupName(groupName, l)));
       }
-      children.addAll(rows.map(_bodyRow));
+      children.addAll(rows.map((r) => _bodyRow(r, grouped: showGroupHeaders)));
     });
 
     return Padding(
@@ -243,28 +254,41 @@ class _StandingsTableWidgetState extends State<StandingsTableWidget> {
 
   Widget _groupHeader(String name) {
     final c = context.col;
+    final isHe = Localizations.localeOf(context).languageCode == 'he';
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
-      margin: const EdgeInsets.only(top: 8),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: c.hairline, width: 1)),
-      ),
-      child: Text(
-        name,
-        style: EType.label(color: c.ink, size: 11, letterSpacing: 1.2),
+      color: c.cardHi,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      child: Row(
+        children: [
+          Container(
+            width: 14,
+            height: 2.5,
+            decoration: BoxDecoration(
+              color: c.live,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            name,
+            style: EType.body(
+                color: c.ink, size: 12, weight: FontWeight.w700, hebrew: isHe),
+          ),
+        ],
       ),
     );
   }
 
   Widget _headerRow(AppLocalizations l) {
-    final c = context.col;
+    // Padding and the rank/gap widths mirror _bodyRow exactly, so the headings
+    // sit directly above the columns they label.
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
       child: Row(
         children: [
-          SizedBox(width: 22, child: _hdr('#')),
-          const SizedBox(width: 6),
+          SizedBox(width: 22, child: _hdr('#', center: true)),
+          const SizedBox(width: 8),
           Expanded(child: _hdr('')),
           SizedBox(width: 22, child: _hdr(l.colPlayed, center: true)),
           SizedBox(width: 22, child: _hdr(l.colWon, center: true)),
@@ -286,31 +310,44 @@ class _StandingsTableWidgetState extends State<StandingsTableWidget> {
     );
   }
 
-  Widget _bodyRow(StandingRow row) {
+  // Colour for a qualifying position, or null when the row isn't one.
+  //
+  // Only applied to multi-group tables (World Cup / CL group stage), where the
+  // top two advance. A single-table league has no such cut-off at rank 2, and
+  // the API rows carry no `description` field to derive one from — so those
+  // tables get no qualification tint at all rather than a wrong one.
+  Color? _qualifyColor(StandingRow row, bool grouped) {
+    if (!grouped) return null;
     final c = context.col;
-    final isMatch =
-        row.teamId == widget.highlightHomeId || row.teamId == widget.highlightAwayId;
+    if (row.rank == 1) return c.amber;
+    if (row.rank == 2) return c.live;
+    return null;
+  }
+
+  Widget _bodyRow(StandingRow row, {bool grouped = false}) {
+    final c = context.col;
+    final isMatch = row.teamId == widget.highlightHomeId ||
+        row.teamId == widget.highlightAwayId;
+    final qualify = _qualifyColor(row, grouped);
 
     final content = Container(
       decoration: BoxDecoration(
-        color: isMatch ? c.liveSoft : Colors.transparent,
-        border: Border(bottom: BorderSide(color: c.hairline, width: 1)),
+        color: (isMatch || qualify != null) ? c.liveSoft : Colors.transparent,
+        border: Border(
+          bottom: BorderSide(color: c.hairline, width: 1),
+          // Accent bar marking a qualifying slot (rendered at the start edge,
+          // so it sits on the right in Hebrew).
+          left: BorderSide(
+            color: qualify ?? Colors.transparent,
+            width: 3,
+          ),
+        ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
       child: Row(
         children: [
-          SizedBox(
-            width: 22,
-            child: Text(
-              '${row.rank}',
-              style: EType.numeric(
-                color: isMatch ? c.live : c.inkDim,
-                size: 11,
-                weight: FontWeight.w600,
-              ),
-            ),
-          ),
-          const SizedBox(width: 6),
+          _rankBadge(row.rank, qualify, isMatch),
+          const SizedBox(width: 8),
           Expanded(
             child: Row(
               children: [
@@ -318,11 +355,13 @@ class _StandingsTableWidgetState extends State<StandingsTableWidget> {
                   width: 20,
                   height: 20,
                   padding: const EdgeInsets.all(1),
-                  decoration: BoxDecoration(color: c.cardHi, shape: BoxShape.circle),
+                  decoration:
+                      BoxDecoration(color: c.cardHi, shape: BoxShape.circle),
                   child: Builder(builder: (_) {
                     var logo = _logoFor(row);
                     if (logo.isEmpty) {
-                      return Icon(Icons.shield_outlined, size: 10, color: c.inkDim);
+                      return Icon(Icons.shield_outlined,
+                          size: 10, color: c.inkDim);
                     }
                     // Cache-bust ONLY proxy URLs that previously 404'd — leaves
                     // the API-Football CDN URLs untouched so they stay cached.
@@ -332,8 +371,8 @@ class _StandingsTableWidgetState extends State<StandingsTableWidget> {
                     return Image.network(
                       logo,
                       fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) =>
-                          Icon(Icons.shield_outlined, size: 10, color: c.inkDim),
+                      errorBuilder: (_, __, ___) => Icon(Icons.shield_outlined,
+                          size: 10, color: c.inkDim),
                     );
                   }),
                 ),
@@ -392,6 +431,40 @@ class _StandingsTableWidgetState extends State<StandingsTableWidget> {
         );
       },
       child: content,
+    );
+  }
+
+  // Qualifying ranks get an outlined badge in their accent colour; everything
+  // else stays a plain muted numeral.
+  Widget _rankBadge(int rank, Color? qualify, bool isMatch) {
+    final c = context.col;
+    if (qualify == null) {
+      return SizedBox(
+        width: 22,
+        child: Text(
+          '$rank',
+          textAlign: TextAlign.center,
+          style: EType.numeric(
+            color: isMatch ? c.live : c.inkDim,
+            size: 11,
+            weight: FontWeight.w600,
+          ),
+        ),
+      );
+    }
+    return Container(
+      width: 22,
+      height: 22,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(7),
+        border: Border.all(color: qualify, width: 1.5),
+      ),
+      child: Text(
+        '$rank',
+        style: EType.numeric(color: qualify, size: 11, weight: FontWeight.w700),
+      ),
     );
   }
 

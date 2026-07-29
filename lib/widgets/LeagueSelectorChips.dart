@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
+import 'package:football/utils/league_logos.dart';
 
 class LeagueSelectorChips extends StatefulWidget {
   const LeagueSelectorChips({
@@ -8,11 +9,15 @@ class LeagueSelectorChips extends StatefulWidget {
     required this.onSelectionChanged,
     required this.options,
     this.selectedIndex = -1,
+    this.leagueIds,
   });
 
   final void Function(int) onSelectionChanged;
   final List<String> options;
   final int selectedIndex;
+
+  /// Parallel to [options]. When provided, each chip shows that league's crest.
+  final List<int>? leagueIds;
 
   @override
   State<LeagueSelectorChips> createState() => _LeagueSelectorChipsState();
@@ -72,15 +77,19 @@ class _LeagueSelectorChipsState extends State<LeagueSelectorChips> {
     const hPad = 20.0;
     final c = context.col;
     return SizedBox(
-      height: 38,
+      height: 42,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final children = <Widget>[];
           for (int i = 0; i < widget.options.length; i++) {
             if (i > 0) children.add(const SizedBox(width: 8));
+            final ids = widget.leagueIds;
             children.add(_EditorialChip(
               label: widget.options[i],
               selected: widget.selectedIndex == i,
+              // Guard the index: options may be placeholders while the real
+              // league list is still loading, so the two can be out of step.
+              leagueId: (ids != null && i < ids.length) ? ids[i] : null,
               onTap: () => widget.onSelectionChanged(i),
             ));
           }
@@ -172,9 +181,8 @@ class _EdgeHint extends StatelessWidget {
                 ],
               ),
             ),
-            alignment: alignmentLeft
-                ? Alignment.centerLeft
-                : Alignment.centerRight,
+            alignment:
+                alignmentLeft ? Alignment.centerLeft : Alignment.centerRight,
             padding: EdgeInsets.only(
               left: alignmentLeft ? 2 : 0,
               right: alignmentLeft ? 0 : 2,
@@ -202,37 +210,77 @@ class _EditorialChip extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.leagueId,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
 
+  /// When supplied the chip leads with that league's crest; otherwise it falls
+  /// back to a generic trophy glyph.
+  final int? leagueId;
+
   @override
   Widget build(BuildContext context) {
     final c = context.col;
+    final isHe = Localizations.localeOf(context).languageCode == 'he';
+    final fg = selected ? Colors.white : c.inkMute;
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: selected ? c.ink : Colors.transparent,
+          // Filled green when active, plain surface with a hairline when not.
+          color: selected ? c.live : c.card,
           border: Border.all(
-            color: selected ? c.ink : c.hairline,
+            color: selected ? c.live : c.hairline,
             width: 1,
           ),
-          borderRadius: BorderRadius.circular(2),
+          borderRadius: BorderRadius.circular(20),
         ),
-        child: Text(
-          label.toUpperCase(),
-          style: EType.label(
-            color: selected ? c.pitch : c.inkMute,
-            size: 11,
-            letterSpacing: 1.6,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: EType.body(
+                color: fg,
+                size: 13,
+                weight: FontWeight.w600,
+                hebrew: isHe,
+              ),
+            ),
+            const SizedBox(width: 7),
+            _chipIcon(c, fg),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _chipIcon(EditorialColors c, Color fg) {
+    if (leagueId == null) {
+      return Icon(Icons.emoji_events_outlined, size: 15, color: fg);
+    }
+    // White backplate so dark crests stay legible on the green fill — same
+    // treatment the league grid in favorits.dart uses.
+    return Container(
+      width: 19,
+      height: 19,
+      padding: const EdgeInsets.all(2),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+      ),
+      child: Image(
+        image: leagueLogoProvider(leagueId!),
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) =>
+            Icon(Icons.emoji_events_outlined, size: 12, color: c.inkDim),
       ),
     );
   }
