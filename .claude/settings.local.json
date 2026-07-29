@@ -227,7 +227,12 @@
       "Bash(node -e \"import\\('./api.js'\\).then\\(\\(\\)=>console.log\\('loads OK'\\)\\).catch\\(e=>{console.error\\('FAIL',e.message\\);process.exit\\(1\\)}\\)\")",
       "Bash(cp tests/points.golden.test.mjs /tmp/golden.bak)",
       "Bash(sed -i 's/round: \"1st Qualifying Round\"/round: \"Group A - 1\"/' tests/points.golden.test.mjs)",
-      "PowerShell(flutter analyze lib/screens/profile.dart lib/widgets/trophyCabinet.dart)"
+      "PowerShell(flutter analyze lib/screens/profile.dart lib/widgets/trophyCabinet.dart)",
+      "Bash(timeout 60 node --input-type=module -e ' *)",
+      "PowerShell(flutter analyze lib/screens/table.dart)",
+      "PowerShell(flutter test 2>&1)",
+      "PowerShell(flutter analyze lib/widgets/toggleButton.dart lib/screens/table.dart 2>&1)",
+      "PowerShell(flutter analyze lib/providers/league_data_provider.dart 2>&1)"
     ]
   }
 }

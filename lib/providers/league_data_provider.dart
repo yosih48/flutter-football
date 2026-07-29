@@ -233,7 +233,11 @@ class _LeagueSelectorState extends State<LeagueSelector> {
   final LeagueDataProvider _provider = LeagueDataProvider();
   LeagueData? _leagueData;
   bool _singleNotified = false;
+  bool _fallbackNotified = false;
   bool _placeholderBuilt = false;
+  // Placeholder data is every supported league; the real data is the subset the
+  // user opted into. Membership checks are only meaningful against the latter.
+  bool _isPlaceholder = false;
 
   @override
   void initState() {
@@ -249,7 +253,10 @@ class _LeagueSelectorState extends State<LeagueSelector> {
     try {
       final data = await _provider.getUserLeagueData(widget.userId, context);
       if (mounted) {
-        setState(() => _leagueData = data);
+        setState(() {
+          _leagueData = data;
+          _isPlaceholder = false;
+        });
       }
     } catch (e) {
       // Keep the placeholder visible on failure — better than a "no leagues"
@@ -266,6 +273,7 @@ class _LeagueSelectorState extends State<LeagueSelector> {
       if (!_placeholderBuilt) {
         _leagueData = _provider.buildPlaceholderLeagueData(context);
         _placeholderBuilt = true;
+        _isPlaceholder = true;
       }
     }
 
@@ -306,6 +314,25 @@ class _LeagueSelectorState extends State<LeagueSelector> {
     }
 
     final initialIndex = _leagueData!.getInitialIndex(widget.currentLeague);
+
+    // getInitialIndex falls back to 0 when currentLeague isn't one of the
+    // user's enabled leagues — a stale id left in UserProvider by another
+    // screen, or a league they've since opted out of. Silently falling back
+    // desyncs the two: the rail highlights league 0 while the parent still
+    // holds the stale id and loads *its* data, so the screen shows one league
+    // in the chips and another in its content. Same remedy as the
+    // single-league branch above — tell the parent to adopt what we're
+    // actually showing. Deferred to the real list, since the placeholder is a
+    // superset and would never trip this.
+    if (!_isPlaceholder &&
+        !_fallbackNotified &&
+        !_leagueData!.enabledLeagues.contains(widget.currentLeague)) {
+      _fallbackNotified = true;
+      final fallbackId = _leagueData!.enabledLeagues[initialIndex];
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onSelectionChanged(fallbackId, initialIndex);
+      });
+    }
 
     if (widget.useToggleButtons) {
       return ToggleButtonsSample(

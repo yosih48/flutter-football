@@ -413,7 +413,7 @@ class TableScreenContentState extends State<TableScreenContent> {
   void initState() {
     super.initState();
     currentUserId = widget.authProvider.currentUser?.id ?? 'Not logged in';
-    league = widget.userProvider.selectedLeageId ?? 2;
+    league = _resolveInitialLeague(widget.userProvider.selectedLeageId);
 
     final hydrated = _hydrateFromCache();
     _initializeData(background: hydrated);
@@ -428,6 +428,20 @@ class TableScreenContentState extends State<TableScreenContent> {
         }
       });
     }
+  }
+
+  // UserProvider.selectedLeageId is shared with the games screen, where -1 is a
+  // real value meaning "no league filter — show all". Standings has no
+  // all-leagues mode, so anything that isn't a currently-supported league falls
+  // back to the first configured one. Checking membership rather than just
+  // `!= -1` also covers an id for a league since dropped from the remote
+  // config. Deliberately does NOT write the resolved value back to the
+  // provider: doing so would clear the games screen's filter as a side effect
+  // of merely opening this screen.
+  int _resolveInitialLeague(int fromProvider) {
+    final supported = LeagueConfigService().supportedLeagues;
+    if (supported.contains(fromProvider)) return fromProvider;
+    return supported.isNotEmpty ? supported.first : 2;
   }
 
   bool _hydrateFromCache() {

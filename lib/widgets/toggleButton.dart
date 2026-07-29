@@ -39,6 +39,29 @@ class _ToggleButtonsSampleState extends State<ToggleButtonsSample> {
     });
   }
 
+  // LeagueSelector renders placeholder chips (every supported league) on the
+  // first frame, then swaps in the user's chosen subset once the fetch lands.
+  // Both the list and the resolved index change, so a _selected latched in
+  // initState ends up pointing at the wrong league — typically the next one
+  // along, since the real list is the placeholder minus the leagues the user
+  // opted out of. Re-sync when the parent hands us a new selection.
+  @override
+  void didUpdateWidget(ToggleButtonsSample old) {
+    super.didUpdateWidget(old);
+    if (widget.initialSelection == old.initialSelection &&
+        widget.options.length == old.options.length) {
+      return;
+    }
+    final next = widget.initialSelection;
+    // No-op when the change is the echo of our own tap, which already set
+    // _selected locally before notifying the parent.
+    if (next == _selected || next < 0 || next >= widget.options.length) return;
+    setState(() => _selected = next);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _scrollTo(next);
+    });
+  }
+
   void _scrollTo(int index) {
     if (!_scrollController.hasClients) return;
     final target = (index * _itemWidth)
