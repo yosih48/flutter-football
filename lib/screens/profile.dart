@@ -571,7 +571,9 @@ class _LeaguePredictionCard extends StatelessWidget {
                   height: 34,
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: c.pitch,
+                    // White circle — keeps dark crests legible in dark theme,
+                    // same treatment as the league chips and favourites grid.
+                    color: Colors.white,
                     shape: BoxShape.circle,
                     border: Border.all(color: c.hairline, width: 1),
                   ),

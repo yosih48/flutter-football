@@ -185,7 +185,9 @@ class _TrophyCard extends StatelessWidget {
                   height: 44,
                   padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
-                    color: c.pitch,
+                    // White circle — keeps dark crests legible in dark theme,
+                    // same treatment as the league chips and favourites grid.
+                    color: Colors.white,
                     shape: BoxShape.circle,
                     border: Border.all(color: c.hairline, width: 1),
                   ),

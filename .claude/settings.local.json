@@ -226,7 +226,8 @@
       "Bash(node -e \"import\\('./api.js'\\).then\\(\\(\\)=>console.log\\('api.js loads OK'\\)\\).catch\\(e=>{console.error\\('FAIL',e.message\\);process.exit\\(1\\)}\\)\")",
       "Bash(node -e \"import\\('./api.js'\\).then\\(\\(\\)=>console.log\\('loads OK'\\)\\).catch\\(e=>{console.error\\('FAIL',e.message\\);process.exit\\(1\\)}\\)\")",
       "Bash(cp tests/points.golden.test.mjs /tmp/golden.bak)",
-      "Bash(sed -i 's/round: \"1st Qualifying Round\"/round: \"Group A - 1\"/' tests/points.golden.test.mjs)"
+      "Bash(sed -i 's/round: \"1st Qualifying Round\"/round: \"Group A - 1\"/' tests/points.golden.test.mjs)",
+      "PowerShell(flutter analyze lib/screens/profile.dart lib/widgets/trophyCabinet.dart)"
     ]
   }
 }
