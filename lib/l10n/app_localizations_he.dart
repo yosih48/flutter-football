@@ -1369,6 +1369,21 @@ class AppLocalizationsHe extends AppLocalizations {
   String get trophyOf => 'מתוך';
 
   @override
+  String get trophyTotalPoints => 'סה״כ נקודות';
+
+  @override
+  String get trophyPodiums => 'עליות לפודיום';
+
+  @override
+  String get trophyFirstPlaces => 'מקומות ראשונים';
+
+  @override
+  String get trophyYourPoints => 'הנקודות שלך';
+
+  @override
+  String get trophyNoPick => 'לא נבחר';
+
+  @override
   String get trophyChampionLabel => 'אלופה';
 
   @override
@@ -1406,6 +1421,30 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get myChampionshipPicks => 'הבחירות שלי';
+
+  @override
+  String get picksCompleted => 'בחירות הושלמו';
+
+  @override
+  String get picksComplete => 'הושלם';
+
+  @override
+  String picksMissing(String count) => 'חסרות $count בחירות';
+
+  @override
+  String get picksDeadline => 'סגירה';
+
+  @override
+  String get pickChoose => 'בחר';
+
+  @override
+  String get searchTeamHint => 'חיפוש קבוצה';
+
+  @override
+  String get searchPlayerHint => 'חיפוש שחקן או קבוצה';
+
+  @override
+  String get noSearchResults => 'לא נמצאו תוצאות';
 
   @override
   String get championHit => 'פגעת באלופה';

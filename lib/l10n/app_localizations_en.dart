@@ -1369,6 +1369,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trophyOf => 'of';
 
   @override
+  String get trophyTotalPoints => 'Total Points';
+
+  @override
+  String get trophyPodiums => 'Podiums';
+
+  @override
+  String get trophyFirstPlaces => 'First Places';
+
+  @override
+  String get trophyYourPoints => 'Your Points';
+
+  @override
+  String get trophyNoPick => 'Not chosen';
+
+  @override
   String get trophyChampionLabel => 'Champion';
 
   @override
@@ -1406,6 +1421,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get myChampionshipPicks => 'My championship picks';
+
+  @override
+  String get picksCompleted => 'Picks completed';
+
+  @override
+  String get picksComplete => 'Complete';
+
+  @override
+  String picksMissing(String count) => '$count missing';
+
+  @override
+  String get picksDeadline => 'Closes';
+
+  @override
+  String get pickChoose => 'Choose';
+
+  @override
+  String get searchTeamHint => 'Search team';
+
+  @override
+  String get searchPlayerHint => 'Search player or team';
+
+  @override
+  String get noSearchResults => 'No results found';
 
   @override
   String get championHit => 'Nailed the champion';

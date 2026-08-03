@@ -15,8 +15,16 @@ import 'package:football/widgets/adminSeasonArchive.dart';
 import 'package:football/widgets/seasonPickers.dart';
 import 'package:football/screens/trophyCabinet.dart';
 import 'package:football/l10n/app_localizations.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+
+// Hebrew needs a face that actually ships Hebrew glyphs (Rubik); the Latin
+// display face silently falls back per-device. Every bold string on this screen
+// routes through EType.body(hebrew:) / EType.screenTitle(hebrew:) for that
+// reason — see the font audit.
+bool _isHe(BuildContext context) =>
+    Localizations.localeOf(context).languageCode == 'he';
 
 class ProfileScreen extends StatelessWidget {
   @override
@@ -123,25 +131,21 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     return Scaffold(
       backgroundColor: c.pitch,
       body: SafeArea(
-        child: Column(
-          children: [
-            // ── Hero (fixed at top) ──────────────────────────────────
-            _buildHero(context, c),
-
-            // ── Scrollable content ───────────────────────────────────
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: _buildBody(
-                  context,
-                  c,
-                  placeholderNames: placeholderNames,
-                  filteredWinners: filteredWinners,
-                  filteredTopScorers: filteredTopScorers,
-                ),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildHero(context, c),
+              _buildBody(
+                context,
+                c,
+                placeholderNames: placeholderNames,
+                filteredWinners: filteredWinners,
+                filteredTopScorers: filteredTopScorers,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -166,25 +170,42 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
       );
     }
 
+    // Two picks per league — champion and top scorer — so the progress card
+    // counts against 2×leagues rather than a league count.
+    int filled(Map<String, String> src, String id) {
+      final v = src[id];
+      return (v != null && v.isNotEmpty) ? 1 : 0;
+    }
+
+    final done = _isLoading
+        ? 0
+        : ids.fold<int>(
+            0,
+            (sum, id) =>
+                sum +
+                filled(filteredWinners, id) +
+                filled(filteredTopScorers, id));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // ── Championship picks: one card per opted-in league ──────────
-        _greenHeader(context, c, l.myChampionshipPicks),
+        _sectionTitle(context, c, l.myChampionshipPicks),
         Skeletonizer(
           enabled: _isLoading,
           child: Column(
-            children: ids
-                .map((id) => _LeaguePredictionCard(
-                      leagueIdStr: id,
-                      winnerPick: _isLoading ? null : filteredWinners[id],
-                      topScorerPick: _isLoading ? null : filteredTopScorers[id],
-                      clientId: currentUserId,
-                      email: currentUserEmail,
-                      isLoading: _isLoading,
-                      onChanged: _fetchPersonalData,
-                    ))
-                .toList(),
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _ProgressCard(done: done, total: ids.length * 2),
+              ...ids.map((id) => _LeaguePredictionCard(
+                    leagueIdStr: id,
+                    winnerPick: _isLoading ? null : filteredWinners[id],
+                    topScorerPick: _isLoading ? null : filteredTopScorers[id],
+                    clientId: currentUserId,
+                    email: currentUserEmail,
+                    isLoading: _isLoading,
+                    onChanged: _fetchPersonalData,
+                  )),
+            ],
           ),
         ),
 
@@ -199,6 +220,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   // seasons). Keeps the long, per-season history off the main profile scroll.
   Widget _buildCabinetEntry(BuildContext context, EditorialColors c) {
     final l = AppLocalizations.of(context)!;
+    final isHe = _isHe(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 6),
       child: GestureDetector(
@@ -235,11 +257,15 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(l.trophyCabinet,
-                        style: EType.display(
-                            size: 16, color: c.ink, letterSpacing: 0.4)),
+                        style: EType.body(
+                            color: c.ink,
+                            size: 15,
+                            weight: FontWeight.w700,
+                            hebrew: isHe)),
                     const SizedBox(height: 3),
                     Text(l.pastSeasons,
-                        style: EType.body(color: c.inkMute, size: 12)),
+                        style: EType.body(
+                            color: c.inkMute, size: 12, hebrew: isHe)),
                   ],
                 ),
               ),
@@ -251,28 +277,14 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     );
   }
 
-  // Green-accented section header (a short green dash + label), matching the
-  // "My championship picks" / "Trophy cabinet" headers in the design.
-  Widget _greenHeader(BuildContext context, EditorialColors c, String label,
-      {Widget? trailing}) {
+  // Large bold section title, the anchor of the picks list.
+  Widget _sectionTitle(BuildContext context, EditorialColors c, String label) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 10),
-      child: Row(
-        children: [
-          Container(
-            width: 18,
-            height: 3,
-            decoration: BoxDecoration(
-              color: c.live,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Text(label,
-              style: EType.label(color: c.ink, size: 13, letterSpacing: 1)),
-          const Spacer(),
-          if (trailing != null) trailing,
-        ],
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+      child: Text(
+        label,
+        style:
+            EType.screenTitle(size: 24, color: c.ink, hebrew: _isHe(context)),
       ),
     );
   }
@@ -282,6 +294,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
 
   Widget _buildHero(BuildContext context, EditorialColors c) {
     final l = AppLocalizations.of(context)!;
+    final isHe = _isHe(context);
     final initial =
         currentUserName.isNotEmpty ? currentUserName[0].toUpperCase() : '?';
 
@@ -295,7 +308,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
 
     return Container(
       color: c.pitch,
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
       child: Column(
         children: [
           // Solid green monogram — the profile's anchor.
@@ -316,7 +329,8 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: EType.body(color: c.ink, size: 20, weight: FontWeight.w700),
+            style: EType.body(
+                color: c.ink, size: 20, weight: FontWeight.w700, hebrew: isHe),
           ),
 
           if (parts.isNotEmpty) ...[
@@ -331,7 +345,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                     parts.join('  •  '),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: EType.body(color: c.inkDim, size: 12),
+                    style: EType.body(color: c.inkDim, size: 12, hebrew: isHe),
                   ),
                 ),
               ],
@@ -342,6 +356,66 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
             const SizedBox(height: 20),
             const _AdminManagementSection(),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── Progress card ───────────────────────────────────────────────────────────
+// "3/6 picks completed" with a bar. LinearProgressIndicator is direction-aware,
+// so the fill grows from the right in Hebrew without extra work.
+class _ProgressCard extends StatelessWidget {
+  const _ProgressCard({required this.done, required this.total});
+  final int done;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    final l = AppLocalizations.of(context)!;
+    final isHe = _isHe(context);
+    final value = total == 0 ? 0.0 : (done / total).clamp(0.0, 1.0);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: c.hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l.picksCompleted,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: EType.body(color: c.inkMute, size: 12, hebrew: isHe),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                '$done/$total',
+                style: EType.numeric(
+                    color: c.ink, size: 20, weight: FontWeight.w700),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: value,
+              minHeight: 8,
+              backgroundColor: c.cardHi,
+              valueColor: AlwaysStoppedAnimation(c.live),
+            ),
+          ),
         ],
       ),
     );
@@ -366,6 +440,7 @@ class _AdminManagementSectionState extends State<_AdminManagementSection> {
   Widget build(BuildContext context) {
     final c = context.col;
     final l = AppLocalizations.of(context)!;
+    final isHe = _isHe(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -388,8 +463,11 @@ class _AdminManagementSectionState extends State<_AdminManagementSection> {
                 ),
                 const SizedBox(width: 10),
                 Text(l.leagueManagement,
-                    style:
-                        EType.label(color: c.ink, size: 13, letterSpacing: 1)),
+                    style: EType.body(
+                        color: c.ink,
+                        size: 13,
+                        weight: FontWeight.w700,
+                        hebrew: isHe)),
                 const Spacer(),
                 AnimatedRotation(
                   turns: _open ? 0.5 : 0,
@@ -457,6 +535,7 @@ class _AdminRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.col;
+    final isHe = _isHe(context);
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -478,10 +557,15 @@ class _AdminRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
-                      style: EType.display(
-                          size: 14, color: c.ink, letterSpacing: 0.2)),
+                      style: EType.body(
+                          color: c.ink,
+                          size: 14,
+                          weight: FontWeight.w700,
+                          hebrew: isHe)),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: EType.body(color: c.inkDim, size: 11)),
+                  Text(subtitle,
+                      style:
+                          EType.body(color: c.inkDim, size: 11, hebrew: isHe)),
                 ],
               ),
             ),
@@ -526,9 +610,10 @@ String _leagueLogoUrl(String id) =>
     'https://media.api-sports.io/football/leagues/$id.png';
 
 // ── Combined per-league prediction card ─────────────────────────────────
-// One white card per opted-in league showing both the champion pick and the
-// top-scorer pick. Each inner row keeps its own availability-aware picker.
-class _LeaguePredictionCard extends StatelessWidget {
+// One card per opted-in league: crest + name + status, then the champion and
+// top-scorer rows. The pick window is resolved ONCE here and handed to both
+// rows — it's a per-league fact, and the header needs the deadline too.
+class _LeaguePredictionCard extends StatefulWidget {
   const _LeaguePredictionCard({
     required this.leagueIdStr,
     required this.winnerPick,
@@ -548,81 +633,197 @@ class _LeaguePredictionCard extends StatelessWidget {
   final VoidCallback onChanged;
 
   @override
+  State<_LeaguePredictionCard> createState() => _LeaguePredictionCardState();
+}
+
+class _LeaguePredictionCardState extends State<_LeaguePredictionCard> {
+  Future<PickAvailability>? _availability;
+
+  // resolvePickWindow reads AppLocalizations for its error strings, so it
+  // depends on inherited widgets and can't run in initState.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _availability ??= _resolve();
+  }
+
+  @override
+  void didUpdateWidget(_LeaguePredictionCard old) {
+    super.didUpdateWidget(old);
+    // Re-probe after a save so a card that flipped past the cutoff updates.
+    if (old.winnerPick != widget.winnerPick ||
+        old.topScorerPick != widget.topScorerPick) {
+      _availability = _resolve();
+    }
+  }
+
+  Future<PickAvailability> _resolve() async {
+    if (widget.isLoading) return const PickAvailability(PickWindow.error);
+    final id = int.tryParse(widget.leagueIdStr);
+    if (id == null) return const PickAvailability(PickWindow.error);
+    return resolvePickWindow(context, id);
+  }
+
+  bool get _hasWinner =>
+      widget.winnerPick != null && widget.winnerPick!.isNotEmpty;
+  bool get _hasTopScorer =>
+      widget.topScorerPick != null && widget.topScorerPick!.isNotEmpty;
+
+  @override
   Widget build(BuildContext context) {
     final c = context.col;
     final l = AppLocalizations.of(context)!;
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-      decoration: BoxDecoration(
-        color: c.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: c.hairline),
-      ),
-      child: Column(
+    return FutureBuilder<PickAvailability>(
+      future: _availability,
+      builder: (ctx, snap) {
+        final av = snap.data;
+        final waiting = snap.connectionState == ConnectionState.waiting;
+        final isOpen = av?.canPick ?? false;
+        final missing = (_hasWinner ? 0 : 1) + (_hasTopScorer ? 0 : 1);
+
+        return Container(
+          margin: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: c.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: c.hairline),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _header(context, c, l, missing: missing, cutoff: av?.cutoff),
+              Divider(height: 1, color: c.hairline),
+              _SeasonPickRow(
+                leagueIdStr: widget.leagueIdStr,
+                pick: widget.winnerPick,
+                icon: Icons.emoji_events_outlined,
+                label: l.trophyChampionLabel,
+                clientId: widget.clientId,
+                email: widget.email,
+                isOpen: isOpen,
+                waiting: waiting,
+                onChanged: widget.onChanged,
+                mode: _PickKind.winner,
+              ),
+              Divider(height: 1, color: c.hairline),
+              _SeasonPickRow(
+                leagueIdStr: widget.leagueIdStr,
+                pick: widget.topScorerPick,
+                icon: Icons.sports_soccer_outlined,
+                label: l.trophyTopScorerLabel,
+                clientId: widget.clientId,
+                email: widget.email,
+                isOpen: isOpen,
+                waiting: waiting,
+                onChanged: widget.onChanged,
+                mode: _PickKind.topScorer,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _header(
+    BuildContext context,
+    EditorialColors c,
+    AppLocalizations l, {
+    required int missing,
+    required DateTime? cutoff,
+  }) {
+    final isHe = _isHe(context);
+    final complete = missing == 0;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      child: Row(
         children: [
-          // League header (crest + name)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
-            child: Row(
+          Container(
+            width: 44,
+            height: 44,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              // White circle — keeps dark crests legible in dark theme, same
+              // treatment as the league chips and favourites grid.
+              color: Colors.white,
+              shape: BoxShape.circle,
+              border: Border.all(color: c.hairline, width: 1),
+            ),
+            child: Image(
+              image:
+                  leagueLogoProviderForUrl(_leagueLogoUrl(widget.leagueIdStr)),
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) =>
+                  Icon(Icons.shield_outlined, size: 16, color: c.inkDim),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    // White circle — keeps dark crests legible in dark theme,
-                    // same treatment as the league chips and favourites grid.
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: c.hairline, width: 1),
-                  ),
-                  child: Image(
-                    image:
-                        leagueLogoProviderForUrl(_leagueLogoUrl(leagueIdStr)),
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) =>
-                        Icon(Icons.shield_outlined, size: 14, color: c.inkDim),
-                  ),
+                Text(
+                  _leagueName(widget.leagueIdStr, l, context),
+                  style: EType.body(
+                      color: c.ink,
+                      size: 17,
+                      weight: FontWeight.w700,
+                      hebrew: isHe),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    _leagueName(leagueIdStr, l, context),
-                    style: EType.display(
-                        size: 16, color: c.ink, letterSpacing: 0.4),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    _statusChip(c, l, isHe, complete, missing),
+                    if (cutoff != null) _deadline(context, c, l, isHe, cutoff),
+                  ],
                 ),
               ],
             ),
           ),
-          Divider(height: 1, color: c.hairline),
-          _SeasonPickRow(
-            leagueIdStr: leagueIdStr,
-            pick: winnerPick,
-            icon: Icons.emoji_events_outlined,
-            label: l.trophyChampionLabel,
-            clientId: clientId,
-            email: email,
-            isLoading: isLoading,
-            onChanged: onChanged,
-            mode: _PickKind.winner,
-          ),
-          Divider(height: 1, color: c.hairline, indent: 16, endIndent: 16),
-          _SeasonPickRow(
-            leagueIdStr: leagueIdStr,
-            pick: topScorerPick,
-            icon: Icons.sports_soccer_outlined,
-            label: l.trophyTopScorerLabel,
-            clientId: clientId,
-            email: email,
-            isLoading: isLoading,
-            onChanged: onChanged,
-            mode: _PickKind.topScorer,
-          ),
         ],
       ),
+    );
+  }
+
+  Widget _statusChip(EditorialColors c, AppLocalizations l, bool isHe,
+      bool complete, int missing) {
+    final fg = complete ? c.live : c.amber;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: fg.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        complete ? l.picksComplete : l.picksMissing('$missing'),
+        style: EType.body(
+            color: fg, size: 11, weight: FontWeight.w600, hebrew: isHe),
+      ),
+    );
+  }
+
+  Widget _deadline(BuildContext context, EditorialColors c, AppLocalizations l,
+      bool isHe, DateTime cutoff) {
+    final locale = Localizations.localeOf(context).toString();
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.schedule, size: 12, color: c.inkDim),
+        const SizedBox(width: 4),
+        Text(
+          '${l.picksDeadline}: ${DateFormat.MMMMd(locale).format(cutoff)}',
+          style: EType.body(color: c.inkDim, size: 11, hebrew: isHe),
+        ),
+      ],
     );
   }
 }
@@ -638,7 +839,8 @@ class _SeasonPickRow extends StatefulWidget {
     required this.label,
     required this.clientId,
     required this.email,
-    required this.isLoading,
+    required this.isOpen,
+    required this.waiting,
     required this.onChanged,
     required this.mode,
   });
@@ -649,7 +851,9 @@ class _SeasonPickRow extends StatefulWidget {
   final String label;
   final String clientId;
   final String email;
-  final bool isLoading;
+  // Resolved once by the parent card — the window is a per-league fact.
+  final bool isOpen;
+  final bool waiting;
   final VoidCallback onChanged;
   final _PickKind mode;
 
@@ -658,45 +862,26 @@ class _SeasonPickRow extends StatefulWidget {
 }
 
 class _SeasonPickRowState extends State<_SeasonPickRow> {
-  Future<PickAvailability>? _availability;
   // Crest next to the pick. Memoised so rebuilds don't re-trigger the fetch or
   // flicker the FutureBuilder. Re-resolved when the pick changes.
   Future<String?>? _logo;
 
-  // resolvePickWindow reads AppLocalizations for its error strings, so it
-  // depends on inherited widgets and can't run in initState. Defer to
-  // didChangeDependencies and guard against re-running on every dependency
-  // change (theme/locale flips would otherwise re-trigger a network probe).
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _availability ??= _resolve();
     _logo ??= _resolveLogo();
   }
 
   @override
   void didUpdateWidget(_SeasonPickRow old) {
     super.didUpdateWidget(old);
-    // Re-probe after a save so a row that flipped past the cutoff updates.
-    if (old.pick != widget.pick) {
-      _availability = _resolve();
-      _logo = _resolveLogo();
-    }
-  }
-
-  Future<PickAvailability> _resolve() async {
-    if (widget.isLoading) return const PickAvailability(PickWindow.error);
-    final id = int.tryParse(widget.leagueIdStr);
-    if (id == null) return const PickAvailability(PickWindow.error);
-    return resolvePickWindow(context, id);
+    if (old.pick != widget.pick) _logo = _resolveLogo();
   }
 
   Future<String?> _resolveLogo() async {
     final pick = widget.pick;
     final id = int.tryParse(widget.leagueIdStr);
-    if (widget.isLoading || id == null || pick == null || pick.isEmpty) {
-      return null;
-    }
+    if (id == null || pick == null || pick.isEmpty) return null;
     // Same resolvers the statistics screen uses, so crests come from one source.
     return widget.mode == _PickKind.winner
         ? resolveWinnerLogo(id, pick)
@@ -731,83 +916,122 @@ class _SeasonPickRowState extends State<_SeasonPickRow> {
   @override
   Widget build(BuildContext context) {
     final c = context.col;
+    final l = AppLocalizations.of(context)!;
+    final isHe = _isHe(context);
+    final hasPick = widget.pick != null && widget.pick!.isNotEmpty;
+    // An actionable row — open window, nothing picked — is tinted so the work
+    // still outstanding is visible at a glance down the list.
+    final needsAction = !hasPick && widget.isOpen;
 
-    return FutureBuilder<PickAvailability>(
-      future: _availability,
-      builder: (ctx, snap) {
-        final isOpen = snap.data?.canPick ?? false;
-        final hasPick = widget.pick != null && widget.pick!.isNotEmpty;
+    final Widget value;
+    if (hasPick) {
+      final name = widget.mode == _PickKind.winner
+          ? localizedTeamName(context, widget.pick!)
+          : localizedPlayerName(context, widget.pick!);
+      value = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _PickCrest(
+            future: _logo,
+            fallback: widget.mode == _PickKind.winner
+                ? Icons.emoji_events_outlined
+                : Icons.sports_soccer_outlined,
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              name,
+              textAlign: TextAlign.end,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: EType.body(
+                  color: c.ink,
+                  size: 13,
+                  weight: FontWeight.w700,
+                  hebrew: isHe),
+            ),
+          ),
+          if (widget.isOpen) ...[
+            const SizedBox(width: 4),
+            Icon(Icons.chevron_left, size: 18, color: c.inkDim),
+          ],
+        ],
+      );
+    } else if (needsAction) {
+      value = _ChooseButton(label: l.pickChoose);
+    } else if (widget.waiting) {
+      // Quiet placeholder while the availability probe is in-flight.
+      value = SizedBox(
+        width: 14,
+        height: 14,
+        child: CircularProgressIndicator(
+          strokeWidth: 1.5,
+          valueColor: AlwaysStoppedAnimation(c.inkDim),
+        ),
+      );
+    } else {
+      value = const ClosedPickChip();
+    }
 
-        final Widget value;
-        if (hasPick) {
-          final name = widget.mode == _PickKind.winner
-              ? localizedTeamName(context, widget.pick!)
-              : localizedPlayerName(context, widget.pick!);
-          value = Row(
-            mainAxisSize: MainAxisSize.min,
+    return Material(
+      color: needsAction ? c.liveSoft : Colors.transparent,
+      child: InkWell(
+        onTap: widget.isOpen ? _openPicker : null,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
             children: [
-              _PickCrest(
-                future: _logo,
-                fallback: widget.mode == _PickKind.winner
-                    ? Icons.emoji_events_outlined
-                    : Icons.sports_soccer_outlined,
+              Icon(widget.icon, size: 17, color: hasPick ? c.live : c.inkDim),
+              const SizedBox(width: 10),
+              Text(
+                widget.label,
+                style: EType.body(
+                    color: hasPick ? c.ink : c.inkMute, size: 12, hebrew: isHe),
               ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  name,
-                  textAlign: TextAlign.end,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style:
-                      EType.label(color: c.ink, size: 12, letterSpacing: 0.4),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: value,
                 ),
               ),
             ],
-          );
-        } else if (isOpen) {
-          value = const EmptyPickChip();
-        } else if (snap.connectionState == ConnectionState.waiting) {
-          // Quiet placeholder while the availability probe is in-flight.
-          value = SizedBox(
-            width: 14,
-            height: 14,
-            child: CircularProgressIndicator(
-              strokeWidth: 1.5,
-              valueColor: AlwaysStoppedAnimation(c.inkDim),
-            ),
-          );
-        } else {
-          value = const ClosedPickChip();
-        }
-
-        final tappable = isOpen; // edits allowed only inside the open window
-
-        return InkWell(
-          onTap: tappable ? _openPicker : null,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Icon(widget.icon, size: 18, color: c.live),
-                const SizedBox(width: 10),
-                Text(
-                  widget.label,
-                  style: EType.label(
-                      color: c.inkDim, size: 12, letterSpacing: 0.5),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Align(
-                    alignment: AlignmentDirectional.centerEnd,
-                    child: value,
-                  ),
-                ),
-              ],
-            ),
           ),
-        );
-      },
+        ),
+      ),
+    );
+  }
+}
+
+// Solid green call-to-action shown in place of an unmade pick.
+class _ChooseButton extends StatelessWidget {
+  const _ChooseButton({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: c.live,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: EType.body(
+                color: Colors.white,
+                size: 13,
+                weight: FontWeight.w700,
+                hebrew: _isHe(context)),
+          ),
+          const SizedBox(width: 2),
+          const Icon(Icons.chevron_left, size: 17, color: Colors.white),
+        ],
+      ),
     );
   }
 }
@@ -831,8 +1055,8 @@ class _PickCrest extends StatelessWidget {
           return Icon(fallback, size: 16, color: c.inkMute);
         }
         return Container(
-          width: 22,
-          height: 22,
+          width: 24,
+          height: 24,
           padding: const EdgeInsets.all(2),
           decoration: BoxDecoration(
             color: c.cardHi,
@@ -865,6 +1089,7 @@ class _EmptyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.col;
+    final isHe = _isHe(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
       child: Column(
@@ -881,19 +1106,17 @@ class _EmptyCard extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            title.toUpperCase(),
-            style: EType.display(
-              size: 22,
-              color: c.ink,
-              letterSpacing: 1.2,
-            ),
+            title,
+            style: EType.body(
+                color: c.ink, size: 20, weight: FontWeight.w700, hebrew: isHe),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 10),
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: EType.body(color: c.inkMute, size: 13, height: 1.5),
+            style: EType.body(
+                color: c.inkMute, size: 13, height: 1.5, hebrew: isHe),
           ),
         ],
       ),

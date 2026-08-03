@@ -19,9 +19,15 @@ import 'package:http/http.dart' as http;
 enum PickWindow { open, closed, noGames, error }
 
 class PickAvailability {
-  const PickAvailability(this.window, [this.message]);
+  const PickAvailability(this.window, [this.message, this.cutoff]);
   final PickWindow window;
   final String? message;
+
+  /// When the window shuts (local time), for screens that want to show a
+  /// deadline. Only set for a still-open window with a scheduled first game —
+  /// null when there is nothing to count down to.
+  final DateTime? cutoff;
+
   bool get canPick => window == PickWindow.open;
 }
 
@@ -71,7 +77,7 @@ Future<PickAvailability> resolvePickWindow(
     if (nowUtc.isAfter(cutoff)) {
       return PickAvailability(PickWindow.closed, l.selectiontimeexpired);
     }
-    return const PickAvailability(PickWindow.open);
+    return PickAvailability(PickWindow.open, null, cutoff.toLocal());
   } catch (_) {
     return PickAvailability(PickWindow.error, l.selectionnotavailable);
   }
@@ -92,6 +98,7 @@ Future<String?> openWinnerPicker(
     title: l.pickWinnerTitle,
     leagueName: leagueName,
     currentPick: currentPick,
+    searchHint: l.searchTeamHint,
     icon: Icons.emoji_events_outlined,
     fetchOptions: () => _fetchTeamOptions(leagueId),
     onSave: (team) => UsersMethods().updateWinner(
@@ -121,6 +128,7 @@ Future<String?> openTopScorerPicker(
     title: l.pickTopScorerTitle,
     leagueName: leagueName,
     currentPick: currentPick,
+    searchHint: l.searchPlayerHint,
     icon: Icons.sports_soccer_outlined,
     fetchOptions: () async {
       // Fetch players and teams in parallel so the team crest can be attached
@@ -147,10 +155,10 @@ Future<String?> openTopScorerPicker(
         final enTeam = p['team_english'] ?? '';
         final he = (p['name'] ?? '').isNotEmpty ? p['name']! : en;
         final heTeam = (p['team'] ?? '').isNotEmpty ? p['team']! : enTeam;
-        final label = isHebrew ? '$he ($heTeam)' : '$en ($enTeam)';
         return PickerOption(
           value: en,
-          label: label,
+          label: isHebrew ? he : en,
+          subtitle: isHebrew ? heTeam : enTeam,
           iconUrl: logoByTeam[enTeam],
         );
       }).toList();
@@ -218,10 +226,15 @@ class PickerOption {
   const PickerOption({
     required this.value,
     required this.label,
+    this.subtitle,
     this.iconUrl,
   });
   final String value;
   final String label;
+
+  /// Secondary line under [label] — the player's club in the top-scorer
+  /// picker. Null for team options, which are a single line.
+  final String? subtitle;
   final String? iconUrl;
 }
 
@@ -305,6 +318,7 @@ Future<String?> _openPicker(
   required String title,
   required String leagueName,
   required String? currentPick,
+  required String searchHint,
   required IconData icon,
   required Future<List<PickerOption>> Function() fetchOptions,
   required Future<void> Function(String) onSave,
@@ -331,6 +345,10 @@ Future<String?> _openPicker(
 
   String? selected = currentPick;
   bool saving = false;
+  // Owned out here so they survive StatefulBuilder rebuilds; disposed once the
+  // dialog is gone.
+  final searchCtrl = TextEditingController();
+  final listCtrl = ScrollController();
 
   final result = await showDialog<String>(
     context: context,
@@ -338,19 +356,20 @@ Future<String?> _openPicker(
       return StatefulBuilder(
         builder: (ctx, setDialogState) {
           final c = ctx.col;
+          final isHe = Localizations.localeOf(ctx).languageCode == 'he';
           return Dialog(
             backgroundColor: c.card,
             insetPadding:
                 const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Header
+                  // ── Header: league eyebrow + title, close button at the end
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -359,129 +378,178 @@ Future<String?> _openPicker(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              leagueName.toUpperCase(),
-                              style: EType.label(
-                                  color: c.inkDim,
-                                  size: 10,
-                                  letterSpacing: 3),
+                              leagueName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: EType.body(
+                                  color: c.inkDim, size: 11, hebrew: isHe),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 3),
                             Text(
-                              title.toUpperCase(),
-                              style: EType.display(
-                                  size: 22,
+                              title,
+                              style: EType.body(
+                                  size: 20,
                                   color: c.ink,
-                                  letterSpacing: 1.2),
+                                  weight: FontWeight.w700,
+                                  hebrew: isHe),
                             ),
                           ],
                         ),
                       ),
+                      const SizedBox(width: 8),
                       InkWell(
                         onTap: () => Navigator.of(ctx).pop(null),
-                        borderRadius: BorderRadius.circular(2),
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: Icon(Icons.close,
-                              size: 18, color: c.inkMute),
+                        customBorder: const CircleBorder(),
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: c.cardHi,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.close, size: 17, color: c.inkMute),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  Container(height: 1, color: c.hairline),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 18),
 
-                  // ── Warning
-                  Text(
-                    AppLocalizations.of(ctx)!.teamcannotbechanged,
-                    style: EType.label(
-                        color: c.flag, size: 10, letterSpacing: 1.6),
+                  // ── Notice: informational, not an error — the window is still
+                  // open, this just says when it shuts.
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: c.amber.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.info_outline, size: 16, color: c.amber),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            AppLocalizations.of(ctx)!.teamcannotbechanged,
+                            style: EType.body(
+                                color: c.amber,
+                                size: 12,
+                                height: 1.45,
+                                hebrew: isHe),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 18),
 
-                  // ── Dropdown
+                  // ── Search
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 4),
+                    height: 44,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
                     decoration: BoxDecoration(
-                      border: Border.all(color: c.hairline),
-                      borderRadius: BorderRadius.circular(2),
+                      color: c.cardHi,
+                      borderRadius: BorderRadius.circular(22),
                     ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        isExpanded: true,
-                        value: selected,
-                        dropdownColor: c.card,
-                        icon: Icon(Icons.keyboard_arrow_down,
-                            color: c.inkMute),
-                        hint: Text(
-                          AppLocalizations.of(ctx)!.tapToPick,
-                          style: EType.body(color: c.inkDim, size: 14),
+                    child: Row(
+                      children: [
+                        Icon(Icons.search, size: 18, color: c.inkDim),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: searchCtrl,
+                            enabled: !saving,
+                            cursorColor: c.live,
+                            onChanged: (_) => setDialogState(() {}),
+                            style: EType.body(
+                                color: c.ink, size: 14, hebrew: isHe),
+                            decoration: InputDecoration(
+                              isDense: true,
+                              border: InputBorder.none,
+                              hintText: searchHint,
+                              hintStyle: EType.body(
+                                  color: c.inkDim, size: 14, hebrew: isHe),
+                            ),
+                          ),
                         ),
-                        items: options
-                            .map((opt) => DropdownMenuItem<String>(
-                                  value: opt.value,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 6),
-                                    child: Row(
-                                      children: [
-                                        _OptionLeading(
-                                            iconUrl: opt.iconUrl,
-                                            fallback: icon),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Text(
-                                            localizedTeamName(ctx, opt.label),
-                                            overflow: TextOverflow.ellipsis,
-                                            style: EType.body(
-                                                color: c.ink, size: 14),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ))
-                            .toList(),
-                        onChanged: saving
-                            ? null
-                            : (v) => setDialogState(() => selected = v),
-                      ),
+                      ],
                     ),
                   ),
+                  const SizedBox(height: 12),
 
-                  // ── Selected preview
-                  if (selected != null) ...[
-                    const SizedBox(height: 18),
-                    Text(
-                      l.yourprediction.toUpperCase(),
-                      style: EType.label(
-                          color: c.inkDim, size: 10, letterSpacing: 1.6),
+                  // ── Option list
+                  Container(
+                    clipBehavior: Clip.antiAlias,
+                    constraints: const BoxConstraints(maxHeight: 300),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: c.hairline),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: PickedChip(
-                          label: localizedTeamName(ctx, selected!), icon: icon),
-                    ),
-                  ],
+                    child: Builder(builder: (_) {
+                      // Match against what's actually on screen, so a Hebrew
+                      // query hits the Hebrew label the user can see.
+                      final q = searchCtrl.text.trim().toLowerCase();
+                      final shown = q.isEmpty
+                          ? options
+                          : options.where((o) {
+                              final name =
+                                  localizedTeamName(ctx, o.label).toLowerCase();
+                              final sub = o.subtitle == null
+                                  ? ''
+                                  : localizedTeamName(ctx, o.subtitle!)
+                                      .toLowerCase();
+                              return name.contains(q) ||
+                                  sub.contains(q) ||
+                                  o.value.toLowerCase().contains(q);
+                            }).toList();
 
-                  const SizedBox(height: 24),
+                      if (shown.isEmpty) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 28),
+                          child: Center(
+                            child: Text(
+                              AppLocalizations.of(ctx)!.noSearchResults,
+                              style: EType.body(
+                                  color: c.inkDim, size: 13, hebrew: isHe),
+                            ),
+                          ),
+                        );
+                      }
 
-                  // ── Actions
+                      return Scrollbar(
+                        controller: listCtrl,
+                        thumbVisibility: true,
+                        child: ListView.separated(
+                          controller: listCtrl,
+                          shrinkWrap: true,
+                          padding: EdgeInsets.zero,
+                          itemCount: shown.length,
+                          separatorBuilder: (_, __) =>
+                              Divider(height: 1, color: c.hairline),
+                          itemBuilder: (_, i) {
+                            final opt = shown[i];
+                            return _OptionTile(
+                              option: opt,
+                              fallback: icon,
+                              selected: selected == opt.value,
+                              onTap: saving
+                                  ? null
+                                  : () => setDialogState(
+                                      () => selected = opt.value),
+                            );
+                          },
+                        ),
+                      );
+                    }),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // ── Actions: primary leads (right in RTL), cancel trails.
                   Row(
                     children: [
                       Expanded(
-                        child: _GhostButton(
-                          label: l.cancel,
-                          onTap: saving
-                              ? null
-                              : () => Navigator.of(ctx).pop(null),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        flex: 2,
+                        flex: 3,
                         child: _PrimaryButton(
                           label: saveLabel,
                           loading: saving,
@@ -507,6 +575,15 @@ Future<String?> _openPicker(
                                 },
                         ),
                       ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: _GhostButton(
+                          label: l.cancel,
+                          onTap:
+                              saving ? null : () => Navigator.of(ctx).pop(null),
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -518,10 +595,83 @@ Future<String?> _openPicker(
     },
   );
 
+  searchCtrl.dispose();
+  listCtrl.dispose();
+
   if (result != null && context.mounted) {
     showSnackBar(context, successMessage, tone: SnackTone.success);
   }
   return result;
+}
+
+// One row of the picker list: crest, name over club, and a check on the
+// selected row (which also tints).
+class _OptionTile extends StatelessWidget {
+  const _OptionTile({
+    required this.option,
+    required this.fallback,
+    required this.selected,
+    required this.onTap,
+  });
+  final PickerOption option;
+  final IconData fallback;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    final isHe = Localizations.localeOf(context).languageCode == 'he';
+    final sub = option.subtitle;
+
+    return Material(
+      color: selected ? c.liveSoft : Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              _OptionLeading(iconUrl: option.iconUrl, fallback: fallback),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      localizedTeamName(context, option.label),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: EType.body(
+                          color: c.ink,
+                          size: 14,
+                          weight: FontWeight.w700,
+                          hebrew: isHe),
+                    ),
+                    if (sub != null && sub.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        localizedTeamName(context, sub),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style:
+                            EType.body(color: c.inkDim, size: 12, hebrew: isHe),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (selected) ...[
+                const SizedBox(width: 8),
+                Icon(Icons.check, size: 18, color: c.live),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // Small leading visual in the dropdown rows. When the option carries an icon
@@ -540,9 +690,9 @@ class _OptionLeading extends StatelessWidget {
       return Icon(fallback, size: 16, color: c.inkMute);
     }
     return Container(
-      width: 22,
-      height: 22,
-      padding: const EdgeInsets.all(2),
+      width: 28,
+      height: 28,
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: c.cardHi,
         shape: BoxShape.circle,
@@ -551,49 +701,13 @@ class _OptionLeading extends StatelessWidget {
       child: Image.network(
         iconUrl!,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) =>
-            Icon(fallback, size: 12, color: c.inkDim),
+        errorBuilder: (_, __, ___) => Icon(fallback, size: 12, color: c.inkDim),
       ),
     );
   }
 }
 
 // ── Reusable visual atoms exposed for profile rows ─────────────────────────
-class PickedChip extends StatelessWidget {
-  const PickedChip({super.key, required this.label, required this.icon});
-  final String label;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.col;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      constraints: const BoxConstraints(maxWidth: 140),
-      decoration: BoxDecoration(
-        color: c.liveSoft,
-        border: Border.all(color: c.live.withOpacity(0.5), width: 1),
-        borderRadius: BorderRadius.circular(2),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: c.live),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              label,
-              overflow: TextOverflow.ellipsis,
-              style: EType.body(
-                  color: c.live, size: 12, weight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class EmptyPickChip extends StatelessWidget {
   const EmptyPickChip({super.key});
 
@@ -612,8 +726,7 @@ class EmptyPickChip extends StatelessWidget {
         children: [
           Text(
             l.tapToPick.toUpperCase(),
-            style: EType.label(
-                color: c.inkMute, size: 10, letterSpacing: 1.6),
+            style: EType.label(color: c.inkMute, size: 10, letterSpacing: 1.6),
           ),
           const SizedBox(width: 4),
           Icon(Icons.chevron_right, size: 14, color: c.inkMute),
@@ -659,35 +772,34 @@ class _PrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.col;
     final disabled = onTap == null;
+    final isHe = Localizations.localeOf(context).languageCode == 'he';
     return Material(
       color: disabled ? c.cardHi : c.live,
-      borderRadius: BorderRadius.circular(2),
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Container(
-          height: 44,
+          height: 48,
           alignment: Alignment.center,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(2),
-            border:
-                Border.all(color: disabled ? c.hairline : c.live, width: 1),
-          ),
           child: loading
               ? SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 1.5,
-                    valueColor: AlwaysStoppedAnimation(c.pitch),
+                    valueColor: AlwaysStoppedAnimation(Colors.white),
                   ),
                 )
               : Text(
-                  label.toUpperCase(),
-                  style: EType.label(
-                    color: disabled ? c.inkDim : c.pitch,
-                    size: 12,
-                    letterSpacing: 2,
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: EType.body(
+                    color: disabled ? c.inkDim : Colors.white,
+                    size: 14,
+                    weight: FontWeight.w700,
+                    hebrew: isHe,
                   ),
                 ),
         ),
@@ -705,25 +817,29 @@ class _GhostButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.col;
     final disabled = onTap == null;
+    final isHe = Localizations.localeOf(context).languageCode == 'he';
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(2),
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Container(
-          height: 44,
+          height: 48,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(2),
-            border: Border.all(color: c.hairline, width: 1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: c.hairlineHi, width: 1),
           ),
           child: Text(
-            label.toUpperCase(),
-            style: EType.label(
-                color: disabled ? c.inkDim : c.inkMute,
-                size: 12,
-                letterSpacing: 2),
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: EType.body(
+                color: disabled ? c.inkDim : c.ink,
+                size: 14,
+                weight: FontWeight.w600,
+                hebrew: isHe),
           ),
         ),
       ),

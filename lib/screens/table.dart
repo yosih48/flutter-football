@@ -105,41 +105,68 @@ class TableScreenContentState extends State<TableScreenContent> {
     _fetchUsersForSelectedGroup();
   }
 
-  // ── Editorial dialog scaffolding ────────────────────────────────────────
+  // ── Dialog scaffolding ──────────────────────────────────────────────────
+  // Same shape language as the season pickers: 20-radius sheet, bold Hebrew
+  // title, circular close, and full-width actions with the primary leading.
+  bool get _isHe => Localizations.localeOf(context).languageCode == 'he';
+
   Widget _editorialDialog({
     required String title,
     required Widget body,
+    required VoidCallback onClose,
     required List<Widget> actions,
   }) {
     final c = context.col;
     return Dialog(
       backgroundColor: c.card,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(2),
-        side: BorderSide(color: c.hairline, width: 1),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 24),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
-                Container(width: 18, height: 1, color: c.live),
-                const SizedBox(width: 10),
-                Text(title.toUpperCase(),
-                    style: EType.label(
-                        color: c.ink, size: 11, letterSpacing: 2.4)),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: EType.body(
+                        color: c.ink,
+                        size: 20,
+                        weight: FontWeight.w700,
+                        hebrew: _isHe),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: onClose,
+                  customBorder: const CircleBorder(),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: c.cardHi,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.close, size: 17, color: c.inkMute),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 18),
             body,
             const SizedBox(height: 20),
+            // Primary first so it leads (right in RTL) and takes the wider half.
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: actions,
+              children: [
+                for (int i = 0; i < actions.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 12),
+                  Expanded(flex: i == 0 ? 3 : 2, child: actions[i]),
+                ],
+              ],
             ),
           ],
         ),
@@ -150,31 +177,61 @@ class TableScreenContentState extends State<TableScreenContent> {
   TextField _editorialField(
       {required TextEditingController controller, required String label}) {
     final c = context.col;
+    OutlineInputBorder border(Color color, [double width = 1]) =>
+        OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: color, width: width),
+        );
     return TextField(
       controller: controller,
       cursorColor: c.live,
-      cursorWidth: 1.5,
-      style: EType.body(color: c.ink, size: 14),
+      style: EType.body(color: c.ink, size: 14, hebrew: _isHe),
       decoration: InputDecoration(
-        labelText: label,
-        labelStyle: EType.label(color: c.inkDim, size: 11, letterSpacing: 1.6),
-        floatingLabelStyle:
-            EType.label(color: c.live, size: 11, letterSpacing: 1.6),
+        hintText: label,
+        hintStyle: EType.body(color: c.inkDim, size: 14, hebrew: _isHe),
         filled: true,
-        fillColor: c.terrace,
+        fillColor: c.cardHi,
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(2),
-          borderSide: BorderSide(color: c.hairline, width: 1),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(2),
-          borderSide: BorderSide(color: c.hairline, width: 1),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(2),
-          borderSide: BorderSide(color: c.live, width: 1),
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        border: border(c.hairline),
+        enabledBorder: border(c.hairline),
+        focusedBorder: border(c.live, 1.5),
+      ),
+    );
+  }
+
+  // Shared pill geometry. Horizontal padding matters only where the button
+  // isn't stretched by an Expanded — i.e. the empty-state Wrap.
+  Widget _pillBtn({
+    required String label,
+    required VoidCallback? onPressed,
+    required Color fill,
+    required Color fg,
+    Color? border,
+  }) {
+    return Material(
+      color: fill,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onPressed,
+        child: Container(
+          height: 48,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: border == null
+              ? null
+              : BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: border, width: 1),
+                ),
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: EType.body(
+                color: fg, size: 14, weight: FontWeight.w700, hebrew: _isHe),
+          ),
         ),
       ),
     );
@@ -182,38 +239,22 @@ class TableScreenContentState extends State<TableScreenContent> {
 
   Widget _ghostBtn(String label, VoidCallback onPressed, {Color? color}) {
     final c = context.col;
-    final btnColor = color ?? c.inkMute;
-    return TextButton(
+    return _pillBtn(
+      label: label,
       onPressed: onPressed,
-      style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(2),
-        ),
-      ),
-      child: Text(
-        label.toUpperCase(),
-        style: EType.label(color: btnColor, size: 11, letterSpacing: 1.8),
-      ),
+      fill: Colors.transparent,
+      fg: color ?? c.ink,
+      border: color ?? c.hairlineHi,
     );
   }
 
   Widget _solidBtn(String label, VoidCallback onPressed) {
     final c = context.col;
-    return Material(
-      color: c.live,
-      borderRadius: BorderRadius.circular(2),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(2),
-        onTap: onPressed,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          child: Text(
-            label.toUpperCase(),
-            style: EType.label(color: c.pitch, size: 11, letterSpacing: 1.8),
-          ),
-        ),
-      ),
+    return _pillBtn(
+      label: label,
+      onPressed: onPressed,
+      fill: c.live,
+      fg: Colors.white,
     );
   }
 
@@ -225,20 +266,21 @@ class TableScreenContentState extends State<TableScreenContent> {
         final l = AppLocalizations.of(context)!;
         return _editorialDialog(
           title: l.invitefriend,
+          onClose: () => Navigator.of(context).pop(),
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(l.invitecodecopy,
-                  style: EType.body(color: c.inkMute, size: 13)),
+                  style: EType.body(color: c.inkMute, size: 13, hebrew: _isHe)),
               const SizedBox(height: 14),
               Container(
                 width: double.infinity,
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
-                  color: c.terrace,
+                  color: c.cardHi,
                   border: Border.all(color: c.hairline, width: 1),
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   inviteCode,
@@ -252,7 +294,7 @@ class TableScreenContentState extends State<TableScreenContent> {
               ),
               const SizedBox(height: 12),
               Text(l.shareinvitecode,
-                  style: EType.body(color: c.inkDim, size: 12)),
+                  style: EType.body(color: c.inkDim, size: 12, hebrew: _isHe)),
             ],
           ),
           actions: [
@@ -357,13 +399,12 @@ class TableScreenContentState extends State<TableScreenContent> {
         final l = AppLocalizations.of(ctx)!;
         return _editorialDialog(
           title: l.createnewgroup,
+          onClose: () => Navigator.of(ctx).pop(),
           body: _editorialField(
             controller: _groupNameController,
             label: l.entergroupname,
           ),
           actions: [
-            _ghostBtn(l.cancel, () => Navigator.of(ctx).pop()),
-            const SizedBox(width: 8),
             _solidBtn(l.create, () {
               if (_groupNameController.text.isNotEmpty) {
                 final name = _groupNameController.text;
@@ -372,6 +413,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                 _createNewGroup(name);
               }
             }),
+            _ghostBtn(l.cancel, () => Navigator.of(ctx).pop()),
           ],
         );
       },
@@ -385,13 +427,12 @@ class TableScreenContentState extends State<TableScreenContent> {
         final l = AppLocalizations.of(ctx)!;
         return _editorialDialog(
           title: l.joingroup,
+          onClose: () => Navigator.of(ctx).pop(),
           body: _editorialField(
             controller: _inviteCodeController,
             label: l.enterinvitecode,
           ),
           actions: [
-            _ghostBtn(l.cancel, () => Navigator.of(ctx).pop()),
-            const SizedBox(width: 8),
             _solidBtn(l.join, () async {
               if (_inviteCodeController.text.isEmpty) return;
               final code = _inviteCodeController.text;
@@ -403,6 +444,7 @@ class TableScreenContentState extends State<TableScreenContent> {
               if (!mounted) return;
               Navigator.of(ctx).pop();
             }),
+            _ghostBtn(l.cancel, () => Navigator.of(ctx).pop()),
           ],
         );
       },
@@ -781,26 +823,17 @@ class TableScreenContentState extends State<TableScreenContent> {
         final l = AppLocalizations.of(ctx)!;
         return _editorialDialog(
           title: l.leavethegroup,
-          body:
-              Text(l.leavegroup, style: EType.body(color: c.inkMute, size: 13)),
+          onClose: () => Navigator.of(ctx).pop(false),
+          body: Text(l.leavegroup,
+              style: EType.body(color: c.inkMute, size: 13, hebrew: _isHe)),
           actions: [
-            _ghostBtn(l.cancel, () => Navigator.of(ctx).pop(false)),
-            const SizedBox(width: 8),
-            Material(
-              color: c.flag,
-              borderRadius: BorderRadius.circular(2),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(2),
-                onTap: () => Navigator.of(ctx).pop(true),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                  child: Text(l.leave.toUpperCase(),
-                      style: EType.label(
-                          color: c.ink, size: 11, letterSpacing: 1.8)),
-                ),
-              ),
+            _pillBtn(
+              label: l.leave,
+              onPressed: () => Navigator.of(ctx).pop(true),
+              fill: c.flag,
+              fg: Colors.white,
             ),
+            _ghostBtn(l.cancel, () => Navigator.of(ctx).pop(false)),
           ],
         );
       },
@@ -1361,26 +1394,7 @@ class TableScreenContentState extends State<TableScreenContent> {
               runSpacing: 10,
               children: [
                 _solidBtn(l.createnewgroup, _showCreateGroupDialog),
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(2),
-                    onTap: _showJoinGroupDialog,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: c.hairlineHi, width: 1),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                      child: Text(
-                        l.joingroup.toUpperCase(),
-                        style: EType.label(
-                            color: c.ink, size: 11, letterSpacing: 1.8),
-                      ),
-                    ),
-                  ),
-                ),
+                _ghostBtn(l.joingroup, _showJoinGroupDialog),
               ],
             ),
           ],

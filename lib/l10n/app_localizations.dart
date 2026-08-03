@@ -2807,6 +2807,36 @@ abstract class AppLocalizations {
   /// **'of'**
   String get trophyOf;
 
+  /// No description provided for @trophyTotalPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Points'**
+  String get trophyTotalPoints;
+
+  /// No description provided for @trophyPodiums.
+  ///
+  /// In en, this message translates to:
+  /// **'Podiums'**
+  String get trophyPodiums;
+
+  /// No description provided for @trophyFirstPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'First Places'**
+  String get trophyFirstPlaces;
+
+  /// No description provided for @trophyYourPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Points'**
+  String get trophyYourPoints;
+
+  /// No description provided for @trophyNoPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Not chosen'**
+  String get trophyNoPick;
+
   /// No description provided for @trophyChampionLabel.
   ///
   /// In en, this message translates to:
@@ -2884,6 +2914,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'My championship picks'**
   String get myChampionshipPicks;
+
+  /// No description provided for @picksCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Picks completed'**
+  String get picksCompleted;
+
+  /// No description provided for @picksComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get picksComplete;
+
+  /// No description provided for @picksMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} missing'**
+  String picksMissing(String count);
+
+  /// No description provided for @picksDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Closes'**
+  String get picksDeadline;
+
+  /// No description provided for @pickChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get pickChoose;
+
+  /// No description provided for @searchTeamHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search team'**
+  String get searchTeamHint;
+
+  /// No description provided for @searchPlayerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search player or team'**
+  String get searchPlayerHint;
+
+  /// No description provided for @noSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found'**
+  String get noSearchResults;
 
   /// No description provided for @championHit.
   ///

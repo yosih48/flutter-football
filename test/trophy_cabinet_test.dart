@@ -52,16 +52,36 @@ void main() {
     expect(find.text('NO TROPHIES YET'), findsOneWidget);
   });
 
-  testWidgets('renders an archived season card with rank badge', (tester) async {
+  testWidgets('renders an archived season card with rank badge',
+      (tester) async {
     await tester.pumpWidget(_wrap(TrophyCabinetTab(
       userId: 'u1',
       allowedIds: const {'39'},
-      methods: _FakeTrophyMethods([_rec(season: 2026, rank: 1, totalPlayers: 42)]),
+      methods:
+          _FakeTrophyMethods([_rec(season: 2026, rank: 1, totalPlayers: 42)]),
     )));
     await tester.pumpAndSettle();
     expect(find.textContaining('2026'), findsWidgets);
-    expect(find.textContaining('#1'), findsOneWidget);
-    expect(find.textContaining('42'), findsOneWidget);
+    // Rank medallion carries the bare position; the field size sits under it.
+    expect(find.text('1'), findsWidgets);
+    expect(find.text('of 42'), findsOneWidget);
+  });
+
+  testWidgets('summary bar totals points, podiums and wins', (tester) async {
+    await tester.pumpWidget(_wrap(TrophyCabinetTab(
+      userId: 'u1',
+      allowedIds: const {'39', '140'},
+      methods: _FakeTrophyMethods([
+        _rec(leagueId: 39, season: 2026, rank: 1),
+        _rec(leagueId: 140, season: 2026, rank: 4),
+      ]),
+    )));
+    await tester.pumpAndSettle();
+    // Each _rec is worth 100 points; one podium (rank 1), one win.
+    expect(find.text('200'), findsOneWidget);
+    expect(find.text('Total Points'), findsOneWidget);
+    expect(find.text('Podiums'), findsOneWidget);
+    expect(find.text('First Places'), findsOneWidget);
   });
 
   testWidgets('filters out leagues not in allowedIds', (tester) async {
