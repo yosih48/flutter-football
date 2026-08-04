@@ -249,30 +249,13 @@ if(leagueId == -1){
             isSelectedDate = gameDate.isAtSameMomentAs(today);
           }
 
-          bool isToday = false;
-          if (onlyTodayGames) {
-            final now = DateTime.now();
-            final today = DateTime(now.year, now.month, now.day);
-            final gameDate =
-                DateTime(game.date.year, game.date.month, game.date.day);
-            isToday = gameDate.isAtSameMomentAs(today);
-          }
-
-          // Additional filter logic for specific league IDs
-          if (leagueId == 2 || leagueId == 848 || leagueId == 3) {
-            return isNotPostponedOrTBD &&
-                ((hasOdds &&
-                        !game.league.round.contains("Qualifying") &&
-                        game.league.round != "Play-offs" &&
-                        // (!onlyTodayGames || isToday)) ||
-                        (isSelectedDate)) ||
-                    (isFinished &&
-                        !game.league.round.contains("Qualifying") &&
-                        game.league.round != "Play-offs" &&
-                        // (!onlyTodayGames || isToday)));
-                        (isSelectedDate)));
-          }
-          // return hasOdds || isFinished;
+          // Round policy (hiding European qualifiers / play-off rounds for
+          // leagues 2/3/848) now lives on the backend: /api/games/:leagueId
+          // already omits non-guessable-round fixtures for the leagues flagged
+          // `hideNonGuessableRounds` in config/leagues.json. The client no
+          // longer special-cases leagues by round, so the policy can change
+          // server-side with no app release. See worldBackend
+          // src/routes/games.js + src/utils/guessableRound.js.
           return isNotPostponedOrTBD &&
               (hasOdds || isFinished) &&
               // (!onlyTodayGames || isToday);
