@@ -157,6 +157,21 @@ class _LineupsWidgetState extends State<LineupsWidget> {
     final teamMarks = showAway ? awayMarks : homeMarks;
     final teamColor = showAway ? _kAway : _kHome;
 
+    // Display names come from the FIXTURE (API-Football), matched to each side by
+    // the backend's guaranteed [home, away] lineup ordering — NOT from the lineup
+    // payload's own team.name, which is AllSports-sourced, spelled differently,
+    // and therefore misses the Hebrew translation map. Falls back to the lineup
+    // name if a fixture name is somehow empty. The raw team.name still drives all
+    // event/player matching above (buildPlayerMarks) — display only here.
+    final homeDisplay =
+        widget.homeTeamName.isNotEmpty ? widget.homeTeamName : home.team.name;
+    final awayDisplay = away == null
+        ? ''
+        : (widget.awayTeamName.isNotEmpty
+            ? widget.awayTeamName
+            : away.team.name);
+    final teamDisplay = showAway ? awayDisplay : homeDisplay;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -169,8 +184,8 @@ class _LineupsWidgetState extends State<LineupsWidget> {
         // ── Team toggle ────────────────────────────────────────────
         if (away != null) ...[
           _TeamToggle(
-            homeName: home.team.name,
-            awayName: away.team.name,
+            homeName: homeDisplay,
+            awayName: awayDisplay,
             showAway: showAway,
             onChanged: (v) => setState(() => _showAway = v),
           ),
@@ -178,7 +193,7 @@ class _LineupsWidgetState extends State<LineupsWidget> {
         ],
 
         // ── Selected team + its formation ──────────────────────────
-        _PitchHeader(team: team),
+        _PitchHeader(team: team, displayName: teamDisplay),
         const SizedBox(height: 8),
 
         // ── Tactical pitch ─────────────────────────────────────────
@@ -202,6 +217,8 @@ class _LineupsWidgetState extends State<LineupsWidget> {
           _SubstitutesSection(
             home: team,
             away: null,
+            homeDisplayName: teamDisplay,
+            awayDisplayName: '',
             homeMarks: teamMarks,
             awayMarks: const {},
             l: l,
@@ -286,8 +303,10 @@ class _TeamToggle extends StatelessWidget {
 
 // Crest + name at the start, formation pill at the end.
 class _PitchHeader extends StatelessWidget {
-  const _PitchHeader({required this.team});
+  const _PitchHeader({required this.team, required this.displayName});
   final TeamLineup team;
+  // Fixture-sourced name (translatable); the lineup's own team.name is not.
+  final String displayName;
 
   @override
   Widget build(BuildContext context) {
@@ -311,7 +330,7 @@ class _PitchHeader extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: Text(
-            localizedTeamName(context, team.team.name),
+            localizedTeamName(context, displayName),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: EType.body(
@@ -412,6 +431,17 @@ class _TacticalPitch extends StatelessWidget {
   // Group a starting XI into formation rows (grid field, fallback to position),
   // ordered GK→forwards, each row left→right by grid column.
   List<List<LineupPlayer>> _orderedRows(List<LineupPlayer> players) {
+    // Some lineups (esp. predicted / AllSports-sourced) carry neither `grid`
+    // nor `pos` for any player. Without that, grid/pos grouping dumps all 11
+    // into the default midfield row → one flat line. Detect that and lay the
+    // XI out from the formation string instead (keeper-first ordering), or a
+    // sensible default when the formation is missing too.
+    final anyGrid = players.any((p) => _gridRow(p.grid) != null);
+    final anyPos = players.any((p) => (p.pos ?? '').isNotEmpty);
+    if (!anyGrid && !anyPos) {
+      return _rowsFromFormation(players, team.formation);
+    }
+
     final Map<int, List<LineupPlayer>> byRow = {};
     for (final p in players) {
       final row = _gridRow(p.grid) ?? _posToRow(p.pos);
@@ -423,6 +453,48 @@ class _TacticalPitch extends StatelessWidget {
         ..sort(
             (a, b) => (_gridCol(a.grid) ?? 1).compareTo(_gridCol(b.grid) ?? 1));
     }).toList();
+  }
+
+  // Slice a positionless XI into rows using the formation string ("4-3-3" →
+  // GK + 4 + 3 + 3), assuming the list is ordered keeper-first. Falls back to a
+  // standard shape when the formation is absent or doesn't match the head count.
+  static List<List<LineupPlayer>> _rowsFromFormation(
+      List<LineupPlayer> players, String formation) {
+    final counts = _formationCounts(formation, players.length);
+    final rows = <List<LineupPlayer>>[];
+    int i = 0;
+    for (final n in counts) {
+      if (i >= players.length) break;
+      final end = (i + n) > players.length ? players.length : i + n;
+      rows.add(players.sublist(i, end));
+      i = end;
+    }
+    // Any remainder (formation summed short) becomes a final row so no player
+    // is dropped.
+    if (i < players.length) rows.add(players.sublist(i));
+    return rows;
+  }
+
+  // Parse "4-3-3"/"4-2-3-1"/etc. into outfield-row counts and prepend a keeper,
+  // but only when the numbers account for exactly [total] players. Otherwise a
+  // default: 1 keeper + the rest split across three rows.
+  static List<int> _formationCounts(String formation, int total) {
+    final parts = formation
+        .split(RegExp(r'[^0-9]+'))
+        .where((s) => s.isNotEmpty)
+        .map(int.parse)
+        .where((n) => n > 0)
+        .toList();
+    if (parts.isNotEmpty &&
+        parts.fold<int>(0, (a, b) => a + b) == total - 1) {
+      return [1, ...parts];
+    }
+    if (total <= 1) return [total];
+    final outfield = total - 1;
+    final base = outfield ~/ 3;
+    final rem = outfield % 3;
+    // Bias the extra players toward the forward/mid rows for a natural shape.
+    return [1, base + (rem > 0 ? 1 : 0), base + (rem > 1 ? 1 : 0), base];
   }
 
   // ── Position calculation ─────────────────────────────────────────────────
@@ -960,6 +1032,8 @@ List<Widget> _subMarkers(PlayerMarks? m) {
 class _SubstitutesSection extends StatelessWidget {
   final TeamLineup home;
   final TeamLineup? away;
+  final String homeDisplayName;
+  final String awayDisplayName;
   final Map<String, PlayerMarks> homeMarks;
   final Map<String, PlayerMarks> awayMarks;
   final AppLocalizations l;
@@ -967,6 +1041,8 @@ class _SubstitutesSection extends StatelessWidget {
   const _SubstitutesSection({
     required this.home,
     this.away,
+    required this.homeDisplayName,
+    required this.awayDisplayName,
     required this.homeMarks,
     required this.awayMarks,
     required this.l,
@@ -1000,6 +1076,7 @@ class _SubstitutesSection extends StatelessWidget {
               Expanded(
                 child: _SubList(
                     lineup: home,
+                    displayName: homeDisplayName,
                     color: _kHome,
                     c: c,
                     mirror: false,
@@ -1009,6 +1086,7 @@ class _SubstitutesSection extends StatelessWidget {
               Expanded(
                 child: _SubList(
                     lineup: away,
+                    displayName: awayDisplayName,
                     color: _kAway,
                     c: c,
                     mirror: true,
@@ -1024,6 +1102,8 @@ class _SubstitutesSection extends StatelessWidget {
 
 class _SubList extends StatelessWidget {
   final TeamLineup? lineup;
+  // Fixture-sourced name (translatable); the lineup's own team.name is not.
+  final String displayName;
   final Color color;
   final EditorialColors c;
   final bool mirror; // true = away side (right-aligned)
@@ -1031,6 +1111,7 @@ class _SubList extends StatelessWidget {
 
   const _SubList({
     required this.lineup,
+    required this.displayName,
     required this.color,
     required this.c,
     required this.mirror,
@@ -1059,7 +1140,11 @@ class _SubList extends StatelessWidget {
                 ? [
                     Flexible(
                       child: Text(
-                        localizedTeamName(context, lineup!.team.name)
+                        localizedTeamName(
+                                context,
+                                displayName.isNotEmpty
+                                    ? displayName
+                                    : lineup!.team.name)
                             .toUpperCase(),
                         textAlign: TextAlign.right,
                         overflow: TextOverflow.ellipsis,
@@ -1075,7 +1160,11 @@ class _SubList extends StatelessWidget {
                     const SizedBox(width: 5),
                     Flexible(
                       child: Text(
-                        localizedTeamName(context, lineup!.team.name)
+                        localizedTeamName(
+                                context,
+                                displayName.isNotEmpty
+                                    ? displayName
+                                    : lineup!.team.name)
                             .toUpperCase(),
                         overflow: TextOverflow.ellipsis,
                         style: EType.label(
