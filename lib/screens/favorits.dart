@@ -209,7 +209,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
           ),
           const SizedBox(height: 2),
           Text(
-            title.toUpperCase(),
+            title,
             style: EType.screenTitle(
               size: 26,
               color: c.ink,
@@ -1049,10 +1049,11 @@ class _EmptyNotifs extends StatelessWidget {
             const SizedBox(height: 18),
             Text(
               l.noEnabledLeagues.toUpperCase(),
-              style: EType.display(
-                size: 22,
+              style: EType.body(
+                size: 20,
                 color: c.ink,
-                letterSpacing: 1.2,
+                weight: FontWeight.w700,
+                hebrew: Localizations.localeOf(context).languageCode == 'he',
               ),
               textAlign: TextAlign.center,
             ),

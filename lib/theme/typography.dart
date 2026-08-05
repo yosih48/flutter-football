@@ -55,10 +55,12 @@ class EType {
 
   // Screen title in an app-bar slot ("FIXTURES", "משחקים").
   //
-  // Same reasoning as [teamNameDisplay]: Bebas Neue carries no Hebrew glyphs,
-  // so a Hebrew title styled with [display] silently falls back to a thin,
-  // inconsistent system font. Rubik bold gives Hebrew the weight the Latin
-  // display voice has.
+  // Both scripts use the same humanist-sans voice so an English title looks
+  // like its Hebrew counterpart: Sora (Latin) and Rubik (Hebrew), both bold at
+  // the same size/height. Previously the Latin path used Bebas Neue, whose
+  // condensed all-caps look didn't match the Hebrew Rubik at all. [letterSpacing]
+  // is kept for source-compatibility but no longer applied (both scripts read
+  // best at 0).
   static TextStyle screenTitle({
     double size = 26,
     Color color = Editorial.ink,
@@ -73,12 +75,12 @@ class EType {
               letterSpacing: 0,
               height: 1.15,
             )
-          : GoogleFonts.bebasNeue(
+          : GoogleFonts.sora(
               fontSize: size,
               color: color,
-              letterSpacing: letterSpacing,
-              height: 0.95,
-              fontWeight: FontWeight.w400,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0,
+              height: 1.15,
             );
 
   // Editorial small-caps label, e.g. "MATCH EVENTS", "PREDICTIONS".

@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:google_fonts/google_fonts.dart';
 import 'package:football/models/games.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
@@ -26,8 +25,8 @@ ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showSnackBar(
   String? actionLabel,
   VoidCallback? onAction,
 }) {
-  final c = Theme.of(context).extension<EditorialColors>() ??
-      EditorialColors.dark;
+  final c =
+      Theme.of(context).extension<EditorialColors>() ?? EditorialColors.dark;
 
   final (Color accent, IconData icon) = switch (tone) {
     SnackTone.success => (c.live, Icons.check_rounded),
@@ -114,11 +113,13 @@ class _EditorialSnackContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isHe = Localizations.localeOf(context).languageCode == 'he';
     return Container(
       decoration: BoxDecoration(
         color: colors.cardHi,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colors.hairlineHi.withOpacity(0.55), width: 1),
+        border:
+            Border.all(color: colors.hairlineHi.withOpacity(0.55), width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.35),
@@ -160,12 +161,12 @@ class _EditorialSnackContent extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Text(
                     text,
-                    style: GoogleFonts.sora(
+                    style: EType.body(
                       color: colors.ink,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                      size: 13,
+                      weight: FontWeight.w500,
                       height: 1.35,
-                      letterSpacing: 0.1,
+                      hebrew: isHe,
                     ),
                   ),
                 ),
@@ -185,11 +186,11 @@ class _EditorialSnackContent extends StatelessWidget {
                     ),
                     child: Text(
                       actionLabel!.toUpperCase(),
-                      style: GoogleFonts.sora(
+                      style: EType.label(
                         color: accent,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                        size: 11,
                         letterSpacing: 1.4,
+                        hebrew: isHe,
                       ),
                     ),
                   ),
@@ -211,7 +212,6 @@ Future<List<Game>> loadFakeGames() async {
   final List<dynamic> jsonList = json.decode(jsonString);
   return jsonList.map((e) => Game.fromJson(e)).toList();
 }
-
 
 void showForceUpdateDialog(BuildContext context) {
   showDialog(
@@ -253,8 +253,12 @@ void showForceUpdateDialog(BuildContext context) {
                 Text(
                   l.forceUpdateTitle,
                   textAlign: TextAlign.center,
-                  style: EType.display(
-                      size: 26, color: c.ink, letterSpacing: 0.8),
+                  style: EType.body(
+                      size: 24,
+                      color: c.ink,
+                      weight: FontWeight.w700,
+                      hebrew:
+                          Localizations.localeOf(context).languageCode == 'he'),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -276,15 +280,12 @@ void showForceUpdateDialog(BuildContext context) {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.system_update,
-                                size: 18, color: c.pitch),
+                            Icon(Icons.system_update, size: 18, color: c.pitch),
                             const SizedBox(width: 8),
                             Text(
                               l.forceUpdateButton.toUpperCase(),
                               style: EType.label(
-                                  color: c.pitch,
-                                  size: 12,
-                                  letterSpacing: 1.6),
+                                  color: c.pitch, size: 12, letterSpacing: 1.6),
                             ),
                           ],
                         ),
@@ -303,9 +304,12 @@ void showForceUpdateDialog(BuildContext context) {
 
 void _launchStore() {
   // שים פה את הלינק שלך לחנות!
-  const androidUrl = 'https://play.google.com/store/apps/details?id=com.yosi.football';
-  // const iosUrl = 'https://apps.apple.com/...'; 
-  
-  final url = Uri.parse(Platform.isAndroid ? androidUrl : androidUrl); // כרגע שמתי אנדרואיד לשניהם
+  const androidUrl =
+      'https://play.google.com/store/apps/details?id=com.yosi.football';
+  // const iosUrl = 'https://apps.apple.com/...';
+
+  final url = Uri.parse(Platform.isAndroid
+      ? androidUrl
+      : androidUrl); // כרגע שמתי אנדרואיד לשניהם
   launchUrl(url, mode: LaunchMode.externalApplication);
 }

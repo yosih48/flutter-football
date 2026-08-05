@@ -106,10 +106,10 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
           Text(
             localizedTeamName(context, widget.team.name).toUpperCase(),
             textAlign: TextAlign.center,
-            style: EType.teamNameDisplay(
-              size: 24,
+            style: EType.body(
+              size: 22,
               color: c.ink,
-              letterSpacing: 1.2,
+              weight: FontWeight.w700,
               height: 1.1,
               hebrew: localizedTeamName(context, widget.team.name) !=
                   widget.team.name,
@@ -224,8 +224,18 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
     final local = d.toLocal();
     if (Localizations.localeOf(context).languageCode == 'he') {
       const months = [
-        'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
-        'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'
+        'ינואר',
+        'פברואר',
+        'מרץ',
+        'אפריל',
+        'מאי',
+        'יוני',
+        'יולי',
+        'אוגוסט',
+        'ספטמבר',
+        'אוקטובר',
+        'נובמבר',
+        'דצמבר'
       ];
       return '${local.day} ${months[local.month - 1]}';
     }
@@ -344,8 +354,11 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
 
     final now = DateTime.now();
     final past = teamGames.where((g) => g.date.isBefore(now)).toList();
-    final upcoming =
-        teamGames.where((g) => !g.date.isBefore(now)).toList().reversed.toList();
+    final upcoming = teamGames
+        .where((g) => !g.date.isBefore(now))
+        .toList()
+        .reversed
+        .toList();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -408,8 +421,7 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
   Widget _matchRow(Game game, int teamId, {required bool isLast}) {
     final c = context.col;
     final l = AppLocalizations.of(context)!;
-    final isFinished =
-        game.status.short == 'FT' || game.status.short == 'AET';
+    final isFinished = game.status.short == 'FT' || game.status.short == 'AET';
     final isHome = game.home.id == teamId;
     final opponent = isHome ? game.away : game.home;
     final h = game.goals.home;
@@ -474,16 +486,14 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
                         color: c.ink, size: 14, weight: FontWeight.w600),
                   ),
                   const SizedBox(height: 2),
-                  Text(subtitle,
-                      style: EType.body(color: c.inkMute, size: 11)),
+                  Text(subtitle, style: EType.body(color: c.inkMute, size: 11)),
                 ],
               ),
             ),
             const SizedBox(width: 10),
             // Score / kickoff pill.
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
               decoration: BoxDecoration(
                 color: c.cardHi,
                 borderRadius: BorderRadius.circular(20),
@@ -530,7 +540,17 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
 
   // Common club abbreviations / qualifiers that vary between API endpoints.
   static const Set<String> _stopWords = {
-    'fc', 'cf', 'afc', 'sc', 'ac', 'rc', 'cd', 'ud', 'sd', 'club', 'de',
+    'fc',
+    'cf',
+    'afc',
+    'sc',
+    'ac',
+    'rc',
+    'cd',
+    'ud',
+    'sd',
+    'club',
+    'de',
     'the',
   };
 
@@ -714,7 +734,8 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
             child: Text(
               p.number?.toString() ?? '',
               textAlign: TextAlign.center,
-              style: EType.numeric(color: c.inkMute, size: 13, weight: FontWeight.w700),
+              style: EType.numeric(
+                  color: c.inkMute, size: 13, weight: FontWeight.w700),
             ),
           ),
           const SizedBox(width: 10),
@@ -750,7 +771,8 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
             const SizedBox(width: 10),
             Text(
               '${p.age}',
-              style: EType.numeric(color: c.inkDim, size: 13, weight: FontWeight.w500),
+              style: EType.numeric(
+                  color: c.inkDim, size: 13, weight: FontWeight.w500),
             ),
           ],
         ],
@@ -788,5 +810,4 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
       ),
     );
   }
-
 }

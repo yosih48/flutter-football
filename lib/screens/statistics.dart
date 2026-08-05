@@ -180,7 +180,7 @@ class _StatisticsState extends State<Statistics> {
                     EType.label(color: c.inkDim, size: 10, letterSpacing: 3)),
             const SizedBox(height: 2),
             Text(
-              l.statistics.toUpperCase(),
+              l.statistics,
               style: EType.screenTitle(
                 size: 26,
                 color: c.ink,

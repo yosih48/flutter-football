@@ -570,8 +570,12 @@ class _CabinetEmpty extends StatelessWidget {
               const SizedBox(height: 18),
               Text(
                 title.toUpperCase(),
-                style:
-                    EType.display(size: 22, color: c.ink, letterSpacing: 1.2),
+                style: EType.body(
+                    size: 20,
+                    color: c.ink,
+                    weight: FontWeight.w700,
+                    hebrew:
+                        Localizations.localeOf(context).languageCode == 'he'),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 10),

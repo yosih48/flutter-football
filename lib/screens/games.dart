@@ -742,7 +742,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
               style: EType.label(color: c.inkDim, size: 10, letterSpacing: 3)),
           const SizedBox(height: 2),
           Text(
-            AppLocalizations.of(context)!.fixtures.toUpperCase(),
+            AppLocalizations.of(context)!.fixtures,
             style: EType.screenTitle(
               size: 26,
               color: c.ink,

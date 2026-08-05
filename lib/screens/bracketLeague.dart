@@ -93,7 +93,8 @@ class _BracketLeagueScreenState extends State<BracketLeagueScreen> {
 
   Future<void> _confirmLeave() async {
     final l = AppLocalizations.of(context)!;
-    final ok = await _confirm(l.bracketLeagueLeave, l.bracketLeagueLeaveConfirm);
+    final ok =
+        await _confirm(l.bracketLeagueLeave, l.bracketLeagueLeaveConfirm);
     if (ok != true) return;
     final success =
         await GroupsMethods().leaveGroup(widget.userId, _league.name);
@@ -111,8 +112,7 @@ class _BracketLeagueScreenState extends State<BracketLeagueScreen> {
     final ok =
         await _confirm(l.bracketLeagueDelete, l.bracketLeagueDeleteConfirm);
     if (ok != true) return;
-    final success =
-        await GroupsMethods().deleteGroup(_league.id, _league.name);
+    final success = await GroupsMethods().deleteGroup(_league.id, _league.name);
     if (!mounted) return;
     if (success) {
       _changed = true;
@@ -181,9 +181,7 @@ class _BracketLeagueScreenState extends State<BracketLeagueScreen> {
                             horizontal: 18, vertical: 12),
                         child: Text(l.confirm.toUpperCase(),
                             style: EType.label(
-                                color: c.pitch,
-                                size: 11,
-                                letterSpacing: 1.8)),
+                                color: c.pitch, size: 11, letterSpacing: 1.8)),
                       ),
                     ),
                   ),
@@ -223,8 +221,8 @@ class _BracketLeagueScreenState extends State<BracketLeagueScreen> {
             else
               TextButton(
                 onPressed: _confirmLeave,
-                child: Text(l.bracketLeagueLeave,
-                    style: TextStyle(color: c.live)),
+                child:
+                    Text(l.bracketLeagueLeave, style: TextStyle(color: c.live)),
               ),
           ],
         ),
@@ -261,7 +259,11 @@ class _BracketLeagueScreenState extends State<BracketLeagueScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(_league.name.toUpperCase(),
-              style: EType.display(size: 26, color: c.ink, letterSpacing: 1),
+              style: EType.body(
+                  size: 22,
+                  color: c.ink,
+                  weight: FontWeight.w700,
+                  hebrew: Localizations.localeOf(context).languageCode == 'he'),
               overflow: TextOverflow.ellipsis),
           const SizedBox(height: 8),
           Row(
@@ -279,8 +281,8 @@ class _BracketLeagueScreenState extends State<BracketLeagueScreen> {
                   onTap: _copyCode,
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 7),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                     decoration: BoxDecoration(
                       color: c.card,
                       borderRadius: BorderRadius.circular(8),
@@ -294,7 +296,9 @@ class _BracketLeagueScreenState extends State<BracketLeagueScreen> {
                         Flexible(
                           child: Text(_league.code,
                               style: EType.numeric(
-                                  color: c.ink, size: 13, weight: FontWeight.w600),
+                                  color: c.ink,
+                                  size: 13,
+                                  weight: FontWeight.w600),
                               overflow: TextOverflow.ellipsis),
                         ),
                       ],
@@ -308,5 +312,4 @@ class _BracketLeagueScreenState extends State<BracketLeagueScreen> {
       ),
     );
   }
-
 }

@@ -72,8 +72,7 @@ class _CompetitionsState extends State<Competitions> {
       );
 
       if (response.statusCode == 200) {
-        final authProvider =
-            Provider.of<AuthProvider>(context, listen: false);
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
         final nav = Navigator.of(context);
         await markFirstLoginComplete();
         await authProvider.markCurrentUserAsReturning();
@@ -108,8 +107,7 @@ class _CompetitionsState extends State<Competitions> {
 
   // Backend-configured name wins (so a brand-new league shows a real name with
   // no app update); the localized map is the fallback for known leagues.
-  String _leagueName(
-      int id, BuildContext context, Map<int, String> fallback) {
+  String _leagueName(int id, BuildContext context, Map<int, String> fallback) {
     final remote = LeagueConfigService()
         .nameFor(id, Localizations.localeOf(context).languageCode);
     return remote ?? fallback[id] ?? '$id';
@@ -150,16 +148,16 @@ class _CompetitionsState extends State<Competitions> {
               children: [
                 Text('SETUP',
                     style: EType.label(
-                        color: c.inkDim,
-                        size: 10,
-                        letterSpacing: 3)),
+                        color: c.inkDim, size: 10, letterSpacing: 3)),
                 const SizedBox(height: 2),
                 Text(
-                  l.chooseCompetitions.toUpperCase(),
-                  style: EType.display(
-                      size: 28,
-                      color: c.ink,
-                      letterSpacing: 1.4),
+                  l.chooseCompetitions,
+                  style: EType.screenTitle(
+                    size: 28,
+                    color: c.ink,
+                    hebrew:
+                        Localizations.localeOf(context).languageCode == 'he',
+                  ),
                 ),
               ],
             ),
@@ -174,10 +172,8 @@ class _CompetitionsState extends State<Competitions> {
                 const SizedBox(width: 10),
                 Text(
                   l.allCompetitions.toUpperCase(),
-                  style: EType.label(
-                      color: c.ink,
-                      size: 11,
-                      letterSpacing: 2.4),
+                  style:
+                      EType.label(color: c.ink, size: 11, letterSpacing: 2.4),
                 ),
               ],
             ),
@@ -189,8 +185,7 @@ class _CompetitionsState extends State<Competitions> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: GridView.builder(
                 physics: const BouncingScrollPhysics(),
-                gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
                   crossAxisSpacing: 8,
                   mainAxisSpacing: 8,
@@ -198,15 +193,14 @@ class _CompetitionsState extends State<Competitions> {
                 ),
                 itemCount: chosenLeagues.length,
                 itemBuilder: (context, index) {
-                  final id =
-                      chosenLeagues.keys.elementAt(index);
+                  final id = chosenLeagues.keys.elementAt(index);
                   final isSelected = chosenLeagues[id]!;
                   return _LeagueCard(
                     leagueName: _leagueName(id, context, leagueNames),
                     logoUrl: '$_leagueLogoBase$id.png',
                     selected: isSelected,
-                    onTap: () => setState(
-                        () => chosenLeagues[id] = !isSelected),
+                    onTap: () =>
+                        setState(() => chosenLeagues[id] = !isSelected),
                   );
                 },
               ),
@@ -224,33 +218,33 @@ class _CompetitionsState extends State<Competitions> {
         right: false,
         minimum: const EdgeInsets.only(bottom: 12),
         child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-        child: GestureDetector(
-          onTap: anySelected
-              ? () => updateDatabase(widget.userName, widget.userEmail)
-              : null,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            height: 52,
-            decoration: BoxDecoration(
-              color: anySelected ? c.live : c.card,
-              border: Border.all(
-                color: anySelected ? c.live : c.hairline,
-                width: 1,
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          child: GestureDetector(
+            onTap: anySelected
+                ? () => updateDatabase(widget.userName, widget.userEmail)
+                : null,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              height: 52,
+              decoration: BoxDecoration(
+                color: anySelected ? c.live : c.card,
+                border: Border.all(
+                  color: anySelected ? c.live : c.hairline,
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(2),
               ),
-              borderRadius: BorderRadius.circular(2),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              l.continueButton.toUpperCase(),
-              style: EType.label(
-                color: anySelected ? c.pitch : c.inkDim,
-                size: 12,
-                letterSpacing: 2.4,
+              alignment: Alignment.center,
+              child: Text(
+                l.continueButton.toUpperCase(),
+                style: EType.label(
+                  color: anySelected ? c.pitch : c.inkDim,
+                  size: 12,
+                  letterSpacing: 2.4,
+                ),
               ),
             ),
           ),
-        ),
         ),
       ),
     );

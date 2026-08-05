@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:football/l10n/app_localizations.dart';
 import 'package:football/models/bracket.dart';
@@ -309,9 +309,7 @@ class _BracketScreenState extends State<BracketScreen> {
             Expanded(
               child: Skeletonizer(
                 enabled: _loading,
-                child: _showRanking
-                    ? _buildRanking(c)
-                    : _buildMyBracket(c),
+                child: _showRanking ? _buildRanking(c) : _buildMyBracket(c),
               ),
             ),
           ],
@@ -323,8 +321,8 @@ class _BracketScreenState extends State<BracketScreen> {
   Widget _buildHero(EditorialColors c) {
     final l = AppLocalizations.of(context)!;
     final lang = _langCode(context);
-    final name = LeagueConfigService().nameFor(widget.leagueId, lang) ??
-        l.bracketTitle;
+    final name =
+        LeagueConfigService().nameFor(widget.leagueId, lang) ?? l.bracketTitle;
     final total = _bracket?.totalPoints ?? 0;
     return Container(
       color: c.pitch,
@@ -340,7 +338,12 @@ class _BracketScreenState extends State<BracketScreen> {
             children: [
               Expanded(
                 child: Text(name.toUpperCase(),
-                    style: EType.display(size: 30, color: c.ink, letterSpacing: 1.2),
+                    style: EType.body(
+                        size: 26,
+                        color: c.ink,
+                        weight: FontWeight.w700,
+                        hebrew: Localizations.localeOf(context).languageCode ==
+                            'he'),
                     overflow: TextOverflow.ellipsis),
               ),
               const SizedBox(width: 12),
@@ -531,8 +534,9 @@ class _BracketScreenState extends State<BracketScreen> {
                 locked: locked,
                 onTap: locked ? null : () => _toggleGroup(letter, team),
                 correct: showResult ? _isQualifier(letter, team) : null,
-                points:
-                    showResult ? _scoreGroupPick(letter, team, order - 1) : null,
+                points: showResult
+                    ? _scoreGroupPick(letter, team, order - 1)
+                    : null,
               );
             }),
         ],
@@ -633,9 +637,8 @@ class _BracketScreenState extends State<BracketScreen> {
                     Expanded(
                       child: Text(localizedTeamName(context, team),
                           style: EType.body(
-                              color: _thirdQual.contains(team)
-                                  ? c.ink
-                                  : c.inkMute,
+                              color:
+                                  _thirdQual.contains(team) ? c.ink : c.inkMute,
                               size: 14,
                               weight: _thirdQual.contains(team)
                                   ? FontWeight.w600
@@ -661,8 +664,7 @@ class _BracketScreenState extends State<BracketScreen> {
   void _toggleThird(String group, String team) {
     final l = AppLocalizations.of(context)!;
     if (!_thirdQual.contains(team)) {
-      final sameGroup =
-          _thirdQual.where((t) => _groupOf(t) == group).length;
+      final sameGroup = _thirdQual.where((t) => _groupOf(t) == group).length;
       // A new pick in a fresh group would exceed the 8 best-third cap.
       if (sameGroup == 0 && _thirdQual.length >= 8) {
         _toast(l.bracketThirdsFull, context.col.amber);
@@ -732,10 +734,8 @@ class _BracketScreenState extends State<BracketScreen> {
 
   // Winners the user has tapped for a stage = the advance set the backend
   // scores (set-based scoring is unchanged by the match-tree UI).
-  List<String> _winnersForStage(String stage) => _matchesFor(stage)
-      .map((m) => _winSel[m.id])
-      .whereType<String>()
-      .toList();
+  List<String> _winnersForStage(String stage) =>
+      _matchesFor(stage).map((m) => _winSel[m.id]).whereType<String>().toList();
 
   String? _groupOf(String team) {
     for (final e in _groupRosters.entries) {
@@ -818,8 +818,8 @@ class _BracketScreenState extends State<BracketScreen> {
     );
   }
 
-  Widget _buildMatchRow(EditorialColors c, BracketMatch m, bool sideA, String? team,
-      bool isWinner, bool locked) {
+  Widget _buildMatchRow(EditorialColors c, BracketMatch m, bool sideA,
+      String? team, bool isWinner, bool locked) {
     final slot = sideA ? m.a : m.b;
     final resolved = team != null;
     final tappable = !locked && resolved;
@@ -836,9 +836,7 @@ class _BracketScreenState extends State<BracketScreen> {
               child: Text(
                 resolved ? localizedTeamName(context, team) : _slotLabel(slot),
                 style: EType.body(
-                  color: isWinner
-                      ? c.live
-                      : (resolved ? c.ink : c.inkDim),
+                  color: isWinner ? c.live : (resolved ? c.ink : c.inkDim),
                   size: 14,
                   weight: isWinner
                       ? FontWeight.w700
@@ -996,7 +994,8 @@ class _BracketScreenState extends State<BracketScreen> {
     );
   }
 
-  Widget _leagueCard(EditorialColors c, AppLocalizations l, BracketLeagueInfo lg) {
+  Widget _leagueCard(
+      EditorialColors c, AppLocalizations l, BracketLeagueInfo lg) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -1019,8 +1018,13 @@ class _BracketScreenState extends State<BracketScreen> {
                       children: [
                         Flexible(
                           child: Text(lg.name.toUpperCase(),
-                              style: EType.display(
-                                  size: 18, color: c.ink, letterSpacing: 0.6),
+                              style: EType.body(
+                                  size: 16,
+                                  color: c.ink,
+                                  weight: FontWeight.w700,
+                                  hebrew: Localizations.localeOf(context)
+                                          .languageCode ==
+                                      'he'),
                               overflow: TextOverflow.ellipsis),
                         ),
                         if (lg.isOwner) ...[
@@ -1099,8 +1103,7 @@ class _BracketScreenState extends State<BracketScreen> {
 
       bool isMember(Map<String, dynamic> u, String name) {
         final gid = u['groupID'];
-        return gid is Map &&
-            gid.values.map((v) => v.toString()).contains(name);
+        return gid is Map && gid.values.map((v) => v.toString()).contains(name);
       }
 
       final list = <BracketLeagueInfo>[];
@@ -1183,8 +1186,8 @@ class _BracketScreenState extends State<BracketScreen> {
                         l.bracketHelpThirdsTitle, l.bracketHelpThirdsBody),
                     _helpEntry(c, Icons.account_tree_outlined,
                         l.bracketHelpKnockoutTitle, l.bracketHelpKnockoutBody),
-                    _helpEntry(c, Icons.star_outline,
-                        l.bracketHelpPointsTitle, l.bracketHelpPointsBody),
+                    _helpEntry(c, Icons.star_outline, l.bracketHelpPointsTitle,
+                        l.bracketHelpPointsBody),
                     _helpEntry(c, Icons.lock_clock_outlined,
                         l.bracketHelpLockTitle, l.bracketHelpLockBody),
                     _helpEntry(c, Icons.groups_outlined,
@@ -1320,8 +1323,7 @@ class _BracketScreenState extends State<BracketScreen> {
       decoration: InputDecoration(
         labelText: label,
         counterText: '',
-        labelStyle:
-            EType.label(color: c.inkDim, size: 11, letterSpacing: 1.6),
+        labelStyle: EType.label(color: c.inkDim, size: 11, letterSpacing: 1.6),
         floatingLabelStyle:
             EType.label(color: c.live, size: 11, letterSpacing: 1.6),
         filled: true,
@@ -1436,8 +1438,8 @@ class _BracketScreenState extends State<BracketScreen> {
         actions: [
           _ghostBtn(l.cancel, () => Navigator.pop(ctx)),
           const SizedBox(width: 8),
-          _solidBtn(l.bracketLeagueJoin,
-              () => Navigator.pop(ctx, ctrl.text.trim())),
+          _solidBtn(
+              l.bracketLeagueJoin, () => Navigator.pop(ctx, ctrl.text.trim())),
         ],
       ),
     );
@@ -1450,7 +1452,6 @@ class _BracketScreenState extends State<BracketScreen> {
     await _reloadLeagues();
     if (mounted) setState(() => _leaguesBusy = false);
   }
-
 }
 
 // ── Reusable pieces ─────────────────────────────────────────────────────
@@ -1604,15 +1605,16 @@ class _SectionState extends State<_Section> {
                             Flexible(
                               child: Text(widget.title.toUpperCase(),
                                   style: EType.label(
-                                      color: c.ink,
-                                      size: 12,
-                                      letterSpacing: 2),
+                                      color: c.ink, size: 12, letterSpacing: 2),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis),
                             ),
-                            if (widget.points != null && widget.points! > 0) ...[
+                            if (widget.points != null &&
+                                widget.points! > 0) ...[
                               const SizedBox(width: 8),
-                              _PointsBadge(points: widget.points!, locked: widget.locked),
+                              _PointsBadge(
+                                  points: widget.points!,
+                                  locked: widget.locked),
                             ],
                           ],
                         ),
@@ -1630,7 +1632,8 @@ class _SectionState extends State<_Section> {
                   if (widget.locked)
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
-                      child: Icon(Icons.lock_outline, size: 14, color: c.inkDim),
+                      child:
+                          Icon(Icons.lock_outline, size: 14, color: c.inkDim),
                     ),
                   AnimatedRotation(
                     turns: _expanded ? 0.5 : 0.0,
@@ -1673,8 +1676,8 @@ class _PointsBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(2),
       ),
       child: Text('+$points',
-          style: EType.numeric(
-              color: color, size: 10, weight: FontWeight.w700)),
+          style:
+              EType.numeric(color: color, size: 10, weight: FontWeight.w700)),
     );
   }
 }
@@ -1758,8 +1761,8 @@ class _ResultBadge extends StatelessWidget {
           Icon(correct ? Icons.check : Icons.close, size: 11, color: color),
           const SizedBox(width: 3),
           Text(correct ? '+$points' : '0',
-              style:
-                  EType.numeric(color: color, size: 10, weight: FontWeight.w700)),
+              style: EType.numeric(
+                  color: color, size: 10, weight: FontWeight.w700)),
         ],
       ),
     );
@@ -1806,8 +1809,7 @@ class _ThirdBadge extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: selected ? c.live : Colors.transparent,
-        border:
-            Border.all(color: selected ? c.live : c.hairlineHi, width: 1.5),
+        border: Border.all(color: selected ? c.live : c.hairlineHi, width: 1.5),
       ),
       child: selected ? Icon(Icons.check, size: 13, color: c.pitch) : null,
     );
@@ -1834,8 +1836,8 @@ class _Crest extends StatelessWidget {
           ? Icon(Icons.shield_outlined, size: size * 0.6, color: c.inkDim)
           : Image.network(url!,
               fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) =>
-                  Icon(Icons.shield_outlined, size: size * 0.6, color: c.inkDim)),
+              errorBuilder: (_, __, ___) => Icon(Icons.shield_outlined,
+                  size: size * 0.6, color: c.inkDim)),
     );
   }
 }
@@ -1860,8 +1862,7 @@ class _SaveButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(label.toUpperCase(),
-              style: EType.label(
-                  color: c.pitch, size: 12, letterSpacing: 2.4)),
+              style: EType.label(color: c.pitch, size: 12, letterSpacing: 2.4)),
         ),
       ),
     );
@@ -1877,8 +1878,8 @@ class _InlineNote extends StatelessWidget {
     final c = context.col;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
-      child: Text(text,
-          style: EType.body(color: c.inkDim, size: 13, height: 1.4)),
+      child:
+          Text(text, style: EType.body(color: c.inkDim, size: 13, height: 1.4)),
     );
   }
 }
@@ -1912,7 +1913,11 @@ class _Empty extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(title.toUpperCase(),
-              style: EType.display(size: 22, color: c.ink, letterSpacing: 1.2),
+              style: EType.body(
+                  size: 20,
+                  color: c.ink,
+                  weight: FontWeight.w700,
+                  hebrew: Localizations.localeOf(context).languageCode == 'he'),
               textAlign: TextAlign.center),
           const SizedBox(height: 10),
           Text(subtitle,

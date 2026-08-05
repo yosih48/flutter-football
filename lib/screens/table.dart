@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
 import 'package:football/models/users.dart';
@@ -778,10 +777,13 @@ class TableScreenContentState extends State<TableScreenContent> {
                               child: Text(
                                 name.toUpperCase(),
                                 overflow: TextOverflow.ellipsis,
-                                style: EType.display(
-                                  size: 16,
+                                style: EType.body(
+                                  size: 15,
                                   color: sc.ink,
-                                  letterSpacing: 0.8,
+                                  weight: FontWeight.w700,
+                                  hebrew: Localizations.localeOf(innerCtx)
+                                          .languageCode ==
+                                      'he',
                                 ),
                               ),
                             ),
@@ -985,7 +987,7 @@ class TableScreenContentState extends State<TableScreenContent> {
               style: EType.label(color: c.inkDim, size: 10, letterSpacing: 3)),
           const SizedBox(height: 2),
           Text(
-            AppLocalizations.of(context)!.standings.toUpperCase(),
+            AppLocalizations.of(context)!.standings,
             style: EType.screenTitle(
               size: 26,
               color: c.ink,
@@ -1091,7 +1093,13 @@ class TableScreenContentState extends State<TableScreenContent> {
                           selectedGroupName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: EType.display(size: 18, color: c.ink),
+                          style: EType.body(
+                              size: 18,
+                              color: c.ink,
+                              weight: FontWeight.w700,
+                              hebrew: Localizations.localeOf(context)
+                                      .languageCode ==
+                                  'he'),
                         ),
                       ],
                     ),
@@ -1148,8 +1156,13 @@ class TableScreenContentState extends State<TableScreenContent> {
                   ),
                   const SizedBox(width: 8),
                   Text(_leagueName(),
-                      style: EType.display(
-                          size: 14, color: c.ink, letterSpacing: 0.2)),
+                      style: EType.body(
+                          size: 14,
+                          color: c.ink,
+                          weight: FontWeight.w700,
+                          hebrew:
+                              Localizations.localeOf(context).languageCode ==
+                                  'he')),
                   const Spacer(),
                   Text('$playerCount ${l.playersLabel}',
                       style: EType.body(color: c.inkMute, size: 12)),
@@ -1374,10 +1387,11 @@ class TableScreenContentState extends State<TableScreenContent> {
             const SizedBox(height: 22),
             Text(
               l.nogroupsfound.toUpperCase(),
-              style: EType.display(
-                size: 26,
+              style: EType.body(
+                size: 22,
                 color: c.ink,
-                letterSpacing: 1.2,
+                weight: FontWeight.w700,
+                hebrew: Localizations.localeOf(context).languageCode == 'he',
               ),
               textAlign: TextAlign.center,
             ),
@@ -1483,13 +1497,12 @@ class _HeaderActionButtonState extends State<_HeaderActionButton> {
               ],
               Text(
                 widget.label,
-                style: GoogleFonts.sora(
-                  fontSize: 13,
+                style: EType.body(
+                  size: 13,
                   color: textColor,
-                  fontWeight:
-                      widget.primary ? FontWeight.w700 : FontWeight.w600,
-                  letterSpacing: 0.2,
+                  weight: widget.primary ? FontWeight.w700 : FontWeight.w600,
                   height: 1.0,
+                  hebrew: Localizations.localeOf(context).languageCode == 'he',
                 ),
               ),
             ],

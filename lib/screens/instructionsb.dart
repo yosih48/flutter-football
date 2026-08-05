@@ -118,8 +118,8 @@ class _InstructionsBottomSheetState extends State<_InstructionsBottomSheet>
               // Add the system gesture/nav bar inset to the sheet height so the
               // navigation row at the bottom isn't clipped on devices that
               // reserve space there.
-              height: size.height * 0.75 +
-                  MediaQuery.viewPaddingOf(context).bottom,
+              height:
+                  size.height * 0.75 + MediaQuery.viewPaddingOf(context).bottom,
               decoration: BoxDecoration(
                 color: c.card,
                 borderRadius:
@@ -167,8 +167,7 @@ class _InstructionsBottomSheetState extends State<_InstructionsBottomSheet>
         controller: _controller,
         itemCount: widget.instructions.length,
         onPageChanged: (i) => setState(() => _currentPage = i),
-        itemBuilder: (context, i) =>
-            _buildCard(widget.instructions[i], c),
+        itemBuilder: (context, i) => _buildCard(widget.instructions[i], c),
       ),
     );
   }
@@ -204,11 +203,12 @@ class _InstructionsBottomSheetState extends State<_InstructionsBottomSheet>
           Text(
             ins.title,
             textAlign: TextAlign.center,
-            style: EType.display(
-              size: 22,
+            style: EType.body(
+              size: 20,
               color: c.ink,
-              letterSpacing: 0.8,
+              weight: FontWeight.w700,
               height: 1.15,
+              hebrew: Localizations.localeOf(context).languageCode == 'he',
             ),
           ),
 
@@ -287,13 +287,11 @@ class _InstructionsBottomSheetState extends State<_InstructionsBottomSheet>
 
           // Counter pill
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
               color: c.liveSoft,
               borderRadius: BorderRadius.circular(2),
-              border: Border.all(
-                  color: c.live.withOpacity(0.3), width: 1),
+              border: Border.all(color: c.live.withOpacity(0.3), width: 1),
             ),
             child: Text(
               '${_currentPage + 1}  /  ${widget.instructions.length}',
@@ -351,9 +349,7 @@ class _NavBtn extends StatelessWidget {
         decoration: BoxDecoration(
           color: filled ? c.live : Colors.transparent,
           borderRadius: BorderRadius.circular(2),
-          border: filled
-              ? null
-              : Border.all(color: c.hairline, width: 1),
+          border: filled ? null : Border.all(color: c.hairline, width: 1),
         ),
         child: Icon(
           icon,

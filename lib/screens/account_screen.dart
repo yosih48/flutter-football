@@ -43,7 +43,7 @@ class AccountScreen extends StatelessWidget {
                               color: c.inkMute, size: 10, letterSpacing: 3)),
                       const SizedBox(height: 2),
                       Text(
-                        l.account.toUpperCase(),
+                        l.account,
                         style: EType.screenTitle(
                           size: 26,
                           color: c.ink,

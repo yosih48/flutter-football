@@ -1435,7 +1435,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archiveDoneMessage => 'Archived';
 
   @override
-  String get myChampionshipPicks => 'My championship picks';
+  String get myChampionshipPicks => 'My picks';
 
   @override
   String get picksCompleted => 'Picks completed';

@@ -66,7 +66,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           color: c.inkDim, size: 10, letterSpacing: 3)),
                   const SizedBox(height: 2),
                   Text(
-                    l.settings.toUpperCase(),
+                    l.settings,
                     style: EType.screenTitle(
                       size: 26,
                       color: c.ink,

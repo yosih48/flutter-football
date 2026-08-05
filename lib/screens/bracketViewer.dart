@@ -112,17 +112,15 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       // Sort by final rank so index 0 = group winner, 1 = runner-up.
       list.sort((a, b) => a.rank.compareTo(b.rank));
       _groupRosters[letter] = list.map((r) => r.teamName).toList();
-      _groupActualTop2[letter] =
-          list.take(2).map((r) => r.teamName).toList();
+      _groupActualTop2[letter] = list.take(2).map((r) => r.teamName).toList();
       if (list.length > 2) thirds.add(list[2]);
     });
     // FIFA best-thirds ranking: points → goal difference → goals for.
-    thirds.sort((a, b) =>
-        b.points != a.points
-            ? b.points - a.points
-            : b.goalsDiff != a.goalsDiff
-                ? b.goalsDiff - a.goalsDiff
-                : b.goalsFor - a.goalsFor);
+    thirds.sort((a, b) => b.points != a.points
+        ? b.points - a.points
+        : b.goalsDiff != a.goalsDiff
+            ? b.goalsDiff - a.goalsDiff
+            : b.goalsFor - a.goalsFor);
     final n = _structure?.bestThirds ?? 0;
     _bestThirdsActual.addAll(thirds.take(n).map((r) => r.teamName));
   }
@@ -191,8 +189,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       a.trim().toLowerCase() == b.trim().toLowerCase();
 
   bool _isQualifier(String letter, String team) =>
-      (_groupActualTop2[letter] ?? const [])
-          .any((t) => _sameTeam(t, team));
+      (_groupActualTop2[letter] ?? const []).any((t) => _sameTeam(t, team));
 
   // Points for one group pick: qualifier points if the team finished top-2,
   // plus the order bonus if it landed in the exact predicted position.
@@ -202,8 +199,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     if (gs == null) return 0;
     final actual = _groupActualTop2[letter] ?? const [];
     final inTop2 = actual.any((t) => _sameTeam(t, team));
-    final exact =
-        predictedIndex < actual.length && _sameTeam(actual[predictedIndex], team);
+    final exact = predictedIndex < actual.length &&
+        _sameTeam(actual[predictedIndex], team);
     return (inTop2 ? gs.qualifierPoints : 0) + (exact ? gs.orderBonus : 0);
   }
 
@@ -217,8 +214,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   bool _isBestThird(String team) =>
       _bestThirdsActual.any((t) => _sameTeam(t, team));
 
-  int _scoreThirdPick(String team) =>
-      _isBestThird(team) ? (_structure?.stage('groups')?.thirdQualifierPoints ?? 0) : 0;
+  int _scoreThirdPick(String team) => _isBestThird(team)
+      ? (_structure?.stage('groups')?.thirdQualifierPoints ?? 0)
+      : 0;
 
   // ── Knockout results (mirrors backend computeKnockoutWinners) ──────────────
   static const Set<String> _finishedStatuses = {'FT', 'AET', 'PEN'};
@@ -281,7 +279,12 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             Text(l.bracketViewerTitle.toUpperCase(),
                 style: EType.label(color: c.inkDim, size: 9, letterSpacing: 2)),
             Text(widget.displayName.toUpperCase(),
-                style: EType.display(size: 20, color: c.ink, letterSpacing: 1),
+                style: EType.body(
+                    size: 18,
+                    color: c.ink,
+                    weight: FontWeight.w700,
+                    hebrew:
+                        Localizations.localeOf(context).languageCode == 'he'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
           ],
@@ -353,8 +356,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                   color: c.live, size: 22, weight: FontWeight.w700)),
           const SizedBox(width: 6),
           Text(l.bracketPointsLabel.toUpperCase(),
-              style:
-                  EType.label(color: c.inkDim, size: 9, letterSpacing: 1.6)),
+              style: EType.label(color: c.inkDim, size: 9, letterSpacing: 1.6)),
         ],
       ),
     );
@@ -419,9 +421,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                 logo: _logoFor(ranked[i]),
                 order: i + 1,
                 // Once settled: mark each pick correct/wrong + its points.
-                correct: _groupsSettled
-                    ? _isQualifier(letter, ranked[i])
-                    : null,
+                correct:
+                    _groupsSettled ? _isQualifier(letter, ranked[i]) : null,
                 points: _groupsSettled
                     ? _scoreGroupPick(letter, ranked[i], i)
                     : null,
@@ -490,8 +491,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   Widget _buildKnockoutSection(
       EditorialColors c, BracketStage stage, AppLocalizations l) {
     final matches = _matchesFor(stage.key);
-    final anyReady = matches.any((m) =>
-        _participant(m, true) != null || _participant(m, false) != null);
+    final anyReady = matches.any(
+        (m) => _participant(m, true) != null || _participant(m, false) != null);
     return _ViewerSection(
       title: stage.label(_lang(context)),
       points: _stageEarned(stage.key) ?? stage.points,
@@ -509,8 +510,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     );
   }
 
-  Widget _buildMatchCard(
-      EditorialColors c, BracketMatch m, BracketStage stage, AppLocalizations l) {
+  Widget _buildMatchCard(EditorialColors c, BracketMatch m, BracketStage stage,
+      AppLocalizations l) {
     final aTeam = _participant(m, true);
     final bTeam = _participant(m, false);
     final win = _winSel[m.id];
@@ -766,8 +767,8 @@ class _ResultBadge extends StatelessWidget {
           Icon(correct ? Icons.check : Icons.close, size: 11, color: color),
           const SizedBox(width: 3),
           Text(correct ? '+$points' : '0',
-              style:
-                  EType.numeric(color: color, size: 10, weight: FontWeight.w700)),
+              style: EType.numeric(
+                  color: color, size: 10, weight: FontWeight.w700)),
         ],
       ),
     );
@@ -809,8 +810,8 @@ class _InlineNote extends StatelessWidget {
     final c = context.col;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
-      child: Text(text,
-          style: EType.body(color: c.inkDim, size: 13, height: 1.4)),
+      child:
+          Text(text, style: EType.body(color: c.inkDim, size: 13, height: 1.4)),
     );
   }
 }
@@ -845,8 +846,12 @@ class _ViewerEmpty extends StatelessWidget {
             ),
             const SizedBox(height: 18),
             Text(title.toUpperCase(),
-                style:
-                    EType.display(size: 22, color: c.ink, letterSpacing: 1.2),
+                style: EType.body(
+                    size: 20,
+                    color: c.ink,
+                    weight: FontWeight.w700,
+                    hebrew:
+                        Localizations.localeOf(context).languageCode == 'he'),
                 textAlign: TextAlign.center),
             const SizedBox(height: 10),
             Text(subtitle,

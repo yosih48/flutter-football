@@ -284,7 +284,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
       child: Text(
         label,
         style:
-            EType.screenTitle(size: 24, color: c.ink, hebrew: _isHe(context)),
+            EType.screenTitle(size: 20, color: c.ink, hebrew: _isHe(context)),
       ),
     );
   }

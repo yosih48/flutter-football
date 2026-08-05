@@ -260,10 +260,11 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
             const SizedBox(width: 12),
             Text(
               AppLocalizations.of(context)!.matchEvents,
-              style: EType.display(
+              style: EType.body(
                 size: 16,
                 color: c.ink,
-                letterSpacing: 0.4,
+                weight: FontWeight.w700,
+                hebrew: Localizations.localeOf(context).languageCode == 'he',
               ),
             ),
           ],

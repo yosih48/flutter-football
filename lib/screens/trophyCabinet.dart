@@ -29,7 +29,11 @@ class TrophyCabinetScreen extends StatelessWidget {
         iconTheme: IconThemeData(color: c.ink),
         title: Text(
           l.trophyCabinet,
-          style: EType.display(size: 20, color: c.ink, letterSpacing: 0.6),
+          style: EType.screenTitle(
+            size: 20,
+            color: c.ink,
+            hebrew: Localizations.localeOf(context).languageCode == 'he',
+          ),
         ),
       ),
       body: SafeArea(

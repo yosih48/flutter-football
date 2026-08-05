@@ -77,9 +77,8 @@ class _BracketLeaderboardListState extends State<BracketLeaderboardList> {
             children: [
               InkWell(
                 onTap: hasBreakdown
-                    ? () => setState(() => expanded
-                        ? _expanded.remove(i)
-                        : _expanded.add(i))
+                    ? () => setState(
+                        () => expanded ? _expanded.remove(i) : _expanded.add(i))
                     : null,
                 child: Padding(
                   padding:
@@ -100,10 +99,13 @@ class _BracketLeaderboardListState extends State<BracketLeaderboardList> {
                           children: [
                             Flexible(
                               child: Text(r.name.toUpperCase(),
-                                  style: EType.display(
-                                      size: 17,
+                                  style: EType.body(
+                                      size: 15,
                                       color: isMe ? c.live : c.ink,
-                                      letterSpacing: 0.6),
+                                      weight: FontWeight.w700,
+                                      hebrew: Localizations.localeOf(context)
+                                              .languageCode ==
+                                          'he'),
                                   overflow: TextOverflow.ellipsis),
                             ),
                             if (r.isOwner) ...[
@@ -216,8 +218,7 @@ class _BracketLeaderboardListState extends State<BracketLeaderboardList> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.account_tree_outlined,
-                        size: 14, color: c.live),
+                    Icon(Icons.account_tree_outlined, size: 14, color: c.live),
                     const SizedBox(width: 8),
                     Text(l.bracketViewFull.toUpperCase(),
                         style: EType.label(

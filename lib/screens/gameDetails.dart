@@ -1258,10 +1258,13 @@ class _GameDetailsState extends State<GameDetails> {
                           child: Text(
                             name.toUpperCase(),
                             overflow: TextOverflow.ellipsis,
-                            style: EType.display(
-                              size: 16,
+                            style: EType.body(
+                              size: 15,
                               color: sc.ink,
-                              letterSpacing: 0.8,
+                              weight: FontWeight.w700,
+                              hebrew: Localizations.localeOf(sheetCtx)
+                                      .languageCode ==
+                                  'he',
                             ),
                           ),
                         ),
