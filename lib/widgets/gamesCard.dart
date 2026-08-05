@@ -226,15 +226,23 @@ class GameWidget extends StatelessWidget {
           ? onTeamTap!(team)
           : TeamLinkHandler.linkToTeam(team.name),
       child: Text(
-        display.toUpperCase(),
+        // Natural case, not uppercase: all-caps English read visibly taller and
+        // heavier than the (caseless) Hebrew names beside it. Rendering English
+        // in its own case matches the Hebrew's weight and size.
+        display,
         textAlign: alignEnd ? TextAlign.right : TextAlign.left,
         maxLines: maxLines,
         softWrap: maxLines > 1,
         overflow: TextOverflow.ellipsis,
-        style: EType.teamNameDisplay(
+        // Use the body voice (Sora Latin / Rubik Hebrew) rather than the
+        // teamNameDisplay Bebas face: Bebas is the app's "old" condensed
+        // display font and left English names inconsistent with the rest of
+        // the UI. The Hebrew path resolves to Rubik w700 either way, so Hebrew
+        // names are unchanged.
+        style: EType.body(
           size: 16,
-          letterSpacing: 0.6,
           height: 1.05,
+          weight: FontWeight.w700,
           color: c.ink,
           hebrew: heName,
         ),

@@ -30,6 +30,21 @@ class AppLocalizationsHe extends AppLocalizations {
   String get login => 'היכנס';
 
   @override
+  String get loginWelcomeBack => 'ברוכים השבים';
+
+  @override
+  String get loginSubtitle => 'התחברו כדי להמשיך לנחש';
+
+  @override
+  String get signupTitle => 'יצירת חשבון';
+
+  @override
+  String get signupSubtitle => 'הצטרפו ותתחילו לצבור נקודות';
+
+  @override
+  String get signupWithGoogle => 'הרשמה עם גוגל';
+
+  @override
   String get donthaveanaccount => 'עדיין אין לך חשבון?';
 
   @override

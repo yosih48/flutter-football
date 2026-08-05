@@ -30,7 +30,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController    = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
@@ -56,20 +56,25 @@ class _LoginScreenState extends State<LoginScreen> {
         context: context,
         builder: (dialogCtx) {
           final dc = dialogCtx.col;
+          final isHe = Localizations.localeOf(dialogCtx).languageCode == 'he';
           return AlertDialog(
             backgroundColor: dc.card,
             surfaceTintColor: Colors.transparent,
             shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(2)),
+              borderRadius: BorderRadius.all(Radius.circular(20)),
             ),
             title: Text(
-              l.emailsent.toUpperCase(),
-              style: EType.display(
-                  size: 18, color: dc.ink, letterSpacing: 0.8),
+              l.emailsent,
+              style: EType.body(
+                  size: 18,
+                  color: dc.ink,
+                  weight: FontWeight.w700,
+                  hebrew: isHe),
             ),
             content: Text(
               l.emailsentlink,
-              style: EType.body(color: dc.inkMute, size: 13, height: 1.55),
+              style: EType.body(
+                  color: dc.inkMute, size: 13, height: 1.55, hebrew: isHe),
             ),
             actions: [
               GestureDetector(
@@ -133,11 +138,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // ── Build ──────────────────────────────────────────────────────────────
+  bool get _isHe => Localizations.localeOf(context).languageCode == 'he';
+
   @override
   Widget build(BuildContext context) {
     final c = context.col;
     final l = AppLocalizations.of(context)!;
     final authProvider = Provider.of<AuthProvider>(context);
+    final isHe = _isHe;
 
     return Scaffold(
       backgroundColor: c.pitch,
@@ -148,72 +156,81 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 56),
+              const SizedBox(height: 48),
 
               // ── Brand mark ─────────────────────────────────────
+              // Solid green disc with a white ball — the login's anchor.
               Container(
-                width: 60,
-                height: 60,
+                width: 84,
+                height: 84,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: c.cardHi,
+                  color: c.live,
                   shape: BoxShape.circle,
-                  border: Border.all(color: c.hairline, width: 1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: c.live.withValues(alpha: 0.30),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-                child:
-                    Icon(Icons.sports_soccer, color: c.live, size: 26),
+                child: const Icon(Icons.sports_soccer,
+                    color: Colors.white, size: 40),
               ),
               const SizedBox(height: 20),
               Text(
-                l.login.toUpperCase(),
-                style: EType.display(
-                    size: 28, color: c.ink, letterSpacing: 1.6),
+                l.loginWelcomeBack,
+                textAlign: TextAlign.center,
+                style: EType.screenTitle(size: 28, color: c.ink, hebrew: isHe),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 10),
               // Kit-stripe accent
               Container(
-                width: 28, height: 2, color: c.live,
+                width: 40,
+                height: 3,
+                decoration: BoxDecoration(
+                  color: c.live,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l.loginSubtitle,
+                textAlign: TextAlign.center,
+                style: EType.body(color: c.inkMute, size: 13, hebrew: isHe),
               ),
 
-              const SizedBox(height: 36),
+              const SizedBox(height: 34),
 
-              // ── Form card ──────────────────────────────────────
-              Container(
-                decoration: BoxDecoration(
-                  color: c.card,
-                  borderRadius: BorderRadius.circular(2),
-                  border: Border.all(color: c.hairline, width: 1),
-                ),
-                child: Column(
-                  children: [
-                    // Email row
-                    _AuthField(
-                      icon: Icons.mail_outline,
-                      hintText: l.email,
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      c: c,
-                    ),
-                    Container(height: 1, color: c.hairline),
-                    // Password row
-                    _AuthField(
-                      icon: Icons.lock_outline,
-                      hintText: l.password,
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      c: c,
-                      trailing: GestureDetector(
-                        onTap: () => setState(
-                            () => _obscurePassword = !_obscurePassword),
-                        child: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                          size: 18,
-                          color: c.inkDim,
-                        ),
-                      ),
-                    ),
-                  ],
+              // ── Email ──────────────────────────────────────────
+              _AuthField(
+                icon: Icons.mail_outline,
+                hintText: l.email,
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                c: c,
+                hebrew: isHe,
+              ),
+              const SizedBox(height: 12),
+              // ── Password ───────────────────────────────────────
+              _AuthField(
+                icon: Icons.lock_outline,
+                hintText: l.password,
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                c: c,
+                hebrew: isHe,
+                trailing: GestureDetector(
+                  onTap: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
+                  child: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    size: 20,
+                    color: c.inkDim,
+                  ),
                 ),
               ),
 
@@ -221,21 +238,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // ── Forgot password ────────────────────────────────
               Align(
-                alignment: Alignment.centerRight,
+                alignment: AlignmentDirectional.centerStart,
                 child: GestureDetector(
                   onTap: authProvider.isLoading ? null : _sendResetEmail,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Text(
-                      l.forgotpassword.toUpperCase(),
-                      style: EType.label(
-                          color: c.inkMute, size: 10, letterSpacing: 1.6),
+                      l.forgotpassword,
+                      style: EType.body(
+                          color: c.live,
+                          size: 13,
+                          weight: FontWeight.w600,
+                          hebrew: isHe),
                     ),
                   ),
                 ),
               ),
 
-              const SizedBox(height: 28),
+              const SizedBox(height: 24),
 
               // ── Login button ───────────────────────────────────
               GestureDetector(
@@ -243,12 +263,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 17),
                   decoration: BoxDecoration(
-                    color: authProvider.isLoading
-                        ? c.hairlineHi
-                        : c.live,
-                    borderRadius: BorderRadius.circular(2),
+                    color: authProvider.isLoading ? c.hairlineHi : c.live,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: authProvider.isLoading
+                        ? null
+                        : [
+                            BoxShadow(
+                              color: c.live.withValues(alpha: 0.30),
+                              blurRadius: 18,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
                   ),
                   child: authProvider.isLoading
                       ? Center(
@@ -257,20 +284,30 @@ class _LoginScreenState extends State<LoginScreen> {
                             height: 18,
                             child: CircularProgressIndicator(
                               strokeWidth: 1.5,
-                              valueColor:
-                                  AlwaysStoppedAnimation(c.pitch),
+                              valueColor: AlwaysStoppedAnimation(Colors.white),
                             ),
                           ),
                         )
-                      : Center(
-                          child: Text(
-                            l.login.toUpperCase(),
-                            style: EType.label(
-                              color: c.pitch,
-                              size: 12,
-                              letterSpacing: 2.4,
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              l.login,
+                              style: EType.body(
+                                  color: Colors.white,
+                                  size: 15,
+                                  weight: FontWeight.w700,
+                                  hebrew: isHe),
                             ),
-                          ),
+                            const SizedBox(width: 8),
+                            // Direction-aware "proceed" arrow: points along the
+                            // reading direction (left in Hebrew, right in en).
+                            Icon(
+                              isHe ? Icons.arrow_back : Icons.arrow_forward,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ],
                         ),
                 ),
               ),
@@ -280,19 +317,16 @@ class _LoginScreenState extends State<LoginScreen> {
               // ── OR divider ─────────────────────────────────────
               Row(
                 children: [
-                  Expanded(
-                      child: Container(height: 1, color: c.hairline)),
+                  Expanded(child: Container(height: 1, color: c.hairline)),
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
                     child: Text(
-                      l.or.toUpperCase(),
-                      style: EType.label(
-                          color: c.inkDim, size: 10, letterSpacing: 2),
+                      l.or,
+                      style:
+                          EType.body(color: c.inkDim, size: 12, hebrew: isHe),
                     ),
                   ),
-                  Expanded(
-                      child: Container(height: 1, color: c.hairline)),
+                  Expanded(child: Container(height: 1, color: c.hairline)),
                 ],
               ),
 
@@ -301,8 +335,7 @@ class _LoginScreenState extends State<LoginScreen> {
               // ── Google sign-in ─────────────────────────────────
               GoogleSignInButton(
                 onSignInSuccess: (String token) {
-                  final ap =
-                      Provider.of<AuthProvider>(context, listen: false);
+                  final ap = Provider.of<AuthProvider>(context, listen: false);
                   if (ap.currentUser?.isFirstLogin == true) {
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(
@@ -315,8 +348,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     );
                   } else {
                     Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                          builder: (_) => MobileScreenLayout()),
+                      MaterialPageRoute(builder: (_) => MobileScreenLayout()),
                       (route) => false,
                     );
                   }
@@ -326,7 +358,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
               ),
 
-              const SizedBox(height: 48),
+              const SizedBox(height: 40),
 
               // ── Sign-up link ───────────────────────────────────
               Row(
@@ -334,18 +366,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Text(
                     l.donthaveanaccount,
-                    style: EType.body(color: c.inkMute, size: 13),
+                    style: EType.body(color: c.inkMute, size: 13, hebrew: isHe),
                   ),
                   const SizedBox(width: 6),
                   GestureDetector(
                     onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                          builder: (_) => const SignupScreen()),
+                      MaterialPageRoute(builder: (_) => const SignupScreen()),
                     ),
                     child: Text(
-                      l.signup.toUpperCase(),
-                      style: EType.label(
-                          color: c.live, size: 11, letterSpacing: 1.4),
+                      l.signup,
+                      style: EType.body(
+                          color: c.live,
+                          size: 13,
+                          weight: FontWeight.w700,
+                          hebrew: isHe),
                     ),
                   ),
                 ],
@@ -360,49 +394,57 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-// ── Reusable auth field row ────────────────────────────────────────────────
+// ── Reusable auth field ─────────────────────────────────────────────────────
+// A standalone rounded pill: input on the leading side, the field's icon at the
+// trailing edge (left in RTL), with an optional inner control (e.g. the
+// password eye) sitting just inside it.
 class _AuthField extends StatelessWidget {
   const _AuthField({
     required this.icon,
     required this.hintText,
     required this.controller,
     required this.c,
+    required this.hebrew,
     this.keyboardType,
     this.obscureText = false,
     this.trailing,
   });
 
-  final IconData                icon;
-  final String                  hintText;
-  final TextEditingController   controller;
-  final EditorialColors         c;
-  final TextInputType?          keyboardType;
-  final bool                    obscureText;
-  final Widget?                 trailing;
+  final IconData icon;
+  final String hintText;
+  final TextEditingController controller;
+  final EditorialColors c;
+  final bool hebrew;
+  final TextInputType? keyboardType;
+  final bool obscureText;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return Container(
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: c.hairline, width: 1),
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: c.inkDim),
-          const SizedBox(width: 12),
           Expanded(
             child: TextField(
               controller: controller,
               keyboardType: keyboardType,
               obscureText: obscureText,
-              style: EType.body(color: c.ink, size: 14),
+              style: EType.body(color: c.ink, size: 14, hebrew: hebrew),
               cursorColor: c.live,
               cursorWidth: 1.5,
               decoration: InputDecoration(
                 hintText: hintText,
-                hintStyle: EType.body(color: c.inkFaint, size: 14),
+                hintStyle:
+                    EType.body(color: c.inkFaint, size: 14, hebrew: hebrew),
                 border: InputBorder.none,
                 isDense: true,
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 16),
+                contentPadding: const EdgeInsets.symmetric(vertical: 18),
               ),
             ),
           ),
@@ -410,6 +452,8 @@ class _AuthField extends StatelessWidget {
             const SizedBox(width: 8),
             trailing!,
           ],
+          const SizedBox(width: 12),
+          Icon(icon, size: 20, color: c.inkDim),
         ],
       ),
     );

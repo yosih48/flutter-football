@@ -30,6 +30,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get login => 'log in';
 
   @override
+  String get loginWelcomeBack => 'Welcome back';
+
+  @override
+  String get loginSubtitle => 'Log in to keep predicting';
+
+  @override
+  String get signupTitle => 'Create account';
+
+  @override
+  String get signupSubtitle => 'Sign up and start earning points';
+
+  @override
+  String get signupWithGoogle => 'Sign up with Google';
+
+  @override
   String get donthaveanaccount => 'dont have an account?';
 
   @override

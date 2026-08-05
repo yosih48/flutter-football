@@ -698,7 +698,11 @@ class _MasterNotifCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: EType.display(size: 16, color: c.ink, height: 1.1)),
+                    style: EType.body(
+                        size: 16,
+                        color: c.ink,
+                        weight: FontWeight.w600,
+                        height: 1.1)),
                 const SizedBox(height: 3),
                 Text(subtitle,
                     style: EType.body(color: c.inkMute, size: 12, height: 1.3)),
@@ -780,7 +784,11 @@ class _NotifRowCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: EType.display(size: 15, color: c.ink, height: 1.1)),
+                    style: EType.body(
+                        size: 15,
+                        color: c.ink,
+                        weight: FontWeight.w600,
+                        height: 1.1)),
                 const SizedBox(height: 3),
                 Text(subtitle,
                     style:
@@ -873,8 +881,11 @@ class _LeagueNotifGroup extends StatelessWidget {
                         name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style:
-                            EType.display(size: 16, color: c.ink, height: 1.1),
+                        style: EType.body(
+                            size: 16,
+                            color: c.ink,
+                            weight: FontWeight.w600,
+                            height: 1.1),
                       ),
                       const SizedBox(height: 3),
                       Text(subtitle,

@@ -137,6 +137,36 @@ abstract class AppLocalizations {
   /// **'log in'**
   String get login;
 
+  /// No description provided for @loginWelcomeBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back'**
+  String get loginWelcomeBack;
+
+  /// No description provided for @loginSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in to keep predicting'**
+  String get loginSubtitle;
+
+  /// No description provided for @signupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get signupTitle;
+
+  /// No description provided for @signupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up and start earning points'**
+  String get signupSubtitle;
+
+  /// No description provided for @signupWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up with Google'**
+  String get signupWithGoogle;
+
   /// No description provided for @donthaveanaccount.
   ///
   /// In en, this message translates to:
