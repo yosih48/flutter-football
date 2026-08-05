@@ -101,18 +101,47 @@ class GroupsMethods {
     }
   }
 
-  Future<void> addGroupToUser(String groupId, currentUserId, context) async {
-    print(' groupId: ${groupId}');
+  // Resolve a group from a code the user typed. The backend accepts both the
+  // short joinCode (e.g. "K7QP2M") and, for backward compatibility, a raw group
+  // _id (the old long share code). Falls back to a client-side _id match if the
+  // endpoint is unavailable (e.g. backend not yet deployed).
+  Future<Map<String, dynamic>?> fetchGroupByCode(String code) async {
+    final trimmed = code.trim();
+    if (trimmed.isEmpty) return null;
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/groups/byCode/${Uri.encodeComponent(trimmed)}'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is Map && data['error'] == false && data['msg'] != null) {
+          return Map<String, dynamic>.from(data['msg']);
+        }
+      }
+      // 404 / not found → no group for this code.
+      if (response.statusCode == 404) return null;
+    } catch (e) {
+      print('fetchGroupByCode error (falling back to _id match): $e');
+    }
+    // Fallback: old behaviour — match the raw _id against the full group list.
+    try {
+      final groups = await fetchGroups();
+      for (final g in groups) {
+        if (g['_id'] == trimmed) return Map<String, dynamic>.from(g);
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> addGroupToUser(String groupCode, currentUserId, context) async {
+    print(' groupCode: ${groupCode}');
 
     try {
-      // Fetch the list of groups
-      final groups = await fetchGroups();
-//  print(' groups: ${ groups}');
-      // Find the group with the specified ID
-      final group = groups.firstWhere(
-        (g) => g['_id'] == groupId,
-        // orElse: () => null,
-      );
+      // Resolve the group from the typed code (short joinCode or raw _id).
+      final group = await fetchGroupByCode(groupCode);
       final user = await UsersMethods().fetchUserById(currentUserId);
       print(' user: ${user}');
       if (group != null) {

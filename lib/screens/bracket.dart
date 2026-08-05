@@ -1113,10 +1113,13 @@ class _BracketScreenState extends State<BracketScreen> {
             name.toLowerCase() == 'public' ||
             !myNames.contains(name)) continue;
         final createdBy = (g['createdBy'] ?? '').toString();
+        // Shown/shared as the join code: prefer the short joinCode, fall back
+        // to the raw _id for old groups not yet backfilled.
+        final joinCode = (g['joinCode'] ?? '').toString();
         list.add(BracketLeagueInfo(
           id: (g['_id'] ?? '').toString(),
           name: name,
-          code: (g['_id'] ?? '').toString(),
+          code: joinCode.isNotEmpty ? joinCode : (g['_id'] ?? '').toString(),
           leagueId: widget.leagueId,
           season: season,
           ownerUserId: createdBy,

@@ -308,7 +308,12 @@ class TableScreenContentState extends State<TableScreenContent> {
     try {
       final groups = await GroupsMethods().fetchGroups();
       final group = groups.firstWhere((g) => g['name'] == groupName);
-      final groupCode = group['_id'];
+      // Prefer the short, shareable joinCode; fall back to the raw _id for old
+      // groups that predate joinCode and haven't been backfilled yet.
+      final groupCode =
+          (group['joinCode']?.toString().isNotEmpty ?? false)
+              ? group['joinCode'].toString()
+              : group['_id'].toString();
       await FlutterClipboard.copy(groupCode);
       _showInviteDialog(groupCode);
     } catch (e) {
