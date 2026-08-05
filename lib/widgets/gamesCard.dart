@@ -389,7 +389,7 @@ class _OddsCell extends StatelessWidget {
       decoration: BoxDecoration(
         color: c.terrace,
         border: Border.all(color: c.hairline, width: 1),
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -508,7 +508,9 @@ class _GuessInputState extends State<_GuessInput> {
   }
 
   OutlineInputBorder _border(Color col) => OutlineInputBorder(
-        borderRadius: BorderRadius.circular(2),
+        // Matches the played card's score pill (radius 10) so the guess inputs
+        // read as the editable version of the same element.
+        borderRadius: BorderRadius.circular(10),
         borderSide: BorderSide(color: col, width: 1),
       );
 }
