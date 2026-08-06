@@ -10,11 +10,9 @@ class TrophyCabinetScreen extends StatelessWidget {
   const TrophyCabinetScreen({
     super.key,
     required this.userId,
-    required this.allowedIds,
   });
 
   final String userId;
-  final Set<String> allowedIds;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +45,6 @@ class TrophyCabinetScreen extends StatelessWidget {
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
               child: TrophyCabinetTab(
                 userId: userId,
-                allowedIds: allowedIds,
               ),
             ),
           ),

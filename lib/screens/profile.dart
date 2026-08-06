@@ -228,7 +228,6 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
           MaterialPageRoute(
             builder: (_) => TrophyCabinetScreen(
               userId: currentUserId,
-              allowedIds: _allowedIds,
             ),
           ),
         ),

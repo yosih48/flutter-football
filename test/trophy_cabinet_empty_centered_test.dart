@@ -17,7 +17,7 @@ Widget _screen(Locale locale) => MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       locale: locale,
-      home: const TrophyCabinetScreen(userId: 'u1', allowedIds: {'39'}),
+      home: const TrophyCabinetScreen(userId: 'u1'),
     );
 
 void main() {

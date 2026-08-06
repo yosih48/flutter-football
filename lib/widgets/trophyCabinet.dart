@@ -15,13 +15,10 @@ class TrophyCabinetTab extends StatefulWidget {
   const TrophyCabinetTab({
     super.key,
     required this.userId,
-    required this.allowedIds,
     this.methods = const TrophyMethods(),
   });
 
   final String userId;
-  // Supported ∩ opted-in league ids (string), same set the profile uses.
-  final Set<String> allowedIds;
   final TrophyMethods methods;
 
   @override
@@ -40,10 +37,14 @@ class _TrophyCabinetTabState extends State<TrophyCabinetTab> {
 
   Future<void> _load() async {
     try {
+      // Show the full archived history as returned by the backend — trophies
+      // are permanent and must NOT be filtered by the user's currently-enabled
+      // leagues. A league they played in a past season (but have since opted
+      // out of) still belongs in their cabinet.
       final history = await widget.methods.fetchHistory(widget.userId);
       if (!mounted) return;
       setState(() {
-        _history = _filter(history);
+        _history = history;
         _loading = false;
       });
     } catch (_) {
@@ -53,10 +54,6 @@ class _TrophyCabinetTabState extends State<TrophyCabinetTab> {
       setState(() => _loading = false);
     }
   }
-
-  List<SeasonRecord> _filter(List<SeasonRecord> src) => src
-      .where((r) => widget.allowedIds.contains(r.leagueId.toString()))
-      .toList();
 
   @override
   Widget build(BuildContext context) {

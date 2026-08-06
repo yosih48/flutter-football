@@ -45,7 +45,6 @@ void main() {
   testWidgets('shows empty state when there is no history', (tester) async {
     await tester.pumpWidget(_wrap(TrophyCabinetTab(
       userId: 'u1',
-      allowedIds: const {'39'},
       methods: const _FakeTrophyMethods([]),
     )));
     await tester.pumpAndSettle();
@@ -56,7 +55,6 @@ void main() {
       (tester) async {
     await tester.pumpWidget(_wrap(TrophyCabinetTab(
       userId: 'u1',
-      allowedIds: const {'39'},
       methods:
           _FakeTrophyMethods([_rec(season: 2026, rank: 1, totalPlayers: 42)]),
     )));
@@ -70,7 +68,6 @@ void main() {
   testWidgets('summary bar totals points, podiums and wins', (tester) async {
     await tester.pumpWidget(_wrap(TrophyCabinetTab(
       userId: 'u1',
-      allowedIds: const {'39', '140'},
       methods: _FakeTrophyMethods([
         _rec(leagueId: 39, season: 2026, rank: 1),
         _rec(leagueId: 140, season: 2026, rank: 4),
@@ -84,20 +81,22 @@ void main() {
     expect(find.text('First Places'), findsOneWidget);
   });
 
-  testWidgets('filters out leagues not in allowedIds', (tester) async {
+  testWidgets('shows history for every league the user ever played',
+      (tester) async {
+    // Trophies are permanent: a past-season record must appear even though the
+    // widget no longer knows or cares which leagues the user is enrolled in now.
     await tester.pumpWidget(_wrap(TrophyCabinetTab(
       userId: 'u1',
-      allowedIds: const {'140'}, // record is league 39 → filtered out
-      methods: _FakeTrophyMethods([_rec(leagueId: 39)]),
+      methods: _FakeTrophyMethods([_rec(leagueId: 39, season: 2025)]),
     )));
     await tester.pumpAndSettle();
-    expect(find.text('NO TROPHIES YET'), findsOneWidget);
+    expect(find.text('NO TROPHIES YET'), findsNothing);
+    expect(find.textContaining('2025'), findsWidgets);
   });
 
   testWidgets('groups records by season, newest first', (tester) async {
     await tester.pumpWidget(_wrap(TrophyCabinetTab(
       userId: 'u1',
-      allowedIds: const {'39'},
       methods: _FakeTrophyMethods([
         _rec(season: 2024),
         _rec(season: 2026),
