@@ -869,7 +869,6 @@ class _GameDetailsState extends State<GameDetails> {
 
     final countStr = NumberFormat.decimalPattern().format(total);
     int pct(int n) => total == 0 ? 0 : (n / total * 100).round();
-    final actual = _actualOutcome();
 
     // Always a single line now: the split bar plus an inline legend. The old
     // expand/collapse toggle and the per-outcome rows are gone.
@@ -906,19 +905,17 @@ class _GameDetailsState extends State<GameDetails> {
                   _outcomeColor('home'),
                   localizedTeamName(context, _currentGame.home.name),
                   pct(homeWins),
-                  actual == 'home',
                 ),
               ),
               Expanded(
-                child: _distLegend(_outcomeColor('draw'), l.drawLabel,
-                    pct(draws), actual == 'draw'),
+                child: _distLegend(
+                    _outcomeColor('draw'), l.drawLabel, pct(draws)),
               ),
               Expanded(
                 child: _distLegend(
                   _outcomeColor('away'),
                   localizedTeamName(context, _currentGame.away.name),
                   pct(awayWins),
-                  actual == 'away',
                 ),
               ),
             ],
@@ -928,9 +925,8 @@ class _GameDetailsState extends State<GameDetails> {
     );
   }
 
-  // One legend entry: colour dot, who it refers to, the percentage, and a tick
-  // on the outcome that actually happened.
-  Widget _distLegend(Color color, String label, int pctVal, bool actual) {
+  // One legend entry: colour dot, who it refers to, and the percentage.
+  Widget _distLegend(Color color, String label, int pctVal) {
     final c = context.col;
     final isHe = Localizations.localeOf(context).languageCode == 'he';
     return Row(
@@ -945,10 +941,6 @@ class _GameDetailsState extends State<GameDetails> {
         Text('$pctVal%',
             style:
                 EType.numeric(color: color, size: 13, weight: FontWeight.w700)),
-        if (actual) ...[
-          const SizedBox(width: 4),
-          Icon(Icons.check, size: 13, color: color),
-        ],
         const SizedBox(width: 6),
         // Flexible so a long name ellipsises rather than overflowing the third.
         Flexible(
@@ -1290,9 +1282,11 @@ class _GameDetailsState extends State<GameDetails> {
 
     return Column(
       children: [
-        // Header row.
+        // Header row. Horizontal inset matches the data card's inner content
+        // edge (1px border + 12px row padding) so the # / NAME / GUESS / POINTS
+        // headers line up with the columns below them.
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 4),
           child: Row(
             children: [
               SizedBox(

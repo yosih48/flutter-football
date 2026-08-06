@@ -1255,12 +1255,15 @@ class TableScreenContentState extends State<TableScreenContent> {
               const SizedBox(width: 28), // change arrow column (no label)
               SizedBox(
                 width: 64,
+                // Two lines so the longer English label ("DAILY POINTS") wraps
+                // inside its own column instead of truncating and crowding the
+                // POINTS column. Hebrew's shorter label just stays on one line.
                 child: Text(l.daypoints.toUpperCase(),
                     textAlign: TextAlign.center,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: EType.label(
-                        color: c.inkDim, size: 10, letterSpacing: 0.3)),
+                        color: c.inkDim, size: 10, letterSpacing: 0)),
               ),
               SizedBox(
                 width: 50,
@@ -1348,13 +1351,13 @@ class TableScreenContentState extends State<TableScreenContent> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.circular(14),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            border: Border.all(color: color.withOpacity(0.4), width: 1),
-            borderRadius: BorderRadius.circular(2),
+            border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
+            borderRadius: BorderRadius.circular(14),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
