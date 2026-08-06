@@ -113,6 +113,55 @@ Future<String?> openWinnerPicker(
   );
 }
 
+// The topscorers and getTeams endpoints both come from API-Football but carry
+// team names independently, so they can differ by case, punctuation, or a
+// long/short form ("Newcastle United" vs "Newcastle"). Worse, some topscorer
+// files (e.g. Ligat Haal) put the Hebrew team name in the english field. To
+// resolve a crest across all of that we normalize aggressively and match
+// loosely, and also index each team by its Hebrew name via [kClubNamesHe].
+String _teamKey(String s) => s
+    .trim()
+    .toLowerCase()
+    // Drop gershayim/geresh, quotes and dots so "בית״ר" == "ביתר" and
+    // "A.F.C." == "AFC".
+    .replaceAll(RegExp('[׳״\'"`.]'), '')
+    .replaceAll(RegExp(r'\s+'), ' ');
+
+// Logo lookup keyed by BOTH the team's english name and its Hebrew name (from
+// kClubNamesHe), so a player whose team is stored in either language resolves.
+Map<String, String> _teamLogoIndex(List<PickerOption> teams) {
+  final byTeam = <String, String>{};
+  for (final t in teams) {
+    final url = t.iconUrl;
+    if (url == null || url.isEmpty) continue;
+    byTeam[_teamKey(t.value)] = url;
+    final he = kClubNamesHe[t.value.trim()];
+    if (he != null && he.isNotEmpty) byTeam[_teamKey(he)] = url;
+  }
+  return byTeam;
+}
+
+// Exact key first; then an affix-tolerant pass so a short api name matches a
+// longer club name and vice versa ("Newcastle" ⊂ "Newcastle United",
+// "Bournemouth" ⊂ "AFC Bournemouth"). Only whole-word leading/trailing overlaps
+// count, so "Manchester City" never collides with "Manchester United".
+String? _logoForTeam(Map<String, String> byTeam, String team) {
+  final k = _teamKey(team);
+  if (k.isEmpty) return null;
+  final exact = byTeam[k];
+  if (exact != null) return exact;
+  for (final e in byTeam.entries) {
+    final ek = e.key;
+    if (k.startsWith('$ek ') ||
+        k.endsWith(' $ek') ||
+        ek.startsWith('$k ') ||
+        ek.endsWith(' $k')) {
+      return e.value;
+    }
+  }
+  return null;
+}
+
 Future<String?> openTopScorerPicker(
   BuildContext context, {
   required String clientId,
@@ -141,10 +190,7 @@ Future<String?> openTopScorerPicker(
       ]);
       final players = results[0] as List<Map<String, String>>;
       final teams = results[1] as List<PickerOption>;
-      final logoByTeam = <String, String>{
-        for (final t in teams)
-          if (t.iconUrl != null && t.iconUrl!.isNotEmpty) t.value: t.iconUrl!,
-      };
+      final logoByTeam = _teamLogoIndex(teams);
 
       // The persisted value is always name_english so the data shape is locale-
       // agnostic across sessions. Only the label rendered in the dropdown
@@ -159,7 +205,10 @@ Future<String?> openTopScorerPicker(
           value: en,
           label: isHebrew ? he : en,
           subtitle: isHebrew ? heTeam : enTeam,
-          iconUrl: logoByTeam[enTeam],
+          // Try the english team first, then the Hebrew one — some files store
+          // the team only in Hebrew even in the english field.
+          iconUrl: _logoForTeam(logoByTeam, enTeam) ??
+              _logoForTeam(logoByTeam, heTeam),
         );
       }).toList();
     },
@@ -205,16 +254,17 @@ Future<String?> resolveTopScorerLogo(int leagueId, String playerEnglish) async {
     final players = results[0] as List<Map<String, String>>;
     final teams = results[1] as List<PickerOption>;
     var teamEnglish = '';
+    var teamHebrew = '';
     for (final p in players) {
       if (p['name_english'] == playerEnglish) {
         teamEnglish = p['team_english'] ?? '';
+        teamHebrew = p['team'] ?? '';
         break;
       }
     }
-    if (teamEnglish.isEmpty) return null;
-    for (final t in teams) {
-      if (t.value == teamEnglish) return t.iconUrl;
-    }
+    if (teamEnglish.isEmpty && teamHebrew.isEmpty) return null;
+    final byTeam = _teamLogoIndex(teams);
+    return _logoForTeam(byTeam, teamEnglish) ?? _logoForTeam(byTeam, teamHebrew);
   } catch (_) {}
   return null;
 }
