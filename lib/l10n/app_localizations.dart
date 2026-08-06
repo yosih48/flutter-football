@@ -1031,6 +1031,12 @@ abstract class AppLocalizations {
   /// **'All Competitions'**
   String get allCompetitions;
 
+  /// No description provided for @allLeagues.
+  ///
+  /// In en, this message translates to:
+  /// **'All leagues'**
+  String get allLeagues;
+
   /// No description provided for @provideEmail.
   ///
   /// In en, this message translates to:

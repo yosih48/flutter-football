@@ -369,18 +369,76 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
   }
 
   // ── Chips / filters ──────────────────────────────────────────────────
+  // The league ids currently backing the chip rail. While bootstrapping,
+  // `_enabledLeagues` is still empty and the rail shows placeholder chips
+  // derived from the supported-league config (mirrors the build), so the tap
+  // handler must resolve against the SAME list to avoid an empty-list index.
+  List<int> _displayedLeagueIds() {
+    if (_enabledLeagues.isNotEmpty) return _enabledLeagues;
+    final ids = <int>[];
+    for (final id in LeagueConfigService().supportedLeagues) {
+      if (getLocalizedLeagueName(id, context).isNotEmpty) ids.add(id);
+    }
+    return ids;
+  }
+
   void _onChipChanged(int chipIndex) {
+    final ids = _displayedLeagueIds();
+    if (chipIndex < 0 || chipIndex >= ids.length) return;
     setState(() {
       if (_selectedChipIndex == chipIndex) {
         _selectedChipIndex = -1;
         _selectedChipLeagueId = -1;
       } else {
         _selectedChipIndex = chipIndex;
-        _selectedChipLeagueId = _enabledLeagues[chipIndex];
+        _selectedChipLeagueId = ids[chipIndex];
       }
     });
     Provider.of<UserProvider>(context, listen: false)
         .setselectedLeageId(_selectedChipLeagueId);
+  }
+
+  // Clears the league chip selection so every enabled league's games show.
+  // No-op when nothing is selected (already showing all).
+  void _selectAllLeagues() {
+    if (_selectedChipIndex == -1 && _selectedChipLeagueId == -1) return;
+    setState(() {
+      _selectedChipIndex = -1;
+      _selectedChipLeagueId = -1;
+    });
+    Provider.of<UserProvider>(context, listen: false).setselectedLeageId(-1);
+  }
+
+  // Small "All leagues" text at the top of the chip rail. Highlighted green
+  // when no single league is selected (i.e. all games are showing); tapping it
+  // cancels any chip selection.
+  Widget _buildAllLeaguesToggle(BuildContext context, EditorialColors c) {
+    final l = AppLocalizations.of(context)!;
+    final isHe = Localizations.localeOf(context).languageCode == 'he';
+    final active = _selectedChipIndex == -1;
+    final fg = active ? c.live : c.inkMute;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _selectAllLeagues,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.layers_outlined, size: 15, color: fg),
+              const SizedBox(width: 6),
+              Text(
+                l.allLeagues,
+                style: EType.body(
+                    color: fg, size: 12, weight: FontWeight.w600, hebrew: isHe),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _toggleLeagueHeaderFilter(int leagueId) {
@@ -692,7 +750,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
                 imageUrl: LeagueDataProvider()
                     .getLeagueImageUrl(_enabledLeagues.first),
               )
-            else
+            else ...[
+              _buildAllLeaguesToggle(context, c),
               LeagueSelectorChips(
                 options: chipOptions.isEmpty ? placeholderOptions : chipOptions,
                 // Ids must line up with whichever option list is in use.
@@ -701,6 +760,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
                 selectedIndex: _selectedChipIndex,
                 onSelectionChanged: _onChipChanged,
               ),
+            ],
             const SizedBox(height: 12),
             Container(height: 1, color: c.hairline),
             Expanded(

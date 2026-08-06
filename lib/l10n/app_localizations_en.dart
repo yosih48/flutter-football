@@ -477,6 +477,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get allCompetitions => 'All Competitions';
 
   @override
+  String get allLeagues => 'All leagues';
+
+  @override
   String get provideEmail => 'please provide an email address';
 
   @override

@@ -477,6 +477,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get allCompetitions => 'כל התחרויות';
 
   @override
+  String get allLeagues => 'כל הליגות';
+
+  @override
   String get provideEmail => 'אנא הזן כתובת אימייל לאיפוס';
 
   @override
