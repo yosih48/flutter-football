@@ -50,23 +50,10 @@ class _CompetitionsState extends State<Competitions> {
         body: jsonEncode({
           'email': email,
           'displayName': name,
-          // Notifications default ON for every league the user just chose.
-          // The backend maps each leagueData flag → snetEmail[<leagueId>], so we
-          // set each flag from whether that league id was selected.
-          'leagueData': {
-            'championsLeague': chosenLeagues[2] ?? false,
-            'israeliLeague': chosenLeagues[383] ?? false,
-            'spanishLeague': chosenLeagues[140] ?? false,
-            'europeLeague': chosenLeagues[3] ?? false,
-            'premierLeague': chosenLeagues[39] ?? false,
-            'conferenceLeague': chosenLeagues[848] ?? false,
-            'clubworldcup': chosenLeagues[15] ?? false,
-            'africaLeague': chosenLeagues[6] ?? false,
-            'euroLeague': chosenLeagues[4] ?? false,
-            'copaLeague': chosenLeagues[9] ?? false,
-            'bundesLeague': chosenLeagues[78] ?? false,
-            'worldCup': chosenLeagues[1] ?? false,
-          },
+          // Notifications default ON for every league the user just chose. The
+          // backend seeds snetEmail by iterating chosenLeagues, so every league
+          // in the remote config is covered with no hardcoded id↔flag map — a
+          // newly added league (e.g. Serie A, Ligue 1) works with no app update.
           'chosenLeagues': encodableLeagues,
         }),
       );
