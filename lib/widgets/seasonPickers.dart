@@ -79,7 +79,7 @@ Future<PickAvailability> resolvePickWindow(
     }
     return PickAvailability(PickWindow.open, null, cutoff.toLocal());
   } catch (_) {
-    return PickAvailability(PickWindow.error, l.selectionnotavailable);
+    return PickAvailability(PickWindow.error, l.selectionnotavailableyet);
   }
 }
 
@@ -386,7 +386,7 @@ Future<String?> _openPicker(
   }
   if (options.isEmpty) {
     if (context.mounted) {
-      showSnackBar(context, l.selectionnotavailable, tone: SnackTone.warning);
+      showSnackBar(context, l.selectionnotavailableyet, tone: SnackTone.warning);
     }
     return null;
   }
