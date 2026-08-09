@@ -1447,7 +1447,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get picksComplete => 'Complete';
 
   @override
-  String picksMissing(String count) => '$count missing';
+  String picksMissing(String count) {
+    return '$count missing';
+  }
 
   @override
   String get picksDeadline => 'Closes';

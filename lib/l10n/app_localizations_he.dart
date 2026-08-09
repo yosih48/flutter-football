@@ -1333,7 +1333,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get redCardLabel => 'אדום';
 
   @override
-  String get profilePlayerSince => 'שחקן מאז';
+  String get profilePlayerSince => 'משחק מאז';
 
   @override
   String get profileLeaguesWord => 'ליגות';
@@ -1447,7 +1447,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get picksComplete => 'הושלם';
 
   @override
-  String picksMissing(String count) => 'חסרות $count בחירות';
+  String picksMissing(String count) {
+    return 'חסרות $count בחירות';
+  }
 
   @override
   String get picksDeadline => 'סגירה';
@@ -1486,7 +1488,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get notifMasterTitle => 'כל ההתראות';
 
   @override
-  String get notifMasterSub => 'תקבלו התראות לפי ההגדרות שמטה';
+  String get notifMasterSub => 'אפשר כל ההתראות לכל הליגות';
 
   @override
   String get notifDefaults => 'ברירת מחדל';
@@ -1504,7 +1506,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get notifRemindersSub => 'לפני תחילת המשחק, אם חסרות בחירות';
 
   @override
-  String get notifPointsSub => 'כשהתוצאות נסגרות והנקודות מחושבות';
+  String get notifPointsSub => 'כשהמשחק הסתיים והנקודות מחושבות';
 
   @override
   String get notifAlertsOnSuffix => 'מתוך 3 התראות פעילות';
@@ -1546,7 +1548,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get languageSubtitle => 'עברית או אנגלית';
 
   @override
-  String get notifSubtitle => 'ניהול התראות פוש';
+  String get notifSubtitle => 'ניהול התראות';
 
   @override
   String get rulesSubtitle => 'איך צוברים נקודות';

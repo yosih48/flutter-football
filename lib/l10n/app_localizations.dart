@@ -2948,7 +2948,7 @@ abstract class AppLocalizations {
   /// No description provided for @myChampionshipPicks.
   ///
   /// In en, this message translates to:
-  /// **'My championship picks'**
+  /// **'My picks'**
   String get myChampionshipPicks;
 
   /// No description provided for @picksCompleted.
