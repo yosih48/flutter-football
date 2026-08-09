@@ -212,6 +212,7 @@ const Map<String, String> kClubNamesHe = {
   'Cagliari': 'קליארי',
   'Como': 'קומו',
   'Cremonese': 'קרמונזה',
+  
   'Fiorentina': 'פיורנטינה',
   'Genoa': 'גנואה',
   'Inter': 'אינטר',
