@@ -345,11 +345,9 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       setState(() {
         for (final id in enabledIds) {
           final cur = notificationStates[id] ?? const NotifPref();
-          notificationStates[id] = kind == 'goals'
-              ? cur.copyWith(goals: v)
-              : kind == 'reminders'
-                  ? cur.copyWith(reminders: v)
-                  : cur.copyWith(points: v);
+          notificationStates[id] = kind == 'reminders'
+              ? cur.copyWith(reminders: v)
+              : cur.copyWith(points: v);
         }
       });
       updateDatabase(name, userEmail);
@@ -362,7 +360,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       setState(() {
         for (final id in enabledIds) {
           notificationStates[id] = v
-              ? const NotifPref(goals: true, reminders: true, points: true)
+              ? const NotifPref(reminders: true, points: true)
               : const NotifPref();
         }
       });
@@ -386,14 +384,6 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         _NotifSectionHeader(label: l.notifDefaults, trailing: l.notifApplyAll),
         const SizedBox(height: 10),
         _GroupedCard(rows: [
-          _NotifRowCard(
-            kind: _NotifKind.goals,
-            title: l.notifAllGoals,
-            subtitle: l.notifGoalsSub,
-            value: allOfKind((p) => p.goals),
-            grouped: true,
-            onChanged: (v) => setAllOfKind('goals', v),
-          ),
           _NotifRowCard(
             kind: _NotifKind.reminders,
             title: l.notifAllReminders,
@@ -419,9 +409,8 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         ...enabledIds.map((id) {
           final pref = notificationStates[id] ?? const NotifPref();
           final expanded = _expandedNotifLeagues.contains(id);
-          final onCount = (pref.goals ? 1 : 0) +
-              (pref.reminders ? 1 : 0) +
-              (pref.points ? 1 : 0);
+          final onCount =
+              (pref.reminders ? 1 : 0) + (pref.points ? 1 : 0);
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: _LeagueNotifGroup(
@@ -430,10 +419,8 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
               pref: pref,
               expanded: expanded,
               subtitle: '$onCount ${l.notifAlertsOnSuffix}',
-              goalsTitle: l.notifAllGoals,
               remindersTitle: l.notifAllReminders,
               pointsTitle: l.notifAllPoints,
-              goalsSub: l.notifGoalsSub,
               remindersSub: l.notifRemindersSub,
               pointsSub: l.notifPointsSub,
               onToggleExpand: () => setState(() {
@@ -617,7 +604,7 @@ class _LeagueCard extends StatelessWidget {
 }
 
 // The three notification categories, each with its own tinted icon tile.
-enum _NotifKind { goals, reminders, points }
+enum _NotifKind { reminders, points }
 
 class _NotifIconTile extends StatelessWidget {
   const _NotifIconTile({required this.kind});
@@ -630,11 +617,6 @@ class _NotifIconTile extends StatelessWidget {
     final Color bg;
     final Color fg;
     switch (kind) {
-      case _NotifKind.goals:
-        icon = Icons.adjust;
-        bg = c.live.withValues(alpha: 0.12);
-        fg = c.live;
-        break;
       case _NotifKind.reminders:
         icon = Icons.schedule_outlined;
         bg = c.amber.withValues(alpha: 0.16);
@@ -813,10 +795,8 @@ class _LeagueNotifGroup extends StatelessWidget {
     required this.pref,
     required this.expanded,
     required this.subtitle,
-    required this.goalsTitle,
     required this.remindersTitle,
     required this.pointsTitle,
-    required this.goalsSub,
     required this.remindersSub,
     required this.pointsSub,
     required this.onToggleExpand,
@@ -827,10 +807,8 @@ class _LeagueNotifGroup extends StatelessWidget {
   final NotifPref pref;
   final bool expanded;
   final String subtitle;
-  final String goalsTitle;
   final String remindersTitle;
   final String pointsTitle;
-  final String goalsSub;
   final String remindersSub;
   final String pointsSub;
   final VoidCallback onToggleExpand;
@@ -908,14 +886,6 @@ class _LeagueNotifGroup extends StatelessWidget {
         // _GroupedCard weaves a hairline between every pair, so the header
         // and each toggle are separated without any gaps.
         if (expanded) ...[
-          _NotifRowCard(
-            kind: _NotifKind.goals,
-            title: goalsTitle,
-            subtitle: goalsSub,
-            value: pref.goals,
-            grouped: true,
-            onChanged: (v) => onChanged(pref.copyWith(goals: v)),
-          ),
           _NotifRowCard(
             kind: _NotifKind.reminders,
             title: remindersTitle,
