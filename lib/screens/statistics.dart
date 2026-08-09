@@ -217,6 +217,10 @@ class _StatisticsState extends State<Statistics> {
                       ratio: directPct,
                       color: c.live,
                       isLoading: isLoading,
+                      onTap: isLoading || direct == 0
+                          ? null
+                          : () => _showGuessesSheet(
+                              l.directGuesses, directGuesses, c.live),
                     ),
                     _AccuracyBar(
                       label: l.directionGuesses,
@@ -225,6 +229,10 @@ class _StatisticsState extends State<Statistics> {
                       ratio: directionPct,
                       color: c.amber,
                       isLoading: isLoading,
+                      onTap: isLoading || direction == 0
+                          ? null
+                          : () => _showGuessesSheet(
+                              l.directionGuesses, directionGuesses, c.amber),
                     ),
                   ],
                 ),
@@ -311,26 +319,19 @@ class _StatisticsState extends State<Statistics> {
                     label: l.statisticsMisses,
                     color: c.inkFaint,
                     isLoading: isLoading,
+                    muted: true,
                   ),
                   _LegendItem(
                     value: direction,
                     label: l.directionGuesses,
                     color: c.amber,
                     isLoading: isLoading,
-                    onTap: isLoading || direction == 0
-                        ? null
-                        : () => _showGuessesSheet(
-                            l.directionGuesses, directionGuesses, c.amber),
                   ),
                   _LegendItem(
                     value: direct,
                     label: l.directGuesses,
                     color: c.live,
                     isLoading: isLoading,
-                    onTap: isLoading || direct == 0
-                        ? null
-                        : () => _showGuessesSheet(
-                            l.directGuesses, directGuesses, c.live),
                   ),
                 ],
               ),
@@ -610,17 +611,17 @@ class _LegendItem extends StatelessWidget {
     required this.label,
     required this.color,
     required this.isLoading,
-    this.onTap,
+    this.muted = false,
   });
   final int value;
   final String label;
   final Color color;
   final bool isLoading;
-  final VoidCallback? onTap;
 
   /// Misses are the "inactive" series in the design — grey dot, muted figure —
-  /// while the two scoring series keep a full-contrast number.
-  bool get _muted => onTap == null;
+  /// while the two scoring series keep a full-contrast number. (Tapping to open
+  /// the guesses list now lives on the Accuracy bars instead.)
+  final bool muted;
 
   @override
   Widget build(BuildContext context) {
@@ -629,40 +630,35 @@ class _LegendItem extends StatelessWidget {
       // Grouped from the leading edge with an even gap rather than spread
       // across the full width — matches the design.
       padding: const EdgeInsets.only(right: 28),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration:
-                      BoxDecoration(color: color, shape: BoxShape.circle),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  isLoading ? '—' : value.toString(),
-                  style: EType.numeric(
-                      color: _muted ? c.inkDim : c.ink,
-                      size: 17,
-                      weight: FontWeight.w700),
-                ),
-              ],
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              maxLines: 1,
-              style: EType.body(color: c.inkDim, size: 11),
-            ),
-          ],
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                isLoading ? '—' : value.toString(),
+                style: EType.numeric(
+                    color: muted ? c.inkDim : c.ink,
+                    size: 17,
+                    weight: FontWeight.w700),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            maxLines: 1,
+            style: EType.body(color: c.inkDim, size: 11),
+          ),
+        ],
       ),
     );
   }
@@ -677,6 +673,7 @@ class _AccuracyBar extends StatelessWidget {
     required this.ratio,
     required this.color,
     required this.isLoading,
+    this.onTap,
   });
   final String label;
   final int count;
@@ -685,14 +682,20 @@ class _AccuracyBar extends StatelessWidget {
   final Color color;
   final bool isLoading;
 
+  /// When non-null the row opens the list of guesses behind this metric, and a
+  /// disclosure chevron is shown as the affordance. Null (loading or 0 guesses)
+  /// leaves the row static.
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     final c = context.col;
     final pct = (ratio * 100).round();
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     const barHeight = 6.0;
 
-    return Padding(
+    final content = Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -737,6 +740,20 @@ class _AccuracyBar extends StatelessWidget {
                   ),
                 ),
               ),
+              // Disclosure chevron — the sign that this row opens the guesses
+              // list. Space is reserved even when not tappable so both bars'
+              // percentages stay column-aligned. Points along the reading
+              // direction (left in RTL Hebrew).
+              SizedBox(
+                width: 20,
+                child: onTap == null
+                    ? null
+                    : Icon(
+                        isRtl ? Icons.chevron_left : Icons.chevron_right,
+                        size: 18,
+                        color: c.inkDim,
+                      ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -768,6 +785,14 @@ class _AccuracyBar extends StatelessWidget {
           ),
         ],
       ),
+    );
+
+    if (onTap == null) return content;
+    // Material wrapper so the tap ripple paints above the card surface rather
+    // than being hidden behind it (the enclosing _Card is a plain Container).
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(onTap: onTap, child: content),
     );
   }
 }
