@@ -119,38 +119,90 @@ Future<String?> openWinnerPicker(
 // files (e.g. Ligat Haal) put the Hebrew team name in the english field. To
 // resolve a crest across all of that we normalize aggressively and match
 // loosely, and also index each team by its Hebrew name via [kClubNamesHe].
-String _teamKey(String s) => s
-    .trim()
-    .toLowerCase()
+const Map<String, String> _diacriticFold = {
+  'à': 'a', 'á': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a', 'å': 'a', 'ā': 'a',
+  'ç': 'c', 'č': 'c', 'ć': 'c',
+  'è': 'e', 'é': 'e', 'ê': 'e', 'ë': 'e', 'ē': 'e', 'ě': 'e',
+  'ì': 'i', 'í': 'i', 'î': 'i', 'ï': 'i', 'ī': 'i',
+  'ñ': 'n', 'ń': 'n',
+  'ò': 'o', 'ó': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o', 'ø': 'o', 'ō': 'o',
+  'ù': 'u', 'ú': 'u', 'û': 'u', 'ü': 'u', 'ū': 'u',
+  'ý': 'y', 'ÿ': 'y', 'š': 's', 'ś': 's', 'ž': 'z', 'ź': 'z', 'ż': 'z',
+  'ß': 'ss',
+};
+
+String _fold(String s) {
+  final b = StringBuffer();
+  for (final ch in s.split('')) {
+    b.write(_diacriticFold[ch] ?? ch);
+  }
+  return b.toString();
+}
+
+String _teamKey(String s) => _fold(s.trim().toLowerCase())
     // Drop gershayim/geresh, quotes and dots so "בית״ר" == "ביתר" and
     // "A.F.C." == "AFC".
     .replaceAll(RegExp('[׳״\'"`.]'), '')
-    .replaceAll(RegExp(r'\s+'), ' ');
+    // Hyphens/dashes → space so "Paris Saint-Germain" == "Paris Saint Germain"
+    // (the topscorers file and API-Football disagree on the hyphen).
+    .replaceAll(RegExp(r'[-–—]'), ' ')
+    .replaceAll(RegExp(r'\s+'), ' ')
+    .trim();
 
-// Logo lookup keyed by BOTH the team's english name and its Hebrew name (from
-// kClubNamesHe), so a player whose team is stored in either language resolves.
-Map<String, String> _teamLogoIndex(List<PickerOption> teams) {
-  final byTeam = <String, String>{};
+// A word is a generic team-name token if it's short (fc, rb, sc, vfb, tsg) or
+// purely numeric (1899, 05) — never distinctive enough to match on.
+bool _isGenericToken(String tok) =>
+    tok.length < 4 || RegExp(r'^\d+$').hasMatch(tok);
+
+// Logo index for a set of teams. `exact` is keyed by both the english name and
+// the Hebrew name (via [kClubNamesHe]). `token` maps a DISTINCTIVE word (one
+// that appears in exactly one team) to that team's logo, so names that share
+// no full form but a unique word still resolve — "Bayern Munich" ↔ "Bayern
+// München", "TSG Hoffenheim" ↔ "1899 Hoffenheim". Words shared by multiple
+// teams ("Borussia", "Manchester", "Real") are excluded, so this never
+// mismatches sibling clubs.
+class _LogoIndex {
+  const _LogoIndex(this.exact, this.token);
+  final Map<String, String> exact;
+  final Map<String, String> token;
+}
+
+_LogoIndex _teamLogoIndex(List<PickerOption> teams) {
+  final exact = <String, String>{};
+  final tokenUrls = <String, Set<String>>{};
+  void addName(String name, String url) {
+    final k = _teamKey(name);
+    if (k.isEmpty) return;
+    exact.putIfAbsent(k, () => url);
+    for (final tok in k.split(' ')) {
+      if (_isGenericToken(tok)) continue;
+      (tokenUrls[tok] ??= <String>{}).add(url);
+    }
+  }
+
   for (final t in teams) {
     final url = t.iconUrl;
     if (url == null || url.isEmpty) continue;
-    byTeam[_teamKey(t.value)] = url;
+    addName(t.value, url);
     final he = kClubNamesHe[t.value.trim()];
-    if (he != null && he.isNotEmpty) byTeam[_teamKey(he)] = url;
+    if (he != null && he.isNotEmpty) addName(he, url);
   }
-  return byTeam;
+  final token = <String, String>{};
+  tokenUrls.forEach((tok, urls) {
+    if (urls.length == 1) token[tok] = urls.first;
+  });
+  return _LogoIndex(exact, token);
 }
 
-// Exact key first; then an affix-tolerant pass so a short api name matches a
-// longer club name and vice versa ("Newcastle" ⊂ "Newcastle United",
-// "Bournemouth" ⊂ "AFC Bournemouth"). Only whole-word leading/trailing overlaps
-// count, so "Manchester City" never collides with "Manchester United".
-String? _logoForTeam(Map<String, String> byTeam, String team) {
+// Exact key first; then an affix-tolerant pass ("Newcastle" ⊂ "Newcastle
+// United", "Bournemouth" ⊂ "AFC Bournemouth"); then a distinctive-token match
+// as a last resort.
+String? _logoForTeam(_LogoIndex idx, String team) {
   final k = _teamKey(team);
   if (k.isEmpty) return null;
-  final exact = byTeam[k];
+  final exact = idx.exact[k];
   if (exact != null) return exact;
-  for (final e in byTeam.entries) {
+  for (final e in idx.exact.entries) {
     final ek = e.key;
     if (k.startsWith('$ek ') ||
         k.endsWith(' $ek') ||
@@ -158,6 +210,11 @@ String? _logoForTeam(Map<String, String> byTeam, String team) {
         ek.endsWith(' $k')) {
       return e.value;
     }
+  }
+  for (final tok in k.split(' ')) {
+    if (_isGenericToken(tok)) continue;
+    final u = idx.token[tok];
+    if (u != null) return u;
   }
   return null;
 }
@@ -329,10 +386,19 @@ Future<List<PickerOption>> _fetchTeamOptions(int leagueId) async {
       if (g.home.name.isNotEmpty) keep.add(g.home.name);
       if (g.away.name.isNotEmpty) keep.add(g.away.name);
     }
-    // Fail-open: if we couldn't classify (no fixtures yet, all classified as
-    // qualifying), return the unfiltered list rather than hiding everything.
-    if (keep.isEmpty) return all;
-    return all.where((t) => keep.contains(t.value)).toList();
+    // Only teams that appear in a main-draw (group stage onward) fixture. When
+    // the group stage isn't set yet, this is deliberately EMPTY so the champion
+    // pick is unavailable — rather than listing qualifier / play-off teams that
+    // aren't in the tournament proper.
+    //
+    // No fail-open on an empty result: the backend already hides qualifier
+    // rounds from /api/games, so before the group draw `games` comes back empty
+    // and falling open here would resurrect exactly the qualifier teams we mean
+    // to hide. A genuine fetch FAILURE throws and is caught below (→ all), so a
+    // transient error still can't block a tournament that's actually underway.
+    return all
+        .where((t) => keep.any((k) => _teamKey(k) == _teamKey(t.value)))
+        .toList();
   } catch (_) {
     return all;
   }

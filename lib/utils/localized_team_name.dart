@@ -290,6 +290,7 @@ const Map<String, String> kClubNamesHe = {
 // ── Bundesliga ───────────────────────────────────────────────────
   'Bayern Munich': 'באיירן מינכן',
   'FC Bayern München': 'באיירן מינכן',
+  'Bayern München': 'באיירן מינכן',
   'Borussia Dortmund': 'בורוסיה דורטמונד',
   'Dortmund': 'בורוסיה דורטמונד',
   'RB Leipzig': 'ר.ב. לייפציג',
@@ -300,6 +301,8 @@ const Map<String, String> kClubNamesHe = {
   'Stuttgart': 'שטוטגרט',
   'Eintracht Frankfurt': 'איינטרכט פרנקפורט',
   'Frankfurt': 'איינטרכט פרנקפורט',
+  'Hoffenheim 1899': 'הופנהיים',
+  '1899 Hoffenheim': 'הופנהיים',
   'TSG Hoffenheim': 'הופנהיים',
   'Hoffenheim': 'הופנהיים',
   'SC Freiburg': 'פרייבורג',
@@ -311,6 +314,7 @@ const Map<String, String> kClubNamesHe = {
   'Union Berlin': 'אוניון ברלין',
   'Mainz 05': 'מיינץ',
   'Mainz': 'מיינץ',
+  'FSV Mainz 05': 'מיינץ',
   'FC Augsburg': 'אוגסבורג',
   'Augsburg': 'אוגסבורג',
   '1. FC Köln': 'פ.צ. קלן',
@@ -321,6 +325,7 @@ const Map<String, String> kClubNamesHe = {
   'FC Schalke 04': 'שאלקה',
   'SC Paderborn': 'פאדרבורן',
   'Paderborn': 'פאדרבורן',
+  'SC Paderborn 07': 'פאדרבורן',
   'SV Elversberg': 'אלברסברג',
   'Elversberg': 'אלברסברג',
 

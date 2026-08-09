@@ -118,11 +118,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
 
             if (appVersion.isNotEmpty)
-              Center(
-                child: Text('v$appVersion',
-                    style: EType.label(
-                        color: c.inkFaint, size: 10, letterSpacing: 1.6)),
-              ),
+              // Center(
+              //   child: Text('v$appVersion',
+              //       style: EType.label(
+              //           color: c.inkFaint, size: 10, letterSpacing: 1.6)),
+              // ),
 
             // ── Delete account ──────────────────────────────────────
             if (user != null) ...[
