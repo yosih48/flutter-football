@@ -897,7 +897,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get substitutes => 'מחליפים';
 
   @override
-  String get lineupsNotAvailable => 'לא נמצאו הרכבים';
+  String get lineupsNotAvailable => 'הרכבים לא זמינים עדיין';
 
   @override
   String get predictedLineup => 'הרכב משוער';
