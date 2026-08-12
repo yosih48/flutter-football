@@ -229,10 +229,12 @@ if(leagueId == -1){
         print('🔍 Filtering games...');
         final filterStartTime = DateTime.now();
         final filteredGames = games.where((game) {
-          bool hasOdds = game.odds.home != 10 ||
-              game.odds.draw != 10 ||
-              game.odds.away != 10;
-          bool isFinished = game.status.long == "Match Finished";
+          // Odds are no longer a display gate. API-Football only publishes
+          // odds ~7 days out, but the points pipeline reads odds at SCORING
+          // time (after the match) and falls back to flat 6/3 points when they
+          // are absent — so showing (and guessing) odds-less upcoming games is
+          // safe. See worldBackend api.js point-calc + editPoints.js. The card
+          // shows an "odds pending" placeholder until odds arrive.
           bool isNotPostponedOrTBD =
               game.status.short != 'PST' && game.status.short != 'TBD';
 
@@ -257,7 +259,6 @@ if(leagueId == -1){
           // server-side with no app release. See worldBackend
           // src/routes/games.js + src/utils/guessableRound.js.
           return isNotPostponedOrTBD &&
-              (hasOdds || isFinished) &&
               // (!onlyTodayGames || isToday);
               isSelectedDate;
         }).toList();

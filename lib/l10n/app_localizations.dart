@@ -1001,6 +1001,12 @@ abstract class AppLocalizations {
   /// **'points'**
   String get points;
 
+  /// No description provided for @oddsPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Odds not out yet — you can still guess'**
+  String get oddsPending;
+
   /// No description provided for @pst.
   ///
   /// In en, this message translates to:

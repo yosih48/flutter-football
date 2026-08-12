@@ -51,6 +51,11 @@ class GameWidget extends StatelessWidget {
       game.status.short == 'FT' || _isAfterExtraTime || _isAfterPenalties;
   bool get _isHalftime => game.status.short == 'HT';
   bool get _isUpcoming => game.status.long == 'Not Started';
+  // Real odds present? The model defaults every price to 10 when the backend
+  // has none yet (API-Football only publishes ~7 days out). Any price off 10
+  // means real odds arrived.
+  bool get _hasOdds =>
+      game.odds.home != 10 || game.odds.draw != 10 || game.odds.away != 10;
   bool get _kickoffPassed => DateTime.now().isAfter(game.date.toLocal());
   bool get _canGuess => !_kickoffPassed;
 
@@ -98,7 +103,9 @@ class GameWidget extends StatelessWidget {
                       _buildMatchRow(context, c),
                       if (_isUpcoming) ...[
                         const SizedBox(height: 14),
-                        _buildOddsRow(c),
+                        _hasOdds
+                            ? _buildOddsRow(c)
+                            : _buildOddsPending(context, c),
                       ],
                       if (!_isUpcoming) ...[
                         const SizedBox(height: 12),
@@ -334,6 +341,27 @@ class GameWidget extends StatelessWidget {
           const SizedBox(width: 6),
           Expanded(child: _OddsCell(label: '2', value: game.odds.away)),
         ],
+      ),
+    );
+  }
+
+  // Shown for upcoming games whose odds haven't been published yet (further
+  // out than API-Football's ~7-day window). Guessing is still open — the
+  // points multiplier is resolved from the odds present at scoring time.
+  Widget _buildOddsPending(BuildContext context, EditorialColors c) {
+    final l = AppLocalizations.of(context)!;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      decoration: BoxDecoration(
+        color: c.terrace,
+        border: Border.all(color: c.hairline, width: 1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        l.oddsPending,
+        textAlign: TextAlign.center,
+        style: EType.label(color: c.inkDim, size: 10, letterSpacing: 0.6),
       ),
     );
   }

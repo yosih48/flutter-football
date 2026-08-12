@@ -462,6 +462,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get points => 'נקודות';
 
   @override
+  String get oddsPending => 'היחסים יעודכנו בהמשך';
+
+  @override
   String get pst => 'נק\'';
 
   @override
