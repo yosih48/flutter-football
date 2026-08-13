@@ -1646,7 +1646,7 @@ abstract class AppLocalizations {
   /// No description provided for @forceUpdateContent.
   ///
   /// In en, this message translates to:
-  /// **'You\'re on an older version that\'s no longer supported. Grab the latest update to keep predicting, following live scores, and playing the World Cup bracket.'**
+  /// **'You are using an older version that is no longer supported. Please update to the latest version to keep predicting, tracking live scores, and participating in all your favorite leagues.'**
   String get forceUpdateContent;
 
   /// No description provided for @forceUpdateButton.

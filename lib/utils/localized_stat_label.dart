@@ -99,6 +99,26 @@ final Map<String, String> _foldedIndex = {
   for (final e in kStatLabelsHe.entries) _foldKey(e.key): e.value,
 };
 
+/// Remote overrides fetched from the backend (GET /api/config/statLabels) and
+/// applied via [applyRemoteStatLabels]. These WIN over the compiled
+/// [kStatLabelsHe] map above, which stays the offline/first-launch baseline, so
+/// a label can be added or corrected without an app release. Same DISPLAY-ONLY
+/// contract — consulted only by the lookup below.
+Map<String, String> _remoteFolded = const {};
+
+/// Replace the remote English→Hebrew stat-label overrides. Pass the raw map from
+/// the backend config endpoint; an empty map clears overrides to the baseline.
+void applyRemoteStatLabels(Map<String, String> labels) {
+  final folded = <String, String>{};
+  labels.forEach((type, he) {
+    final k = _foldKey(type);
+    final v = he.trim();
+    if (k.isEmpty || v.isEmpty) return;
+    folded[k] = v;
+  });
+  _remoteFolded = folded;
+}
+
 /// Hebrew display label for a statistic [type] when the app locale is Hebrew
 /// and a translation exists; otherwise the original [type].
 ///
@@ -106,11 +126,13 @@ final Map<String, String> _foldedIndex = {
 /// (the raw English `type` must keep flowing everywhere else).
 String localizedStatLabel(BuildContext context, String type) {
   if (Localizations.localeOf(context).languageCode != 'he') return type;
-  return _foldedIndex[_foldKey(type)] ?? type;
+  final k = _foldKey(type);
+  return _remoteFolded[k] ?? _foldedIndex[k] ?? type;
 }
 
 /// Locale-agnostic variant for callers that already know the language code.
 String localizedStatLabelFor(String languageCode, String type) {
   if (languageCode != 'he') return type;
-  return _foldedIndex[_foldKey(type)] ?? type;
+  final k = _foldKey(type);
+  return _remoteFolded[k] ?? _foldedIndex[k] ?? type;
 }

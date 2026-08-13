@@ -13,7 +13,10 @@ import 'package:football/resources/firebase_messaging_service.dart';
 import 'package:football/resources/gamesMethods.dart';
 import 'package:football/resources/league_config_service.dart';
 import 'package:football/resources/rate_app_service.dart';
+import 'package:football/resources/player_names_config_service.dart';
 import 'package:football/resources/remote_config_service.dart';
+import 'package:football/resources/stat_labels_config_service.dart';
+import 'package:football/resources/team_names_config_service.dart';
 import 'package:football/utils/player_names_he.dart';
 import 'package:football/responsive/mobile_screen_layout.dart';
 import 'package:football/responsive/rsponsive_layout_screen.dart';
@@ -51,10 +54,18 @@ void main() async {
   await RemoteConfigService().initialize();
   // Must run after RemoteConfigService — it resolves backendUrl.
   await LeagueConfigService().initialize();
+  // Hebrew team-name overrides from the backend (same source as the compiled
+  // baseline in localized_team_name.dart). Also needs backendUrl resolved.
+  await TeamNamesConfigService().initialize();
+  // Hebrew fixture-stat-label overrides (baseline in localized_stat_label.dart).
+  await StatLabelsConfigService().initialize();
   await FirebaseMessagingService.initialize();
   // Curated Hebrew player names (bundled asset) — loaded once so lineup/event
   // names resolve on first frame; falls back to transliteration if absent.
   await PlayerNamesHe.load();
+  // Backend player-name overrides on top of the bundled asset (same source as
+  // notification copy). Needs backendUrl resolved and load() run first.
+  await PlayerNamesConfigService().initialize();
 
   // Cheap, no network — bumps the launch counter that gates the rate-app prompt.
   await RateAppService().recordLaunch();

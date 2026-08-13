@@ -427,6 +427,31 @@ final Map<String, String> _foldedIndex = {
   for (final e in kClubNamesHe.entries) _foldKey(e.key): e.value,
 };
 
+/// Remote overrides fetched from the backend (GET /api/config/teamNames) and
+/// applied via [applyRemoteTeamNames]. These WIN over the compiled [kTeamNamesHe]
+/// / [kClubNamesHe] maps above, which remain the offline/first-launch baseline.
+/// Keeping the backend authoritative means names can be added or corrected
+/// without an app release. Same DISPLAY-ONLY contract — consulted only by
+/// [_lookupHe], which only [localizedTeamName]/[localizedTeamNameFor] call.
+Map<String, String> _remoteNames = const {};
+Map<String, String> _remoteFolded = const {};
+
+/// Replace the remote English→Hebrew overrides. Pass the raw map from the
+/// backend config endpoint; an empty map clears overrides back to the baseline.
+void applyRemoteTeamNames(Map<String, String> names) {
+  final trimmed = <String, String>{};
+  final folded = <String, String>{};
+  names.forEach((en, he) {
+    final k = en.trim();
+    final v = he.trim();
+    if (k.isEmpty || v.isEmpty) return;
+    trimmed[k] = v;
+    folded[_foldKey(k)] = v;
+  });
+  _remoteNames = trimmed;
+  _remoteFolded = folded;
+}
+
 /// Hebrew display name for [englishName] when the app locale is Hebrew and a
 /// translation exists; otherwise the original [englishName]. Matching ignores
 /// case and diacritics, so `Türkiye`/`Curaçao` resolve like `Turkey`/`Curacao`.
@@ -446,8 +471,12 @@ String localizedTeamNameFor(String languageCode, String englishName) {
 
 String _lookupHe(String englishName) {
   final trimmed = englishName.trim();
-  return kTeamNamesHe[trimmed] ??
+  final folded = _foldKey(englishName);
+  // Remote overrides first (exact, then folded), then the compiled baseline.
+  return _remoteNames[trimmed] ??
+      kTeamNamesHe[trimmed] ??
       kClubNamesHe[trimmed] ??
-      _foldedIndex[_foldKey(englishName)] ??
+      _remoteFolded[folded] ??
+      _foldedIndex[folded] ??
       englishName;
 }

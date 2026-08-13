@@ -462,7 +462,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get points => 'נקודות';
 
   @override
-  String get oddsPending => 'היחסים יעודכנו בהמשך';
+  String get oddsPending => 'היחסים יעודכנו בקרוב';
 
   @override
   String get pst => 'נק\'';
@@ -783,7 +783,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get forceUpdateTitle => 'הגיע הזמן לעדכן 🚀';
 
   @override
-  String get forceUpdateContent => 'אתם בגרסה ישנה שכבר לא נתמכת. עדכנו לגרסה האחרונה כדי להמשיך לנחש, לעקוב אחרי תוצאות חיות ולשחק בטבלת המונדיאל.';
+  String get forceUpdateContent => 'הגרסה שברשותך אינה נתמכת עוד. יש לעדכן לגרסה החדשה כדי להמשיך לנחש תוצאות, לעקוב בלייב ולהשתתף בכל הליגות והטורנירים.';
 
   @override
   String get forceUpdateButton => 'עדכנו עכשיו';

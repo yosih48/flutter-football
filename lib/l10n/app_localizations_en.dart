@@ -783,7 +783,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forceUpdateTitle => 'Time to update 🚀';
 
   @override
-  String get forceUpdateContent => 'You\'re on an older version that\'s no longer supported. Grab the latest update to keep predicting, following live scores, and playing the World Cup bracket.';
+  String get forceUpdateContent => 'You are using an older version that is no longer supported. Please update to the latest version to keep predicting, tracking live scores, and participating in all your favorite leagues.';
 
   @override
   String get forceUpdateButton => 'Update now';
