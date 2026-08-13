@@ -632,11 +632,14 @@ class _GameDetailsState extends State<GameDetails> {
     final c = context.col;
     final l = AppLocalizations.of(context)!;
 
+    // Normal case (not upper-cased) so the English labels read with the same
+    // soft, non-shouty weight as the Hebrew tabs. Hebrew has no case, so this
+    // only affects the English text — the Hebrew tabs are untouched.
     final tabs = <String>[
-      l.timeline.toUpperCase(),
-      l.lineups.toUpperCase(),
-      l.tableTab.toUpperCase(),
-      l.statsTab.toUpperCase(),
+      l.timeline,
+      l.lineups,
+      l.tableTab,
+      l.statsTab,
     ];
 
     final isHe = Localizations.localeOf(context).languageCode == 'he';
@@ -986,10 +989,10 @@ class _GameDetailsState extends State<GameDetails> {
       segs.add(Expanded(
         flex: flex,
         child: Container(
-          height: 12,
+          height: 6,
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(3),
           ),
         ),
       ));

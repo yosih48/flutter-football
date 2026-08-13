@@ -473,7 +473,7 @@ class _TabItem extends StatelessWidget {
                   Icon(icon, size: 16, color: active ? c.ink : c.inkDim),
                   const SizedBox(width: 8),
                   Text(
-                    label.toUpperCase(),
+                    label,
                     style: EType.label(
                       color: active ? c.ink : c.inkDim,
                       size: 11,

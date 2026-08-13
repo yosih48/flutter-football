@@ -737,6 +737,11 @@ class TableScreenContentState extends State<TableScreenContent> {
                     final name = entry.value;
                     final isActive = name == selectedGroupName;
                     final isDefault = name == _defaultGroupName;
+                    // Uppercase Latin names read taller than Hebrew at the same
+                    // point size, so size the English names down to match the
+                    // Hebrew ones in this list.
+                    final isHebrewName =
+                        RegExp(r'[֐-׿]').hasMatch(name);
                     return InkWell(
                       onTap: () {
                         Navigator.of(sheetCtx).pop();
@@ -783,7 +788,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                                 name.toUpperCase(),
                                 overflow: TextOverflow.ellipsis,
                                 style: EType.body(
-                                  size: 15,
+                                  size: isHebrewName ? 15 : 13,
                                   color: sc.ink,
                                   weight: FontWeight.w700,
                                   hebrew: Localizations.localeOf(innerCtx)
@@ -1063,10 +1068,17 @@ class TableScreenContentState extends State<TableScreenContent> {
         ),
         child: Column(
           children: [
-            // Identity + switch
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-              child: Row(
+            // Identity + switch — tapping anywhere on this row opens the group
+            // switcher, not just the Switch pill on the end.
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _showGroupSwitcherSheet,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(15)),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+                  child: Row(
                 children: [
                   Container(
                     width: 40,
@@ -1134,6 +1146,8 @@ class TableScreenContentState extends State<TableScreenContent> {
                     ),
                   ),
                 ],
+              ),
+            ),
               ),
             ),
             // League strip

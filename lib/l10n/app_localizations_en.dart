@@ -429,7 +429,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get send => 'send';
 
   @override
-  String get chooseleagues => 'my Leagues';
+  String get chooseleagues => 'My Leagues';
 
   @override
   String get managegroups => 'Manage your groups and competitions';
@@ -1512,7 +1512,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifPointsSub => 'When results settle and points are awarded';
 
   @override
-  String get notifAlertsOnSuffix => 'of 3 alerts on';
+  String get notifAlertsOnSuffix => 'of 2 alerts on';
 
   @override
   String get playersLabel => 'players';

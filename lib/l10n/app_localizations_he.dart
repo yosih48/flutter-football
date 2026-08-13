@@ -1512,7 +1512,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get notifPointsSub => 'כשהמשחק הסתיים והנקודות מחושבות';
 
   @override
-  String get notifAlertsOnSuffix => 'מתוך 3 התראות פעילות';
+  String get notifAlertsOnSuffix => 'מתוך 2 התראות פעילות';
 
   @override
   String get playersLabel => 'שחקנים';
