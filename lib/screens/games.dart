@@ -491,13 +491,17 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
   }
 
   // ── Submit guesses ───────────────────────────────────────────────────
+  // One filled guess ready to submit, tagged with whether the user already had
+  // a stored guess for this game (only needed by the legacy per-guess fallback,
+  // which must choose POST-add vs PUT-update; the bulk path upserts either way).
   Future<void> _submitAllGuesses() async {
     if (_buttonLoading) return;
     setState(() => _buttonLoading = true);
 
-    final newGuesses = <Map<String, dynamic>>[];
-    final updatedGuesses = <Map<String, dynamic>>[];
-
+    // Collect every valid, still-guessable entry once. The bulk endpoint upserts
+    // per (user, game, league), so we no longer split new vs existing here — the
+    // split is only reconstructed inside the fallback.
+    final entries = <_GuessEntry>[];
     for (final game in _allGames) {
       final controllers = _guessControllers[game.fixtureId];
       if (controllers == null) continue;
@@ -519,34 +523,16 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
         continue;
       }
 
-      Guess? existing;
-      try {
-        existing =
-            _guesses.firstWhere((g) => g.gameOriginalId == game.fixtureId);
-      } catch (_) {
-        existing = null;
-      }
-
-      final data = <String, dynamic>{
-        'userID': _clientId,
-        'gameID': game.fixtureId,
-        'gameOriginalID': game.fixtureId,
-        'expectedPoints': 0,
-        'home_team_goals': home,
-        'away_team_goals': away,
-        'leagueID': game.league.id,
-      };
-
-      if (existing != null && game.status.long == 'Not Started') {
-        updatedGuesses.add(data);
-      } else if (existing == null) {
-        data['email'] = _email;
-        data['sum_points'] = 0;
-        newGuesses.add(data);
-      }
+      final exists = _guesses.any((g) => g.gameOriginalId == game.fixtureId);
+      entries.add(_GuessEntry(
+        game: game,
+        home: home,
+        away: away,
+        existed: exists,
+      ));
     }
 
-    if (newGuesses.isEmpty && updatedGuesses.isEmpty) {
+    if (entries.isEmpty) {
       showSnackBar(
         context,
         AppLocalizations.of(context)!.noguessesfound,
@@ -556,43 +542,89 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
       return;
     }
 
-    final newUrl = Uri.parse('$backendUrl/guesses/add');
-    final updateUrl = Uri.parse('$backendUrl/guesses/');
-    bool ok = true;
-
-    for (final g in newGuesses) {
-      final r = await http.post(newUrl,
-          headers: {'Content-Type': 'application/json'}, body: jsonEncode(g));
-      if (r.statusCode != 200) ok = false;
-    }
-    for (final g in updatedGuesses) {
-      final r = await http.put(updateUrl,
-          headers: {'Content-Type': 'application/json'}, body: jsonEncode(g));
-      if (r.statusCode != 200) ok = false;
-    }
-
-    if (!mounted) return;
-    if (ok) {
-      showSnackBar(
-        context,
-        AppLocalizations.of(context)!.savedsuccessfully,
-        tone: SnackTone.success,
+    try {
+      // Preferred path: a single bulk request. Returns the refreshed guess list
+      // (no separate refetch needed), or null if the backend is too old.
+      final refreshed = await GuessesMethods().submitGuessesBulk(
+        userID: _clientId,
+        email: _email,
+        guesses: [for (final e in entries) e.toBulkJson()],
       );
-      final refreshed = await GuessesMethods().fetchThisUserGuesses(_clientId);
-      if (mounted) {
+
+      if (refreshed != null) {
+        if (!mounted) return;
+        showSnackBar(
+          context,
+          AppLocalizations.of(context)!.savedsuccessfully,
+          tone: SnackTone.success,
+        );
         setState(() {
           _guesses = refreshed;
           _hydrateControllers();
         });
+        if (mounted) setState(() => _buttonLoading = false);
+        return;
       }
-    } else {
-      showSnackBar(
-        context,
-        AppLocalizations.of(context)!.failedToSubmitGuesses,
-        tone: SnackTone.error,
-      );
+
+      // Fallback: bulk endpoint not deployed. Fire the per-guess POST/PUT
+      // requests IN PARALLEL (the old code awaited them one at a time).
+      final ok = await _submitPerGuessFallback(entries);
+      if (!mounted) return;
+      if (ok) {
+        showSnackBar(
+          context,
+          AppLocalizations.of(context)!.savedsuccessfully,
+          tone: SnackTone.success,
+        );
+        final list = await GuessesMethods().fetchThisUserGuesses(_clientId);
+        if (mounted) {
+          setState(() {
+            _guesses = list;
+            _hydrateControllers();
+          });
+        }
+      } else {
+        showSnackBar(
+          context,
+          AppLocalizations.of(context)!.failedToSubmitGuesses,
+          tone: SnackTone.error,
+        );
+      }
+    } catch (e) {
+      print('❌ submit guesses failed: $e');
+      if (mounted) {
+        showSnackBar(
+          context,
+          AppLocalizations.of(context)!.failedToSubmitGuesses,
+          tone: SnackTone.error,
+        );
+      }
     }
     if (mounted) setState(() => _buttonLoading = false);
+  }
+
+  // Legacy path for backends without /guesses/bulk. Same POST-add / PUT-update
+  // semantics as before, but dispatched concurrently via Future.wait instead of
+  // a sequential await-loop, so wall-clock is ~1 round-trip instead of N.
+  Future<bool> _submitPerGuessFallback(List<_GuessEntry> entries) async {
+    final newUrl = Uri.parse('$backendUrl/guesses/add');
+    final updateUrl = Uri.parse('$backendUrl/guesses/');
+    const headers = {'Content-Type': 'application/json'};
+
+    final futures = <Future<http.Response>>[];
+    for (final e in entries) {
+      if (e.existed) {
+        futures.add(http.put(updateUrl,
+            headers: headers, body: jsonEncode(e.toUpdateJson(_clientId))));
+      } else {
+        futures.add(http.post(newUrl,
+            headers: headers,
+            body: jsonEncode(e.toAddJson(_clientId, _email))));
+      }
+    }
+
+    final responses = await Future.wait(futures);
+    return responses.every((r) => r.statusCode == 200);
   }
 
   // ── Localization helpers ─────────────────────────────────────────────
@@ -1225,6 +1257,52 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
       odds: Odds(home: 1.0, draw: 1.0, away: 1.0),
     );
   }
+}
+
+// One filled, still-guessable prediction gathered from the form, ready to
+// submit. `existed` records whether the user already had a stored guess for
+// this game — only the legacy per-guess fallback needs it (POST-add vs
+// PUT-update); the bulk endpoint upserts regardless.
+class _GuessEntry {
+  _GuessEntry({
+    required this.game,
+    required this.home,
+    required this.away,
+    required this.existed,
+  });
+
+  final Game game;
+  final String home;
+  final String away;
+  final bool existed;
+
+  // Compact shape for POST /guesses/bulk — the server fills userID, email,
+  // season, and the points fields.
+  Map<String, dynamic> toBulkJson() => {
+        'gameID': game.fixtureId,
+        'gameOriginalID': game.fixtureId,
+        'leagueID': game.league.id,
+        'home_team_goals': home,
+        'away_team_goals': away,
+      };
+
+  // Legacy PUT /guesses/ body (update an existing guess).
+  Map<String, dynamic> toUpdateJson(String userID) => {
+        'userID': userID,
+        'gameID': game.fixtureId,
+        'gameOriginalID': game.fixtureId,
+        'expectedPoints': 0,
+        'home_team_goals': home,
+        'away_team_goals': away,
+        'leagueID': game.league.id,
+      };
+
+  // Legacy POST /guesses/add body (create a new guess).
+  Map<String, dynamic> toAddJson(String userID, String email) => {
+        ...toUpdateJson(userID),
+        'email': email,
+        'sum_points': 0,
+      };
 }
 
 // ── Editorial chrome widgets ─────────────────────────────────────────────

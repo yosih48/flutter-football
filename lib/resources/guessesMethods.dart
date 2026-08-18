@@ -162,6 +162,48 @@ class GuessesMethods {
         .toList();
   }
 
+  /// One-shot bulk submit. Replaces the screen's old per-guess POST/PUT loop
+  /// with a single `POST /guesses/bulk`; the backend upserts every guess in one
+  /// `bulkWrite` after a single kickoff-lock check.
+  ///
+  /// [guesses] is a list of maps, each:
+  ///   { gameID, gameOriginalID, leagueID, home_team_goals, away_team_goals }
+  ///
+  /// Returns the user's full guess list after the write (so the caller skips a
+  /// separate refetch). Returns `null` when the bulk endpoint isn't deployed
+  /// yet (404) so the caller can fall back to the legacy per-guess path —
+  /// mirrors the rollout-safety pattern used by [fetchGuessesWithUsers].
+  /// Throws on other non-200 responses so real failures surface to the user.
+  Future<List<Guess>?> submitGuessesBulk({
+    required String userID,
+    required String email,
+    required List<Map<String, dynamic>> guesses,
+  }) async {
+    final url = Uri.parse('$_baseUrl/guesses/bulk');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'userID': userID,
+        'email': email,
+        'guesses': guesses,
+      }),
+    );
+
+    // Bulk endpoint not present on this deployment — signal the caller to fall
+    // back to the legacy per-guess path.
+    if (response.statusCode == 404) return null;
+    if (response.statusCode != 200) {
+      throw Exception('Bulk submit failed: HTTP ${response.statusCode}');
+    }
+
+    final body = jsonDecode(response.body);
+    final list = (body is Map && body['guesses'] is List)
+        ? body['guesses'] as List
+        : const [];
+    return list.map((item) => Guess.fromJson(item)).toList();
+  }
+
   Future<String> fetchUserName(String userId) async {
     final response = await http.get(Uri.parse('$_baseUrl/users/${userId}'));
 
