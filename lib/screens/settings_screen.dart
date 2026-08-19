@@ -8,6 +8,7 @@ import 'package:football/utils/utils.dart';
 import 'package:provider/provider.dart';
 import 'package:football/providers/flutter pub add provider.dart';
 import 'package:football/providers/LocaleProvider.dart';
+import 'package:football/providers/names_language_provider.dart';
 import 'package:football/providers/theme_provider.dart';
 import 'package:football/resources/auth.dart';
 import 'package:football/theme/colors.dart';
@@ -102,6 +103,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _GroupedCard(rows: [
               _ThemeCard(l: l, grouped: true),
               _LanguageCard(l: l, grouped: true),
+              // Name-language choice only matters while the app is Hebrew — in
+              // English everything is already the original name.
+              if (Localizations.localeOf(context).languageCode == 'he') ...[
+                _TeamNamesCard(l: l, grouped: true),
+                _PlayerNamesCard(l: l, grouped: true),
+              ],
             ]),
             const SizedBox(height: 24),
 
@@ -666,6 +673,62 @@ class _LanguageCard extends StatelessWidget {
                 l.settings_heb, !isEn, () => lp.setLocale(const Locale('he'))),
             _SegOption(
                 l.settings_eng, isEn, () => lp.setLocale(const Locale('en'))),
+          ]),
+        );
+      },
+    );
+  }
+}
+
+// ── Team-names language card (Hebrew app only) ─────────────────────────────
+class _TeamNamesCard extends StatelessWidget {
+  const _TeamNamesCard({required this.l, this.grouped = false});
+  final AppLocalizations l;
+  final bool grouped;
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<NamesLanguageProvider>(
+      builder: (context, np, _) {
+        final he = np.teamNamesInHebrew;
+        return _SettingsCardRow(
+          icon: Icons.shield_outlined,
+          title: l.settings_team_names,
+          subtitle: l.settings_team_names_subtitle,
+          grouped: grouped,
+          trailing: _Segmented(options: [
+            _SegOption(
+                l.settings_heb, he, () => np.setTeamNamesInHebrew(true)),
+            _SegOption(
+                l.settings_eng, !he, () => np.setTeamNamesInHebrew(false)),
+          ]),
+        );
+      },
+    );
+  }
+}
+
+// ── Player-names language card (Hebrew app only) ───────────────────────────
+class _PlayerNamesCard extends StatelessWidget {
+  const _PlayerNamesCard({required this.l, this.grouped = false});
+  final AppLocalizations l;
+  final bool grouped;
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<NamesLanguageProvider>(
+      builder: (context, np, _) {
+        final he = np.playerNamesInHebrew;
+        return _SettingsCardRow(
+          icon: Icons.person_outline,
+          title: l.settings_player_names,
+          subtitle: l.settings_player_names_subtitle,
+          grouped: grouped,
+          trailing: _Segmented(options: [
+            _SegOption(
+                l.settings_heb, he, () => np.setPlayerNamesInHebrew(true)),
+            _SegOption(
+                l.settings_eng, !he, () => np.setPlayerNamesInHebrew(false)),
           ]),
         );
       },

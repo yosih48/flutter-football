@@ -1551,6 +1551,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageSubtitle => 'Hebrew or English';
 
   @override
+  String get settings_team_names => 'Team names';
+
+  @override
+  String get settings_team_names_subtitle => 'Hebrew or original name';
+
+  @override
+  String get settings_player_names => 'Player names';
+
+  @override
+  String get settings_player_names_subtitle => 'Hebrew or original name';
+
+  @override
   String get notifSubtitle => 'Manage push notifications';
 
   @override

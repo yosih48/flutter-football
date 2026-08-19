@@ -65,7 +65,29 @@ When adding a new string:
 2. Add the corresponding `String get <key>;` to `lib/l10n/app_localizations.dart` and `String get <key> => '...';` overrides to `lib/l10n/app_localizations_en.dart` and `lib/l10n/app_localizations_he.dart`.
 3. Reference it in code as `AppLocalizations.of(context)!.<key>`.
 
-Note: Hebrew **team names** are display-only — localize them in `Text` widgets, but the raw `team.name` must still flow through navigation, links, and fuzzy matching unchanged.
+Note: Hebrew **team / player / stat names** are display-only and follow a separate, backend-owned system — see **Names & translations** below.
+
+## Names & translations
+
+Hebrew display names for **teams**, **players**, and **fixture-stat labels** are backend-owned, with a compiled/bundled baseline in the app as an offline fallback. This is deliberately separate from `AppLocalizations` (which is for static UI strings): names are data that changes by season, so they must be editable without an app release.
+
+**Display-only contract (critical).** These translations may only be substituted inside `Text(...)`. The raw English/Latin `team.name` / player name / `stat.type` must keep flowing unchanged through navigation, links (`TeamLinkHandler`), fuzzy matching, `Team(...)` construction, event↔lineup matching, and any persisted pick value. Translating a name on one of those paths breaks the lookup silently.
+
+**The three dictionaries.** Each has the same shape: a backend module = source of truth (also used for push-notification copy), a `GET /api/config/*` endpoint that serves it with a content-hash `version`, a Flutter config service that caches it to `SharedPreferences` and applies it as overrides, and a compiled/bundled baseline.
+
+| What | Backend source → endpoint | Frontend lookup ← baseline | Cache service |
+|---|---|---|---|
+| Team names | `worldBackend/src/utils/teamNamesHe.js` → `/api/config/teamNames` | `localizedTeamName(context, …)` in `lib/utils/localized_team_name.dart` ← `kTeamNamesHe`/`kClubNamesHe` | `TeamNamesConfigService` |
+| Player names | `worldBackend/src/utils/playerNamesHe.js` → `/api/config/playerNames` (honors `?v=` to skip the ~140KB body when unchanged) | `PlayerNamesHe.lookup(...)` used by `localizedPlayerName(context, …)` in `lib/utils/he_player_name.dart` ← bundled `assets/player_names_he.json` (+ transliteration fallback) | `PlayerNamesConfigService` |
+| Stat labels | `worldBackend/src/utils/statLabelsHe.js` → `/api/config/statLabels` | `localizedStatLabel(context, …)` in `lib/utils/localized_stat_label.dart` ← `kStatLabelsHe` | `StatLabelsConfigService` |
+
+**Lookup priority everywhere:** backend override → compiled/bundled baseline → (players only: transliteration) → original name. All config services init in `main.dart` after `backendUrl` resolves; each applies its cache first (offline-safe) then refreshes by `version`.
+
+**To add or fix a name:** edit the backend module only (e.g. `teamNamesHe.js`) — it reaches the app within the cache window, no release. Keep the bundled Flutter baseline valid too (it's the cold-start fallback); after editing `assets/player_names_he.json`, verify it still `JSON.parse`s. Player-name extraction helpers: `scripts/extractPlayerNames.js` (from Mongo lineups) and `scripts/extractSquadNames.js` (from cached squads, `--leagues …`, needs `prewarmSquads.js` first).
+
+**User preference (Hebrew app only).** `NamesLanguageProvider` (`lib/providers/names_language_provider.dart`) holds two independent, persisted switches — team names and player names — each defaulting to Hebrew. When the app locale is English, names are always the original and the Settings rows are hidden. The provider mirrors each choice into the lookup modules (`setPreferHebrew{Team,Player}Names`) and sits in the `Consumer3` around `MaterialApp`, so toggling rebuilds the tree and refreshes visible names live. Stat labels are **not** covered by the toggle (always Hebrew when locale is Hebrew).
+
+**Caveat — season pickers use a different source.** The winner / top-scorer pickers in `lib/widgets/seasonPickers.dart` render Hebrew names from the **API players/teams payload** (`name`/`team` fields), not the maps above, so a name there can differ from the rest of the app. The top-scorer picker still honors the user preference (via `NamesLanguageProvider`), but its Hebrew strings are not sourced from `playerNamesHe.js`/`teamNamesHe.js`.
 
 ## Versioning
 

@@ -748,6 +748,10 @@
     "preferencesSection": "העדפות",
     "themeSubtitle": "מראה בהיר או כהה",
     "languageSubtitle": "עברית או אנגלית",
+    "settings_team_names": "שמות קבוצות",
+    "settings_team_names_subtitle": "בעברית או בשם המקורי",
+    "settings_player_names": "שמות שחקנים",
+    "settings_player_names_subtitle": "בעברית או בשם המקורי",
     "notifSubtitle": "ניהול התראות",
     "rulesSubtitle": "איך צוברים נקודות",
     "termsTitle": "תנאי שימוש ופרטיות"

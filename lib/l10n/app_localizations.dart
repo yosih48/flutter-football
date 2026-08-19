@@ -3167,6 +3167,30 @@ abstract class AppLocalizations {
   /// **'Hebrew or English'**
   String get languageSubtitle;
 
+  /// No description provided for @settings_team_names.
+  ///
+  /// In en, this message translates to:
+  /// **'Team names'**
+  String get settings_team_names;
+
+  /// No description provided for @settings_team_names_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hebrew or original name'**
+  String get settings_team_names_subtitle;
+
+  /// No description provided for @settings_player_names.
+  ///
+  /// In en, this message translates to:
+  /// **'Player names'**
+  String get settings_player_names;
+
+  /// No description provided for @settings_player_names_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hebrew or original name'**
+  String get settings_player_names_subtitle;
+
   /// No description provided for @notifSubtitle.
   ///
   /// In en, this message translates to:

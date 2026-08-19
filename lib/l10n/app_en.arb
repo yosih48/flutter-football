@@ -531,6 +531,10 @@
     "preferencesSection": "Preferences",
     "themeSubtitle": "Light or dark appearance",
     "languageSubtitle": "Hebrew or English",
+    "settings_team_names": "Team names",
+    "settings_team_names_subtitle": "Hebrew or original name",
+    "settings_player_names": "Player names",
+    "settings_player_names_subtitle": "Hebrew or original name",
     "notifSubtitle": "Manage push notifications",
     "rulesSubtitle": "How points are scored",
     "termsTitle": "Terms & privacy"

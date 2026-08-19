@@ -9,18 +9,27 @@ import 'package:football/utils/player_names_he.dart';
 /// The raw Latin name must keep flowing through event↔lineup matching, links,
 /// navigation and any data construction — otherwise those lookups break.
 
-/// Hebrew display name when the app locale is Hebrew; otherwise the original.
-/// Set [abbreviate] for tight spots (pitch dots): shortens the first name to an
-/// initial in whichever script is shown (e.g. "פראנק קסייה" → "פ. קסייה").
+/// User preference (Hebrew app only): when false, player names render in their
+/// original Latin form even though the app locale is Hebrew. Set from
+/// `NamesLanguageProvider`; defaults to true (Hebrew) — the prior behavior.
+bool _preferHebrewPlayerNames = true;
+void setPreferHebrewPlayerNames(bool value) => _preferHebrewPlayerNames = value;
+
+/// Hebrew display name when the app locale is Hebrew and the user hasn't opted
+/// player names back to Latin; otherwise the original. Set [abbreviate] for
+/// tight spots (pitch dots): shortens the first name to an initial in whichever
+/// script is shown (e.g. "פראנק קסייה" → "פ. קסייה").
 String localizedPlayerName(BuildContext context, String name, {bool abbreviate = false}) {
-  final isHe = Localizations.localeOf(context).languageCode == 'he';
+  final isHe = Localizations.localeOf(context).languageCode == 'he' &&
+      _preferHebrewPlayerNames;
   final base = isHe ? (PlayerNamesHe.lookup(name) ?? transliterateToHebrew(name)) : name;
   return abbreviate ? _abbreviate(base) : base;
 }
 
 /// Locale-agnostic variant for callers that already know the language code.
 String localizedPlayerNameFor(String languageCode, String name, {bool abbreviate = false}) {
-  final base = languageCode == 'he'
+  final isHe = languageCode == 'he' && _preferHebrewPlayerNames;
+  final base = isHe
       ? (PlayerNamesHe.lookup(name) ?? transliterateToHebrew(name))
       : name;
   return abbreviate ? _abbreviate(base) : base;

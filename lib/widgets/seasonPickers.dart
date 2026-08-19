@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:football/l10n/app_localizations.dart';
+import 'package:football/providers/names_language_provider.dart';
 import 'package:football/resources/gamesMethods.dart';
 import 'package:football/resources/playersMethods.dart';
 import 'package:football/resources/usersMethods.dart';
@@ -11,6 +12,7 @@ import 'package:football/utils/config.dart';
 import 'package:football/utils/localized_team_name.dart';
 import 'package:football/utils/utils.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 // ── Availability ────────────────────────────────────────────────────────────
 // Whether a user can still pick a season-long winner / top scorer for [leagueId].
@@ -229,6 +231,12 @@ Future<String?> openTopScorerPicker(
 }) {
   final l = AppLocalizations.of(context)!;
   final isHebrew = Localizations.localeOf(context).languageCode == 'he';
+  // Respect the per-type name-language choice (Hebrew app only): the dropdown
+  // shows Hebrew player names / team subtitles only when the app is Hebrew AND
+  // the user hasn't switched that type back to its original name in Settings.
+  final names = context.read<NamesLanguageProvider>();
+  final playerHe = isHebrew && names.playerNamesInHebrew;
+  final teamHe = isHebrew && names.teamNamesInHebrew;
   return _openPicker(
     context,
     title: l.pickTopScorerTitle,
@@ -260,8 +268,8 @@ Future<String?> openTopScorerPicker(
         final heTeam = (p['team'] ?? '').isNotEmpty ? p['team']! : enTeam;
         return PickerOption(
           value: en,
-          label: isHebrew ? he : en,
-          subtitle: isHebrew ? heTeam : enTeam,
+          label: playerHe ? he : en,
+          subtitle: teamHe ? heTeam : enTeam,
           // Try the english team first, then the Hebrew one — some files store
           // the team only in Hebrew even in the english field.
           iconUrl: _logoForTeam(logoByTeam, enTeam) ??

@@ -1551,6 +1551,18 @@ class AppLocalizationsHe extends AppLocalizations {
   String get languageSubtitle => 'עברית או אנגלית';
 
   @override
+  String get settings_team_names => 'שמות קבוצות';
+
+  @override
+  String get settings_team_names_subtitle => 'בעברית או בשם המקורי';
+
+  @override
+  String get settings_player_names => 'שמות שחקנים';
+
+  @override
+  String get settings_player_names_subtitle => 'בעברית או בשם המקורי';
+
+  @override
   String get notifSubtitle => 'ניהול התראות';
 
   @override

@@ -14,6 +14,7 @@ import 'package:football/resources/gamesMethods.dart';
 import 'package:football/resources/league_config_service.dart';
 import 'package:football/resources/rate_app_service.dart';
 import 'package:football/resources/player_names_config_service.dart';
+import 'package:football/providers/names_language_provider.dart';
 import 'package:football/resources/remote_config_service.dart';
 import 'package:football/resources/stat_labels_config_service.dart';
 import 'package:football/resources/team_names_config_service.dart';
@@ -82,6 +83,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
+        ChangeNotifierProvider(create: (_) => NamesLanguageProvider()),
         ChangeNotifierProvider(create: (_) => LeagueDataProvider()),
       ],
       child: GameApp(),
@@ -94,8 +96,8 @@ class GameApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<ThemeProvider, LocaleProvider>(
-      builder: (context, themeProvider, localeProvider, child) {
+    return Consumer3<ThemeProvider, LocaleProvider, NamesLanguageProvider>(
+      builder: (context, themeProvider, localeProvider, namesProvider, child) {
         return MaterialApp(
           navigatorKey: navigatorKey,
           theme: themeProvider.themeData,

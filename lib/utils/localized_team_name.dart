@@ -452,20 +452,28 @@ void applyRemoteTeamNames(Map<String, String> names) {
   _remoteFolded = folded;
 }
 
-/// Hebrew display name for [englishName] when the app locale is Hebrew and a
-/// translation exists; otherwise the original [englishName]. Matching ignores
-/// case and diacritics, so `Türkiye`/`Curaçao` resolve like `Turkey`/`Curacao`.
+/// User preference (Hebrew app only): when false, team names render in their
+/// original English even though the app locale is Hebrew. Set from
+/// `NamesLanguageProvider`; defaults to true (Hebrew) — the prior behavior.
+bool _preferHebrewTeamNames = true;
+void setPreferHebrewTeamNames(bool value) => _preferHebrewTeamNames = value;
+
+/// Hebrew display name for [englishName] when the app locale is Hebrew, the
+/// user hasn't opted team names back to English, and a translation exists;
+/// otherwise the original [englishName]. Matching ignores case and diacritics,
+/// so `Türkiye`/`Curaçao` resolve like `Turkey`/`Curacao`.
 ///
 /// Use ONLY inside `Text(...)` widgets — never for navigation, links, matching,
 /// or data construction (the raw English name must keep flowing everywhere else).
 String localizedTeamName(BuildContext context, String englishName) {
   if (Localizations.localeOf(context).languageCode != 'he') return englishName;
+  if (!_preferHebrewTeamNames) return englishName;
   return _lookupHe(englishName);
 }
 
 /// Locale-agnostic variant for callers that already know the language code.
 String localizedTeamNameFor(String languageCode, String englishName) {
-  if (languageCode != 'he') return englishName;
+  if (languageCode != 'he' || !_preferHebrewTeamNames) return englishName;
   return _lookupHe(englishName);
 }
 
