@@ -456,6 +456,7 @@
     "statisticsPoints": "Points",
     "goalLabel": "Goal",
     "penaltyLabel": "Penalty",
+    "missedPenaltyLabel": "Missed penalty",
     "ownGoalLabel": "Own goal",
     "yellowCardLabel": "Yellow",
     "redCardLabel": "Red",

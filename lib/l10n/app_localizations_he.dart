@@ -1327,6 +1327,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get penaltyLabel => 'פנדל';
 
   @override
+  String get missedPenaltyLabel => 'פנדל שהוחמץ';
+
+  @override
   String get ownGoalLabel => 'שער עצמי';
 
   @override

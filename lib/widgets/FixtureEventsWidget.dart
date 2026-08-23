@@ -345,7 +345,11 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
     required bool isFirst,
     required bool isLast,
   }) {
-    final isGoal = event.type.toLowerCase() == 'goal';
+    // A "Missed Penalty" has type "Goal" but is NOT a goal — keep it off the
+    // solid green goal node and the ⚽ icon.
+    final detail = event.detail?.toLowerCase() ?? '';
+    final isGoal =
+        event.type.toLowerCase() == 'goal' && !detail.contains('missed');
 
     return SizedBox(
       width: 46,
@@ -417,6 +421,12 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
       return const Icon(Icons.sports_soccer, size: 17, color: Colors.white);
     }
     final type = event.type.toLowerCase();
+    final detail = event.detail?.toLowerCase() ?? '';
+    // Missed penalty (type "Goal", detail "Missed Penalty"): a struck-through
+    // ball so it reads as an attempt that didn't score, distinct from a goal.
+    if (type == 'goal' && detail.contains('missed')) {
+      return Icon(Icons.block, size: 14, color: c.inkMute);
+    }
     if (type == 'subst') {
       return Icon(Icons.swap_vert, size: 15, color: c.inkDim);
     }
@@ -545,7 +555,11 @@ class _FixtureEventsWidgetState extends State<FixtureEventsWidget> {
     String text;
     Color color;
     if (type == 'goal') {
-      if (detail.contains('penalty')) {
+      if (detail.contains('missed')) {
+        // Missed penalty: muted, not the amber scored-penalty badge.
+        text = l.missedPenaltyLabel;
+        color = c.inkMute;
+      } else if (detail.contains('penalty')) {
         text = l.penaltyLabel;
         color = c.amber;
       } else if (detail.contains('own')) {

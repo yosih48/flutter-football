@@ -938,7 +938,7 @@ abstract class AppLocalizations {
   /// No description provided for @chooseleagues.
   ///
   /// In en, this message translates to:
-  /// **'my Leagues'**
+  /// **'My Leagues'**
   String get chooseleagues;
 
   /// No description provided for @managegroups.
@@ -2723,6 +2723,12 @@ abstract class AppLocalizations {
   /// **'Penalty'**
   String get penaltyLabel;
 
+  /// No description provided for @missedPenaltyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed penalty'**
+  String get missedPenaltyLabel;
+
   /// No description provided for @ownGoalLabel.
   ///
   /// In en, this message translates to:
@@ -3092,7 +3098,7 @@ abstract class AppLocalizations {
   /// No description provided for @notifAlertsOnSuffix.
   ///
   /// In en, this message translates to:
-  /// **'of 3 alerts on'**
+  /// **'of 2 alerts on'**
   String get notifAlertsOnSuffix;
 
   /// No description provided for @playersLabel.

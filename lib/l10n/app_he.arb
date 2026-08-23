@@ -673,6 +673,7 @@
     "statisticsPoints": "נקודות",
     "goalLabel": "גול",
     "penaltyLabel": "פנדל",
+    "missedPenaltyLabel": "פנדל שהוחמץ",
     "ownGoalLabel": "שער עצמי",
     "yellowCardLabel": "צהוב",
     "redCardLabel": "אדום",
