@@ -365,16 +365,16 @@ class _TeamDetailsScreenState extends State<TeamDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (upcoming.isNotEmpty) ...[
-            _sectionHeader(l.upcomingMatches.toUpperCase()),
-            const SizedBox(height: 8),
-            _matchesCard(upcoming, teamId),
-            const SizedBox(height: 16),
-          ],
           if (past.isNotEmpty) ...[
             _sectionHeader(l.recentResults.toUpperCase()),
             const SizedBox(height: 8),
             _matchesCard(past, teamId),
+            const SizedBox(height: 16),
+          ],
+          if (upcoming.isNotEmpty) ...[
+            _sectionHeader(l.upcomingMatches.toUpperCase()),
+            const SizedBox(height: 8),
+            _matchesCard(upcoming, teamId),
           ],
         ],
       ),
