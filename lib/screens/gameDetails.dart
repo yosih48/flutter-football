@@ -16,6 +16,7 @@ import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/utils/localized_team_name.dart';
 import 'package:football/utils/status_utils.dart';
+import 'package:football/utils/match_status.dart';
 import 'package:football/widgets/FixtureEventsWidget.dart';
 // H2H tab is built but hidden for now — re-enable once FixtureCache has more
 // historical meetings to show. See HeadToHeadWidget + the commented tab below.
@@ -72,17 +73,6 @@ class _GameDetailsState extends State<GameDetails> {
   late int _currentIndex;
   late Game _currentGame;
   late int currentGameId;
-
-  static const Set<String> _liveShort = {
-    '1H',
-    '2H',
-    'H1',
-    'H2',
-    'ET',
-    'BT',
-    'P',
-    'INT'
-  };
 
   String _guessesCacheKey(int gameId, String group) => '$gameId|$group';
 
@@ -223,7 +213,10 @@ class _GameDetailsState extends State<GameDetails> {
   }
 
   bool get _notStarted => _currentGame.status.long == 'Not Started';
-  bool get _isLive => _liveShort.contains(_currentGame.status.short);
+  bool get _isLive => MatchStatus.isInPlay(_currentGame.status.short);
+  bool get _isInterrupted =>
+      MatchStatus.isInterrupted(_currentGame.status.short);
+  bool get _isVoid => MatchStatus.isVoid(_currentGame.status.short);
   bool get _isHalftime => _currentGame.status.short == 'HT';
   bool get _isAfterPenalties => _currentGame.status.short == 'PEN';
   bool get _isAfterExtraTime => _currentGame.status.short == 'AET';
@@ -234,8 +227,8 @@ class _GameDetailsState extends State<GameDetails> {
 
   Color _getAccent(EditorialColors c) {
     if (_isLive) return c.live;
-    if (_isHalftime) return c.amber;
-    if (_isFinished) return c.inkMute;
+    if (_isHalftime || _isInterrupted) return c.amber;
+    if (_isFinished || _isVoid) return c.inkMute;
     return c.inkDim;
   }
 
@@ -339,6 +332,9 @@ class _GameDetailsState extends State<GameDetails> {
       statusColor = c.live;
     } else if (_isHalftime) {
       statusText = AppLocalizations.of(context)!.halfTimeLabel.toUpperCase();
+      statusColor = c.amber;
+    } else if (_isInterrupted) {
+      statusText = (info['text']?.toString() ?? '').toUpperCase();
       statusColor = c.amber;
     } else if (_isAfterPenalties) {
       statusText =
@@ -450,8 +446,9 @@ class _GameDetailsState extends State<GameDetails> {
 
   Widget _buildScoreboard({required bool hasPrev, required bool hasNext}) {
     final c = context.col;
-    final h = _currentGame.goals.home ?? 0;
-    final a = _currentGame.goals.away ?? 0;
+    // A voided match (postponed/cancelled/abandoned) has no result that counts.
+    final h = _isVoid ? '–' : '${_currentGame.goals.home ?? 0}';
+    final a = _isVoid ? '–' : '${_currentGame.goals.away ?? 0}';
     // Reserve 2 lines for both teams only if at least one name has multiple
     // words; otherwise keep it to a single line. This keeps the two sides
     // symmetric and never splits a word mid-letter.
@@ -479,7 +476,7 @@ class _GameDetailsState extends State<GameDetails> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  '$h',
+                  h,
                   style: EType.body(
                     size: 44,
                     height: 1.0,
@@ -500,7 +497,7 @@ class _GameDetailsState extends State<GameDetails> {
                   ),
                 ),
                 Text(
-                  '$a',
+                  a,
                   style: EType.body(
                     size: 44,
                     height: 1.0,

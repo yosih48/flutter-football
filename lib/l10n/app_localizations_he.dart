@@ -669,6 +669,18 @@ class AppLocalizationsHe extends AppLocalizations {
   String get postponed => 'נדחה';
 
   @override
+  String get matchInterrupted => 'הופסק';
+
+  @override
+  String get matchSuspended => 'מושהה';
+
+  @override
+  String get matchAbandoned => 'הופסק סופית';
+
+  @override
+  String get matchCancelled => 'בוטל';
+
+  @override
   String get welcomeTitle => 'ברוכים הבאים לאפליקציית-ScoreCast! ';
 
   @override

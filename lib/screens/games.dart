@@ -18,6 +18,7 @@ import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/utils/config.dart';
 import 'package:football/utils/utils.dart';
+import 'package:football/utils/match_status.dart';
 import 'package:football/widgets/LeagueSelectorChips.dart';
 import 'package:football/widgets/gamesCard.dart';
 import 'package:http/http.dart' as http;
@@ -88,16 +89,6 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
   static const Duration _liveTickInterval = Duration(seconds: 30);
 
   final ScrollController _scrollController = ScrollController();
-
-  static const Set<String> _liveStatuses = {
-    '1H',
-    '2H',
-    'HT',
-    'ET',
-    'BT',
-    'P',
-    'INT'
-  };
 
   // ── Lifecycle ────────────────────────────────────────────────────────
   @override
@@ -269,7 +260,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
   }
 
   // ── Auto-refresh loop ────────────────────────────────────────────────
-  static bool _isLive(Game g) => _liveStatuses.contains(g.status.short);
+  // Includes interrupted games: they may resume (or turn ABD), so keep polling.
+  static bool _isLive(Game g) => MatchStatus.isOngoing(g.status.short);
 
   void _startRefreshLoop() {
     _refreshTimer?.cancel();

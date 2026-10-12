@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:football/models/games.dart';
 import 'package:football/resources/league_config_service.dart';
 import 'package:football/resources/gamesMethods.dart' show parseGamesListJson;
+import 'package:football/utils/match_status.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class GameCacheService {
@@ -159,25 +160,14 @@ class GameCacheService {
 
   // Check if there are any live games in the list
   bool hasLiveGames(List<Game> games) {
-    final hasLive = games.any((game) =>
-        game.status.short == '1H' ||
-        game.status.short == '2H' ||
-        game.status.short == 'HT' ||
-        game.status.short == 'ET' ||
-        game.status.short == 'BT' ||
-        game.status.short == 'P' ||
-        game.status.short == 'INT');
+    // Ongoing = in play, half-time or interrupted (may resume / turn ABD), so
+    // the short live TTL applies and a status change is picked up quickly.
+    final hasLive =
+        games.any((game) => MatchStatus.isOngoing(game.status.short));
 
     if (hasLive) {
       final liveGames = games
-          .where((game) =>
-              game.status.short == '1H' ||
-              game.status.short == '2H' ||
-              game.status.short == 'HT' ||
-              game.status.short == 'ET' ||
-              game.status.short == 'BT' ||
-              game.status.short == 'P' ||
-              game.status.short == 'INT')
+          .where((game) => MatchStatus.isOngoing(game.status.short))
           .toList();
 
       print('⚽ Found ${liveGames.length} live games');

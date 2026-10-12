@@ -1415,6 +1415,30 @@ abstract class AppLocalizations {
   /// **'Postponed'**
   String get postponed;
 
+  /// Match stopped mid-game by the provider (status INT).
+  ///
+  /// In en, this message translates to:
+  /// **'Interrupted'**
+  String get matchInterrupted;
+
+  /// Match suspended (status SUSP).
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended'**
+  String get matchSuspended;
+
+  /// Match abandoned and not completed (status ABD).
+  ///
+  /// In en, this message translates to:
+  /// **'Abandoned'**
+  String get matchAbandoned;
+
+  /// Match cancelled (status CANC).
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get matchCancelled;
+
   /// No description provided for @welcomeTitle.
   ///
   /// In en, this message translates to:

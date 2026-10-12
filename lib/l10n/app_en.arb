@@ -224,6 +224,10 @@
   "notStarted": "Not Started",
   "finished": "Finished",
   "postponed": "Postponed",
+  "matchInterrupted": "Interrupted",
+  "matchSuspended": "Suspended",
+  "matchAbandoned": "Abandoned",
+  "matchCancelled": "Cancelled",
     "welcomeTitle": "Welcome to the ScoreCast App!",
   "welcomeContent": "An innovative sports prediction app that lets you guess game results, compete with friends, and earn points. Start your journey toward an exciting competition!",
   

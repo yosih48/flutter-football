@@ -6,6 +6,7 @@ import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/utils/localized_team_name.dart';
 import 'package:football/utils/status_utils.dart';
+import 'package:football/utils/match_status.dart';
 import 'package:football/widgets/teamLInks.dart';
 
 import 'package:intl/intl.dart';
@@ -33,18 +34,9 @@ class GameWidget extends StatelessWidget {
     }
   }
 
-  static const Set<String> _liveShort = {
-    '1H',
-    '2H',
-    'H1',
-    'H2',
-    'ET',
-    'BT',
-    'P',
-    'INT'
-  };
-
-  bool get _isLive => _liveShort.contains(game.status.short);
+  bool get _isLive => MatchStatus.isInPlay(game.status.short);
+  bool get _isInterrupted => MatchStatus.isInterrupted(game.status.short);
+  bool get _isVoid => MatchStatus.isVoid(game.status.short);
   bool get _isAfterPenalties => game.status.short == 'PEN';
   bool get _isAfterExtraTime => game.status.short == 'AET';
   bool get _isFinished =>
@@ -69,9 +61,9 @@ class GameWidget extends StatelessWidget {
     final Color accent;
     if (_isLive) {
       accent = c.live;
-    } else if (_isHalftime) {
+    } else if (_isHalftime || _isInterrupted) {
       accent = c.amber;
-    } else if (_isFinished) {
+    } else if (_isFinished || _isVoid) {
       accent = c.inkDim;
     } else {
       accent = c.hairline;
@@ -174,6 +166,14 @@ class GameWidget extends StatelessWidget {
     if (_isHalftime) {
       return Text(l.halfTimeLabel.toUpperCase(),
           style: EType.label(color: c.amber, size: 10, letterSpacing: 1.8));
+    }
+    if (_isInterrupted) {
+      return Text((info['text']?.toString() ?? '').toUpperCase(),
+          style: EType.label(color: c.amber, size: 10, letterSpacing: 1.8));
+    }
+    if (_isVoid) {
+      return Text((info['text']?.toString() ?? '').toUpperCase(),
+          style: EType.label(color: c.inkMute, size: 10, letterSpacing: 1.8));
     }
     if (_isAfterPenalties) {
       return Text(l.afterPenaltiesLabel.toUpperCase(),
@@ -290,8 +290,9 @@ class GameWidget extends StatelessWidget {
         awayController: awayController,
       );
     }
-    final h = game.goals.home ?? 0;
-    final a = game.goals.away ?? 0;
+    // A voided match (postponed/cancelled/abandoned) has no result that counts.
+    final h = _isVoid ? '–' : '${game.goals.home ?? 0}';
+    final a = _isVoid ? '–' : '${game.goals.away ?? 0}';
     final digit = EType.body(
       size: 18,
       height: 1.0,
@@ -314,7 +315,7 @@ class GameWidget extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('$h', style: digit),
+          Text(h, style: digit),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6),
             child: Text(':',
@@ -324,7 +325,7 @@ class GameWidget extends StatelessWidget {
                     weight: FontWeight.w600,
                     color: c.inkDim)),
           ),
-          Text('$a', style: digit),
+          Text(a, style: digit),
         ],
       ),
     );

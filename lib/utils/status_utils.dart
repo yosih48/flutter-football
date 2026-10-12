@@ -36,10 +36,31 @@ class StatusUtils {
           "color": Colors.green,
           "text": AppLocalizations.of(context)!.finished
         };
+      case "PST":
       case "Postponed":
         return {
           "color": Colors.yellow,
           "text": AppLocalizations.of(context)!.postponed
+        };
+      case "INT":
+        return {
+          "color": Colors.orange,
+          "text": AppLocalizations.of(context)!.matchInterrupted
+        };
+      case "SUSP":
+        return {
+          "color": Colors.orange,
+          "text": AppLocalizations.of(context)!.matchSuspended
+        };
+      case "ABD":
+        return {
+          "color": Colors.grey,
+          "text": AppLocalizations.of(context)!.matchAbandoned
+        };
+      case "CANC":
+        return {
+          "color": Colors.grey,
+          "text": AppLocalizations.of(context)!.matchCancelled
         };
       case "AET":
       case "BT":
