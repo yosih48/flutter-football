@@ -57,6 +57,7 @@ dependencies:
   font_awesome_flutter: ^10.8.0
   firebase_remote_config: ^5.5.0
   skeletonizer: ^2.1.2
+  share_plus: ^12.0.2
   
 flutter_launcher_icons:
   android: true

@@ -13,7 +13,15 @@ import 'package:football/resources/auth.dart';
 import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/l10n/app_localizations.dart';
+import 'package:football/resources/rate_app_service.dart';
+import 'package:football/widgets/RateAppDialog.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+// Published privacy-policy page. While empty the row is hidden, so users never
+// land on a dead link — fill in the URL to show it.
+const String _kPrivacyPolicyUrl = '';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -24,6 +32,10 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   String appVersion = '';
+  bool _signingOut = false;
+
+  // Bold Hebrew needs the face that ships Hebrew glyphs (see EType.body).
+  bool get _isHe => Localizations.localeOf(context).languageCode == 'he';
 
   @override
   void initState() {
@@ -124,12 +136,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               //           color: c.inkFaint, size: 10, letterSpacing: 1.6)),
               // ),
 
-            // ── Delete account ──────────────────────────────────────
-            if (user != null) ...[
-              const SizedBox(height: 14),
-              Center(
-                  child: _deleteAccountLink(context, c, l, user, authProvider)),
-            ],
+              // ── Delete account ──────────────────────────────────────
+              if (user != null) ...[
+                const SizedBox(height: 14),
+                Center(
+                    child:
+                        _deleteAccountLink(context, c, l, user, authProvider)),
+              ],
           ],
         ),
       ),
@@ -166,49 +179,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _identityCard(
       EditorialColors c, String name, String email, String initial,
       {VoidCallback? onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: c.card,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: c.hairline, width: 1),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(color: c.live, shape: BoxShape.circle),
-              child: Text(initial,
-                  style: EType.display(size: 20, color: Colors.white)),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(name.isNotEmpty ? name : '—',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: EType.body(
-                          color: c.ink, size: 16, weight: FontWeight.w600)),
-                  const SizedBox(height: 3),
-                  Text(email,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: EType.body(color: c.inkMute, size: 12)),
-                ],
+    return _CardSurface(
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                alignment: Alignment.center,
+                decoration:
+                    BoxDecoration(color: c.live, shape: BoxShape.circle),
+                child: Text(initial,
+                    style: EType.display(size: 20, color: Colors.white)),
               ),
-            ),
-            if (onTap != null) ...[
-              const SizedBox(width: 8),
-              Icon(Icons.chevron_left, size: 22, color: c.inkDim),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name.isNotEmpty ? name : '—',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: EType.body(
+                            color: c.ink,
+                            size: 16,
+                            weight: FontWeight.w600,
+                            hebrew: _isHe)),
+                    const SizedBox(height: 3),
+                    Text(email,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: EType.body(color: c.inkMute, size: 12)),
+                  ],
+                ),
+              ),
+              if (onTap != null) ...[
+                const SizedBox(width: 8),
+                Icon(Icons.chevron_left, size: 22, color: c.inkDim),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -217,12 +230,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // ── Application links (grouped card) ───────────────────────────────────
   Widget _appLinksCard(
       BuildContext context, EditorialColors c, AppLocalizations l) {
-    return Container(
-      decoration: BoxDecoration(
-        color: c.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: c.hairline, width: 1),
-      ),
+    final divider =
+        Divider(height: 1, color: c.hairline, indent: 14, endIndent: 14);
+    return _CardSurface(
       child: Column(
         children: [
           _linkRow(
@@ -235,7 +245,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   builder: (_) => const FavoritsScreen(initialTab: 1)),
             ),
           ),
-          Divider(height: 1, color: c.hairline, indent: 14, endIndent: 14),
+          divider,
           _linkRow(
             c,
             icon: Icons.info_outline,
@@ -243,9 +253,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: l.rulesSubtitle,
             onTap: () => showInstructionsBottomSheet(context),
           ),
+          // Store links exist for Google Play only so far, so rating is
+          // Android-only (same gate as the automatic rate prompt).
+          if (RateAppService().isAndroid) ...[
+            divider,
+            _linkRow(
+              c,
+              icon: Icons.star_outline,
+              title: l.rateAppRow,
+              subtitle: l.rateAppRowSub,
+              onTap: () async {
+                // A manual rating also retires the automatic prompt.
+                await RateAppService().markRated();
+                await openPlayStorePage();
+              },
+            ),
+          ],
+          divider,
+          // Builder: the share sheet anchors to this row on iPad.
+          Builder(
+            builder: (rowCtx) => _linkRow(
+              c,
+              icon: Icons.share_outlined,
+              title: l.shareAppRow,
+              subtitle: l.shareAppRowSub,
+              onTap: () => _shareApp(rowCtx, l),
+            ),
+          ),
+          if (_kPrivacyPolicyUrl.isNotEmpty) ...[
+            divider,
+            _linkRow(
+              c,
+              icon: Icons.privacy_tip_outlined,
+              title: l.privacyPolicyRow,
+              onTap: () => launchUrl(Uri.parse(_kPrivacyPolicyUrl),
+                  mode: LaunchMode.externalApplication),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  Future<void> _shareApp(BuildContext rowContext, AppLocalizations l) async {
+    final box = rowContext.findRenderObject() as RenderBox?;
+    try {
+      await SharePlus.instance.share(ShareParams(
+        text: '${l.shareAppText} $kPlayStoreWebUrl',
+        sharePositionOrigin:
+            box == null ? null : box.localToGlobal(Offset.zero) & box.size,
+      ));
+    } catch (e) {
+      // Say so instead of failing silently — e.g. a MissingPluginException
+      // when the app was hot-restarted rather than rebuilt after adding
+      // share_plus.
+      print('Share failed: $e');
+      if (mounted) {
+        showSnackBar(context, l.shareAppFailed, tone: SnackTone.error);
+      }
+    }
   }
 
   Widget _linkRow(
@@ -269,7 +335,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Text(title,
                       style: EType.body(
-                          color: c.ink, size: 15, weight: FontWeight.w600)),
+                          color: c.ink,
+                          size: 15,
+                          weight: FontWeight.w600,
+                          hebrew: _isHe)),
                   if (subtitle != null) ...[
                     const SizedBox(height: 3),
                     Text(subtitle,
@@ -295,42 +364,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
     AuthProvider authProvider,
     UserProvider userProvider,
   ) {
-    return InkWell(
-      onTap: () async {
-        final nav = Navigator.of(context);
-        final confirm = await _showEditorialDialog(
-          context: context,
-          title: l.confirmsignout,
-          body: l.leaveapp,
-          confirmLabel: l.yes,
-          confirmColor: c.flag,
-          cancelLabel: l.cancel,
-        );
-        if (confirm == true) {
-          userProvider.setSelectedGroupName('public');
-          await authProvider.signOut(user.id);
-          nav.pushNamedAndRemoveUntil('/login', (route) => false);
-        }
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: c.card,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: c.hairline, width: 1),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-        child: Row(
-          children: [
-            _IconTile(icon: Icons.logout, color: c.flag),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(l.signout,
-                  style: EType.body(
-                      color: c.flag, size: 15, weight: FontWeight.w600)),
-            ),
-            const SizedBox(width: 8),
-            Icon(Icons.chevron_left, size: 22, color: c.flag),
-          ],
+    return _CardSurface(
+      child: InkWell(
+        // Disabled while signing out so a double tap can't run it twice.
+        onTap: _signingOut
+            ? null
+            : () async {
+                final nav = Navigator.of(context);
+                final confirm = await _showEditorialDialog(
+                  context: context,
+                  title: l.confirmsignout,
+                  body: l.leaveapp,
+                  confirmLabel: l.yes,
+                  confirmColor: c.flag,
+                  cancelLabel: l.cancel,
+                );
+                if (confirm != true || !mounted) return;
+                setState(() => _signingOut = true);
+                try {
+                  userProvider.setSelectedGroupName('public');
+                  await authProvider.signOut(user.id);
+                  nav.pushNamedAndRemoveUntil('/login', (route) => false);
+                } catch (e) {
+                  print('Sign out failed: $e');
+                  if (!mounted) return;
+                  setState(() => _signingOut = false);
+                  showSnackBar(context, l.signOutFailed, tone: SnackTone.error);
+                }
+              },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+          child: Row(
+            children: [
+              _IconTile(icon: Icons.logout, color: c.flag),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(l.signout,
+                    style: EType.body(
+                        color: c.flag,
+                        size: 15,
+                        weight: FontWeight.w600,
+                        hebrew: _isHe)),
+              ),
+              const SizedBox(width: 8),
+              if (_signingOut)
+                SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 1.8, color: c.flag),
+                )
+              else
+                Icon(Icons.chevron_left, size: 22, color: c.flag),
+            ],
+          ),
         ),
       ),
     );
@@ -359,29 +446,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
             pageBuilder: (_, __, ___) =>
                 Center(child: CircularProgressIndicator(color: cc.live)),
           ));
-          try {
-            final ok = await authProvider.deleteAccount(user.id);
-            if (ok) {
-              nav.pop();
-              await authProvider.signOut(user.id);
-              nav.pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (route) => false,
-              );
-              messenger.showSnackBar(buildEditorialSnackBar(
-                text: l.accountDeleted,
+          // One translated message for every failure; the raw exception
+          // (already wrapped twice in auth.dart) only goes to the log.
+          void showFailure() => messenger.showSnackBar(buildEditorialSnackBar(
+                text: l.accountDeleteFailed,
                 colors: cc,
-                tone: SnackTone.success,
+                tone: SnackTone.error,
               ));
-            }
+          bool ok;
+          try {
+            ok = await authProvider.deleteAccount(user.id);
           } catch (e) {
-            nav.pop();
-            messenger.showSnackBar(buildEditorialSnackBar(
-              text: '${l.failedToDeleteAccount}$e',
-              colors: cc,
-              tone: SnackTone.error,
-            ));
+            print('Delete account failed: $e');
+            ok = false;
           }
+          // Always dismiss the spinner — a false result used to leave it up
+          // with no way out.
+          nav.pop();
+          if (!ok) {
+            showFailure();
+            return;
+          }
+          await authProvider.signOut(user.id);
+          nav.pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            (route) => false,
+          );
+          messenger.showSnackBar(buildEditorialSnackBar(
+            text: l.accountDeleted,
+            colors: cc,
+            tone: SnackTone.success,
+          ));
         }
       },
       child: Padding(
@@ -425,7 +520,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Text(title,
                   style: EType.body(
-                      color: c.ink, size: 18, weight: FontWeight.w600)),
+                      color: c.ink,
+                      size: 18,
+                      weight: FontWeight.w600,
+                      hebrew: _isHe)),
               const SizedBox(height: 10),
               Text(body, style: EType.body(color: c.inkMute, size: 13)),
               const SizedBox(height: 24),
@@ -451,6 +549,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ── Card surface ───────────────────────────────────────────────────────────
+// The card's fill lives on a Material (not a decorated Container) so InkWell
+// ripples inside it paint on top of the fill instead of hidden beneath it.
+class _CardSurface extends StatelessWidget {
+  const _CardSurface({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    return Material(
+      color: c.card,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: c.hairline, width: 1),
+      ),
+      child: child,
     );
   }
 }
@@ -557,7 +677,11 @@ class _SettingsCardRow extends StatelessWidget {
               children: [
                 Text(title,
                     style: EType.body(
-                        color: c.ink, size: 15, weight: FontWeight.w600)),
+                        color: c.ink,
+                        size: 15,
+                        weight: FontWeight.w600,
+                        hebrew: Localizations.localeOf(context).languageCode ==
+                            'he')),
                 const SizedBox(height: 3),
                 Text(subtitle, style: EType.body(color: c.inkMute, size: 12)),
               ],

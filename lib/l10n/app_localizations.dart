@@ -2435,6 +2435,60 @@ abstract class AppLocalizations {
   /// **'Couldn't save your changes. Check your connection and try again.'**
   String get prefsSaveFailed;
 
+  /// No description provided for @accountDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn't delete your account. Please try again.'**
+  String get accountDeleteFailed;
+
+  /// No description provided for @signOutFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn't sign out. Please try again.'**
+  String get signOutFailed;
+
+  /// No description provided for @rateAppRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate the app'**
+  String get rateAppRow;
+
+  /// No description provided for @rateAppRowSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us what you think on Google Play'**
+  String get rateAppRowSub;
+
+  /// No description provided for @shareAppRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Share with friends'**
+  String get shareAppRow;
+
+  /// No description provided for @shareAppRowSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite friends to compete with you'**
+  String get shareAppRowSub;
+
+  /// No description provided for @shareAppFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn't open sharing. Please try again.'**
+  String get shareAppFailed;
+
+  /// No description provided for @shareAppText.
+  ///
+  /// In en, this message translates to:
+  /// **'Join me on ScoreCast — predict match scores and compete with friends:'**
+  String get shareAppText;
+
+  /// No description provided for @privacyPolicyRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy policy'**
+  String get privacyPolicyRow;
+
   /// No description provided for @statsLoadFailed.
   ///
   /// In en, this message translates to:

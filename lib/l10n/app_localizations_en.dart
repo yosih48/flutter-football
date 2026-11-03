@@ -1188,6 +1188,42 @@ class AppLocalizationsEn extends AppLocalizations {
       "Couldn't load these statistics. Check your connection and try again.";
 
   @override
+  String get accountDeleteFailed =>
+      "We couldn't delete your account. Please try again.";
+
+  @override
+  String get signOutFailed =>
+      "Couldn't sign out. Please try again.";
+
+  @override
+  String get rateAppRow =>
+      'Rate the app';
+
+  @override
+  String get rateAppRowSub =>
+      'Tell us what you think on Google Play';
+
+  @override
+  String get shareAppRow =>
+      'Share with friends';
+
+  @override
+  String get shareAppRowSub =>
+      'Invite friends to compete with you';
+
+  @override
+  String get shareAppFailed =>
+      "Couldn't open sharing. Please try again.";
+
+  @override
+  String get shareAppText =>
+      'Join me on ScoreCast — predict match scores and compete with friends:';
+
+  @override
+  String get privacyPolicyRow =>
+      'Privacy policy';
+
+  @override
   String get statsRecentForm => 'Recent form';
 
   @override

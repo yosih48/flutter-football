@@ -1485,6 +1485,42 @@ class AppLocalizationsHe extends AppLocalizations {
       'לא הצלחנו לטעון את הפרופיל. בדקו את החיבור ונסו שוב.';
 
   @override
+  String get accountDeleteFailed =>
+      'לא הצלחנו למחוק את החשבון. נסו שוב.';
+
+  @override
+  String get signOutFailed =>
+      'לא הצלחנו להתנתק. נסו שוב.';
+
+  @override
+  String get rateAppRow =>
+      'דרגו את האפליקציה';
+
+  @override
+  String get rateAppRowSub =>
+      'ספרו לנו מה דעתכם ב-Google Play';
+
+  @override
+  String get shareAppRow =>
+      'שתפו עם חברים';
+
+  @override
+  String get shareAppRowSub =>
+      'הזמינו חברים להתחרות איתכם';
+
+  @override
+  String get shareAppFailed =>
+      'לא הצלחנו לפתוח את השיתוף. נסו שוב.';
+
+  @override
+  String get shareAppText =>
+      'בואו להתחרות איתי ב-ScoreCast — מנחשים תוצאות ומתחרים עם חברים:';
+
+  @override
+  String get privacyPolicyRow =>
+      'מדיניות פרטיות';
+
+  @override
   String get statsLoadFailed =>
       'לא הצלחנו לטעון את הסטטיסטיקה. בדקו את החיבור ונסו שוב.';
 

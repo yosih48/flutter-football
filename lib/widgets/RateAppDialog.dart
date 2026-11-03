@@ -23,28 +23,33 @@ Future<void> showRateAppDialog(BuildContext context) async {
   );
 }
 
+/// Public web link to this app's store page — what gets shared with friends.
+const String kPlayStoreWebUrl = _kPlayWebUrl;
+
+/// Opens this app's Play Store page: the native Play Store app first, then the
+/// web URL. Launch failures are swallowed (logged by the OS). Shared by the
+/// rate prompt and the manual "Rate the app" row in settings.
+Future<void> openPlayStorePage() async {
+  try {
+    final market = Uri.parse(_kPlayMarketUrl);
+    if (await canLaunchUrl(market)) {
+      await launchUrl(market, mode: LaunchMode.externalApplication);
+      return;
+    }
+  } catch (_) {
+    // fall through to web URL
+  }
+  try {
+    await launchUrl(Uri.parse(_kPlayWebUrl),
+        mode: LaunchMode.externalApplication);
+  } catch (_) {
+    // Honor the user's "Rate now" intent regardless — dialog already closed
+    // and status marked done.
+  }
+}
+
 class RateAppDialog extends StatelessWidget {
   const RateAppDialog({super.key});
-
-  Future<void> _openStore() async {
-    // Try the native Play Store app first, then fall back to the web URL.
-    try {
-      final market = Uri.parse(_kPlayMarketUrl);
-      if (await canLaunchUrl(market)) {
-        await launchUrl(market, mode: LaunchMode.externalApplication);
-        return;
-      }
-    } catch (_) {
-      // fall through to web URL
-    }
-    try {
-      await launchUrl(Uri.parse(_kPlayWebUrl),
-          mode: LaunchMode.externalApplication);
-    } catch (_) {
-      // Honor the user's "Rate now" intent regardless — dialog already closed
-      // and status marked done; swallow launch failures (logged by the OS).
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +109,7 @@ class RateAppDialog extends StatelessWidget {
               onPressed: () async {
                 await service.markRated();
                 if (context.mounted) Navigator.of(context).pop();
-                await _openStore();
+                await openPlayStorePage();
               },
               child: Text(
                 l.rateAppRateNow,
