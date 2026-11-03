@@ -3023,6 +3023,42 @@ abstract class AppLocalizations {
   /// **'Closes'**
   String get picksDeadline;
 
+  /// No description provided for @profileLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn't load your profile. Check your connection and try again.'**
+  String get profileLoadFailed;
+
+  /// No description provided for @profileSeasonPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Season points'**
+  String get profileSeasonPoints;
+
+  /// No description provided for @picksAllDone.
+  ///
+  /// In en, this message translates to:
+  /// **'All picks done'**
+  String get picksAllDone;
+
+  /// No description provided for @picksClosesInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Closes in 1 day} other{Closes in {count} days}}'**
+  String picksClosesInDays(int count);
+
+  /// No description provided for @picksClosesInHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Closes in 1 hour} other{Closes in {count} hours}}'**
+  String picksClosesInHours(int count);
+
+  /// No description provided for @picksClosesInMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Closes in 1 minute} other{Closes in {count} minutes}}'**
+  String picksClosesInMinutes(int count);
+
   /// No description provided for @pickChoose.
   ///
   /// In en, this message translates to:

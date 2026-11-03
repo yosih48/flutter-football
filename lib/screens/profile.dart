@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:football/providers/flutter%20pub%20add%20provider.dart';
 import 'package:football/resources/auth.dart';
@@ -15,6 +17,9 @@ import 'package:football/widgets/adminSeasonArchive.dart';
 import 'package:football/widgets/seasonPickers.dart';
 import 'package:football/screens/trophyCabinet.dart';
 import 'package:football/l10n/app_localizations.dart';
+import 'package:football/models/season_record.dart';
+import 'package:football/resources/trophyMethods.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -56,6 +61,15 @@ class ProfileScreenContent extends StatefulWidget {
   _ProfileScreenContentState createState() => _ProfileScreenContentState();
 }
 
+// Last loaded profile, per user. The screen is a PageView tab (disposed when
+// swiped away), so a revisit renders the real cards at once and refreshes
+// behind them instead of flashing the skeleton again.
+class _ProfileCache {
+  static String? userId;
+  static Map<String, dynamic>? userData;
+  static List<SeasonRecord>? history;
+}
+
 class _ProfileScreenContentState extends State<ProfileScreenContent> {
   Map<String, String> _userWinners = {};
   Map<String, String> _userTopScorer = {};
@@ -63,14 +77,29 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
   // opted-in (matches the bootstrap default in games.dart), so a league newly
   // added to the remote config shows up here without a manual toggle.
   Map<String, bool> _chosenLeagues = {};
+  // Current-season points per league id, for the hero's stats row.
+  Map<String, double> _points = {};
   // Year the account was created, for the "player since YYYY" line. Empty when
   // the backend record has no usable createdAt, in which case that half of the
   // subtitle is simply omitted.
   String _memberSinceYear = '';
+  // Archived seasons. Null until loaded (or if that fails), in which case the
+  // podium / first-place tiles are left out of the stats row.
+  List<SeasonRecord>? _history;
+  // Pick window per league, resolved here rather than inside each card so the
+  // progress card can leave out picks that can no longer be made.
+  final Map<String, PickAvailability> _windows = {};
+  int _windowsGen = 0;
+  // How many league cards the skeleton shows on a cold load — the count from
+  // the last successful load, so the page doesn't shrink when data arrives.
+  int? _placeholderCount;
   bool _isLoading = true;
+  bool _loadFailed = false;
   late String currentUserId;
   late String currentUserEmail;
   late String currentUserName;
+
+  String get _countPrefsKey => 'profileLeagueCount_$currentUserId';
 
   @override
   void initState() {
@@ -78,30 +107,115 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     currentUserId = widget.authProvider.currentUser?.id ?? '';
     currentUserEmail = widget.authProvider.currentUser?.email ?? '';
     currentUserName = widget.authProvider.currentUser?.name ?? '';
+
+    if (_ProfileCache.userId == currentUserId &&
+        _ProfileCache.userData != null) {
+      _applyUserData(_ProfileCache.userData!);
+      _history = _ProfileCache.history;
+      _isLoading = false;
+      // resolvePickWindow reads AppLocalizations, so wait for the first frame.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _resolveWindows();
+      });
+    } else {
+      _loadPlaceholderCount();
+    }
     _fetchPersonalData();
+    _fetchHistory();
+  }
+
+  Future<void> _loadPlaceholderCount() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final n = prefs.getInt(_countPrefsKey);
+      if (n != null && mounted && _isLoading) {
+        setState(() => _placeholderCount = n);
+      }
+    } catch (_) {}
+  }
+
+  void _applyUserData(Map<String, dynamic> userData) {
+    _userWinners = Map<String, String>.from(userData['winner'] ?? {});
+    _userTopScorer = Map<String, String>.from(userData['topScorer'] ?? {});
+    _chosenLeagues = Map<String, bool>.from(userData['chosenLeagues'] ?? {});
+    final rawPoints = userData['points'];
+    _points = rawPoints is Map
+        ? {
+            for (final e in rawPoints.entries)
+              e.key.toString():
+                  double.tryParse(e.value?.toString() ?? '') ?? 0,
+          }
+        : {};
+    _memberSinceYear =
+        DateTime.tryParse(userData['createdAt']?.toString() ?? '')
+                ?.year
+                .toString() ??
+            '';
   }
 
   Future<void> _fetchPersonalData() async {
     try {
       final userData = await UsersMethods().fetchUserById(currentUserId);
       if (!mounted) return;
+      _ProfileCache.userId = currentUserId;
+      _ProfileCache.userData = userData;
       setState(() {
-        _userWinners = Map<String, String>.from(userData['winner'] ?? {});
-        _userTopScorer = Map<String, String>.from(userData['topScorer'] ?? {});
-        _chosenLeagues =
-            Map<String, bool>.from(userData['chosenLeagues'] ?? {});
-        _memberSinceYear =
-            DateTime.tryParse(userData['createdAt']?.toString() ?? '')
-                    ?.year
-                    .toString() ??
-                '';
+        _applyUserData(userData);
         _isLoading = false;
+        _loadFailed = false;
       });
+      _resolveWindows();
+      SharedPreferences.getInstance()
+          .then((p) => p.setInt(_countPrefsKey, _allowedIds.length))
+          .catchError((_) => false);
       Provider.of<UserProvider>(context, listen: false)
           .setCurrentUser(currentUserId);
     } catch (e) {
       print('Failed to fetch personal data: $e');
-      if (mounted) setState(() => _isLoading = false);
+      // With cached data on screen, keep showing it; otherwise say it failed
+      // rather than rendering every pick as "missing".
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          if (_ProfileCache.userId != currentUserId) _loadFailed = true;
+        });
+      }
+    }
+  }
+
+  Future<void> _fetchHistory() async {
+    try {
+      final history = await const TrophyMethods().fetchHistory(currentUserId);
+      _ProfileCache.history = history;
+      if (mounted) setState(() => _history = history);
+    } catch (e) {
+      print('Failed to fetch trophy history: $e');
+    }
+  }
+
+  Future<void> _retry() async {
+    setState(() {
+      _isLoading = true;
+      _loadFailed = false;
+    });
+    await Future.wait([_fetchPersonalData(), _fetchHistory()]);
+  }
+
+  Future<void> _refresh() =>
+      Future.wait([_fetchPersonalData(), _fetchHistory()]);
+
+  // Re-probed after every load (incl. after a save) so a league that just
+  // crossed its cutoff flips to closed. Old values stay on screen until the
+  // new ones land, and a newer pass discards a slower older one.
+  void _resolveWindows() {
+    final gen = ++_windowsGen;
+    for (final id in _allowedIds) {
+      final intId = int.tryParse(id);
+      if (intId == null) continue;
+      resolvePickWindow(context, intId).then((av) {
+        if (!mounted || gen != _windowsGen) return;
+        setState(() => _windows[id] = av);
+      });
     }
   }
 
@@ -115,36 +229,55 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
       .where((id) => _chosenLeagues[id] != false)
       .toSet();
 
+  bool _isClosed(String id) => _windows[id]?.window == PickWindow.closed;
+
+  void _openCabinet() => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => TrophyCabinetScreen(userId: currentUserId),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     final c = context.col;
     final filteredWinners = _filterById(_userWinners);
     final filteredTopScorers = _filterById(_userTopScorer);
 
-    // Skeleton placeholders: shimmer one row per supported league so the
-    // loading state matches the real league count from the backend config.
+    // Skeleton placeholders: one card per league the user had last time, or
+    // per supported league on a first-ever load.
+    final supported = LeagueConfigService().supportedLeagues;
     final placeholderNames = <String, String>{
-      for (final id in LeagueConfigService().supportedLeagues)
+      for (final id in supported.take(_placeholderCount ?? supported.length))
         id.toString(): 'Loading',
     };
 
     return Scaffold(
       backgroundColor: c.pitch,
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildHero(context, c),
-              _buildBody(
-                context,
-                c,
-                placeholderNames: placeholderNames,
-                filteredWinners: filteredWinners,
-                filteredTopScorers: filteredTopScorers,
-              ),
-            ],
+        child: RefreshIndicator(
+          color: c.live,
+          backgroundColor: c.card,
+          onRefresh: _refresh,
+          child: SingleChildScrollView(
+            // AlwaysScrollable so a short page can still be pulled down.
+            physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics()),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildHero(context, c),
+                if (_loadFailed)
+                  _ErrorCard(onRetry: _retry)
+                else
+                  _buildBody(
+                    context,
+                    c,
+                    placeholderNames: placeholderNames,
+                    filteredWinners: filteredWinners,
+                    filteredTopScorers: filteredTopScorers,
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -170,21 +303,23 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
       );
     }
 
-    // Two picks per league — champion and top scorer — so the progress card
-    // counts against 2×leagues rather than a league count.
     int filled(Map<String, String> src, String id) {
       final v = src[id];
       return (v != null && v.isNotEmpty) ? 1 : 0;
     }
 
-    final done = _isLoading
-        ? 0
-        : ids.fold<int>(
-            0,
-            (sum, id) =>
-                sum +
-                filled(filteredWinners, id) +
-                filled(filteredTopScorers, id));
+    // Two picks per league — champion and top scorer. A league whose window
+    // has closed only counts the picks actually made: the rest can't be made
+    // any more, so they'd keep the bar from ever reaching 100%.
+    var done = 0;
+    var total = 0;
+    if (!_isLoading) {
+      for (final id in ids) {
+        final made = filled(filteredWinners, id) + filled(filteredTopScorers, id);
+        done += made;
+        total += _isClosed(id) ? made : 2;
+      }
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -195,11 +330,13 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _ProgressCard(done: done, total: ids.length * 2),
+              if (_isLoading || total > 0)
+                _ProgressCard(done: done, total: _isLoading ? 2 : total),
               ...ids.map((id) => _LeaguePredictionCard(
                     leagueIdStr: id,
                     winnerPick: _isLoading ? null : filteredWinners[id],
                     topScorerPick: _isLoading ? null : filteredTopScorers[id],
+                    availability: _isLoading ? null : _windows[id],
                     clientId: currentUserId,
                     email: currentUserEmail,
                     isLoading: _isLoading,
@@ -224,13 +361,7 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 6),
       child: GestureDetector(
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => TrophyCabinetScreen(
-              userId: currentUserId,
-            ),
-          ),
-        ),
+        onTap: _openCabinet,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           decoration: BoxDecoration(
@@ -288,40 +419,53 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
     );
   }
 
-  Map<String, String> _filterById(Map<String, String> src) =>
-      Map.fromEntries(src.entries.where((e) => _allowedIds.contains(e.key)));
+  Map<String, String> _filterById(Map<String, String> src) {
+    final allowed = _allowedIds;
+    return Map.fromEntries(src.entries.where((e) => allowed.contains(e.key)));
+  }
+
+  String _fmtPoints(double v) =>
+      v % 1 == 0 ? v.toInt().toString() : v.toStringAsFixed(1);
 
   Widget _buildHero(BuildContext context, EditorialColors c) {
     final l = AppLocalizations.of(context)!;
     final isHe = _isHe(context);
     final initial =
         currentUserName.isNotEmpty ? currentUserName[0].toUpperCase() : '?';
+    final loaded = !_isLoading && !_loadFailed;
 
     // "Player since 2023 • 5 leagues" — each half is dropped when its data
     // isn't available, so the separator never dangles.
     final parts = <String>[
       if (_memberSinceYear.isNotEmpty)
         '${l.profilePlayerSince} $_memberSinceYear',
-      if (!_isLoading) '${_allowedIds.length} ${l.profileLeaguesWord}',
+      if (loaded) '${_allowedIds.length} ${l.profileLeaguesWord}',
     ];
+
+    final history = _history;
+    final seasonPoints = _allowedIds.fold<double>(
+        0, (sum, id) => sum + (_points[id] ?? 0));
 
     return Container(
       color: c.pitch,
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Solid green monogram — the profile's anchor.
-          Container(
-            width: 104,
-            height: 104,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(color: c.live, shape: BoxShape.circle),
-            child: Text(
-              initial,
-              style: EType.display(size: 46, color: Colors.white),
+          Center(
+            child: Container(
+              width: 72,
+              height: 72,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(color: c.live, shape: BoxShape.circle),
+              child: Text(
+                initial,
+                style: EType.display(size: 32, color: Colors.white),
+              ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
           Text(
             currentUserName.isNotEmpty ? currentUserName : '—',
@@ -351,10 +495,154 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
             ),
           ],
 
+          // Stats row — the season at a glance; tapping opens the cabinet.
+          if (loaded) ...[
+            const SizedBox(height: 16),
+            _StatsRow(
+              onTap: _openCabinet,
+              stats: [
+                _Stat(_fmtPoints(seasonPoints), l.profileSeasonPoints),
+                if (history != null) ...[
+                  _Stat(
+                      '${history.where((r) => r.rank != null && r.rank! <= 3).length}',
+                      l.trophyPodiums),
+                  _Stat('${history.where((r) => r.rank == 1).length}',
+                      l.trophyFirstPlaces),
+                ],
+              ],
+            ),
+          ],
+
           if (widget.authProvider.currentUser?.admin == true) ...[
             const SizedBox(height: 20),
             const _AdminManagementSection(),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── Hero stats row ──────────────────────────────────────────────────────────
+class _Stat {
+  const _Stat(this.value, this.label);
+  final String value;
+  final String label;
+}
+
+class _StatsRow extends StatelessWidget {
+  const _StatsRow({required this.stats, required this.onTap});
+  final List<_Stat> stats;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    final isHe = _isHe(context);
+    final cells = <Widget>[];
+    for (var i = 0; i < stats.length; i++) {
+      if (i > 0) {
+        cells.add(Container(width: 1, height: 30, color: c.hairline));
+      }
+      cells.add(Expanded(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(stats[i].value,
+                style: EType.numeric(
+                    color: c.ink, size: 20, weight: FontWeight.w700)),
+            const SizedBox(height: 2),
+            Text(
+              stats[i].label,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: EType.body(color: c.inkMute, size: 11, hebrew: isHe),
+            ),
+          ],
+        ),
+      ));
+    }
+    return Material(
+      color: c.card,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: c.hairline),
+          ),
+          child: Row(children: cells),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Load-failure card ───────────────────────────────────────────────────────
+// Shown instead of the picks list when the user record couldn't be fetched,
+// so an outage doesn't read as "every pick is missing".
+class _ErrorCard extends StatelessWidget {
+  const _ErrorCard({required this.onRetry});
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    final l = AppLocalizations.of(context)!;
+    final isHe = _isHe(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: c.hairline, width: 1),
+            ),
+            child: Icon(Icons.wifi_off_rounded, size: 26, color: c.inkDim),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            l.profileLoadFailed,
+            textAlign: TextAlign.center,
+            style:
+                EType.body(color: c.inkMute, size: 13, height: 1.5, hebrew: isHe),
+          ),
+          const SizedBox(height: 20),
+          Material(
+            color: c.live,
+            borderRadius: BorderRadius.circular(14),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: onRetry,
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.refresh, size: 16, color: Colors.white),
+                    const SizedBox(width: 8),
+                    Text(
+                      l.retry,
+                      style: EType.body(
+                          color: Colors.white,
+                          size: 13,
+                          weight: FontWeight.w700,
+                          hebrew: isHe),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -375,6 +663,36 @@ class _ProgressCard extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
     final isHe = _isHe(context);
     final value = total == 0 ? 0.0 : (done / total).clamp(0.0, 1.0);
+
+    // Once everything is picked the bar carries no information — collapse to
+    // a one-line confirmation.
+    if (total > 0 && done >= total) {
+      return Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: c.liveSoft,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: c.live.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.check_circle, size: 18, color: c.live),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                l.picksAllDone,
+                style: EType.body(
+                    color: c.ink,
+                    size: 13,
+                    weight: FontWeight.w600,
+                    hebrew: isHe),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
@@ -610,13 +928,14 @@ String _leagueLogoUrl(String id) =>
 
 // ── Combined per-league prediction card ─────────────────────────────────
 // One card per opted-in league: crest + name + status, then the champion and
-// top-scorer rows. The pick window is resolved ONCE here and handed to both
-// rows — it's a per-league fact, and the header needs the deadline too.
-class _LeaguePredictionCard extends StatefulWidget {
+// top-scorer rows. The pick window is resolved by the screen (it also feeds
+// the progress card) and handed in; null means it's still being probed.
+class _LeaguePredictionCard extends StatelessWidget {
   const _LeaguePredictionCard({
     required this.leagueIdStr,
     required this.winnerPick,
     required this.topScorerPick,
+    required this.availability,
     required this.clientId,
     required this.email,
     required this.isLoading,
@@ -626,103 +945,66 @@ class _LeaguePredictionCard extends StatefulWidget {
   final String leagueIdStr;
   final String? winnerPick;
   final String? topScorerPick;
+  final PickAvailability? availability;
   final String clientId;
   final String email;
   final bool isLoading;
   final VoidCallback onChanged;
 
-  @override
-  State<_LeaguePredictionCard> createState() => _LeaguePredictionCardState();
-}
-
-class _LeaguePredictionCardState extends State<_LeaguePredictionCard> {
-  Future<PickAvailability>? _availability;
-
-  // resolvePickWindow reads AppLocalizations for its error strings, so it
-  // depends on inherited widgets and can't run in initState.
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _availability ??= _resolve();
-  }
-
-  @override
-  void didUpdateWidget(_LeaguePredictionCard old) {
-    super.didUpdateWidget(old);
-    // Re-probe after a save so a card that flipped past the cutoff updates.
-    if (old.winnerPick != widget.winnerPick ||
-        old.topScorerPick != widget.topScorerPick) {
-      _availability = _resolve();
-    }
-  }
-
-  Future<PickAvailability> _resolve() async {
-    if (widget.isLoading) return const PickAvailability(PickWindow.error);
-    final id = int.tryParse(widget.leagueIdStr);
-    if (id == null) return const PickAvailability(PickWindow.error);
-    return resolvePickWindow(context, id);
-  }
-
-  bool get _hasWinner =>
-      widget.winnerPick != null && widget.winnerPick!.isNotEmpty;
-  bool get _hasTopScorer =>
-      widget.topScorerPick != null && widget.topScorerPick!.isNotEmpty;
+  bool get _hasWinner => winnerPick != null && winnerPick!.isNotEmpty;
+  bool get _hasTopScorer => topScorerPick != null && topScorerPick!.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
     final c = context.col;
     final l = AppLocalizations.of(context)!;
+    final av = availability;
+    final waiting = av == null && !isLoading;
+    final isOpen = av?.canPick ?? false;
+    final closed = av?.window == PickWindow.closed;
+    final missing = (_hasWinner ? 0 : 1) + (_hasTopScorer ? 0 : 1);
 
-    return FutureBuilder<PickAvailability>(
-      future: _availability,
-      builder: (ctx, snap) {
-        final av = snap.data;
-        final waiting = snap.connectionState == ConnectionState.waiting;
-        final isOpen = av?.canPick ?? false;
-        final missing = (_hasWinner ? 0 : 1) + (_hasTopScorer ? 0 : 1);
-
-        return Container(
-          margin: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: c.card,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: c.hairline),
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: c.hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _header(context, c, l,
+              missing: missing, closed: closed, cutoff: av?.cutoff),
+          Divider(height: 1, color: c.hairline),
+          _SeasonPickRow(
+            leagueIdStr: leagueIdStr,
+            pick: winnerPick,
+            icon: Icons.emoji_events_outlined,
+            label: l.trophyChampionLabel,
+            clientId: clientId,
+            email: email,
+            isOpen: isOpen,
+            waiting: waiting,
+            onChanged: onChanged,
+            mode: _PickKind.winner,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _header(context, c, l, missing: missing, cutoff: av?.cutoff),
-              Divider(height: 1, color: c.hairline),
-              _SeasonPickRow(
-                leagueIdStr: widget.leagueIdStr,
-                pick: widget.winnerPick,
-                icon: Icons.emoji_events_outlined,
-                label: l.trophyChampionLabel,
-                clientId: widget.clientId,
-                email: widget.email,
-                isOpen: isOpen,
-                waiting: waiting,
-                onChanged: widget.onChanged,
-                mode: _PickKind.winner,
-              ),
-              Divider(height: 1, color: c.hairline),
-              _SeasonPickRow(
-                leagueIdStr: widget.leagueIdStr,
-                pick: widget.topScorerPick,
-                icon: Icons.sports_soccer_outlined,
-                label: l.trophyTopScorerLabel,
-                clientId: widget.clientId,
-                email: widget.email,
-                isOpen: isOpen,
-                waiting: waiting,
-                onChanged: widget.onChanged,
-                mode: _PickKind.topScorer,
-              ),
-            ],
+          Divider(height: 1, color: c.hairline),
+          _SeasonPickRow(
+            leagueIdStr: leagueIdStr,
+            pick: topScorerPick,
+            icon: Icons.sports_soccer_outlined,
+            label: l.trophyTopScorerLabel,
+            clientId: clientId,
+            email: email,
+            isOpen: isOpen,
+            waiting: waiting,
+            onChanged: onChanged,
+            mode: _PickKind.topScorer,
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 
@@ -731,10 +1013,10 @@ class _LeaguePredictionCardState extends State<_LeaguePredictionCard> {
     EditorialColors c,
     AppLocalizations l, {
     required int missing,
+    required bool closed,
     required DateTime? cutoff,
   }) {
     final isHe = _isHe(context);
-    final complete = missing == 0;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
@@ -752,8 +1034,7 @@ class _LeaguePredictionCardState extends State<_LeaguePredictionCard> {
               border: Border.all(color: c.hairline, width: 1),
             ),
             child: Image(
-              image:
-                  leagueLogoProviderForUrl(_leagueLogoUrl(widget.leagueIdStr)),
+              image: leagueLogoProviderForUrl(_leagueLogoUrl(leagueIdStr)),
               fit: BoxFit.contain,
               errorBuilder: (_, __, ___) =>
                   Icon(Icons.shield_outlined, size: 16, color: c.inkDim),
@@ -766,7 +1047,7 @@ class _LeaguePredictionCardState extends State<_LeaguePredictionCard> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _leagueName(widget.leagueIdStr, l, context),
+                  _leagueName(leagueIdStr, l, context),
                   style: EType.body(
                       color: c.ink,
                       size: 17,
@@ -781,7 +1062,7 @@ class _LeaguePredictionCardState extends State<_LeaguePredictionCard> {
                   runSpacing: 4,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    _statusChip(c, l, isHe, complete, missing),
+                    _statusChip(c, l, isHe, missing, closed),
                     if (cutoff != null) _deadline(context, c, l, isHe, cutoff),
                   ],
                 ),
@@ -794,8 +1075,21 @@ class _LeaguePredictionCardState extends State<_LeaguePredictionCard> {
   }
 
   Widget _statusChip(EditorialColors c, AppLocalizations l, bool isHe,
-      bool complete, int missing) {
-    final fg = complete ? c.live : c.amber;
+      int missing, bool closed) {
+    // Green when done; amber while picks can still be made; grey once the
+    // window has closed with picks missing — nothing left to act on.
+    final String text;
+    final Color fg;
+    if (missing == 0) {
+      text = l.picksComplete;
+      fg = c.live;
+    } else if (closed) {
+      text = l.selectionClosed;
+      fg = c.inkMute;
+    } else {
+      text = l.picksMissing('$missing');
+      fg = c.amber;
+    }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
@@ -803,24 +1097,46 @@ class _LeaguePredictionCardState extends State<_LeaguePredictionCard> {
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        complete ? l.picksComplete : l.picksMissing('$missing'),
+        text,
         style: EType.body(
             color: fg, size: 11, weight: FontWeight.w600, hebrew: isHe),
       ),
     );
   }
 
+  // Countdown once the cutoff is within a week (red in the last 24h), plain
+  // date before that.
   Widget _deadline(BuildContext context, EditorialColors c, AppLocalizations l,
       bool isHe, DateTime cutoff) {
-    final locale = Localizations.localeOf(context).toString();
+    final left = cutoff.difference(DateTime.now());
+    final String text;
+    final Color color;
+    if (left.inHours < 1) {
+      text = l.picksClosesInMinutes(max(1, left.inMinutes));
+      color = c.flag;
+    } else if (left.inHours < 24) {
+      text = l.picksClosesInHours(left.inHours);
+      color = c.flag;
+    } else if (left.inDays <= 7) {
+      text = l.picksClosesInDays(left.inDays);
+      color = c.amber;
+    } else {
+      final locale = Localizations.localeOf(context).toString();
+      text = '${l.picksDeadline}: ${DateFormat.MMMMd(locale).format(cutoff)}';
+      color = c.inkDim;
+    }
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.schedule, size: 12, color: c.inkDim),
+        Icon(Icons.schedule, size: 12, color: color),
         const SizedBox(width: 4),
         Text(
-          '${l.picksDeadline}: ${DateFormat.MMMMd(locale).format(cutoff)}',
-          style: EType.body(color: c.inkDim, size: 11, hebrew: isHe),
+          text,
+          style: EType.body(
+              color: color,
+              size: 11,
+              weight: color == c.inkDim ? FontWeight.w400 : FontWeight.w600,
+              hebrew: isHe),
         ),
       ],
     );

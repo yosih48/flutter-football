@@ -1235,7 +1235,8 @@ class TableScreenContentState extends State<TableScreenContent> {
           _headerExtent + myIndex * _rowExtent - offset;
 
       void scrollToMe() {
-        if (!_scrollCtrl.hasClients) return;
+        // Same one-frame double attach as below — skip rather than assert.
+        if (_scrollCtrl.positions.length != 1) return;
         final target =
             (myIndex * _rowExtent - (viewport - _headerExtent - _rowExtent) / 2)
                 .clamp(0.0, _scrollCtrl.position.maxScrollExtent);
@@ -1293,8 +1294,14 @@ class TableScreenContentState extends State<TableScreenContent> {
               child: ListenableBuilder(
                 listenable: _scrollCtrl,
                 builder: (context, _) {
+                  // Skeletonizer swaps its whole subtree when `isLoading`
+                  // flips, so for one frame the new scroll view is attached
+                  // before the old one detaches and `_scrollCtrl.offset`
+                  // asserts (multiple positions). Read the newest position.
+                  final positions = _scrollCtrl.positions;
+                  final pos = positions.isEmpty ? null : positions.last;
                   final offset =
-                      _scrollCtrl.hasClients ? _scrollCtrl.offset : 0.0;
+                      (pos != null && pos.hasPixels) ? pos.pixels : 0.0;
                   final y = myRowY(offset);
                   final above = y < _headerExtent;
                   final below = y + _rowExtent > viewport;
@@ -1624,7 +1631,7 @@ class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant _PinnedHeaderDelegate oldDelegate) => true;
 }
 
-// ── Position-change arrow: green up / red down / dash for no change ─────────
+// ── Position-change arrow: green up / red down / empty for no change ────────
 class _DeltaArrow extends StatelessWidget {
   const _DeltaArrow({required this.delta});
   final int delta;
@@ -1632,9 +1639,8 @@ class _DeltaArrow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.col;
-    if (delta == 0) {
-      return Text('–', style: EType.body(color: c.inkDim, size: 14));
-    }
+    // No movement → nothing; only real up/down changes draw an arrow.
+    if (delta == 0) return const SizedBox.shrink();
     final up = delta > 0;
     final color = up ? c.live : c.flag;
     return Row(

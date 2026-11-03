@@ -1481,6 +1481,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get picksDeadline => 'Closes';
 
   @override
+  String get profileLoadFailed =>
+      "Couldn't load your profile. Check your connection and try again.";
+
+  @override
+  String get profileSeasonPoints => 'Season points';
+
+  @override
+  String get picksAllDone => 'All picks done';
+
+  @override
+  String picksClosesInDays(int count) =>
+      count == 1 ? 'Closes in 1 day' : 'Closes in $count days';
+
+  @override
+  String picksClosesInHours(int count) =>
+      count == 1 ? 'Closes in 1 hour' : 'Closes in $count hours';
+
+  @override
+  String picksClosesInMinutes(int count) =>
+      count == 1 ? 'Closes in 1 minute' : 'Closes in $count minutes';
+
+  @override
   String get pickChoose => 'Choose';
 
   @override

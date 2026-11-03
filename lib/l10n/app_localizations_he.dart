@@ -1481,6 +1481,34 @@ class AppLocalizationsHe extends AppLocalizations {
   String get picksDeadline => 'סגירה';
 
   @override
+  String get profileLoadFailed =>
+      'לא הצלחנו לטעון את הפרופיל. בדקו את החיבור ונסו שוב.';
+
+  @override
+  String get profileSeasonPoints => 'נקודות העונה';
+
+  @override
+  String get picksAllDone => 'כל הבחירות הושלמו';
+
+  @override
+  String picksClosesInDays(int count) => count == 1
+      ? 'נסגר בעוד יום'
+      : count == 2
+          ? 'נסגר בעוד יומיים'
+          : 'נסגר בעוד $count ימים';
+
+  @override
+  String picksClosesInHours(int count) => count == 1
+      ? 'נסגר בעוד שעה'
+      : count == 2
+          ? 'נסגר בעוד שעתיים'
+          : 'נסגר בעוד $count שעות';
+
+  @override
+  String picksClosesInMinutes(int count) =>
+      count == 1 ? 'נסגר בעוד דקה' : 'נסגר בעוד $count דקות';
+
+  @override
   String get pickChoose => 'בחר';
 
   @override
