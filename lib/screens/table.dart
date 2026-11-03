@@ -84,6 +84,12 @@ class TableScreenContentState extends State<TableScreenContent> {
   String _defaultGroupName = '';
   TextEditingController _inviteCodeController = TextEditingController();
   final TextEditingController _groupNameController = TextEditingController();
+  final ScrollController _scrollCtrl = ScrollController();
+
+  // Fixed geometry for the leaderboard so the sticky "my row" can be placed
+  // from the scroll offset alone.
+  static const double _headerExtent = 44;
+  static const double _rowExtent = 52;
 
   String _usersCacheKey(String group, int lg) => '$group|$lg';
 
@@ -91,6 +97,7 @@ class TableScreenContentState extends State<TableScreenContent> {
   void dispose() {
     _inviteCodeController.dispose();
     _groupNameController.dispose();
+    _scrollCtrl.dispose();
     super.dispose();
   }
 
@@ -310,10 +317,9 @@ class TableScreenContentState extends State<TableScreenContent> {
       final group = groups.firstWhere((g) => g['name'] == groupName);
       // Prefer the short, shareable joinCode; fall back to the raw _id for old
       // groups that predate joinCode and haven't been backfilled yet.
-      final groupCode =
-          (group['joinCode']?.toString().isNotEmpty ?? false)
-              ? group['joinCode'].toString()
-              : group['_id'].toString();
+      final groupCode = (group['joinCode']?.toString().isNotEmpty ?? false)
+          ? group['joinCode'].toString()
+          : group['_id'].toString();
       await FlutterClipboard.copy(groupCode);
       _showInviteDialog(groupCode);
     } catch (e) {
@@ -740,8 +746,7 @@ class TableScreenContentState extends State<TableScreenContent> {
                     // Uppercase Latin names read taller than Hebrew at the same
                     // point size, so size the English names down to match the
                     // Hebrew ones in this list.
-                    final isHebrewName =
-                        RegExp(r'[֐-׿]').hasMatch(name);
+                    final isHebrewName = RegExp(r'[֐-׿]').hasMatch(name);
                     return InkWell(
                       onTap: () {
                         Navigator.of(sheetCtx).pop();
@@ -1058,137 +1063,108 @@ class TableScreenContentState extends State<TableScreenContent> {
   Widget _buildGroupHeader(
       BuildContext context, EditorialColors c, int playerCount) {
     final l = AppLocalizations.of(context)!;
+    // Single compact row: group identity on top, league + player count as a
+    // subtitle. Tapping anywhere opens the group switcher.
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      child: Container(
-        decoration: BoxDecoration(
-          color: c.card,
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+      child: Material(
+        color: c.card,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: _showGroupSwitcherSheet,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: c.hairline, width: 1),
-        ),
-        child: Column(
-          children: [
-            // Identity + switch — tapping anywhere on this row opens the group
-            // switcher, not just the Switch pill on the end.
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: _showGroupSwitcherSheet,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(15)),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-                  child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: c.cardHi,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: c.live, width: 1.5),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      selectedGroupName.isNotEmpty
-                          ? selectedGroupName[0].toUpperCase()
-                          : '?',
-                      style: EType.display(size: 16, color: c.live),
-                    ),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: c.hairline, width: 1),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: c.cardHi,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: c.live, width: 1.5),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(l.group.toUpperCase(),
-                            style: EType.label(
-                                color: c.inkDim, size: 9, letterSpacing: 2)),
-                        const SizedBox(height: 3),
-                        Text(
-                          selectedGroupName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: EType.body(
-                              size: 18,
-                              color: c.ink,
-                              weight: FontWeight.w700,
-                              hebrew: Localizations.localeOf(context)
-                                      .languageCode ==
-                                  'he'),
-                        ),
-                      ],
-                    ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    selectedGroupName.isNotEmpty
+                        ? selectedGroupName[0].toUpperCase()
+                        : '?',
+                    style: EType.display(size: 15, color: c.live),
                   ),
-                  const SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: _showGroupSwitcherSheet,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: c.hairline, width: 1),
-                        borderRadius: BorderRadius.circular(10),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        selectedGroupName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: EType.body(
+                            size: 16,
+                            color: c.ink,
+                            weight: FontWeight.w700,
+                            hebrew: _isHe),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                      const SizedBox(height: 3),
+                      Row(
                         children: [
-                          Text(l.switchGroup,
-                              style: EType.label(
-                                  color: c.inkMute,
-                                  size: 11,
-                                  letterSpacing: 0.5)),
-                          const SizedBox(width: 4),
-                          Icon(Icons.unfold_more, color: c.inkMute, size: 14),
+                          SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: Image(
+                              image: leagueLogoProvider(league),
+                              fit: BoxFit.contain,
+                              errorBuilder: (_, __, ___) => Icon(
+                                  Icons.emoji_events_outlined,
+                                  size: 12,
+                                  color: c.live),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              '${_leagueName()} · $playerCount ${l.playersLabel}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: EType.body(
+                                  color: c.inkMute, size: 12, hebrew: _isHe),
+                            ),
+                          ),
                         ],
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-              ),
-            ),
-            // League strip
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: c.liveSoft,
-                borderRadius:
-                    const BorderRadius.vertical(bottom: Radius.circular(15)),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: Image(
-                      image: leagueLogoProvider(league),
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => Icon(
-                          Icons.emoji_events_outlined,
-                          size: 16,
-                          color: c.live),
-                    ),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: c.hairline, width: 1),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  const SizedBox(width: 8),
-                  Text(_leagueName(),
-                      style: EType.body(
-                          size: 14,
-                          color: c.ink,
-                          weight: FontWeight.w700,
-                          hebrew:
-                              Localizations.localeOf(context).languageCode ==
-                                  'he')),
-                  const Spacer(),
-                  Text('$playerCount ${l.playersLabel}',
-                      style: EType.body(color: c.inkMute, size: 12)),
-                ],
-              ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(l.switchGroup,
+                          style: EType.label(
+                              color: c.inkMute, size: 11, letterSpacing: 0.5)),
+                      const SizedBox(width: 4),
+                      Icon(Icons.unfold_more, color: c.inkMute, size: 14),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -1221,10 +1197,6 @@ class TableScreenContentState extends State<TableScreenContent> {
     final prevRank = _previousRanks(rows);
     int deltaOf(String id, int rank) => (prevRank[id] ?? rank) - rank;
 
-    final top3 = sorted.take(3).toList();
-    final rest =
-        sorted.length > 3 ? sorted.sublist(3) : const <Map<String, dynamic>>[];
-
     void openStats(Map u) => Navigator.push(
           context,
           MaterialPageRoute(
@@ -1232,84 +1204,181 @@ class TableScreenContentState extends State<TableScreenContent> {
           ),
         );
 
-    return ListView(
-      physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.zero,
-      children: [
-        if (top3.isNotEmpty)
-          _Podium(
-            spots: [
-              for (int i = 0; i < top3.length; i++)
-                _PodiumData(
-                  rank: i + 1,
-                  name: top3[i]['displayName']?.toString() ?? '—',
-                  points: _fmtPts(_ptsOf(top3[i])),
-                  isMe: top3[i]['_id'] == currentUserId,
-                  onTap: () => openStats(top3[i]),
+    Widget rowAt(int index, {VoidCallback? onTap}) {
+      final u = sorted[index];
+      final rank = index + 1;
+      final id = u['_id']?.toString() ?? '';
+      final day = _dayOf(u);
+      return _LeaderRow(
+        rank: rank,
+        name: u['displayName']?.toString() ?? '—',
+        // A dash instead of "0" keeps the column quiet on days most players
+        // haven't scored, so actual points stand out.
+        dayPoints: day == 0 ? '–' : _fmtPts(day),
+        dayPositive: day > 0,
+        points: _fmtPts(_ptsOf(u)),
+        delta: deltaOf(id, rank),
+        isMe: u['_id'] == currentUserId,
+        youLabel: l.youLabel,
+        onTap: onTap ?? () => openStats(u),
+      );
+    }
+
+    final myIndex = sorted.indexWhere((u) => u['_id'] == currentUserId);
+
+    return LayoutBuilder(builder: (context, constraints) {
+      final viewport = constraints.maxHeight;
+
+      // Rows have a fixed extent, so the current user's on-screen position
+      // follows directly from the scroll offset — no per-frame measuring.
+      double myRowY(double offset) =>
+          _headerExtent + myIndex * _rowExtent - offset;
+
+      void scrollToMe() {
+        if (!_scrollCtrl.hasClients) return;
+        final target =
+            (myIndex * _rowExtent - (viewport - _headerExtent - _rowExtent) / 2)
+                .clamp(0.0, _scrollCtrl.position.maxScrollExtent);
+        _scrollCtrl.animateTo(target,
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOutCubic);
+      }
+
+      return Stack(
+        children: [
+          // Pull-to-refresh awaits a fresh fetch of this group+league so the
+          // spinner stays until the new standings are on screen (the normal
+          // SWR path returns cached rows immediately).
+          RefreshIndicator(
+            color: c.live,
+            backgroundColor: c.card,
+            onRefresh: () => _revalidateUsers(selectedGroupName, league),
+            child: CustomScrollView(
+              controller: _scrollCtrl,
+              // AlwaysScrollable so a short table can still be pulled down.
+              physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics()),
+              slivers: [
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _PinnedHeaderDelegate(
+                    extent: _headerExtent,
+                    child: _buildColumnHeader(c, l),
+                  ),
                 ),
-            ],
+                SliverFixedExtentList(
+                  itemExtent: _rowExtent,
+                  delegate: SliverChildBuilderDelegate(
+                    (_, i) => rowAt(i),
+                    childCount: sorted.length,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 16),
+                      _buildInviteLeave(context, c, l),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        // Column header (name · change · day pts · total pts)
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 6, 20, 8),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 24,
-                child: Text('#',
-                    style: EType.label(
-                        color: c.inkDim, size: 10, letterSpacing: 1.4)),
+          // The user's own row sticks to the top (under the column header)
+          // or bottom edge while it's scrolled out of view; tapping it
+          // scrolls the table back to it.
+          if (myIndex >= 0)
+            Positioned.fill(
+              child: ListenableBuilder(
+                listenable: _scrollCtrl,
+                builder: (context, _) {
+                  final offset =
+                      _scrollCtrl.hasClients ? _scrollCtrl.offset : 0.0;
+                  final y = myRowY(offset);
+                  final above = y < _headerExtent;
+                  final below = y + _rowExtent > viewport;
+                  if (!above && !below) return const SizedBox.shrink();
+                  return Align(
+                    alignment:
+                        above ? Alignment.topCenter : Alignment.bottomCenter,
+                    child: Padding(
+                      padding: EdgeInsets.only(top: above ? _headerExtent : 0),
+                      child: Container(
+                        height: _rowExtent,
+                        decoration: BoxDecoration(
+                          color: c.card,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.25),
+                              blurRadius: 12,
+                              offset: Offset(0, above ? 4 : -4),
+                            ),
+                          ],
+                        ),
+                        child: rowAt(myIndex, onTap: scrollToMe),
+                      ),
+                    ),
+                  );
+                },
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(l.name.toUpperCase(),
-                    style: EType.label(
-                        color: c.inkDim, size: 10, letterSpacing: 1.6)),
+            ),
+        ],
+      );
+    });
+  }
+
+  // Column header (name · change · day pts · total pts), pinned while the
+  // table scrolls.
+  Widget _buildColumnHeader(EditorialColors c, AppLocalizations l) {
+    return Container(
+      color: c.pitch,
+      child: Column(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 24,
+                    child: Text('#',
+                        style: EType.label(
+                            color: c.inkDim, size: 10, letterSpacing: 1.4)),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(l.name.toUpperCase(),
+                        style: EType.label(
+                            color: c.inkDim, size: 10, letterSpacing: 1.6)),
+                  ),
+                  const SizedBox(width: 28), // change arrow column (no label)
+                  SizedBox(
+                    width: 64,
+                    // Two lines so the longer English label ("DAILY POINTS") wraps
+                    // inside its own column instead of truncating and crowding the
+                    // POINTS column. Hebrew's shorter label just stays on one line.
+                    child: Text(l.daypoints.toUpperCase(),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: EType.label(
+                            color: c.inkDim, size: 10, letterSpacing: 0)),
+                  ),
+                  SizedBox(
+                    width: 50,
+                    child: Text(l.sumpoints.toUpperCase(),
+                        textAlign: TextAlign.end,
+                        style: EType.label(
+                            color: c.inkDim, size: 10, letterSpacing: 1.4)),
+                  ),
+                ],
               ),
-              const SizedBox(width: 28), // change arrow column (no label)
-              SizedBox(
-                width: 64,
-                // Two lines so the longer English label ("DAILY POINTS") wraps
-                // inside its own column instead of truncating and crowding the
-                // POINTS column. Hebrew's shorter label just stays on one line.
-                child: Text(l.daypoints.toUpperCase(),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: EType.label(
-                        color: c.inkDim, size: 10, letterSpacing: 0)),
-              ),
-              SizedBox(
-                width: 50,
-                child: Text(l.sumpoints.toUpperCase(),
-                    textAlign: TextAlign.end,
-                    style: EType.label(
-                        color: c.inkDim, size: 10, letterSpacing: 1.4)),
-              ),
-            ],
+            ),
           ),
-        ),
-        Container(height: 1, color: c.hairline),
-        ...rest.asMap().entries.map((e) {
-          final rank = e.key + 4;
-          final u = e.value;
-          final id = u['_id']?.toString() ?? '';
-          return _LeaderRow(
-            rank: rank,
-            name: u['displayName']?.toString() ?? '—',
-            dayPoints: _fmtPts(_dayOf(u)),
-            dayPositive: _dayOf(u) > 0,
-            points: _fmtPts(_ptsOf(u)),
-            delta: deltaOf(id, rank),
-            isMe: u['_id'] == currentUserId,
-            youLabel: l.youLabel,
-            onTap: () => openStats(u),
-          );
-        }),
-        const SizedBox(height: 16),
-        _buildInviteLeave(context, c, l),
-        const SizedBox(height: 12),
-      ],
+          Container(height: 1, color: c.hairline),
+        ],
+      ),
     );
   }
 
@@ -1535,6 +1604,26 @@ class _HeaderActionButtonState extends State<_HeaderActionButton> {
   }
 }
 
+// ── Fixed-height pinned header for the leaderboard's column labels ──────────
+class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _PinnedHeaderDelegate({required this.extent, required this.child});
+  final double extent;
+  final Widget child;
+
+  @override
+  double get minExtent => extent;
+  @override
+  double get maxExtent => extent;
+
+  @override
+  Widget build(
+          BuildContext context, double shrinkOffset, bool overlapsContent) =>
+      child;
+
+  @override
+  bool shouldRebuild(covariant _PinnedHeaderDelegate oldDelegate) => true;
+}
+
 // ── Position-change arrow: green up / red down / dash for no change ─────────
 class _DeltaArrow extends StatelessWidget {
   const _DeltaArrow({required this.delta});
@@ -1561,7 +1650,7 @@ class _DeltaArrow extends StatelessWidget {
   }
 }
 
-// ── One leaderboard row (rank 4+): number · name · change · points ─────────
+// ── One leaderboard row: number · name · change · points ───────────────────
 class _LeaderRow extends StatelessWidget {
   const _LeaderRow({
     required this.rank,
@@ -1587,6 +1676,14 @@ class _LeaderRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.col;
+    // Top 3 keep their medal colors, now as a small badge in the rank column.
+    final Color? medal = rank == 1
+        ? c.amber
+        : rank == 2
+            ? c.chalk
+            : rank == 3
+                ? const Color(0xFFCD7F32) // bronze
+                : null;
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -1598,14 +1695,34 @@ class _LeaderRow extends StatelessWidget {
                 BorderSide(color: isMe ? c.live : Colors.transparent, width: 3),
           ),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        // Height comes from the parent (fixed-extent list / sticky slot); the
+        // Row centers vertically within it.
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Row(
           children: [
             SizedBox(
               width: 24,
-              child: Text('$rank',
-                  style: EType.numeric(
-                      color: c.inkDim, size: 13, weight: FontWeight.w500)),
+              child: medal != null
+                  ? Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Container(
+                        width: 22,
+                        height: 22,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: medal,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text('$rank',
+                            style: EType.numeric(
+                                color: c.pitch,
+                                size: 11,
+                                weight: FontWeight.w700)),
+                      ),
+                    )
+                  : Text('$rank',
+                      style: EType.numeric(
+                          color: c.inkDim, size: 13, weight: FontWeight.w500)),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -1661,137 +1778,6 @@ class _LeaderRow extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// ── Podium (top 3): #1 centered and elevated, #2 right, #3 left ────────────
-class _PodiumData {
-  const _PodiumData({
-    required this.rank,
-    required this.name,
-    required this.points,
-    required this.isMe,
-    required this.onTap,
-  });
-  final int rank;
-  final String name;
-  final String points;
-  final bool isMe;
-  final VoidCallback onTap;
-}
-
-class _Podium extends StatelessWidget {
-  const _Podium({required this.spots});
-  final List<_PodiumData> spots;
-
-  _PodiumData? _byRank(int r) {
-    for (final s in spots) {
-      if (s.rank == r) return s;
-    }
-    return null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final r1 = _byRank(1);
-    final r2 = _byRank(2);
-    final r3 = _byRank(3);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 20, 12, 20),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Expanded(
-              child:
-                  r2 != null ? _PodiumSpot(data: r2) : const SizedBox.shrink()),
-          Expanded(
-              child: r1 != null
-                  ? _PodiumSpot(data: r1, big: true)
-                  : const SizedBox.shrink()),
-          Expanded(
-              child:
-                  r3 != null ? _PodiumSpot(data: r3) : const SizedBox.shrink()),
-        ],
-      ),
-    );
-  }
-}
-
-class _PodiumSpot extends StatelessWidget {
-  const _PodiumSpot({required this.data, this.big = false});
-  final _PodiumData data;
-  final bool big;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.col;
-    final rankColor = data.rank == 1
-        ? c.amber
-        : data.rank == 2
-            ? c.chalk
-            : const Color(0xFFCD7F32); // bronze
-    final size = big ? 68.0 : 56.0;
-    final initial = data.name.isNotEmpty ? data.name[0].toUpperCase() : '?';
-
-    return GestureDetector(
-      onTap: data.onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: size,
-                height: size,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: data.isMe ? c.live : c.cardHi,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: data.isMe ? c.live : rankColor, width: 2),
-                ),
-                child: Text(initial,
-                    style: EType.display(
-                        size: big ? 26 : 20,
-                        color: data.isMe ? c.pitch : rankColor)),
-              ),
-              Positioned(
-                bottom: -8,
-                child: Container(
-                  width: 22,
-                  height: 22,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: rankColor,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: c.pitch, width: 2),
-                  ),
-                  child: Text('${data.rank}',
-                      style: EType.numeric(
-                          color: c.pitch, size: 11, weight: FontWeight.w700)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(data.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style:
-                  EType.body(color: c.ink, size: 12, weight: FontWeight.w600)),
-          const SizedBox(height: 2),
-          Text(data.points,
-              style: EType.numeric(
-                  color: data.rank == 1 ? c.live : c.ink,
-                  size: big ? 18 : 15,
-                  weight: FontWeight.w700)),
-        ],
       ),
     );
   }
