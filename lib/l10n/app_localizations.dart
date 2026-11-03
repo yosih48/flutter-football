@@ -2435,6 +2435,12 @@ abstract class AppLocalizations {
   /// **'Couldn't save your changes. Check your connection and try again.'**
   String get prefsSaveFailed;
 
+  /// No description provided for @gamesLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn't load matches. Check your connection and try again.'**
+  String get gamesLoadFailed;
+
   /// No description provided for @bracketViewerEmptyTitle.
   ///
   /// In en, this message translates to:

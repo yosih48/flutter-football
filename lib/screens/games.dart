@@ -84,7 +84,14 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
 
   // ── Loading / refresh ────────────────────────────────────────────────
   bool _isLoading = true;
+  bool _loadFailed = false;
   bool _buttonLoading = false;
+  bool _autoSaving = false;
+
+  // Filled guesses that differ from what's stored — drives the count on the
+  // send button. A notifier so typing doesn't rebuild the whole list.
+  final ValueNotifier<int> _pendingCount = ValueNotifier(0);
+  bool _pendingRecomputeScheduled = false;
   Timer? _refreshTimer;
   static const Duration _liveTickInterval = Duration(seconds: 30);
 
@@ -125,10 +132,15 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     WidgetsBinding.instance.removeObserver(this);
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    // This screen is a PageView tab, so swiping to another tab disposes it.
+    // Save changed guesses first — entries are read synchronously, before the
+    // controllers below are disposed.
+    _autoSavePending();
     for (final c in _guessControllers.values) {
       c['home']?.dispose();
       c['away']?.dispose();
     }
+    _pendingCount.dispose();
     super.dispose();
   }
 
@@ -140,12 +152,19 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     } else {
       _refreshTimer?.cancel();
       _refreshTimer = null;
+      // The OS may kill a backgrounded app; don't lose typed guesses.
+      if (state == AppLifecycleState.paused) _autoSavePending();
     }
   }
 
   // ── Bootstrap: user + guesses + leagues, all parallel ────────────────
   Future<void> _bootstrap() async {
-    if (mounted) setState(() => _isLoading = true);
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _loadFailed = false;
+      });
+    }
     try {
       final results = await Future.wait([
         UsersMethods().fetchUserById(_clientId),
@@ -199,7 +218,14 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
       _startRefreshLoop();
     } catch (e) {
       print('❌ bootstrap failed: $e');
-      if (mounted) setState(() => _isLoading = false);
+      // Flagged so the empty list reads as an error with a retry, not as
+      // "season will start soon".
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _loadFailed = true;
+        });
+      }
     }
   }
 
@@ -240,15 +266,23 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     return all;
   }
 
+  // Every guess controller goes through here so it reports edits to the
+  // pending-guess count.
+  Map<String, TextEditingController> _controllersFor(int fixtureId) {
+    return _guessControllers.putIfAbsent(
+      fixtureId,
+      () => {
+        'home': TextEditingController()
+          ..addListener(_schedulePendingRecompute),
+        'away': TextEditingController()
+          ..addListener(_schedulePendingRecompute),
+      },
+    );
+  }
+
   void _hydrateControllers() {
     for (final game in _allGames) {
-      _guessControllers.putIfAbsent(
-        game.fixtureId,
-        () => {
-          'home': TextEditingController(),
-          'away': TextEditingController(),
-        },
-      );
+      _controllersFor(game.fixtureId);
     }
     for (final g in _guesses) {
       final c = _guessControllers[g.gameOriginalId];
@@ -257,6 +291,20 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
         c['away']!.text = g.awayTeamGoals.toString();
       }
     }
+    // Stored guesses may have changed even where no text did.
+    _schedulePendingRecompute();
+  }
+
+  // Coalesces a burst of controller notifications (e.g. hydrating every
+  // field) into one recount at the end of the event.
+  void _schedulePendingRecompute() {
+    if (_pendingRecomputeScheduled) return;
+    _pendingRecomputeScheduled = true;
+    scheduleMicrotask(() {
+      _pendingRecomputeScheduled = false;
+      if (!mounted) return;
+      _pendingCount.value = _collectEntries(onlyChanged: true).length;
+    });
   }
 
   // ── Auto-refresh loop ────────────────────────────────────────────────
@@ -296,6 +344,8 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
         _allGames = byId.values.toList()
           ..sort((a, b) => a.date.compareTo(b.date));
       });
+      // A game that just kicked off is no longer sendable.
+      _schedulePendingRecompute();
     } catch (e) {
       print('❌ tickRefresh failed: $e');
     }
@@ -308,6 +358,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
       if (!mounted) return;
       setState(() {
         _allGames = games;
+        _loadFailed = false;
         _hydrateControllers();
       });
     } catch (e) {
@@ -333,8 +384,11 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     }
 
     if (_showOnlyLiveGames) {
-      const userLive = {'1H', '2H', 'HT'};
-      list = list.where((g) => userLive.contains(g.status.short));
+      // Everything shown with a LIVE badge — incl. extra time, the break
+      // before it, and penalties — plus half-time. Interrupted games aren't
+      // badged LIVE, so they're left out here too.
+      list = list.where((g) =>
+          MatchStatus.isInPlay(g.status.short) || g.status.short == 'HT');
     }
 
     return list.toList()..sort((a, b) => a.date.compareTo(b.date));
@@ -486,19 +540,18 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
   // One filled guess ready to submit, tagged with whether the user already had
   // a stored guess for this game (only needed by the legacy per-guess fallback,
   // which must choose POST-add vs PUT-update; the bulk path upserts either way).
-  Future<void> _submitAllGuesses() async {
-    if (_buttonLoading) return;
-    setState(() => _buttonLoading = true);
-
-    // Collect every valid, still-guessable entry once. The bulk endpoint upserts
-    // per (user, game, league), so we no longer split new vs existing here — the
-    // split is only reconstructed inside the fallback.
+  // Every valid, still-guessable entry in the form. The bulk endpoint upserts
+  // per (user, game, league), so new vs existing isn't split here — the split
+  // is only reconstructed inside the fallback. With [onlyChanged], entries
+  // identical to the stored guess are skipped (what counts as "unsent").
+  List<_GuessEntry> _collectEntries({bool onlyChanged = false}) {
+    final stored = {for (final g in _guesses) g.gameOriginalId: g};
     final entries = <_GuessEntry>[];
     for (final game in _allGames) {
       final controllers = _guessControllers[game.fixtureId];
       if (controllers == null) continue;
-      final home = controllers['home']?.text;
-      final away = controllers['away']?.text;
+      final home = controllers['home']?.text.trim();
+      final away = controllers['away']?.text.trim();
       if (home == null || away == null || home.isEmpty || away.isEmpty) {
         continue;
       }
@@ -515,14 +568,59 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
         continue;
       }
 
-      final exists = _guesses.any((g) => g.gameOriginalId == game.fixtureId);
+      final prev = stored[game.fixtureId];
+      if (onlyChanged &&
+          prev != null &&
+          prev.homeTeamGoals.toString().trim() == home &&
+          prev.awayTeamGoals.toString().trim() == away) {
+        continue;
+      }
       entries.add(_GuessEntry(
         game: game,
         home: home,
         away: away,
-        existed: exists,
+        existed: prev != null,
       ));
     }
+    return entries;
+  }
+
+  // Typed guesses live only in memory until sent, so changed ones are saved
+  // silently when the tab is swiped away (dispose) or the app is backgrounded.
+  // Entries are collected before the first await, so this is safe to call
+  // from dispose(); afterwards it only touches state while still mounted.
+  Future<void> _autoSavePending() async {
+    if (_buttonLoading || _autoSaving) return;
+    final entries = _collectEntries(onlyChanged: true);
+    if (entries.isEmpty) return;
+    _autoSaving = true;
+    try {
+      final refreshed = await GuessesMethods().submitGuessesBulk(
+        userID: _clientId,
+        email: _email,
+        guesses: [for (final e in entries) e.toBulkJson()],
+      );
+      List<Guess>? latest = refreshed;
+      if (latest == null && await _submitPerGuessFallback(entries) && mounted) {
+        latest = await GuessesMethods().fetchThisUserGuesses(_clientId);
+      }
+      if (latest != null && mounted) {
+        final list = latest;
+        setState(() => _guesses = list);
+        _schedulePendingRecompute();
+      }
+    } catch (e) {
+      print('❌ auto-save guesses failed: $e');
+    } finally {
+      _autoSaving = false;
+    }
+  }
+
+  Future<void> _submitAllGuesses() async {
+    if (_buttonLoading) return;
+    setState(() => _buttonLoading = true);
+
+    final entries = _collectEntries();
 
     if (entries.isEmpty) {
       showSnackBar(
@@ -854,66 +952,79 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
 
   Widget _buildSubmitFab(BuildContext context, EditorialColors c) {
     final disabled = _buttonLoading;
-    return Padding(
-      padding: const EdgeInsets.only(right: 4, bottom: 4),
-      child: Material(
-        color: disabled ? c.cardHi : c.live,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          // Matches the Material radius so the ripple stays inside the pill.
-          borderRadius: BorderRadius.circular(14),
-          onTap: disabled ? null : _submitAllGuesses,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-            decoration: BoxDecoration(
+    return ValueListenableBuilder<int>(
+      valueListenable: _pendingCount,
+      builder: (context, pending, _) {
+        // Bright green only while there's something unsent; otherwise a quiet
+        // outlined pill (still tappable — it explains there's nothing to send).
+        final idle = !disabled && pending == 0;
+        final fill = disabled ? c.cardHi : (idle ? c.card : c.live);
+        final fg = disabled ? c.inkDim : (idle ? c.inkMute : c.pitch);
+        final label = AppLocalizations.of(context)!.send.toUpperCase();
+        return Padding(
+          padding: const EdgeInsets.only(right: 4, bottom: 4),
+          child: Material(
+            color: fill,
+            borderRadius: BorderRadius.circular(14),
+            child: InkWell(
+              // Matches the Material radius so the ripple stays inside the pill.
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: disabled ? c.hairline : c.live,
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (disabled)
-                  SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 1.5,
-                      valueColor: AlwaysStoppedAnimation(c.inkDim),
-                    ),
-                  )
-                else
-                  Icon(Icons.bolt, size: 18, color: c.pitch),
-                const SizedBox(width: 8),
-                Text(
-                  AppLocalizations.of(context)!.send.toUpperCase(),
-                  style: EType.label(
-                    color: disabled ? c.inkDim : c.pitch,
-                    size: 12,
-                    letterSpacing: 2,
+              onTap: disabled ? null : _submitAllGuesses,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: disabled || idle ? c.hairline : c.live,
+                    width: 1,
                   ),
                 ),
-              ],
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (disabled)
+                      SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1.5,
+                          valueColor: AlwaysStoppedAnimation(c.inkDim),
+                        ),
+                      )
+                    else
+                      Icon(Icons.bolt, size: 18, color: fg),
+                    const SizedBox(width: 8),
+                    Text(
+                      pending > 0 ? '$label ($pending)' : label,
+                      style: EType.label(
+                        color: fg,
+                        size: 12,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
   Widget _buildJumpToTodayChip(EditorialColors c) {
+    // Same 14 radius as the send pill and the other pills on this screen.
     return Material(
       color: c.ink,
-      borderRadius: BorderRadius.circular(2),
+      borderRadius: BorderRadius.circular(14),
       child: InkWell(
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.circular(14),
         onTap: _jumpToToday,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.5),
@@ -964,6 +1075,10 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
           ],
         ),
       );
+    }
+
+    if (_loadFailed && _allGames.isEmpty) {
+      return _buildErrorState(c);
     }
 
     if (_allGames.isEmpty) {
@@ -1072,6 +1187,66 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
     );
   }
 
+  // Load failed (network / server) — distinct from "no games", with a retry.
+  Widget _buildErrorState(EditorialColors c) {
+    final l = AppLocalizations.of(context)!;
+    final isHe = Localizations.localeOf(context).languageCode == 'he';
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                border: Border.all(color: c.hairline, width: 1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.wifi_off_rounded, size: 26, color: c.inkDim),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              l.gamesLoadFailed,
+              textAlign: TextAlign.center,
+              style: EType.body(
+                  color: c.inkMute, size: 13, height: 1.5, hebrew: isHe),
+            ),
+            const SizedBox(height: 20),
+            Material(
+              color: c.live,
+              borderRadius: BorderRadius.circular(14),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: _bootstrap,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.refresh, size: 16, color: c.pitch),
+                      const SizedBox(width: 8),
+                      Text(
+                        l.retry,
+                        style: EType.body(
+                            color: c.pitch,
+                            size: 13,
+                            weight: FontWeight.w700,
+                            hebrew: isHe),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildDateSection(DateTime date, List<Game> gamesForDate) {
     final widgets = <Widget>[];
     for (int i = 0; i < gamesForDate.length; i++) {
@@ -1086,13 +1261,7 @@ class _GamesScreenContentState extends State<_GamesScreenContent>
         widgets.add(_cardDivider());
       }
 
-      _guessControllers.putIfAbsent(
-        game.fixtureId,
-        () => {
-          'home': TextEditingController(),
-          'away': TextEditingController(),
-        },
-      );
+      _controllersFor(game.fixtureId);
       final guess = _guesses
           .where((g) => g.gameOriginalId == game.fixtureId)
           .cast<Guess?>()

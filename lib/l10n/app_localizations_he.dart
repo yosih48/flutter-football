@@ -1184,6 +1184,10 @@ class AppLocalizationsHe extends AppLocalizations {
       'לא הצלחנו לשמור את השינויים. בדקו את החיבור ונסו שוב.';
 
   @override
+  String get gamesLoadFailed =>
+      'לא הצלחנו לטעון את המשחקים. בדקו את החיבור ונסו שוב.';
+
+  @override
   String get bracketViewerEmptyTitle => 'עדיין אין ניחושים';
 
   @override

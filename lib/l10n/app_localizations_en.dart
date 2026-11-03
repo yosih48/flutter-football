@@ -1184,6 +1184,10 @@ class AppLocalizationsEn extends AppLocalizations {
       "Couldn't save your changes. Check your connection and try again.";
 
   @override
+  String get gamesLoadFailed =>
+      "Couldn't load matches. Check your connection and try again.";
+
+  @override
   String get bracketViewerEmptyTitle => 'No predictions yet';
 
   @override
