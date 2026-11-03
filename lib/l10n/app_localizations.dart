@@ -2435,6 +2435,18 @@ abstract class AppLocalizations {
   /// **'Couldn't save your changes. Check your connection and try again.'**
   String get prefsSaveFailed;
 
+  /// No description provided for @statsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn't load these statistics. Check your connection and try again.'**
+  String get statsLoadFailed;
+
+  /// No description provided for @statsRecentForm.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent form'**
+  String get statsRecentForm;
+
   /// No description provided for @gamesLoadFailed.
   ///
   /// In en, this message translates to:

@@ -1184,6 +1184,13 @@ class AppLocalizationsEn extends AppLocalizations {
       "Couldn't save your changes. Check your connection and try again.";
 
   @override
+  String get statsLoadFailed =>
+      "Couldn't load these statistics. Check your connection and try again.";
+
+  @override
+  String get statsRecentForm => 'Recent form';
+
+  @override
   String get gamesLoadFailed =>
       "Couldn't load matches. Check your connection and try again.";
 

@@ -1200,7 +1200,11 @@ class TableScreenContentState extends State<TableScreenContent> {
     void openStats(Map u) => Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => Statistics(userId: u['_id'], leagueId: league),
+            builder: (_) => Statistics(
+              userId: u['_id'],
+              leagueId: league,
+              displayName: u['displayName']?.toString(),
+            ),
           ),
         );
 

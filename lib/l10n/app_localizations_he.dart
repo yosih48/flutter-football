@@ -1485,6 +1485,13 @@ class AppLocalizationsHe extends AppLocalizations {
       'לא הצלחנו לטעון את הפרופיל. בדקו את החיבור ונסו שוב.';
 
   @override
+  String get statsLoadFailed =>
+      'לא הצלחנו לטעון את הסטטיסטיקה. בדקו את החיבור ונסו שוב.';
+
+  @override
+  String get statsRecentForm => 'כושר אחרון';
+
+  @override
   String get profileSeasonPoints => 'נקודות העונה';
 
   @override

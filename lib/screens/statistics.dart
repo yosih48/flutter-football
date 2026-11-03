@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:football/models/games.dart';
 import 'package:football/models/guesses.dart';
+import 'package:football/resources/auth.dart';
 import 'package:football/resources/gamesMethods.dart';
 import 'package:football/resources/guessesMethods.dart';
 import 'package:football/resources/usersMethods.dart';
@@ -10,12 +11,16 @@ import 'package:football/l10n/app_localizations.dart';
 import 'package:football/utils/localized_team_name.dart';
 import 'package:football/utils/he_player_name.dart';
 import 'package:football/widgets/seasonPickers.dart';
+import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class Statistics extends StatefulWidget {
   final userId;
   final leagueId;
-  const Statistics({super.key, this.userId, this.leagueId});
+  // Shown in the app bar so it's clear whose stats these are. Optional —
+  // falls back to the name on the fetched user record.
+  final String? displayName;
+  const Statistics({super.key, this.userId, this.leagueId, this.displayName});
 
   @override
   State<Statistics> createState() => _StatisticsState();
@@ -42,29 +47,73 @@ class _StatisticsState extends State<Statistics> {
   String? _topScorerLogo;
   bool _leagueStarted = false;
   bool isLoading = true;
+  // Guesses or fixtures failed to load — shown as an error with a retry
+  // rather than as "0 guesses".
+  bool _loadFailed = false;
+  String _displayName = '';
+  // The viewer's own numbers for the same league, shown beside the viewed
+  // player's. Null when viewing yourself, while loading, or if that fetch
+  // failed — the comparison is extra, never a reason to fail the screen.
+  _StatsSummary? _mine;
+  // Last (up to) 5 finished games with a guess, newest first.
+  List<Guess> _recentForm = [];
+
+  static const _finishedStatuses = {'FT', 'AET', 'PEN'};
 
   @override
   void initState() {
     super.initState();
+    _displayName = widget.displayName ?? '';
     _fetchUserGuesses();
   }
 
-  Future<void> _fetchUserGuesses() async {
-    try {
-      final leagueID = widget.leagueId as int;
+  Future<void> _retry() async {
+    setState(() {
+      isLoading = true;
+      _loadFailed = false;
+    });
+    await _fetchUserGuesses();
+  }
 
+  static int _leaguePoints(dynamic field, String leagueKey) {
+    if (field is Map && field[leagueKey] != null) {
+      return (field[leagueKey] as num).toInt();
+    }
+    return 0;
+  }
+
+  // Same counting rules for the viewed player and for the viewer, so the two
+  // sets of numbers are directly comparable.
+  static _StatsSummary _summarize(List<Guess> guesses,
+      Map<String, dynamic> userData, int leagueID, Set<int> startedIds) {
+    final leagueKey = '$leagueID';
+    return _StatsSummary(
+      counted: guesses
+          .where((g) =>
+              g.leagueId == leagueID && startedIds.contains(g.gameOriginalId))
+          .toList(),
+      topScorerPoints: _leaguePoints(userData['topScorerPoints'], leagueKey),
+      championPoints: _leaguePoints(userData['championPoints'], leagueKey),
+    );
+  }
+
+  Future<void> _fetchUserGuesses() async {
+    final leagueID = widget.leagueId as int;
+    final myId = _viewerId();
+    final compare = myId != null &&
+        myId.isNotEmpty &&
+        myId != widget.userId?.toString();
+    try {
       // Guesses + user-doc + league games are independent — fire in parallel so
-      // we pay one round-trip latency instead of three.
+      // we pay one round-trip latency instead of three. Games are required: with
+      // no fixtures nothing counts, which would read as "0 guesses".
       final results = await Future.wait([
         GuessesMethods().fetchThisUserGuesses(widget.userId),
         UsersMethods().fetchUserById(widget.userId).catchError((e) {
           print('Error fetching user points: $e');
           return <String, dynamic>{};
         }),
-        GamesMethods().fetchGamesForLeague(leagueID).catchError((e) {
-          print('Error fetching league games: $e');
-          return <Game>[];
-        }),
+        GamesMethods().fetchGamesForLeague(leagueID),
       ]);
       final guesses = results[0] as List<Guess>;
       final userData = results[1] as Map<String, dynamic>;
@@ -81,21 +130,9 @@ class _StatisticsState extends State<Statistics> {
           .map((g) => g.fixtureId)
           .toSet();
 
-      final filtered = guesses
-          .where((g) =>
-              g.leagueId == leagueID &&
-              startedFixtureIds.contains(g.gameOriginalId))
-          .toList();
-
-      int leaguePoints(dynamic field) {
-        if (field is Map && field[leagueKey] != null) {
-          return (field[leagueKey] as num).toInt();
-        }
-        return 0;
-      }
-
-      final topScorerPts = leaguePoints(userData['topScorerPoints']);
-      final championPts = leaguePoints(userData['championPoints']);
+      final summary =
+          _summarize(guesses, userData, leagueID, startedFixtureIds);
+      final filtered = summary.counted;
 
       // Winner/topScorer picks are stored as plain name strings keyed by league.
       String leaguePick(dynamic field) {
@@ -107,20 +144,36 @@ class _StatisticsState extends State<Statistics> {
 
       final winnerPick = leaguePick(userData['winner']);
       final topScorerPick = leaguePick(userData['topScorer']);
+      final gamesById = {for (final g in games) g.fixtureId: g};
+      final form = filtered
+          .where((g) =>
+              _finishedStatuses.contains(gamesById[g.gameOriginalId]?.status.short))
+          .toList()
+        ..sort((a, b) => gamesById[b.gameOriginalId]!
+            .date
+            .compareTo(gamesById[a.gameOriginalId]!.date));
 
+      if (compare) _fetchMine(myId, leagueID, startedFixtureIds);
+
+      if (!mounted) return;
       setState(() {
         _gamesById
           ..clear()
-          ..addEntries(games.map((g) => MapEntry(g.fixtureId, g)));
+          ..addAll(gamesById);
         userGuesses = filtered;
         directGuesses = filtered.where((g) => g.direct == 1).toList();
         directionGuesses = filtered.where((g) => g.direction == 1).toList();
-        _topScorerPoints = topScorerPts;
-        _championPoints = championPts;
+        _topScorerPoints = summary.topScorerPoints;
+        _championPoints = summary.championPoints;
         _winnerPick = winnerPick;
         _topScorerPick = topScorerPick;
+        _recentForm = form.take(5).toList();
+        if (_displayName.isEmpty) {
+          _displayName = userData['displayName']?.toString() ?? '';
+        }
         _leagueStarted = startedFixtureIds.isNotEmpty;
         isLoading = false;
+        _loadFailed = false;
       });
 
       // Only fetch crests when the section will actually render (league started
@@ -128,7 +181,36 @@ class _StatisticsState extends State<Statistics> {
       if (_leagueStarted) _resolvePickLogos(leagueID);
     } catch (e) {
       print('Error fetching user guesses: $e');
-      setState(() => isLoading = false);
+      if (!mounted) return;
+      setState(() {
+        isLoading = false;
+        _loadFailed = true;
+      });
+    }
+  }
+
+  // The comparison is optional, so a tree without an AuthProvider (e.g. the
+  // layout tests) just skips it instead of throwing.
+  String? _viewerId() {
+    try {
+      return Provider.of<AuthProvider>(context, listen: false).currentUser?.id;
+    } on ProviderNotFoundException {
+      return null;
+    }
+  }
+
+  Future<void> _fetchMine(
+      String myId, int leagueID, Set<int> startedFixtureIds) async {
+    try {
+      final results = await Future.wait([
+        GuessesMethods().fetchThisUserGuesses(myId),
+        UsersMethods().fetchUserById(myId),
+      ]);
+      final mine = _summarize(results[0] as List<Guess>,
+          results[1] as Map<String, dynamic>, leagueID, startedFixtureIds);
+      if (mounted) setState(() => _mine = mine);
+    } catch (e) {
+      print('Error fetching own stats for comparison: $e');
     }
   }
 
@@ -175,12 +257,18 @@ class _StatisticsState extends State<Statistics> {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(l.playerLabel.toUpperCase(),
+            // Whose stats these are is the headline; "statistics" becomes
+            // the caption above it.
+            Text(
+                (_displayName.isNotEmpty ? l.statistics : l.playerLabel)
+                    .toUpperCase(),
                 style:
                     EType.label(color: c.inkDim, size: 10, letterSpacing: 3)),
             const SizedBox(height: 2),
             Text(
-              l.statistics,
+              _displayName.isNotEmpty ? _displayName : l.statistics,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: EType.screenTitle(
                 size: 26,
                 color: c.ink,
@@ -190,7 +278,9 @@ class _StatisticsState extends State<Statistics> {
           ],
         ),
       ),
-      body: Skeletonizer(
+      body: _loadFailed
+          ? _ErrorState(onRetry: _retry)
+          : Skeletonizer(
         enabled: isLoading,
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -217,6 +307,9 @@ class _StatisticsState extends State<Statistics> {
                       ratio: directPct,
                       color: c.live,
                       isLoading: isLoading,
+                      compare: _mine == null
+                          ? null
+                          : '${l.youLabel}: ${(_mine!.directPct * 100).round()}%',
                       onTap: isLoading || direct == 0
                           ? null
                           : () => _showGuessesSheet(
@@ -229,6 +322,9 @@ class _StatisticsState extends State<Statistics> {
                       ratio: directionPct,
                       color: c.amber,
                       isLoading: isLoading,
+                      compare: _mine == null
+                          ? null
+                          : '${l.youLabel}: ${(_mine!.directionPct * 100).round()}%',
                       onTap: isLoading || direction == 0
                           ? null
                           : () => _showGuessesSheet(
@@ -312,6 +408,8 @@ class _StatisticsState extends State<Statistics> {
                 isLoading: isLoading,
               ),
               const SizedBox(height: 14),
+              // Each legend entry opens the guesses behind it — the only way
+              // to see the misses, which have no accuracy bar of their own.
               Row(
                 children: [
                   _LegendItem(
@@ -320,24 +418,65 @@ class _StatisticsState extends State<Statistics> {
                     color: c.inkFaint,
                     isLoading: isLoading,
                     muted: true,
+                    onTap: isLoading || misses == 0
+                        ? null
+                        : () => _showGuessesSheet(
+                            l.statisticsMisses, _missGuesses, c.inkMute),
                   ),
                   _LegendItem(
                     value: direction,
                     label: l.directionGuesses,
                     color: c.amber,
                     isLoading: isLoading,
+                    onTap: isLoading || direction == 0
+                        ? null
+                        : () => _showGuessesSheet(
+                            l.directionGuesses, directionGuesses, c.amber),
                   ),
                   _LegendItem(
                     value: direct,
                     label: l.directGuesses,
                     color: c.live,
                     isLoading: isLoading,
+                    onTap: isLoading || direct == 0
+                        ? null
+                        : () => _showGuessesSheet(
+                            l.directGuesses, directGuesses, c.live),
                   ),
                 ],
               ),
             ],
           ),
         ),
+
+        // Recent form: one dot per finished game, newest at the start —
+        // green exact, amber direction, grey miss.
+        if (!isLoading && _recentForm.isNotEmpty) ...[
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Text(l.statsRecentForm,
+                  style: EType.body(color: c.inkDim, size: 11)),
+              const SizedBox(width: 10),
+              for (final g in _recentForm)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 6),
+                  child: Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: g.direct == 1
+                          ? c.live
+                          : g.direction == 1
+                              ? c.amber
+                              : c.inkFaint,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
       ],
     );
   }
@@ -405,10 +544,18 @@ class _StatisticsState extends State<Statistics> {
         _TotalPointsRow(
           label: l.statisticsTotalPoints,
           value: isLoading ? '—' : fmt(totalPts),
+          compare: _mine == null || isLoading
+              ? null
+              : '${l.youLabel}: ${fmt(_mine!.totalPoints)}',
         ),
       ],
     );
   }
+
+  // Counted guesses that scored neither exact nor direction.
+  List<Guess> get _missGuesses => userGuesses
+      .where((g) => g.direct != 1 && g.direction != 1)
+      .toList();
 
   // Picks are revealed to everyone only after the league kicks off, so they
   // can't be copied pre-season.
@@ -489,6 +636,95 @@ class _StatisticsState extends State<Statistics> {
           ),
         );
       },
+    );
+  }
+}
+
+// ── Counted guesses + tournament bonuses for one player in one league ──────
+class _StatsSummary {
+  const _StatsSummary({
+    required this.counted,
+    required this.topScorerPoints,
+    required this.championPoints,
+  });
+  final List<Guess> counted;
+  final int topScorerPoints;
+  final int championPoints;
+
+  int get total => counted.length;
+  double get directPct =>
+      total > 0 ? counted.where((g) => g.direct == 1).length / total : 0;
+  double get directionPct =>
+      total > 0 ? counted.where((g) => g.direction == 1).length / total : 0;
+  double get totalPoints =>
+      counted.fold<double>(0, (s, g) => s + g.sumPoints) +
+      topScorerPoints +
+      championPoints;
+}
+
+// ── Load-failure state ──────────────────────────────────────────────────────
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.onRetry});
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.col;
+    final l = AppLocalizations.of(context)!;
+    final isHe = Localizations.localeOf(context).languageCode == 'he';
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: c.hairline, width: 1),
+              ),
+              child: Icon(Icons.wifi_off_rounded, size: 26, color: c.inkDim),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              l.statsLoadFailed,
+              textAlign: TextAlign.center,
+              style: EType.body(
+                  color: c.inkMute, size: 13, height: 1.5, hebrew: isHe),
+            ),
+            const SizedBox(height: 20),
+            Material(
+              color: c.live,
+              borderRadius: BorderRadius.circular(14),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: onRetry,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.refresh, size: 16, color: Colors.white),
+                      const SizedBox(width: 8),
+                      Text(
+                        l.retry,
+                        style: EType.body(
+                            color: Colors.white,
+                            size: 13,
+                            weight: FontWeight.w700,
+                            hebrew: isHe),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -612,6 +848,7 @@ class _LegendItem extends StatelessWidget {
     required this.color,
     required this.isLoading,
     this.muted = false,
+    this.onTap,
   });
   final int value;
   final String label;
@@ -619,17 +856,18 @@ class _LegendItem extends StatelessWidget {
   final bool isLoading;
 
   /// Misses are the "inactive" series in the design — grey dot, muted figure —
-  /// while the two scoring series keep a full-contrast number. (Tapping to open
-  /// the guesses list now lives on the Accuracy bars instead.)
+  /// while the two scoring series keep a full-contrast number.
   final bool muted;
+
+  /// Opens the guesses behind this series. Null (loading / none) = static.
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final c = context.col;
-    return Padding(
-      // Grouped from the leading edge with an even gap rather than spread
-      // across the full width — matches the design.
-      padding: const EdgeInsets.only(right: 28),
+    final item = Padding(
+      // Vertical padding only enlarges the tap target; the visual gap stays.
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -656,10 +894,28 @@ class _LegendItem extends StatelessWidget {
           Text(
             label,
             maxLines: 1,
-            style: EType.body(color: c.inkDim, size: 11),
+            // Dotted underline = tappable, without adding a chevron to a row
+            // that's pinned LTR.
+            style: EType.body(color: c.inkDim, size: 11).copyWith(
+              decoration: onTap == null ? null : TextDecoration.underline,
+              decorationStyle: TextDecorationStyle.dotted,
+              decorationColor: c.inkFaint,
+            ),
           ),
         ],
       ),
+    );
+    return Padding(
+      // Grouped from the leading edge with an even gap rather than spread
+      // across the full width — matches the design.
+      padding: const EdgeInsets.only(right: 28),
+      child: onTap == null
+          ? item
+          : GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onTap,
+              child: item,
+            ),
     );
   }
 }
@@ -674,6 +930,7 @@ class _AccuracyBar extends StatelessWidget {
     required this.color,
     required this.isLoading,
     this.onTap,
+    this.compare,
   });
   final String label;
   final int count;
@@ -681,6 +938,10 @@ class _AccuracyBar extends StatelessWidget {
   final double ratio;
   final Color color;
   final bool isLoading;
+
+  /// The viewer's own figure for this metric (e.g. "You: 28%"), shown under
+  /// the bar when looking at someone else's stats.
+  final String? compare;
 
   /// When non-null the row opens the list of guesses behind this metric, and a
   /// disclosure chevron is shown as the affordance. Null (loading or 0 guesses)
@@ -783,6 +1044,10 @@ class _AccuracyBar extends StatelessWidget {
               ),
             ),
           ),
+          if (compare != null && !isLoading) ...[
+            const SizedBox(height: 6),
+            Text(compare!, style: EType.body(color: c.inkDim, size: 11)),
+          ],
         ],
       ),
     );
@@ -907,9 +1172,11 @@ class _PointsGroupHeader extends StatelessWidget {
 
 // ── Dark total bar closing the points card ──────────────────────────────
 class _TotalPointsRow extends StatelessWidget {
-  const _TotalPointsRow({required this.label, required this.value});
+  const _TotalPointsRow({required this.label, required this.value, this.compare});
   final String label;
   final String value;
+  // The viewer's own total, shown beside this one when comparing.
+  final String? compare;
 
   @override
   Widget build(BuildContext context) {
@@ -929,6 +1196,12 @@ class _TotalPointsRow extends StatelessWidget {
                   EType.body(color: c.card, size: 13, weight: FontWeight.w600),
             ),
           ),
+          if (compare != null) ...[
+            Text(compare!,
+                style: EType.body(
+                    color: c.card.withValues(alpha: 0.6), size: 12)),
+            const SizedBox(width: 12),
+          ],
           Text(
             value,
             style:

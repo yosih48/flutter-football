@@ -625,6 +625,8 @@
     "bracketSaveFailed": "השמירה נכשלה",
     "atLeastOneLeague": "חובה להשאיר לפחות ליגה אחת מסומנת.",
     "prefsSaveFailed": "לא הצלחנו לשמור את השינויים. בדקו את החיבור ונסו שוב.",
+    "statsLoadFailed": "לא הצלחנו לטעון את הסטטיסטיקה. בדקו את החיבור ונסו שוב.",
+    "statsRecentForm": "כושר אחרון",
     "gamesLoadFailed": "לא הצלחנו לטעון את המשחקים. בדקו את החיבור ונסו שוב.",
     "bracketViewerEmptyTitle": "עדיין אין ניחושים",
     "bracketViewerEmptyHint": "השחקן הזה עדיין לא מילא את טבלת הניחושים.",

@@ -1358,6 +1358,7 @@ class _GameDetailsState extends State<GameDetails> {
                         builder: (_) => Statistics(
                           userId: g.guess.userId,
                           leagueId: _currentGame.league.id,
+                          displayName: g.userName,
                         ),
                       ),
                     );
