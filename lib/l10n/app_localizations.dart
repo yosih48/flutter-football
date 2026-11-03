@@ -2429,6 +2429,12 @@ abstract class AppLocalizations {
   /// **'You must keep at least one league selected.'**
   String get atLeastOneLeague;
 
+  /// No description provided for @prefsSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn't save your changes. Check your connection and try again.'**
+  String get prefsSaveFailed;
+
   /// No description provided for @bracketViewerEmptyTitle.
   ///
   /// In en, this message translates to:

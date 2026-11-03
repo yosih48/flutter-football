@@ -407,6 +407,7 @@
     "bracketSaved": "Saved",
     "bracketSaveFailed": "Could not save",
     "atLeastOneLeague": "You must keep at least one league selected.",
+    "prefsSaveFailed": "Couldn't save your changes. Check your connection and try again.",
     "bracketViewerEmptyTitle": "No predictions yet",
     "bracketViewerEmptyHint": "This player hasn't filled out their bracket.",
     "bracketNoTeamsTitle": "Not available yet",

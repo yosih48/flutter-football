@@ -1180,6 +1180,10 @@ class AppLocalizationsHe extends AppLocalizations {
   String get atLeastOneLeague => 'חובה להשאיר לפחות ליגה אחת מסומנת.';
 
   @override
+  String get prefsSaveFailed =>
+      'לא הצלחנו לשמור את השינויים. בדקו את החיבור ונסו שוב.';
+
+  @override
   String get bracketViewerEmptyTitle => 'עדיין אין ניחושים';
 
   @override

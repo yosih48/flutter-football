@@ -1180,6 +1180,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get atLeastOneLeague => 'You must keep at least one league selected.';
 
   @override
+  String get prefsSaveFailed =>
+      "Couldn't save your changes. Check your connection and try again.";
+
+  @override
   String get bracketViewerEmptyTitle => 'No predictions yet';
 
   @override

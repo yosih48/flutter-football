@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:football/theme/colors.dart';
 import 'package:football/theme/typography.dart';
 import 'package:football/utils/config.dart';
 import 'package:football/utils/league_logos.dart';
+import 'package:football/utils/utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:football/l10n/app_localizations.dart';
@@ -36,6 +38,19 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
   void initState() {
     super.initState();
     selectedTab = widget.initialTab;
+    // Load once. (didChangeDependencies re-runs on locale/theme/media changes,
+    // which refetched and flashed the skeleton each time.)
+    _loadUserPreferences();
+  }
+
+  @override
+  void dispose() {
+    // Don't drop a change made just before leaving the screen.
+    if (_saveDebounce?.isActive ?? false) {
+      _saveDebounce!.cancel();
+      _flushSave();
+    }
+    super.dispose();
   }
 
   // Both maps are keyed by league id and driven by the backend config. The DB
@@ -64,18 +79,11 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       'https://media.api-sports.io/football/leagues/';
 
   // ── Lifecycle ──────────────────────────────────────────────────────────
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _loadUserPreferences();
-  }
-
   Future<void> _loadUserPreferences() async {
-    setState(() => isLoading = true);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     try {
       final user = await authProvider.ensureUserLoaded();
-      if (user != null) {
+      if (user != null && mounted) {
         setState(() => userId = user.id);
         _getUserInfo();
       }
@@ -91,6 +99,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
       final chosenLeaguesData =
           Map<String, dynamic>.from(userData['chosenLeagues'] ?? {});
 
+      if (!mounted) return;
       setState(() {
         for (final id in LeagueConfigService().supportedLeagues) {
           chosenLeagues[id] = chosenLeaguesData[id.toString()] ?? true;
@@ -98,10 +107,32 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         }
         isLoading = false;
       });
+      _markSaved();
     } catch (e) {
       print('Error loading user preferences: $e');
-      setState(() => isLoading = false);
+      if (mounted) setState(() => isLoading = false);
     }
+  }
+
+  // ── Saving ─────────────────────────────────────────────────────────────
+  // Toggles update the UI immediately; the write is debounced so a burst of
+  // taps becomes one request. If the server rejects it (or there's no
+  // network), the UI rolls back to the last state the server confirmed and
+  // the user is told — instead of a switch that looks on but never saved.
+  Timer? _saveDebounce;
+  int _saveSeq = 0;
+  late Map<int, bool> _savedChosen = Map.of(chosenLeagues);
+  late Map<int, NotifPref> _savedNotifs = Map.of(notificationStates);
+
+  void _markSaved() {
+    _savedChosen = Map.of(chosenLeagues);
+    _savedNotifs = Map.of(notificationStates);
+  }
+
+  // name/email kept in the signature for call-site parity.
+  void updateDatabase(String name, String email) {
+    _saveDebounce?.cancel();
+    _saveDebounce = Timer(const Duration(milliseconds: 400), _flushSave);
   }
 
   // Persists chosenLeagues + snetEmail by id via $set dotted keys on the
@@ -109,32 +140,58 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
   // so nothing is wiped (unlike the old /users/profile path which $set the
   // whole snetEmail object and silently dropped leagues it didn't send).
   // No `email` is sent so the backend takes the plain-update branch, not the
-  // group-join branch. name/email kept in the signature for call-site parity.
-  Future<void> updateDatabase(String name, String email) async {
+  // group-join branch.
+  Future<void> _flushSave() async {
+    // Sync: disable ALL notification kinds for leagues that are unchecked.
+    for (final id in LeagueConfigService().supportedLeagues) {
+      if (chosenLeagues[id] == false) {
+        notificationStates[id] = const NotifPref();
+      }
+    }
+
+    final sentChosen = Map.of(chosenLeagues);
+    final sentNotifs = Map.of(notificationStates);
+    final set = <String, dynamic>{};
+    for (final id in LeagueConfigService().supportedLeagues) {
+      set['chosenLeagues.$id'] = sentChosen[id] ?? true;
+      set['snetEmail.$id'] = (sentNotifs[id] ?? const NotifPref()).toJson();
+    }
+
+    final seq = ++_saveSeq;
+    bool ok;
     try {
-      // Sync: disable ALL notification kinds for leagues that are unchecked.
-      for (final id in LeagueConfigService().supportedLeagues) {
-        if (chosenLeagues[id] == false) {
-          notificationStates[id] = const NotifPref();
-        }
-      }
-
-      final set = <String, dynamic>{};
-      for (final id in LeagueConfigService().supportedLeagues) {
-        set['chosenLeagues.$id'] = chosenLeagues[id] ?? true;
-        set['snetEmail.$id'] =
-            (notificationStates[id] ?? const NotifPref()).toJson();
-      }
-
-      await http.put(
-        Uri.parse('$backendUrl/users/'),
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
-        body: jsonEncode({'_id': userId, '\$set': set}),
-      );
-      LeagueDataProvider().clearCache();
+      final res = await http
+          .put(
+            Uri.parse('$backendUrl/users/'),
+            headers: {'Content-Type': 'application/json; charset=UTF-8'},
+            body: jsonEncode({'_id': userId, '\$set': set}),
+          )
+          .timeout(const Duration(seconds: 15));
+      ok = res.statusCode >= 200 && res.statusCode < 300;
+      if (!ok) print('Preferences save failed: ${res.statusCode}');
     } catch (e) {
       print('Error updating database: $e');
+      ok = false;
     }
+
+    if (ok) {
+      _savedChosen = sentChosen;
+      _savedNotifs = sentNotifs;
+      LeagueDataProvider().clearCache();
+      return;
+    }
+
+    // A newer save is queued or in flight — it carries the latest state, so
+    // let it decide rather than rolling back underneath it.
+    if (!mounted || seq != _saveSeq || (_saveDebounce?.isActive ?? false)) {
+      return;
+    }
+    setState(() {
+      chosenLeagues = Map.of(_savedChosen);
+      notificationStates = Map.of(_savedNotifs);
+    });
+    showSnackBar(context, AppLocalizations.of(context)!.prefsSaveFailed,
+        tone: SnackTone.error);
   }
 
   String _localizedLeagueName(int leagueId) {
@@ -293,12 +350,9 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
                         .where((lid) => chosenLeagues[lid] == true)
                         .length;
                     if (isSelected && selectedCount <= 1) {
-                      ScaffoldMessenger.of(context)
-                        ..hideCurrentSnackBar()
-                        ..showSnackBar(SnackBar(
-                          content: Text(l.atLeastOneLeague),
-                          behavior: SnackBarBehavior.floating,
-                        ));
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      showSnackBar(context, l.atLeastOneLeague,
+                          tone: SnackTone.warning);
                       return;
                     }
                     setState(() {
@@ -409,8 +463,7 @@ class _FavoritsScreenState extends State<FavoritsScreen> {
         ...enabledIds.map((id) {
           final pref = notificationStates[id] ?? const NotifPref();
           final expanded = _expandedNotifLeagues.contains(id);
-          final onCount =
-              (pref.reminders ? 1 : 0) + (pref.points ? 1 : 0);
+          final onCount = (pref.reminders ? 1 : 0) + (pref.points ? 1 : 0);
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: _LeagueNotifGroup(
@@ -656,44 +709,50 @@ class _MasterNotifCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.col;
-    return Container(
-      decoration: BoxDecoration(
-        color: c.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: c.hairline, width: 1),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: c.live.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
+    // The whole card toggles — the switch alone is too small a tap target.
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => onChanged(!value),
+      child: Container(
+        decoration: BoxDecoration(
+          color: c.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: c.hairline, width: 1),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: c.live.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.notifications_none, size: 20, color: c.live),
             ),
-            child: Icon(Icons.notifications_none, size: 20, color: c.live),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: EType.body(
-                        size: 16,
-                        color: c.ink,
-                        weight: FontWeight.w600,
-                        height: 1.1)),
-                const SizedBox(height: 3),
-                Text(subtitle,
-                    style: EType.body(color: c.inkMute, size: 12, height: 1.3)),
-              ],
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: EType.body(
+                          size: 16,
+                          color: c.ink,
+                          weight: FontWeight.w600,
+                          height: 1.1)),
+                  const SizedBox(height: 3),
+                  Text(subtitle,
+                      style:
+                          EType.body(color: c.inkMute, size: 12, height: 1.3)),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          _EditorialSwitch(value: value, onChanged: onChanged),
-        ],
+            const SizedBox(width: 12),
+            _EditorialSwitch(value: value, onChanged: onChanged),
+          ],
+        ),
       ),
     );
   }
@@ -748,39 +807,44 @@ class _NotifRowCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.col;
-    return Container(
-      decoration: grouped
-          ? null
-          : BoxDecoration(
-              color: c.card,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: c.hairline, width: 1),
+    // The whole row toggles — the switch alone is too small a tap target.
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => onChanged(!value),
+      child: Container(
+        decoration: grouped
+            ? null
+            : BoxDecoration(
+                color: c.card,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: c.hairline, width: 1),
+              ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        child: Row(
+          children: [
+            _NotifIconTile(kind: kind),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: EType.body(
+                          size: 15,
+                          color: c.ink,
+                          weight: FontWeight.w600,
+                          height: 1.1)),
+                  const SizedBox(height: 3),
+                  Text(subtitle,
+                      style:
+                          EType.body(color: c.inkMute, size: 12, height: 1.25)),
+                ],
+              ),
             ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      child: Row(
-        children: [
-          _NotifIconTile(kind: kind),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: EType.body(
-                        size: 15,
-                        color: c.ink,
-                        weight: FontWeight.w600,
-                        height: 1.1)),
-                const SizedBox(height: 3),
-                Text(subtitle,
-                    style:
-                        EType.body(color: c.inkMute, size: 12, height: 1.25)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          _EditorialSwitch(value: value, onChanged: onChanged),
-        ],
+            const SizedBox(width: 12),
+            _EditorialSwitch(value: value, onChanged: onChanged),
+          ],
+        ),
       ),
     );
   }
